@@ -6,7 +6,7 @@ additional functionality powered by source generators, and so on.
 
 ## Installation
 
-> [!IMPORTANT]
+> [!CAUTION]
 > The package is in active preview stage, APIs are subject to frequent change.
 > Use at your own risk!
 
@@ -22,7 +22,9 @@ additional functionality powered by source generators, and so on.
 
 > [!IMPORTANT]
 > The package is in active preview stage, I'm not yet comfortable to publish it on OpenUPM.
-> If you're an OpenUPM hunter, please refrain from register this package.
+>
+> If you're an OpenUPM hunter, please refrain from registering this package.
+>
 > Thank you for your understanding.
 
 <!--
