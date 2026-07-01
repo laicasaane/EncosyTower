@@ -272,7 +272,7 @@ namespace EncosyTower.Databases.Authoring
             {
                 var columnValue = columnNames[pageColumn];
 
-                if (columnValue.StartsWith(Config.Comment))
+                if (columnValue.Contains(Config.Comment))
                 {
                     continue;
                 }
