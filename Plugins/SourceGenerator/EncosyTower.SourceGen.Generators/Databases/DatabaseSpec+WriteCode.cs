@@ -34,7 +34,8 @@ namespace EncosyTower.SourceGen.Generators.Databases
             }
 
             p.PrintBeginLine($"partial ").Print(typeKeyword).Print(" ").Print(typeName)
-                .Print(" : ").PrintEndLine("ETDB.IDatabase");
+                .Print(" : ").Print("ETDB.IDatabase, ET.IIsValid, ")
+                .PrintEndLine("ETI.IInitializable, ETI.IIsInitialized, ETI.IDeinitializable");
             p.OpenScope();
             {
                 WriteInstanceMembers(ref p, typeName, isStruct);

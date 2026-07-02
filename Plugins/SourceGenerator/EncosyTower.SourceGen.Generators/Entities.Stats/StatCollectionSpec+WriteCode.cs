@@ -539,6 +539,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
             p.PrintLine("[S.Serializable]");
             p.PrintBeginLine("public partial struct Index : S.IEquatable<Index>")
+                .Print(", ET.IIsValid")
                 .Print(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>")
                 .PrintEndLine();
             p.OpenScope();
@@ -645,7 +646,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"TStatData\">The stat data type this index refers to.</typeparam>");
             p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
             p.PrintLine("[S.Serializable]");
-            p.PrintBeginLine("public partial struct Index<TStatData> : S.IEquatable<Index<TStatData>>")
+            p.PrintBeginLine("public partial struct Index<TStatData> : S.IEquatable<Index<TStatData>>, ET.IIsValid")
                 .PrintEndLine(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>");
             p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
             p.OpenScope();
@@ -764,12 +765,11 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"Index\"/> with its associated <see cref=\"Type\"/> and validity flag.");
             p.PrintBeginLine("/// ").PrintEndLine("</summary>");
             p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct IndexRecord : S.IEquatable<IndexRecord>");
+            p.PrintLine("public readonly partial struct IndexRecord : S.IEquatable<IndexRecord>, ET.IIsValid");
             p.OpenScope();
             {
                 p.PrintLine("public readonly Index Index;");
                 p.PrintLine("public readonly Type Type;");
-                p.PrintLine("public readonly bool IsValid;");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);
@@ -781,6 +781,9 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("IsValid = isValid;");
                 }
                 p.CloseScope();
+                p.PrintEndLine();
+
+                p.PrintLine("public readonly bool IsValid { get; }");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);
@@ -824,12 +827,11 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatIndex\"/> with its associated <see cref=\"Type\"/> and validity flag.");
             p.PrintBeginLine("/// ").PrintEndLine("</summary>");
             p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct StatIndexRecord : S.IEquatable<StatIndexRecord>");
+            p.PrintLine("public readonly partial struct StatIndexRecord : S.IEquatable<StatIndexRecord>, ET.IIsValid");
             p.OpenScope();
             {
                 p.PrintLine("public readonly ETES.StatIndex Index;");
                 p.PrintLine("public readonly Type Type;");
-                p.PrintLine("public readonly bool IsValid;");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);
@@ -841,6 +843,9 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("IsValid = isValid;");
                 }
                 p.CloseScope();
+                p.PrintEndLine();
+
+                p.PrintLine("public readonly bool IsValid { get; }");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);
@@ -884,12 +889,11 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatHandle\"/> with its associated <see cref=\"Type\"/> and validity flag.");
             p.PrintBeginLine("/// ").PrintEndLine("</summary>");
             p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct StatHandleRecord : S.IEquatable<StatHandleRecord>");
+            p.PrintLine("public readonly partial struct StatHandleRecord : S.IEquatable<StatHandleRecord>, ET.IIsValid");
             p.OpenScope();
             {
                 p.PrintLine("public readonly ETES.StatHandle Handle;");
                 p.PrintLine("public readonly Type Type;");
-                p.PrintLine("public readonly bool IsValid;");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);
@@ -901,6 +905,9 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("IsValid = isValid;");
                 }
                 p.CloseScope();
+                p.PrintEndLine();
+
+                p.PrintLine("public readonly bool IsValid { get; }");
                 p.PrintEndLine();
 
                 p.PrintLine(PR_AGGRESSIVE_INLINING);

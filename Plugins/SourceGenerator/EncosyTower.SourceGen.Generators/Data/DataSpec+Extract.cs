@@ -1592,6 +1592,7 @@ namespace EncosyTower.SourceGen.Generators.Data
             p.PrintLine("using ETD = global::EncosyTower.Data;");
             p.PrintLine("using ETDA = global::EncosyTower.Data.Authoring;");
             p.PrintLine("using ETDSG = global::EncosyTower.Data.SourceGen;");
+            p.PrintLine("using ETI = global::EncosyTower.Initialization;");
             p.PrintLine("using UE = global::UnityEngine;");
             p.PrintLine("using UP = global::Unity.Properties;");
             p.PrintEndLine();
