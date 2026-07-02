@@ -52,6 +52,14 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
 
         private void WriteInterface(ref Printer p)
         {
+            p.Print("#region    INTERFACE").PrintEndLine();
+            p.Print("#endregion =========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName).Print(" { } ")
+                .Print("// I").PrintEndLine(ExtensionsName);
+            p.PrintEndLine();
+
             WriteAttribute(ref p);
 
             p.PrintLine(GENERATED_CODE);
@@ -85,6 +93,14 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
 
         private void WriteExtendedStruct(ref Printer p)
         {
+            p.Print("#region    EXTENDED STRUCT").PrintEndLine();
+            p.Print("#endregion ===============").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName).Print(" { } ")
+                .Print("// ").PrintEndLine(StructName);
+            p.PrintEndLine();
+
             WriteAttribute(ref p);
 
             p.PrintLine(GeneratedCode).PrintLine(ExcludeCoverage);
@@ -459,6 +475,14 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
 
         private void WriteExtendedStruct_BitFlagEnumerator(ref Printer p)
         {
+            p.Print("#region    EXTENDED STRUCT [FLAGS]").PrintEndLine();
+            p.Print("#endregion =======================").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName).Print(" { } ")
+                .Print("// ").Print(StructName).PrintEndLine(" [Flags]");
+            p.PrintEndLine();
+
             p.PrintBeginLine("partial struct ").Print(StructName)
                 .Print(" : SCG.IEnumerable<")
                 .Print(FullyQualifiedName).PrintEndLine(">");
@@ -585,12 +609,17 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
 
         private void WriteClass(ref Printer p)
         {
+            p.Print("#region    EXTENSIONS").PrintEndLine();
+            p.Print("#endregion ==========").PrintEndLine();
+            p.PrintEndLine();
+
             WriteAttribute(ref p);
 
             var @this = ParentIsNamespace ? "this " : "";
 
             p.PrintLine(GeneratedCode).PrintLine(ExcludeCoverage);
-            p.PrintBeginLine(Accessibility.GetKeyword()).Print(" static partial class ").PrintEndLine(ExtensionsName);
+            p.PrintBeginLine(Accessibility.GetKeyword()).Print(" static partial class ").Print(ExtensionsName)
+                .Print(" // ").PrintEndLine(ExtensionsName);
             p.OpenScope();
             {
                 if (NoDocumentation == false)
@@ -652,14 +681,62 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
                     WriteClassValues(ref p);
                     WriteClassUnderlyingValues(ref p);
                 }
+            }
+            p.CloseScope();
+            p.PrintEndLine();
 
+            p.Print("#region    NAMES").PrintEndLine();
+            p.Print("#endregion =====").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName)
+                .PrintEndLine("// Names");
+            p.OpenScope();
+            {
                 WriteClassNames(ref p);
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+
+            p.Print("#region    DISPLAY NAMES").PrintEndLine();
+            p.Print("#endregion =============").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName)
+                .PrintEndLine("// DisplayNames");
+            p.OpenScope();
+            {
                 WriteClassDisplayNames(ref p);
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+
+            p.Print("#region    FIXED NAMES").PrintEndLine();
+            p.Print("#endregion ===========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName)
+                .PrintEndLine("// FixedNames");
+            p.OpenScope();
+            {
                 WriteClassFixedNames(ref p);
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+
+            p.Print("#region    FIXED DISPLAY NAMES").PrintEndLine();
+            p.Print("#endregion ===================").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsName)
+                .PrintEndLine("// FixedDisplayNames");
+            p.OpenScope();
+            {
                 WriteClassFixedDisplayNames(ref p);
             }
             p.CloseScope();
             p.PrintEndLine();
+
         }
 
         private void WriteAttribute(ref Printer p)

@@ -6,7 +6,7 @@
         public const string PR_EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         public const string PR_GENERATED_CODE = $"[SCDC.GeneratedCode(\"EncosyTower.SourceGen.Generators.Entities.TypeHandles.TypeHandleGenerator\", \"{SourceGenVersion.VALUE}\")]";
 
-        public static string Write(in TypeHandleSpec spec)
+        public static string WriteCode(in TypeHandleSpec spec)
         {
             var p = Printer.DefaultLarge;
 

@@ -50,24 +50,24 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     WriteConstructors(ref p);
                     WriteProperties(ref p);
                     WriteMethods(ref p);
-                    WriteTypeEnum(ref p, enumUnderlyingType);
-                    WriteTypeIdStruct(ref p, enumUnderlyingType);
-                    WriteIndicesStruct(ref p);
-                    WriteIndexStructs(ref p, underlyingType);
-                    WriteIndexRecordStruct(ref p);
-                    WriteStatIndexRecordStruct(ref p);
-                    WriteStatHandleRecordStruct(ref p);
-                    WriteStatIndicesStruct(ref p);
-                    WriteStatHandlesStruct(ref p);
-                    WriteStatDataCollection(ref p);
-                    WriteOptionsStruct(ref p);
-                    WriteBakerStruct(ref p);
-                    WriteAccessorStruct(ref p);
-                    WriteReaderStruct(ref p);
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
+                WriteTypeEnum(ref p, enumUnderlyingType);
+                WriteTypeIdStruct(ref p, enumUnderlyingType);
+                WriteIndicesStruct(ref p);
+                WriteIndexStructs(ref p, underlyingType);
+                WriteIndexRecordStruct(ref p);
+                WriteStatIndexRecordStruct(ref p);
+                WriteStatHandleRecordStruct(ref p);
+                WriteStatIndicesStruct(ref p);
+                WriteStatHandlesStruct(ref p);
+                WriteStatDataCollection(ref p);
+                WriteOptionsStruct(ref p);
+                WriteBakerStructs(ref p);
+                WriteAccessorStructs(ref p);
+                WriteReaderStruct(ref p);
                 WriteExtensionsClass(ref p);
 
                 p.Print("#region INTERNALS").PrintEndLine();
@@ -75,7 +75,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                 p.PrintEndLine();
 
                 p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-                p.PrintBeginLine("partial struct ").PrintEndLine(typeName);
+                p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Internals");
                 p.OpenScope();
                 {
                     WriteHelperConstants(ref p);
@@ -85,7 +85,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                 p.PrintEndLine();
 
                 p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-                p.PrintBeginLine("static partial class ").Print(typeName).PrintEndLine("Extensions");
+                p.PrintBeginLine("static partial class ").Print(typeName).PrintEndLine("Extensions // Internals");
                 p.OpenScope();
                 {
                     WriteHelperConstants(ref p);
@@ -336,24 +336,30 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteTypeEnum(ref Printer p, string underlyingType)
         {
-            p.Print("#region TYPE ENUM").PrintEndLine();
-            p.Print("#endregion ======").PrintEndLine();
+            p.Print("#region    TYPE ENUM").PrintEndLine();
+            p.Print("#endregion =========").PrintEndLine();
             p.PrintEndLine();
 
-            var count = statDataCollection.Count;
-
-            p.PrintLine(PR_GENERATED_CODE);
-            p.PrintBeginLine("public enum Type : ").PrintEndLine(underlyingType);
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Type");
             p.OpenScope();
             {
-                p.PrintLine("Undefined = 0,");
-
-                for (var i = 0; i < count; i++)
+                p.PrintLine(PR_GENERATED_CODE);
+                p.PrintBeginLine("public enum Type : ").PrintEndLine(underlyingType);
+                p.OpenScope();
                 {
-                    var statData = statDataCollection[i];
+                    p.PrintLine("Undefined = 0,");
 
-                    p.PrintBeginLine(statData.typeName).Print(" = ").Print(i + 1).PrintEndLine(",");
+                    var count = statDataCollection.Count;
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        var statData = statDataCollection[i];
+
+                        p.PrintBeginLine(statData.typeName).Print(" = ").Print(i + 1).PrintEndLine(",");
+                    }
                 }
+                p.CloseScope();
+                p.PrintEndLine();
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -363,161 +369,171 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         {
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Identifies a stat type within <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Wraps the <see cref=\"Type\"/> enum and provides methods for encoding and decoding stat user data,");
-            p.PrintBeginLine("/// ").PrintEndLine("validating types, and converting to array indices.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct TypeId : S.IEquatable<TypeId>");
+            p.Print("#region    TYPE ID").PrintEndLine();
+            p.Print("#endregion =======").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("TypeId");
             p.OpenScope();
             {
-                p.PrintBeginLine("public const uint OFFSET = ").Print(typeIdOffset).PrintEndLine(";");
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly Type Value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public TypeId(Type value)");
-                p.OpenScope();
-                {
-                    p.PrintLine("Value = value;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator TypeId(Type value)");
-                p.WithIncreasedIndent().PrintLine("=> new(value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator Type(TypeId id)");
-                p.WithIncreasedIndent().PrintLine("=> id.Value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static bool operator ==(TypeId lhs, TypeId rhs)");
-                p.WithIncreasedIndent().PrintLine("=> lhs.Equals(rhs);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static bool operator !=(TypeId lhs, TypeId rhs)");
-                p.WithIncreasedIndent().PrintLine("=> !lhs.Equals(rhs);");
-                p.PrintEndLine();
-
                 p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-                p.PrintBeginLine("/// ").Print("Converts <paramref name=\"type\"/> to the corresponding valid index")
-                    .Print(" of the array <see cref=\"").Print(typeName).PrintEndLine(".Types\"/>.");
+                p.PrintBeginLine("/// ").Print("Identifies a stat type within <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
                 p.PrintBeginLine("/// ").PrintEndLine("</summary>");
                 p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-                p.PrintBeginLine("/// ").PrintEndLine("The value of <see cref=\"Type.Undefined\"/> is invalid.");
+                p.PrintBeginLine("/// ").PrintEndLine("Wraps the <see cref=\"Type\"/> enum and provides methods for encoding and decoding stat user data,");
+                p.PrintBeginLine("/// ").PrintEndLine("validating types, and converting to array indices.");
                 p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static int ToValidArrayIndex(Type type)");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public readonly partial struct TypeId : S.IEquatable<TypeId>");
                 p.OpenScope();
                 {
-                    p.PrintLine("// Remove the value of Type.Undefined");
-                    p.PrintLine("return (int)type - 1;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static uint EncodeToStatUserData(Type type)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return (uint)type + OFFSET;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static Type DecodeFromStatUserData(uint userData)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return (Type)(userData - OFFSET);");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static Type DecodeFromStatUserData(in StatSystem.Stat stat)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return DecodeFromStatUserData(stat.UserData);");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static bool ValidateType(Type type)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return (uint)type < (uint)LENGTH;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static bool ValidateStatUserData(uint userData)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return (uint)DecodeFromStatUserData(userData) < (uint)LENGTH;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static bool ValidateStatUserData(in StatSystem.Stat stat)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return ValidateStatUserData(stat.UserData);");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public static bool ValidateStat<TStatData>(in StatSystem.Stat<TStatData> stat)");
-                p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
-                p.OpenScope();
-                {
-                    p.PrintLine("if (ValidateStatUserData(stat.UserData) == false) return false;");
+                    p.PrintBeginLine("public const uint OFFSET = ").Print(typeIdOffset).PrintEndLine(";");
                     p.PrintEndLine();
 
-                    for (var i = 0; i < count; i++)
+                    p.PrintLine("public readonly Type Value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public TypeId(Type value)");
+                    p.OpenScope();
                     {
-                        var statData = statDataCollection[i];
-
-                        p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName)
-                            .PrintEndLine(")) return true;");
+                        p.PrintLine("Value = value;");
                     }
-
+                    p.CloseScope();
                     p.PrintEndLine();
-                    p.PrintLine("return false;");
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator TypeId(Type value)");
+                    p.WithIncreasedIndent().PrintLine("=> new(value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator Type(TypeId id)");
+                    p.WithIncreasedIndent().PrintLine("=> id.Value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static bool operator ==(TypeId lhs, TypeId rhs)");
+                    p.WithIncreasedIndent().PrintLine("=> lhs.Equals(rhs);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static bool operator !=(TypeId lhs, TypeId rhs)");
+                    p.WithIncreasedIndent().PrintLine("=> !lhs.Equals(rhs);");
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                    p.PrintBeginLine("/// ").Print("Converts <paramref name=\"type\"/> to the corresponding valid index")
+                        .Print(" of the array <see cref=\"").Print(typeName).PrintEndLine(".Types\"/>.");
+                    p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                    p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                    p.PrintBeginLine("/// ").PrintEndLine("The value of <see cref=\"Type.Undefined\"/> is invalid.");
+                    p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static int ToValidArrayIndex(Type type)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("// Remove the value of Type.Undefined");
+                        p.PrintLine("return (int)type - 1;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static uint EncodeToStatUserData(Type type)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return (uint)type + OFFSET;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static Type DecodeFromStatUserData(uint userData)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return (Type)(userData - OFFSET);");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static Type DecodeFromStatUserData(in StatSystem.Stat stat)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return DecodeFromStatUserData(stat.UserData);");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static bool ValidateType(Type type)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return (uint)type < (uint)LENGTH;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static bool ValidateStatUserData(uint userData)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return (uint)DecodeFromStatUserData(userData) < (uint)LENGTH;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static bool ValidateStatUserData(in StatSystem.Stat stat)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return ValidateStatUserData(stat.UserData);");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public static bool ValidateStat<TStatData>(in StatSystem.Stat<TStatData> stat)");
+                    p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("if (ValidateStatUserData(stat.UserData) == false) return false;");
+                        p.PrintEndLine();
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            var statData = statDataCollection[i];
+
+                            p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName)
+                                .PrintEndLine(")) return true;");
+                        }
+
+                        p.PrintEndLine();
+                        p.PrintLine("return false;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public bool Equals(TypeId other)");
+                    p.WithIncreasedIndent().PrintLine("=> Value == other.Value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is TypeId other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintBeginLine("=> ((").Print(underlyingType)
+                        .PrintEndLine(")Value).GetHashCode();");
+                    p.PrintEndLine();
+
+
                 }
                 p.CloseScope();
                 p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public bool Equals(TypeId other)");
-                p.WithIncreasedIndent().PrintLine("=> Value == other.Value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is TypeId other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override int GetHashCode()");
-                p.WithIncreasedIndent().PrintBeginLine("=> ((").Print(underlyingType)
-                    .PrintEndLine(")Value).GetHashCode();");
-                p.PrintEndLine();
-
-
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -525,230 +541,242 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteIndexStructs(ref Printer p, string fieldType)
         {
-            p.Print("#region INDEX").PrintEndLine();
-            p.Print("#endregion ==").PrintEndLine();
+            p.Print("#region    INDEX").PrintEndLine();
+            p.Print("#endregion =====").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("A type-erased index into the stat buffer for a stat slot.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").Print("Use <see cref=\"Index{TStatData}\"/> when the stat data type is known at compile time. ");
-            p.PrintBeginLine("/// ").PrintEndLine("An index is valid when its <c>value</c> is greater than zero.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("[S.Serializable]");
-            p.PrintBeginLine("public partial struct Index : S.IEquatable<Index>")
-                .Print(", ET.IIsValid")
-                .Print(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>")
-                .PrintEndLine();
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Index");
             p.OpenScope();
             {
-                p.PrintLine("public static readonly Index Null = default;");
-                p.PrintEndLine();
-
-                p.PrintLine("/// <inheritdoc cref=\"ETES.StatIndex.value\"/>");
-                p.PrintBeginLine("public ").Print(fieldType).PrintEndLine(" value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public Index(").Print(fieldType).PrintEndLine(" value)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("A type-erased index into the stat buffer for a stat slot.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").Print("Use <see cref=\"Index{TStatData}\"/> when the stat data type is known at compile time. ");
+                p.PrintBeginLine("/// ").PrintEndLine("An index is valid when its <c>value</c> is greater than zero.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("[S.Serializable]");
+                p.PrintBeginLine("public partial struct Index : S.IEquatable<Index>")
+                    .Print(", ET.IIsValid")
+                    .Print(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>")
+                    .PrintEndLine();
                 p.OpenScope();
                 {
-                    p.PrintLine("this.value = value;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
+                    p.PrintLine("public static readonly Index Null = default;");
+                    p.PrintEndLine();
 
-                p.PrintLine("public readonly bool IsValid");
-                p.OpenScope();
-                {
+                    p.PrintLine("/// <inheritdoc cref=\"ETES.StatIndex.value\"/>");
+                    p.PrintBeginLine("public ").Print(fieldType).PrintEndLine(" value;");
+                    p.PrintEndLine();
+
                     p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => value > Null.value;");
+                    p.PrintBeginLine("public Index(").Print(fieldType).PrintEndLine(" value)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("this.value = value;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsValid");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => value > Null.value;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static implicit operator Index(")
+                        .Print(fieldType).PrintEndLine(" value)");
+                    p.WithIncreasedIndent().PrintLine("=> new(value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static implicit operator ").Print(fieldType)
+                        .PrintEndLine("(Index index)");
+                    p.WithIncreasedIndent().PrintLine("=> index.value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator Index(ETES.StatIndex index)");
+                    p.WithIncreasedIndent().PrintBeginLine("=> new((").Print(fieldType).PrintEndLine(")index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator ETES.StatIndex(Index index)");
+                    p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly bool Equals(Index other)");
+                    p.WithIncreasedIndent().PrintLine("=> value == other.value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is Index other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintLine("=> value.GetHashCode();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override string ToString()");
+                    p.WithIncreasedIndent().PrintLine("=> value.ToString();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly UC.FixedString32Bytes ToFixedString()");
+                    p.WithIncreasedIndent().PrintLine("=> ETCol.EncosyFixedStringExtensions.ToFixedString(value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
+                    p.WithIncreasedIndent().PrintBeginLine("where TFixedString : unmanaged, UC.INativeList<byte>, ")
+                        .PrintEndLine("UC.IUTF8Bytes");
+                    p.WithIncreasedIndent().PrintBeginLine("=> ETCol.EncosyFixedStringExtensions")
+                        .PrintEndLine(".CastTo<TFixedString>(ToFixedString());");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly ETES.StatHandle ToStatHandle(UECS.Entity entity)");
+                    p.WithIncreasedIndent().PrintLine("=> new(entity, this);");
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static implicit operator Index(")
-                    .Print(fieldType).PrintEndLine(" value)");
-                p.WithIncreasedIndent().PrintLine("=> new(value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static implicit operator ").Print(fieldType)
-                    .PrintEndLine("(Index index)");
-                p.WithIncreasedIndent().PrintLine("=> index.value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator Index(ETES.StatIndex index)");
-                p.WithIncreasedIndent().PrintBeginLine("=> new((").Print(fieldType).PrintEndLine(")index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator ETES.StatIndex(Index index)");
-                p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly bool Equals(Index other)");
-                p.WithIncreasedIndent().PrintLine("=> value == other.value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is Index other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override int GetHashCode()");
-                p.WithIncreasedIndent().PrintLine("=> value.GetHashCode();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override string ToString()");
-                p.WithIncreasedIndent().PrintLine("=> value.ToString();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly UC.FixedString32Bytes ToFixedString()");
-                p.WithIncreasedIndent().PrintLine("=> ETCol.EncosyFixedStringExtensions.ToFixedString(value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
-                p.WithIncreasedIndent().PrintBeginLine("where TFixedString : unmanaged, UC.INativeList<byte>, ")
-                    .PrintEndLine("UC.IUTF8Bytes");
-                p.WithIncreasedIndent().PrintBeginLine("=> ETCol.EncosyFixedStringExtensions")
-                    .PrintEndLine(".CastTo<TFixedString>(ToFixedString());");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly ETES.StatHandle ToStatHandle(UECS.Entity entity)");
-                p.WithIncreasedIndent().PrintLine("=> new(entity, this);");
                 p.PrintEndLine();
             }
             p.CloseScope();
             p.PrintEndLine();
 
-            p.Print("#region INDEX<TSTAT_DATA>").PrintEndLine();
-            p.Print("#endregion ==============").PrintEndLine();
+            p.Print("#region    INDEX<TSTAT_DATA>").PrintEndLine();
+            p.Print("#endregion =================").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("A strongly-typed index into the stat buffer for a specific <typeparamref name=\"TStatData\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").Print("Implicitly converts to and from <see cref=\"Index\"/> and <see cref=\"ETES.StatIndex{TStatData}\"/>. ");
-            p.PrintBeginLine("/// ").PrintEndLine("An index is valid when its <c>value</c> is greater than zero.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"TStatData\">The stat data type this index refers to.</typeparam>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("[S.Serializable]");
-            p.PrintBeginLine("public partial struct Index<TStatData> : S.IEquatable<Index<TStatData>>, ET.IIsValid")
-                .PrintEndLine(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>");
-            p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Index<TStatData>");
             p.OpenScope();
             {
-                p.PrintLine("public static readonly Index<TStatData> Null = default;");
-                p.PrintEndLine();
-
-                p.PrintLine("/// <inheritdoc cref=\"StatIndex.value\"/>");
-                p.PrintBeginLine("public ").Print(fieldType).PrintEndLine(" value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public Index(").Print(fieldType).PrintEndLine(" value)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("A strongly-typed index into the stat buffer for a specific <typeparamref name=\"TStatData\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").Print("Implicitly converts to and from <see cref=\"Index\"/> and <see cref=\"ETES.StatIndex{TStatData}\"/>. ");
+                p.PrintBeginLine("/// ").PrintEndLine("An index is valid when its <c>value</c> is greater than zero.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"TStatData\">The stat data type this index refers to.</typeparam>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("[S.Serializable]");
+                p.PrintBeginLine("public partial struct Index<TStatData> : S.IEquatable<Index<TStatData>>, ET.IIsValid")
+                    .PrintEndLine(", ETCon.IToFixedString, ETCon.IToFixedString<UC.FixedString32Bytes>");
+                p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
                 p.OpenScope();
                 {
-                    p.PrintLine("this.value = value;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
+                    p.PrintLine("public static readonly Index<TStatData> Null = default;");
+                    p.PrintEndLine();
 
-                p.PrintLine("public readonly bool IsValid");
-                p.OpenScope();
-                {
+                    p.PrintLine("/// <inheritdoc cref=\"StatIndex.value\"/>");
+                    p.PrintBeginLine("public ").Print(fieldType).PrintEndLine(" value;");
+                    p.PrintEndLine();
+
                     p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => value > Null.value;");
+                    p.PrintBeginLine("public Index(").Print(fieldType).PrintEndLine(" value)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("this.value = value;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsValid");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => value > Null.value;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static implicit operator Index<TStatData>(")
+                        .Print(fieldType).PrintEndLine(" value)");
+                    p.WithIncreasedIndent().PrintLine("=> new(value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static implicit operator ").Print(fieldType)
+                        .PrintEndLine("(Index<TStatData> index)");
+                    p.WithIncreasedIndent().PrintLine("=> index.value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator Index<TStatData>(ETES.StatIndex<TStatData> index)");
+                    p.WithIncreasedIndent().PrintBeginLine("=> new((").Print(fieldType).PrintEndLine(")index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator Index<TStatData>(Index index)");
+                    p.WithIncreasedIndent().PrintLine("=> new(index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator Index(Index<TStatData> index)");
+                    p.WithIncreasedIndent().PrintLine("=> new(index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator ETES.StatIndex<TStatData>(Index<TStatData> index)");
+                    p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static implicit operator ETES.StatIndex(Index<TStatData> index)");
+                    p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly bool Equals(Index<TStatData> other)");
+                    p.WithIncreasedIndent().PrintLine("=> value == other.value;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is Index<TStatData> other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintLine("=> value.GetHashCode();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly override string ToString()");
+                    p.WithIncreasedIndent().PrintLine("=> value.ToString();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly UC.FixedString32Bytes ToFixedString()");
+                    p.WithIncreasedIndent().PrintLine("=> ETCol.EncosyFixedStringExtensions.ToFixedString(value);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
+                    p.WithIncreasedIndent().PrintBeginLine("where TFixedString : unmanaged, UC.INativeList<byte>, ")
+                        .PrintEndLine("UC.IUTF8Bytes");
+                    p.WithIncreasedIndent().PrintBeginLine("=> ETCol.EncosyFixedStringExtensions")
+                        .PrintEndLine(".CastTo<TFixedString>(ToFixedString());");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly ETES.StatHandle<TStatData> ToStatHandle(UECS.Entity entity)");
+                    p.WithIncreasedIndent().PrintLine("=> new(entity, this);");
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static implicit operator Index<TStatData>(")
-                    .Print(fieldType).PrintEndLine(" value)");
-                p.WithIncreasedIndent().PrintLine("=> new(value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static implicit operator ").Print(fieldType)
-                    .PrintEndLine("(Index<TStatData> index)");
-                p.WithIncreasedIndent().PrintLine("=> index.value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator Index<TStatData>(ETES.StatIndex<TStatData> index)");
-                p.WithIncreasedIndent().PrintBeginLine("=> new((").Print(fieldType).PrintEndLine(")index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator Index<TStatData>(Index index)");
-                p.WithIncreasedIndent().PrintLine("=> new(index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator Index(Index<TStatData> index)");
-                p.WithIncreasedIndent().PrintLine("=> new(index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator ETES.StatIndex<TStatData>(Index<TStatData> index)");
-                p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static implicit operator ETES.StatIndex(Index<TStatData> index)");
-                p.WithIncreasedIndent().PrintLine("=> new((int)index.value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly bool Equals(Index<TStatData> other)");
-                p.WithIncreasedIndent().PrintLine("=> value == other.value;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is Index<TStatData> other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override int GetHashCode()");
-                p.WithIncreasedIndent().PrintLine("=> value.GetHashCode();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly override string ToString()");
-                p.WithIncreasedIndent().PrintLine("=> value.ToString();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly UC.FixedString32Bytes ToFixedString()");
-                p.WithIncreasedIndent().PrintLine("=> ETCol.EncosyFixedStringExtensions.ToFixedString(value);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
-                p.WithIncreasedIndent().PrintBeginLine("where TFixedString : unmanaged, UC.INativeList<byte>, ")
-                    .PrintEndLine("UC.IUTF8Bytes");
-                p.WithIncreasedIndent().PrintBeginLine("=> ETCol.EncosyFixedStringExtensions")
-                    .PrintEndLine(".CastTo<TFixedString>(ToFixedString());");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly ETES.StatHandle<TStatData> ToStatHandle(UECS.Entity entity)");
-                p.WithIncreasedIndent().PrintLine("=> new(entity, this);");
                 p.PrintEndLine();
             }
             p.CloseScope();
@@ -757,60 +785,66 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteIndexRecordStruct(ref Printer p)
         {
-            p.Print("#region INDEX RECORD").PrintEndLine();
-            p.Print("#endregion =========").PrintEndLine();
+            p.Print("#region    INDEX RECORD").PrintEndLine();
+            p.Print("#endregion ============").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"Index\"/> with its associated <see cref=\"Type\"/> and validity flag.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct IndexRecord : S.IEquatable<IndexRecord>, ET.IIsValid");
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("IndexRecord");
             p.OpenScope();
             {
-                p.PrintLine("public readonly Index Index;");
-                p.PrintLine("public readonly Type Type;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public IndexRecord(Index index, Type type, bool isValid)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"Index\"/> with its associated <see cref=\"Type\"/> and validity flag.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public readonly partial struct IndexRecord : S.IEquatable<IndexRecord>, ET.IIsValid");
                 p.OpenScope();
                 {
-                    p.PrintLine("Index = index;");
-                    p.PrintLine("Type = type;");
-                    p.PrintLine("IsValid = isValid;");
+                    p.PrintLine("public readonly Index Index;");
+                    p.PrintLine("public readonly Type Type;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public IndexRecord(Index index, Type type, bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("Index = index;");
+                        p.PrintLine("Type = type;");
+                        p.PrintLine("IsValid = isValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsValid { get; }");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public void Deconstruct(out Index index, out Type type, out bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("index = Index;");
+                        p.PrintLine("type = Type;");
+                        p.PrintLine("isValid = IsValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public bool Equals(IndexRecord other)");
+                    p.WithIncreasedIndent().PrintBeginLine("=> Index == other.Index && Type == other.Type")
+                        .PrintEndLine(" && IsValid == other.IsValid;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is IndexRecord other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Index, Type, IsValid);");
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly bool IsValid { get; }");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public void Deconstruct(out Index index, out Type type, out bool isValid)");
-                p.OpenScope();
-                {
-                    p.PrintLine("index = Index;");
-                    p.PrintLine("type = Type;");
-                    p.PrintLine("isValid = IsValid;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public bool Equals(IndexRecord other)");
-                p.WithIncreasedIndent().PrintBeginLine("=> Index == other.Index && Type == other.Type")
-                    .PrintEndLine(" && IsValid == other.IsValid;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is IndexRecord other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override int GetHashCode()");
-                p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Index, Type, IsValid);");
                 p.PrintEndLine();
             }
             p.CloseScope();
@@ -819,60 +853,66 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteStatIndexRecordStruct(ref Printer p)
         {
-            p.Print("#region STAT INDEX RECORD").PrintEndLine();
-            p.Print("#endregion ==============").PrintEndLine();
+            p.Print("#region    STAT INDEX RECORD").PrintEndLine();
+            p.Print("#endregion =================").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatIndex\"/> with its associated <see cref=\"Type\"/> and validity flag.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct StatIndexRecord : S.IEquatable<StatIndexRecord>, ET.IIsValid");
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("StatIndexRecord");
             p.OpenScope();
             {
-                p.PrintLine("public readonly ETES.StatIndex Index;");
-                p.PrintLine("public readonly Type Type;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public StatIndexRecord(ETES.StatIndex index, Type type, bool isValid)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatIndex\"/> with its associated <see cref=\"Type\"/> and validity flag.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public readonly partial struct StatIndexRecord : S.IEquatable<StatIndexRecord>, ET.IIsValid");
                 p.OpenScope();
                 {
-                    p.PrintLine("Index = index;");
-                    p.PrintLine("Type = type;");
-                    p.PrintLine("IsValid = isValid;");
+                    p.PrintLine("public readonly ETES.StatIndex Index;");
+                    p.PrintLine("public readonly Type Type;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public StatIndexRecord(ETES.StatIndex index, Type type, bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("Index = index;");
+                        p.PrintLine("Type = type;");
+                        p.PrintLine("IsValid = isValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsValid { get; }");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public void Deconstruct(out ETES.StatIndex index, out Type type, out bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("index = Index;");
+                        p.PrintLine("type = Type;");
+                        p.PrintLine("isValid = IsValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public bool Equals(StatIndexRecord other)");
+                    p.WithIncreasedIndent().PrintBeginLine("=> Index == other.Index && Type == other.Type")
+                        .PrintEndLine(" && IsValid == other.IsValid;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is StatIndexRecord other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Index, Type, IsValid);");
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly bool IsValid { get; }");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public void Deconstruct(out ETES.StatIndex index, out Type type, out bool isValid)");
-                p.OpenScope();
-                {
-                    p.PrintLine("index = Index;");
-                    p.PrintLine("type = Type;");
-                    p.PrintLine("isValid = IsValid;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public bool Equals(StatIndexRecord other)");
-                p.WithIncreasedIndent().PrintBeginLine("=> Index == other.Index && Type == other.Type")
-                    .PrintEndLine(" && IsValid == other.IsValid;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is StatIndexRecord other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override int GetHashCode()");
-                p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Index, Type, IsValid);");
                 p.PrintEndLine();
             }
             p.CloseScope();
@@ -881,60 +921,66 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteStatHandleRecordStruct(ref Printer p)
         {
-            p.Print("#region STAT HANDLE RECORD").PrintEndLine();
-            p.Print("#endregion ===============").PrintEndLine();
+            p.Print("#region    STAT HANDLE RECORD").PrintEndLine();
+            p.Print("#endregion ==================").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatHandle\"/> with its associated <see cref=\"Type\"/> and validity flag.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public readonly partial struct StatHandleRecord : S.IEquatable<StatHandleRecord>, ET.IIsValid");
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("StatHandleRecord");
             p.OpenScope();
             {
-                p.PrintLine("public readonly ETES.StatHandle Handle;");
-                p.PrintLine("public readonly Type Type;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public StatHandleRecord(ETES.StatHandle handle, Type type, bool isValid)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("An immutable record that pairs an <see cref=\"ETES.StatHandle\"/> with its associated <see cref=\"Type\"/> and validity flag.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public readonly partial struct StatHandleRecord : S.IEquatable<StatHandleRecord>, ET.IIsValid");
                 p.OpenScope();
                 {
-                    p.PrintLine("Handle = handle;");
-                    p.PrintLine("Type = type;");
-                    p.PrintLine("IsValid = isValid;");
+                    p.PrintLine("public readonly ETES.StatHandle Handle;");
+                    p.PrintLine("public readonly Type Type;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public StatHandleRecord(ETES.StatHandle handle, Type type, bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("Handle = handle;");
+                        p.PrintLine("Type = type;");
+                        p.PrintLine("IsValid = isValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsValid { get; }");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public void Deconstruct(out ETES.StatHandle handle, out Type type, out bool isValid)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("handle = Handle;");
+                        p.PrintLine("type = Type;");
+                        p.PrintLine("isValid = IsValid;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public bool Equals(StatHandleRecord other)");
+                    p.WithIncreasedIndent().PrintBeginLine("=> Handle == other.Handle && Type == other.Type")
+                        .PrintEndLine(" && IsValid == other.IsValid;");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override bool Equals(object obj)");
+                    p.WithIncreasedIndent().PrintLine("=> obj is StatHandleRecord other && Equals(other);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public override int GetHashCode()");
+                    p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Handle, Type, IsValid);");
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly bool IsValid { get; }");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public void Deconstruct(out ETES.StatHandle handle, out Type type, out bool isValid)");
-                p.OpenScope();
-                {
-                    p.PrintLine("handle = Handle;");
-                    p.PrintLine("type = Type;");
-                    p.PrintLine("isValid = IsValid;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public bool Equals(StatHandleRecord other)");
-                p.WithIncreasedIndent().PrintBeginLine("=> Handle == other.Handle && Type == other.Type")
-                    .PrintEndLine(" && IsValid == other.IsValid;");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override bool Equals(object obj)");
-                p.WithIncreasedIndent().PrintLine("=> obj is StatHandleRecord other && Equals(other);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public override int GetHashCode()");
-                p.WithIncreasedIndent().PrintLine("=> ET.HashValue.Combine(Handle, Type, IsValid);");
                 p.PrintEndLine();
             }
             p.CloseScope();
@@ -943,243 +989,249 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteIndicesStruct(ref Printer p)
         {
-            p.Print("#region INDICES").PrintEndLine();
-            p.Print("#endregion ====").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"Index\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Each field corresponds to a stat type and stores the index of that stat in the stat buffer.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct Indices : ETCol.IHasLength, ETCol.IAsSpan<Index>, ETCol.IAsReadOnlySpan<Index>");
+            p.Print("#region    INDICES").PrintEndLine();
+            p.Print("#endregion =======").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Indices");
             p.OpenScope();
             {
-                p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
-                p.PrintEndLine();
-
-                for (var i = 0; i < count; i++)
-                {
-                    var statData = statDataCollection[i];
-
-                    p.PrintBeginLine("public Index<").Print(statData.typeName).Print("> ")
-                        .Print(statData.fieldName).PrintEndLine(";");
-                }
-
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public Indices(S.ReadOnlySpan<Index> values) : this()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"Index\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Each field corresponds to a stat type and stores the index of that stat in the stat buffer.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct Indices : ETCol.IHasLength, ETCol.IAsSpan<Index>, ETCol.IAsReadOnlySpan<Index>");
                 p.OpenScope();
                 {
-                    p.PrintLine("values.CopyTo(AsSpan());");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref Index this[int index]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[index];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref Index this[Type type]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly int Length");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => LENGTH;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator Indices(S.Span<Index> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator Indices(S.ReadOnlySpan<Index> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly bool TryGet(Type type, out Index result)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
+                    p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
                     p.PrintEndLine();
 
-                    p.PrintLine("if ((uint)index < (uint)LENGTH)");
-                    p.OpenScope();
-                    {
-                        p.PrintLine("result = AsReadOnlySpan()[index];");
-                        p.PrintLine("return true;");
-                    }
-                    p.CloseScope();
-                    p.PrintEndLine();
-
-                    p.PrintLine("result = default;");
-                    p.PrintLine("return false;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly S.Span<Index> AsSpan()");
-                p.OpenScope();
-                {
-                    p.PrintLine("unsafe");
-                    p.OpenScope();
-                    {
-                        var firstFieldName = statDataCollection[0].fieldName;
-
-                        p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
-                        p.OpenScope();
-                        {
-                            p.PrintLine("return new S.Span<Index>(ptr, LENGTH);");
-                        }
-                        p.CloseScope();
-                    }
-                    p.CloseScope();
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<Index> AsReadOnlySpan()");
-                p.WithIncreasedIndent().PrintLine("=> AsSpan();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<Index>.Enumerator GetEnumerator()");
-                p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly StatIndices ToStatIndices()");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
-                    p.OpenScope();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var fieldName = statDataCollection[i].fieldName;
-
-                            p.PrintBeginLine(fieldName).Print(" = ").Print(fieldName).PrintEndLine(",");
-                        }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly StatHandles ToStatHandles(UECS.Entity entity)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
-                    p.OpenScope();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var fieldName = statDataCollection[i].fieldName;
-
-                            p.PrintBeginLine(fieldName).Print(" = new(entity, ")
-                                .Print(fieldName).PrintEndLine("),");
-                        }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly Index<TStatData> GetIndexFor<TStatData>()");
-                p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
-                p.OpenScope();
-                {
                     for (var i = 0; i < count; i++)
                     {
                         var statData = statDataCollection[i];
 
-                        p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
-                        p.OpenScope();
-                        {
-                            p.PrintBeginLine("return (Index<TStatData>)((Index)")
-                                .Print(statData.fieldName).PrintEndLine(");");
-                        }
-                        p.CloseScope();
-                        p.PrintEndLine();
+                        p.PrintBeginLine("public Index<").Print(statData.typeName).Print("> ")
+                            .Print(statData.fieldName).PrintEndLine(";");
                     }
 
-                    p.PrintLine("return default;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<IndexRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<IndexRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var indices = AsReadOnlySpan();");
                     p.PrintEndLine();
 
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public Indices(S.ReadOnlySpan<Index> values) : this()");
                     p.OpenScope();
                     {
-                        p.PrintLine("var index = indices[i];");
-                        p.PrintLine("result.AddNoResize(new IndexRecord(index, types[i], index.IsValid));");
+                        p.PrintLine("values.CopyTo(AsSpan());");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<IndexRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<IndexRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var indices = AsReadOnlySpan();");
-                    p.PrintEndLine();
-
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                    p.PrintLine("public ref Index this[int index]");
                     p.OpenScope();
                     {
-                        p.PrintLine("var index = indices[i];");
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[index];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public ref Index this[Type type]");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly int Length");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => LENGTH;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator Indices(S.Span<Index> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator Indices(S.ReadOnlySpan<Index> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly bool TryGet(Type type, out Index result)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
                         p.PrintEndLine();
 
-                        p.PrintLine("if (index.IsValid)");
+                        p.PrintLine("if ((uint)index < (uint)LENGTH)");
                         p.OpenScope();
                         {
-                            p.PrintLine("result.AddNoResize(new IndexRecord(index, types[i], true));");
+                            p.PrintLine("result = AsReadOnlySpan()[index];");
+                            p.PrintLine("return true;");
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("result = default;");
+                        p.PrintLine("return false;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly S.Span<Index> AsSpan()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            var firstFieldName = statDataCollection[0].fieldName;
+
+                            p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("return new S.Span<Index>(ptr, LENGTH);");
+                            }
+                            p.CloseScope();
                         }
                         p.CloseScope();
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<Index> AsReadOnlySpan()");
+                    p.WithIncreasedIndent().PrintLine("=> AsSpan();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<Index>.Enumerator GetEnumerator()");
+                    p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly StatIndices ToStatIndices()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var fieldName = statDataCollection[i].fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = ").Print(fieldName).PrintEndLine(",");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly StatHandles ToStatHandles(UECS.Entity entity)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var fieldName = statDataCollection[i].fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = new(entity, ")
+                                    .Print(fieldName).PrintEndLine("),");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly Index<TStatData> GetIndexFor<TStatData>()");
+                    p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
+                    p.OpenScope();
+                    {
+                        for (var i = 0; i < count; i++)
+                        {
+                            var statData = statDataCollection[i];
+
+                            p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
+                            p.OpenScope();
+                            {
+                                p.PrintBeginLine("return (Index<TStatData>)((Index)")
+                                    .Print(statData.fieldName).PrintEndLine(");");
+                            }
+                            p.CloseScope();
+                            p.PrintEndLine();
+                        }
+
+                        p.PrintLine("return default;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly UC.NativeList<IndexRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var result = new UC.NativeList<IndexRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var indices = AsReadOnlySpan();");
+                        p.PrintEndLine();
+
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("var index = indices[i];");
+                            p.PrintLine("result.AddNoResize(new IndexRecord(index, types[i], index.IsValid));");
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly UC.NativeList<IndexRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var result = new UC.NativeList<IndexRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var indices = AsReadOnlySpan();");
+                        p.PrintEndLine();
+
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("var index = indices[i];");
+                            p.PrintEndLine();
+
+                            p.PrintLine("if (index.IsValid)");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("result.AddNoResize(new IndexRecord(index, types[i], true));");
+                            }
+                            p.CloseScope();
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -1190,247 +1242,253 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteStatIndicesStruct(ref Printer p)
         {
-            p.Print("#region STAT INDICES").PrintEndLine();
-            p.Print("#endregion =========").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"ETES.StatIndex\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").Print("Mirrors <see cref=\"Indices\"/> but stores raw <see cref=\"ETES.StatIndex\"/> values. ");
-            p.PrintBeginLine("/// ").PrintEndLine("Obtained via <see cref=\"Indices.ToStatIndices\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct StatIndices : ETCol.IHasLength, ETCol.IAsSpan<ETES.StatIndex>, ETCol.IAsReadOnlySpan<ETES.StatIndex>");
+            p.Print("#region    STAT INDICES").PrintEndLine();
+            p.Print("#endregion ============").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("StatIndices");
             p.OpenScope();
             {
-                p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
-                p.PrintEndLine();
-
-                for (var i = 0; i < count; i++)
-                {
-                    var statData = statDataCollection[i];
-
-                    p.PrintBeginLine("public ETES.StatIndex<").Print(statData.typeName).Print("> ")
-                        .Print(statData.fieldName).PrintEndLine(";");
-                }
-
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public StatIndices(S.ReadOnlySpan<ETES.StatIndex> values) : this()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"ETES.StatIndex\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").Print("Mirrors <see cref=\"Indices\"/> but stores raw <see cref=\"ETES.StatIndex\"/> values. ");
+                p.PrintBeginLine("/// ").PrintEndLine("Obtained via <see cref=\"Indices.ToStatIndices\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct StatIndices : ETCol.IHasLength, ETCol.IAsSpan<ETES.StatIndex>, ETCol.IAsReadOnlySpan<ETES.StatIndex>");
                 p.OpenScope();
                 {
-                    p.PrintLine("values.CopyTo(AsSpan());");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref ETES.StatIndex this[int index]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[index];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref ETES.StatIndex this[Type type]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly int Length");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => LENGTH;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator StatIndices(S.Span<ETES.StatIndex> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator StatIndices(S.ReadOnlySpan<ETES.StatIndex> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly bool TryGet(Type type, out ETES.StatIndex result)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
+                    p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
                     p.PrintEndLine();
 
-                    p.PrintLine("if ((uint)index < (uint)LENGTH)");
+                    for (var i = 0; i < count; i++)
+                    {
+                        var statData = statDataCollection[i];
+
+                        p.PrintBeginLine("public ETES.StatIndex<").Print(statData.typeName).Print("> ")
+                            .Print(statData.fieldName).PrintEndLine(";");
+                    }
+
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public StatIndices(S.ReadOnlySpan<ETES.StatIndex> values) : this()");
                     p.OpenScope();
                     {
-                        p.PrintLine("result = AsReadOnlySpan()[index];");
-                        p.PrintLine("return true;");
+                        p.PrintLine("values.CopyTo(AsSpan());");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("result = default;");
-                    p.PrintLine("return false;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly S.Span<ETES.StatIndex> AsSpan()");
-                p.OpenScope();
-                {
-                    p.PrintLine("unsafe");
+                    p.PrintLine("public ref ETES.StatIndex this[int index]");
                     p.OpenScope();
                     {
-                        var firstFieldName = statDataCollection[0].fieldName;
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[index];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
 
-                        p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
+                    p.PrintLine("public ref ETES.StatIndex this[Type type]");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly int Length");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => LENGTH;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator StatIndices(S.Span<ETES.StatIndex> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator StatIndices(S.ReadOnlySpan<ETES.StatIndex> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly bool TryGet(Type type, out ETES.StatIndex result)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
+                        p.PrintEndLine();
+
+                        p.PrintLine("if ((uint)index < (uint)LENGTH)");
                         p.OpenScope();
                         {
-                            p.PrintLine("return new S.Span<ETES.StatIndex>(ptr, LENGTH);");
+                            p.PrintLine("result = AsReadOnlySpan()[index];");
+                            p.PrintLine("return true;");
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("result = default;");
+                        p.PrintLine("return false;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly S.Span<ETES.StatIndex> AsSpan()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            var firstFieldName = statDataCollection[0].fieldName;
+
+                            p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("return new S.Span<ETES.StatIndex>(ptr, LENGTH);");
+                            }
+                            p.CloseScope();
                         }
                         p.CloseScope();
                     }
                     p.CloseScope();
-                }
-                p.CloseScope();
-                p.PrintEndLine();
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatIndex> AsReadOnlySpan()");
-                p.WithIncreasedIndent().PrintLine("=> AsSpan();");
-                p.PrintEndLine();
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatIndex> AsReadOnlySpan()");
+                    p.WithIncreasedIndent().PrintLine("=> AsSpan();");
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatIndex>.Enumerator GetEnumerator()");
-                p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
-                p.PrintEndLine();
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatIndex>.Enumerator GetEnumerator()");
+                    p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly Indices ToIndices()");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly Indices ToIndices()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var statData = statDataCollection[i];
+                                var fieldName = statData.fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = (Index<")
+                                    .Print(statData.typeName).Print(">)")
+                                    .Print(fieldName).PrintEndLine(",");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly StatHandles ToStatHandles(Entity entity)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var fieldName = statDataCollection[i].fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = new(entity, ")
+                                    .Print(fieldName).PrintEndLine("),");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly ETES.StatIndex<TStatData> GetStatIndexFor<TStatData>()");
+                    p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, IStatData");
                     p.OpenScope();
                     {
                         for (var i = 0; i < count; i++)
                         {
                             var statData = statDataCollection[i];
-                            var fieldName = statData.fieldName;
 
-                            p.PrintBeginLine(fieldName).Print(" = (Index<")
-                                .Print(statData.typeName).Print(">)")
-                                .Print(fieldName).PrintEndLine(",");
+                            p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
+                            p.OpenScope();
+                            {
+                                p.PrintBeginLine("return (ETES.StatIndex<TStatData>)((StatIndex)")
+                                    .Print(statData.fieldName).PrintEndLine(");");
+                            }
+                            p.CloseScope();
+                            p.PrintEndLine();
                         }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly StatHandles ToStatHandles(Entity entity)");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
-                    p.OpenScope();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var fieldName = statDataCollection[i].fieldName;
-
-                            p.PrintBeginLine(fieldName).Print(" = new(entity, ")
-                                .Print(fieldName).PrintEndLine("),");
-                        }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly ETES.StatIndex<TStatData> GetStatIndexFor<TStatData>()");
-                p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, IStatData");
-                p.OpenScope();
-                {
-                    for (var i = 0; i < count; i++)
-                    {
-                        var statData = statDataCollection[i];
-
-                        p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
-                        p.OpenScope();
-                        {
-                            p.PrintBeginLine("return (ETES.StatIndex<TStatData>)((StatIndex)")
-                                .Print(statData.fieldName).PrintEndLine(");");
-                        }
-                        p.CloseScope();
-                        p.PrintEndLine();
-                    }
-
-                    p.PrintLine("return default;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<StatIndexRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<StatIndexRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var indices = AsReadOnlySpan();");
-                    p.PrintEndLine();
-
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
-                    p.OpenScope();
-                    {
-                        p.PrintLine("var index = indices[i];");
-                        p.PrintLine("result.AddNoResize(new StatIndexRecord(index, types[i], index.IsValid));");
+                        p.PrintLine("return default;");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<StatIndexRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<StatIndexRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var indices = AsReadOnlySpan();");
-                    p.PrintEndLine();
-
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                    p.PrintLine("public readonly UC.NativeList<StatIndexRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
                     p.OpenScope();
                     {
-                        p.PrintLine("var index = indices[i];");
+                        p.PrintLine("var result = new UC.NativeList<StatIndexRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var indices = AsReadOnlySpan();");
                         p.PrintEndLine();
 
-                        p.PrintLine("if (index.IsValid)");
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
                         p.OpenScope();
                         {
-                            p.PrintLine("result.AddNoResize(new StatIndexRecord(index, types[i], true));");
+                            p.PrintLine("var index = indices[i];");
+                            p.PrintLine("result.AddNoResize(new StatIndexRecord(index, types[i], index.IsValid));");
                         }
                         p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
+                    p.PrintLine("public readonly UC.NativeList<StatIndexRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var result = new UC.NativeList<StatIndexRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var indices = AsReadOnlySpan();");
+                        p.PrintEndLine();
+
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("var index = indices[i];");
+                            p.PrintEndLine();
+
+                            p.PrintLine("if (index.IsValid)");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("result.AddNoResize(new StatIndexRecord(index, types[i], true));");
+                            }
+                            p.CloseScope();
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -1441,247 +1499,253 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteStatHandlesStruct(ref Printer p)
         {
-            p.Print("#region STAT HANDLES").PrintEndLine();
-            p.Print("#endregion =========").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"ETES.StatHandle\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Each handle encodes both an entity reference and a stat index, allowing direct stat access.");
-            p.PrintBeginLine("/// ").Print("Obtained via <see cref=\"Indices.ToStatHandles\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct StatHandles : ETCol.IHasLength, ETCol.IAsSpan<ETES.StatHandle>, ETCol.IAsReadOnlySpan<ETES.StatHandle>");
+            p.Print("#region    STAT HANDLES").PrintEndLine();
+            p.Print("#endregion ============").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("StatHandles");
             p.OpenScope();
             {
-                p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
-                p.PrintEndLine();
-
-                for (var i = 0; i < count; i++)
-                {
-                    var statData = statDataCollection[i];
-
-                    p.PrintBeginLine("public ETES.StatHandle<").Print(statData.typeName).Print("> ")
-                        .Print(statData.fieldName).PrintEndLine(";");
-                }
-
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public StatHandles(S.ReadOnlySpan<ETES.StatHandle> values) : this()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("A fixed-size, blittable collection of <see cref=\"ETES.StatHandle\"/> values, one per stat type in <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Each handle encodes both an entity reference and a stat index, allowing direct stat access.");
+                p.PrintBeginLine("/// ").Print("Obtained via <see cref=\"Indices.ToStatHandles\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct StatHandles : ETCol.IHasLength, ETCol.IAsSpan<ETES.StatHandle>, ETCol.IAsReadOnlySpan<ETES.StatHandle>");
                 p.OpenScope();
                 {
-                    p.PrintLine("values.CopyTo(AsSpan());");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref ETES.StatHandle this[int index]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[index];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public ref ETES.StatHandle this[Type type]");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly int Length");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => LENGTH;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator StatHandles(S.Span<ETES.StatHandle> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public static explicit operator StatHandles(S.ReadOnlySpan<ETES.StatHandle> values)");
-                p.WithIncreasedIndent().PrintLine("=> new(values);");
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly bool TryGet(Type type, out ETES.StatHandle result)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
+                    p.PrintBeginLine("public const int LENGTH = ").Print(typeName).PrintEndLine(".LENGTH;");
                     p.PrintEndLine();
 
-                    p.PrintLine("if ((uint)index < (uint)LENGTH)");
+                    for (var i = 0; i < count; i++)
+                    {
+                        var statData = statDataCollection[i];
+
+                        p.PrintBeginLine("public ETES.StatHandle<").Print(statData.typeName).Print("> ")
+                            .Print(statData.fieldName).PrintEndLine(";");
+                    }
+
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public StatHandles(S.ReadOnlySpan<ETES.StatHandle> values) : this()");
                     p.OpenScope();
                     {
-                        p.PrintLine("result = AsReadOnlySpan()[index];");
-                        p.PrintLine("return true;");
+                        p.PrintLine("values.CopyTo(AsSpan());");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("result = default;");
-                    p.PrintLine("return false;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly S.Span<ETES.StatHandle> AsSpan()");
-                p.OpenScope();
-                {
-                    p.PrintLine("unsafe");
+                    p.PrintLine("public ref ETES.StatHandle this[int index]");
                     p.OpenScope();
                     {
-                        var firstFieldName = statDataCollection[0].fieldName;
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[index];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
 
-                        p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
+                    p.PrintLine("public ref ETES.StatHandle this[Type type]");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => ref AsSpan()[TypeId.ToValidArrayIndex(type)];");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly int Length");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => LENGTH;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator StatHandles(S.Span<ETES.StatHandle> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public static explicit operator StatHandles(S.ReadOnlySpan<ETES.StatHandle> values)");
+                    p.WithIncreasedIndent().PrintLine("=> new(values);");
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly bool TryGet(Type type, out ETES.StatHandle result)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var index = TypeId.ToValidArrayIndex(type);");
+                        p.PrintEndLine();
+
+                        p.PrintLine("if ((uint)index < (uint)LENGTH)");
                         p.OpenScope();
                         {
-                            p.PrintLine("return new S.Span<ETES.StatHandle>(ptr, LENGTH);");
+                            p.PrintLine("result = AsReadOnlySpan()[index];");
+                            p.PrintLine("return true;");
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("result = default;");
+                        p.PrintLine("return false;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly S.Span<ETES.StatHandle> AsSpan()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            var firstFieldName = statDataCollection[0].fieldName;
+
+                            p.PrintBeginLine("fixed (void* ptr = &").Print(firstFieldName).PrintEndLine(")");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("return new S.Span<ETES.StatHandle>(ptr, LENGTH);");
+                            }
+                            p.CloseScope();
                         }
                         p.CloseScope();
                     }
                     p.CloseScope();
-                }
-                p.CloseScope();
-                p.PrintEndLine();
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatHandle> AsReadOnlySpan()");
-                p.WithIncreasedIndent().PrintLine("=> AsSpan();");
-                p.PrintEndLine();
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatHandle> AsReadOnlySpan()");
+                    p.WithIncreasedIndent().PrintLine("=> AsSpan();");
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatHandle>.Enumerator GetEnumerator()");
-                p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
-                p.PrintEndLine();
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly S.ReadOnlySpan<ETES.StatHandle>.Enumerator GetEnumerator()");
+                    p.WithIncreasedIndent().PrintLine("=> AsReadOnlySpan().GetEnumerator();");
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly Indices ToIndices()");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly Indices ToIndices()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var statData = statDataCollection[i];
+                                var fieldName = statData.fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = (Index<")
+                                    .Print(statData.typeName).Print(">)")
+                                    .Print(fieldName).PrintEndLine(".index,");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly StatIndices ToStatIndices()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new()");
+                        p.OpenScope();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var fieldName = statDataCollection[i].fieldName;
+
+                                p.PrintBeginLine(fieldName).Print(" = ")
+                                    .Print(fieldName).PrintEndLine(".index,");
+                            }
+                        }
+                        p.CloseScope("};");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintLine("public readonly ETES.StatHandle<TStatData> GetStatHandleFor<TStatData>()");
+                    p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
                     p.OpenScope();
                     {
                         for (var i = 0; i < count; i++)
                         {
                             var statData = statDataCollection[i];
-                            var fieldName = statData.fieldName;
 
-                            p.PrintBeginLine(fieldName).Print(" = (Index<")
-                                .Print(statData.typeName).Print(">)")
-                                .Print(fieldName).PrintEndLine(".index,");
+                            p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
+                            p.OpenScope();
+                            {
+                                p.PrintBeginLine("return (ETES.StatHandle<TStatData>)((StatHandle)")
+                                    .Print(statData.fieldName).PrintEndLine(");");
+                            }
+                            p.CloseScope();
+                            p.PrintEndLine();
                         }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly StatIndices ToStatIndices()");
-                p.OpenScope();
-                {
-                    p.PrintLine("return new()");
-                    p.OpenScope();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var fieldName = statDataCollection[i].fieldName;
-
-                            p.PrintBeginLine(fieldName).Print(" = ")
-                                .Print(fieldName).PrintEndLine(".index,");
-                        }
-                    }
-                    p.CloseScope("};");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintLine("public readonly ETES.StatHandle<TStatData> GetStatHandleFor<TStatData>()");
-                p.WithIncreasedIndent().PrintLine("where TStatData : unmanaged, ETES.IStatData");
-                p.OpenScope();
-                {
-                    for (var i = 0; i < count; i++)
-                    {
-                        var statData = statDataCollection[i];
-
-                        p.PrintBeginLine("if (typeof(TStatData) == typeof(").Print(statData.typeName).PrintEndLine("))");
-                        p.OpenScope();
-                        {
-                            p.PrintBeginLine("return (ETES.StatHandle<TStatData>)((StatHandle)")
-                                .Print(statData.fieldName).PrintEndLine(");");
-                        }
-                        p.CloseScope();
-                        p.PrintEndLine();
-                    }
-
-                    p.PrintLine("return default;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<StatHandleRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<StatHandleRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var handles = AsReadOnlySpan();");
-                    p.PrintEndLine();
-
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
-                    p.OpenScope();
-                    {
-                        p.PrintLine("var handle = handles[i];");
-                        p.PrintLine("result.AddNoResize(new StatHandleRecord(handle, types[i], handle.IsValid));");
+                        p.PrintLine("return default;");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly UC.NativeList<StatHandleRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var result = new UC.NativeList<StatHandleRecord>(LENGTH, allocator);");
-                    p.PrintLine("var types = Types;");
-                    p.PrintLine("var handles = AsReadOnlySpan();");
-                    p.PrintEndLine();
-
-                    p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                    p.PrintLine("public readonly UC.NativeList<StatHandleRecord> ToRecords(UC.AllocatorManager.AllocatorHandle allocator)");
                     p.OpenScope();
                     {
-                        p.PrintLine("var handle = handles[i];");
+                        p.PrintLine("var result = new UC.NativeList<StatHandleRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var handles = AsReadOnlySpan();");
                         p.PrintEndLine();
 
-                        p.PrintLine("if (handle.IsValid)");
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
                         p.OpenScope();
                         {
-                            p.PrintLine("result.AddNoResize(new StatHandleRecord(handle, types[i], true));");
+                            p.PrintLine("var handle = handles[i];");
+                            p.PrintLine("result.AddNoResize(new StatHandleRecord(handle, types[i], handle.IsValid));");
                         }
                         p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
 
-                    p.PrintLine("return result;");
+                    p.PrintLine("public readonly UC.NativeList<StatHandleRecord> ToValidRecords(UC.AllocatorManager.AllocatorHandle allocator)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var result = new UC.NativeList<StatHandleRecord>(LENGTH, allocator);");
+                        p.PrintLine("var types = Types;");
+                        p.PrintLine("var handles = AsReadOnlySpan();");
+                        p.PrintEndLine();
+
+                        p.PrintLine("for (var i = 0; i < LENGTH; i++)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("var handle = handles[i];");
+                            p.PrintEndLine();
+
+                            p.PrintLine("if (handle.IsValid)");
+                            p.OpenScope();
+                            {
+                                p.PrintLine("result.AddNoResize(new StatHandleRecord(handle, types[i], true));");
+                            }
+                            p.CloseScope();
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
+
+                        p.PrintLine("return result;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -1694,10 +1758,25 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         {
             var statDataCollection = this.statDataCollection;
             var length = statDataCollection.Count;
+            var collectionTypeName = typeName;
 
             for (var i = 0; i < length; i++)
             {
-                WriteStatCreation(ref p, statDataCollection[i]);
+                var statData = statDataCollection[i];
+                var statTypeName = statData.typeName;
+                var statTypeNameUpper = statTypeName.ToUpper(CultureInfo.InvariantCulture);
+
+                p.Print("#region    STAT DATA - ").Print(statTypeNameUpper).PrintEndLine();
+                p.Print("#endregion ============").PrintRepeat('=', statTypeNameUpper.Length).PrintEndLine();
+                p.PrintEndLine();
+
+                p.PrintBeginLine("partial struct ").Print(collectionTypeName).Print(" // Stat: ").PrintEndLine(statTypeName);
+                p.OpenScope();
+                {
+                    WriteStatCreation(ref p, statDataCollection[i]);
+                }
+                p.CloseScope();
+                p.PrintEndLine();
             }
 
             return;
@@ -1705,10 +1784,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             static void WriteStatCreation(ref Printer p, StatDataSpec statData)
             {
                 var typeName = statData.typeName;
-
-                p.Print("#region STAT DATA - ").Print(typeName.ToUpper(CultureInfo.InvariantCulture)).PrintEndLine();
-                p.Print("#endregion =========").PrintRepeat('=', typeName.Length).PrintEndLine();
-                p.PrintEndLine();
 
                 p.PrintBeginLine("partial struct ").PrintEndLine(typeName);
                 p.OpenScope();
@@ -1774,140 +1849,114 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteOptionsStruct(ref Printer p)
         {
-            p.Print("#region OPTIONS").PrintEndLine();
-            p.Print("#endregion ====").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Contains optional stat data structures for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Provides <see cref=\"Options.Data\"/> for per-stat stat data options and");
-            p.PrintBeginLine("/// ").PrintEndLine("<see cref=\"Options.ProduceChangeEvents\"/> for per-stat change-event flags.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public static partial class Options");
+            p.Print("#region    OPTIONS").PrintEndLine();
+            p.Print("#endregion =======").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Options");
             p.OpenScope();
             {
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Contains optional stat data structures for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Provides <see cref=\"Options.Data\"/> for per-stat stat data options and");
+                p.PrintBeginLine("/// ").PrintEndLine("<see cref=\"Options.ProduceChangeEvents\"/> for per-stat change-event flags.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
                 p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-                p.PrintLine("public partial struct Data");
+                p.PrintLine("public static partial class Options");
                 p.OpenScope();
                 {
-                    for (var i = 0; i < count; i++)
-                    {
-                        var statData = statDataCollection[i];
-                        var fieldName = statData.fieldName;
-                        var typeName = statData.typeName;
-
-                        p.PrintBeginLine("public ET.Option<").Print(typeName).Print("> ")
-                            .Print(fieldName).PrintEndLine(";");
-                    }
-
-                    p.PrintEndLine();
-
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("public Data(");
-                    p = p.IncreasedIndent();
+                    p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                    p.PrintLine("public partial struct Data");
+                    p.OpenScope();
                     {
                         for (var i = 0; i < count; i++)
                         {
-                            var comma = i > 0 ? ", " : "  ";
                             var statData = statDataCollection[i];
                             var fieldName = statData.fieldName;
                             var typeName = statData.typeName;
 
-                            p.PrintBeginLine(comma).Print("ET.Option<").Print(typeName).Print("> ")
-                                .Print(fieldName).PrintEndLine(" = default");
-                        }
-                    }
-                    p = p.DecreasedIndent();
-                    p.PrintLine(")");
-                    p.OpenScope();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var statData = statDataCollection[i];
-                            var fieldName = statData.fieldName;
-
-                            p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
+                            p.PrintBeginLine("public ET.Option<").Print(typeName).Print("> ")
                                 .Print(fieldName).PrintEndLine(";");
                         }
-                    }
-                    p.CloseScope();
-                    p.PrintEndLine();
 
-                    p.PrintLine("public bool TrySet(Type type, in StatSystem.Stat stat)");
-                    p.OpenScope();
-                    {
-                        p.PrintLine("switch (type)");
+                        p.PrintEndLine();
+
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("public Data(");
+                        p = p.IncreasedIndent();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var comma = i > 0 ? ", " : "  ";
+                                var statData = statDataCollection[i];
+                                var fieldName = statData.fieldName;
+                                var typeName = statData.typeName;
+
+                                p.PrintBeginLine(comma).Print("ET.Option<").Print(typeName).Print("> ")
+                                    .Print(fieldName).PrintEndLine(" = default");
+                            }
+                        }
+                        p = p.DecreasedIndent();
+                        p.PrintLine(")");
                         p.OpenScope();
                         {
                             for (var i = 0; i < count; i++)
                             {
                                 var statData = statDataCollection[i];
                                 var fieldName = statData.fieldName;
-                                var typeName = statData.typeName;
 
-                                p.PrintBeginLine("case Type.").Print(typeName).PrintEndLine(":");
-                                p.OpenScope();
-                                {
-                                    p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
-                                        .Print("StatSystem.API.MakeStatData<").Print(typeName)
-                                        .PrintEndLine(">(stat.ValuePair);");
-                                    p.PrintLine("return true;");
-                                }
-                                p.CloseScope();
-                                p.PrintEndLine();
+                                p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
+                                    .Print(fieldName).PrintEndLine(";");
                             }
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
 
-                            p.PrintLine("default:");
+                        p.PrintLine("public bool TrySet(Type type, in StatSystem.Stat stat)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("switch (type)");
                             p.OpenScope();
                             {
-                                p.PrintLine("return false;");
+                                for (var i = 0; i < count; i++)
+                                {
+                                    var statData = statDataCollection[i];
+                                    var fieldName = statData.fieldName;
+                                    var typeName = statData.typeName;
+
+                                    p.PrintBeginLine("case Type.").Print(typeName).PrintEndLine(":");
+                                    p.OpenScope();
+                                    {
+                                        p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
+                                            .Print("StatSystem.API.MakeStatData<").Print(typeName)
+                                            .PrintEndLine(">(stat.ValuePair);");
+                                        p.PrintLine("return true;");
+                                    }
+                                    p.CloseScope();
+                                    p.PrintEndLine();
+                                }
+
+                                p.PrintLine("default:");
+                                p.OpenScope();
+                                {
+                                    p.PrintLine("return false;");
+                                }
+                                p.CloseScope();
                             }
                             p.CloseScope();
                         }
                         p.CloseScope();
+                        p.PrintEndLine();
                     }
                     p.CloseScope();
                     p.PrintEndLine();
-                }
-                p.CloseScope();
-                p.PrintEndLine();
 
-                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-                p.PrintLine("public partial struct ProduceChangeEvents");
-                p.OpenScope();
-                {
-                    for (var i = 0; i < count; i++)
-                    {
-                        var statData = statDataCollection[i];
-                        var fieldName = statData.fieldName;
-
-                        p.PrintBeginLine("public ET.Option<bool> ")
-                            .Print(fieldName).PrintEndLine(";");
-                    }
-
-                    p.PrintEndLine();
-
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("public ProduceChangeEvents(");
-                    p = p.IncreasedIndent();
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            var comma = i > 0 ? ", " : "  ";
-                            var statData = statDataCollection[i];
-                            var fieldName = statData.fieldName;
-
-                            p.PrintBeginLine(comma).Print("ET.Option<bool> ")
-                                .Print(fieldName).PrintEndLine(" = default");
-                        }
-                    }
-                    p = p.DecreasedIndent();
-                    p.PrintLine(")");
+                    p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                    p.PrintLine("public partial struct ProduceChangeEvents");
                     p.OpenScope();
                     {
                         for (var i = 0; i < count; i++)
@@ -1915,44 +1964,76 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                             var statData = statDataCollection[i];
                             var fieldName = statData.fieldName;
 
-                            p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
+                            p.PrintBeginLine("public ET.Option<bool> ")
                                 .Print(fieldName).PrintEndLine(";");
                         }
-                    }
-                    p.CloseScope();
-                    p.PrintEndLine();
 
-                    p.PrintLine("public bool TrySet(Type type, in StatSystem.Stat stat)");
-                    p.OpenScope();
-                    {
-                        p.PrintLine("switch (type)");
+                        p.PrintEndLine();
+
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("public ProduceChangeEvents(");
+                        p = p.IncreasedIndent();
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var comma = i > 0 ? ", " : "  ";
+                                var statData = statDataCollection[i];
+                                var fieldName = statData.fieldName;
+
+                                p.PrintBeginLine(comma).Print("ET.Option<bool> ")
+                                    .Print(fieldName).PrintEndLine(" = default");
+                            }
+                        }
+                        p = p.DecreasedIndent();
+                        p.PrintLine(")");
                         p.OpenScope();
                         {
                             for (var i = 0; i < count; i++)
                             {
                                 var statData = statDataCollection[i];
                                 var fieldName = statData.fieldName;
-                                var typeName = statData.typeName;
 
-                                p.PrintBeginLine("case Type.").Print(typeName).PrintEndLine(":");
-                                p.OpenScope();
-                                {
-                                    p.PrintBeginLine("this.").Print(fieldName)
-                                        .PrintEndLine(" = stat.ProduceChangeEvents;");
-                                    p.PrintLine("return true;");
-                                }
-                                p.CloseScope();
-                                p.PrintEndLine();
+                                p.PrintBeginLine("this.").Print(fieldName).Print(" = ")
+                                    .Print(fieldName).PrintEndLine(";");
                             }
+                        }
+                        p.CloseScope();
+                        p.PrintEndLine();
 
-                            p.PrintLine("default:");
+                        p.PrintLine("public bool TrySet(Type type, in StatSystem.Stat stat)");
+                        p.OpenScope();
+                        {
+                            p.PrintLine("switch (type)");
                             p.OpenScope();
                             {
-                                p.PrintLine("return false;");
+                                for (var i = 0; i < count; i++)
+                                {
+                                    var statData = statDataCollection[i];
+                                    var fieldName = statData.fieldName;
+                                    var typeName = statData.typeName;
+
+                                    p.PrintBeginLine("case Type.").Print(typeName).PrintEndLine(":");
+                                    p.OpenScope();
+                                    {
+                                        p.PrintBeginLine("this.").Print(fieldName)
+                                            .PrintEndLine(" = stat.ProduceChangeEvents;");
+                                        p.PrintLine("return true;");
+                                    }
+                                    p.CloseScope();
+                                    p.PrintEndLine();
+                                }
+
+                                p.PrintLine("default:");
+                                p.OpenScope();
+                                {
+                                    p.PrintLine("return false;");
+                                }
+                                p.CloseScope();
                             }
                             p.CloseScope();
                         }
                         p.CloseScope();
+                        p.PrintEndLine();
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1964,39 +2045,45 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintEndLine();
         }
 
-        private readonly void WriteBakerStruct(ref Printer p)
+        private readonly void WriteBakerStructs(ref Printer p)
         {
-            p.Print("#region BAKER").PrintEndLine();
-            p.Print("#endregion ==").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Baker{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public static partial class Baker");
+            p.Print("#region    BAKER").PrintEndLine();
+            p.Print("#endregion =====").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Baker");
             p.OpenScope();
             {
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static Baker<").Print(typeName)
-                    .PrintEndLine("> Create(StatSystem.Baker baker)");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Baker{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public static partial class Baker");
                 p.OpenScope();
                 {
-                    p.PrintLine("return new() { baker = baker, statCollection = new(), };");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static Baker<").Print(typeName)
+                        .PrintEndLine("> Create(StatSystem.Baker baker)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return new() { baker = baker, statCollection = new(), };");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static Baker<").Print(typeName)
-                    .Print("> Bake(UECS.IBaker ibaker, Entity entity, ")
-                    .PrintEndLine("StatSystem.ValuePair.Composer valuePairComposer = default)");
-                p.OpenScope();
-                {
-                    p.PrintLine("var baker = StatSystem.API.BakeStatComponents(ibaker, entity, valuePairComposer);");
-                    p.PrintLine("return new() { baker = baker, statCollection = new(), };");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static Baker<").Print(typeName)
+                        .Print("> Bake(UECS.IBaker ibaker, Entity entity, ")
+                        .PrintEndLine("StatSystem.ValuePair.Composer valuePairComposer = default)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("var baker = StatSystem.API.BakeStatComponents(ibaker, entity, valuePairComposer);");
+                        p.PrintLine("return new() { baker = baker, statCollection = new(), };");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -2004,53 +2091,63 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.CloseScope();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Provides functionality to create and configure stat components for <see cref=\"").Print(typeName).PrintEndLine("\"/> during entity baking.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Baker.Create\"/> or <see cref=\"Baker.Bake\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to bake into. Must be layout-compatible with the stat collection type.</typeparam>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct Baker<T> where T : unmanaged");
+            p.Print("#region    BAKER<T>").PrintEndLine();
+            p.Print("#endregion ========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Baker<T>");
             p.OpenScope();
             {
-                p.PrintLine("public StatSystem.Baker baker;");
-                p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
-                p.PrintEndLine();
-
-                p.PrintLine("static Baker()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Provides functionality to create and configure stat components for <see cref=\"").Print(typeName).PrintEndLine("\"/> during entity baking.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Baker.Create\"/> or <see cref=\"Baker.Bake\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to bake into. Must be layout-compatible with the stat collection type.</typeparam>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct Baker<T> where T : unmanaged");
                 p.OpenScope();
                 {
-                    p.PrintLine("ThrowIfCannotCastToType<T>();");
+                    p.PrintLine("public StatSystem.Baker baker;");
+                    p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
+                    p.PrintEndLine();
+
+                    p.PrintLine("static Baker()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("ThrowIfCannotCastToType<T>();");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    WriteResetMethod(ref p);
+                    WriteCreateAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteCreateStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteSetStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteSetStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteSetOrCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteSetOrCreateStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteCreateComponentMethod(ref p, typeName);
                 }
                 p.CloseScope();
                 p.PrintEndLine();
-
-                WriteResetMethod(ref p);
-                WriteCreateAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-                WriteCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteCreateStatMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteSetStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteSetStatMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteSetOrCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteSetOrCreateStatMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteCreateComponentMethod(ref p, typeName);
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -2369,34 +2466,40 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             }
         }
 
-        private readonly void WriteAccessorStruct(ref Printer p)
+        private readonly void WriteAccessorStructs(ref Printer p)
         {
-            p.Print("#region ACCESSOR").PrintEndLine();
-            p.Print("#endregion =====").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Accessor{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public static partial class Accessor");
+            p.Print("#region    ACCESSOR").PrintEndLine();
+            p.Print("#endregion ========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Accessor");
             p.OpenScope();
             {
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static Accessor<T> Create<T>(Entity entity, T statCollection, ")
-                    .PrintEndLine("StatSystem.Accessor accessor, StatSystem.WorldData worldData)");
-                p = p.IncreasedIndent();
-                {
-                    p.PrintLine("where T : unmanaged");
-                }
-                p = p.DecreasedIndent();
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Accessor{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public static partial class Accessor");
                 p.OpenScope();
                 {
-                    p.PrintBeginLine("return new() { entity = entity, accessor = accessor, worldData = worldData")
-                        .Print(", statCollection = ").Print(typeName).Print(".CastFrom(statCollection)")
-                        .PrintEndLine(" };");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static Accessor<T> Create<T>(Entity entity, T statCollection, ")
+                        .PrintEndLine("StatSystem.Accessor accessor, StatSystem.WorldData worldData)");
+                    p = p.IncreasedIndent();
+                    {
+                        p.PrintLine("where T : unmanaged");
+                    }
+                    p = p.DecreasedIndent();
+                    p.OpenScope();
+                    {
+                        p.PrintBeginLine("return new() { entity = entity, accessor = accessor, worldData = worldData")
+                            .Print(", statCollection = ").Print(typeName).Print(".CastFrom(statCollection)")
+                            .PrintEndLine(" };");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -2404,103 +2507,113 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.CloseScope();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Provides read and write access to stat data for <see cref=\"").Print(typeName).PrintEndLine("\"/> on an entity.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Accessor.Create\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to access. Must be layout-compatible with the stat collection type.</typeparam>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct Accessor<T> where T : unmanaged");
+            p.Print("#region    ACCESSOR<T>").PrintEndLine();
+            p.Print("#endregion ===========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Accessor<T>");
             p.OpenScope();
             {
-                p.PrintLine("public StatSystem.Accessor accessor;");
-                p.PrintLine("public StatSystem.WorldData worldData;");
-                p.PrintLine("public UECS.Entity entity;");
-                p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
-                p.PrintEndLine();
-
-                p.PrintLine("static Accessor()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Provides read and write access to stat data for <see cref=\"").Print(typeName).PrintEndLine("\"/> on an entity.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Accessor.Create\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to access. Must be layout-compatible with the stat collection type.</typeparam>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct Accessor<T> where T : unmanaged");
                 p.OpenScope();
                 {
-                    p.PrintLine("ThrowIfCannotCastFromType<T>();");
+                    p.PrintLine("public StatSystem.Accessor accessor;");
+                    p.PrintLine("public StatSystem.WorldData worldData;");
+                    p.PrintLine("public UECS.Entity entity;");
+                    p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
+                    p.PrintEndLine();
+
+                    p.PrintLine("static Accessor()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("ThrowIfCannotCastFromType<T>();");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsCreated");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => entity != UECS.Entity.Null && worldData.IsCreated;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly Indices Indices");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => statCollection.indices;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    WriteTryCreateAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteTryCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryCreateStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryCreateOrsSetStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteFindValidStatsMethod(ref p);
+                    WriteTryGetStatForTypeMethod(ref p);
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryGetStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryGetStatDataMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteTrySetBaseValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTrySetStatBaseValueMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteTrySetCurrentValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTrySetStatCurrentValueMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteTrySetValuesToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTrySetStatValuesMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteTrySetProduceChangeEventsForAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteTrySetProduceChangeEventsForStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTrySetStatProduceChangeEventsMethod(ref p, statDataCollection[i]);
+                    }
                 }
                 p.CloseScope();
                 p.PrintEndLine();
-
-                p.PrintLine("public readonly bool IsCreated");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => entity != UECS.Entity.Null && worldData.IsCreated;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly Indices Indices");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => statCollection.indices;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                WriteTryCreateAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-                WriteTryCreateStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryCreateStatMethod(ref p, statDataCollection[i]);
-                }
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryCreateOrsSetStatMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteFindValidStatsMethod(ref p);
-                WriteTryGetStatForTypeMethod(ref p);
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryGetStatMethod(ref p, statDataCollection[i]);
-                }
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryGetStatDataMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteTrySetBaseValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTrySetStatBaseValueMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteTrySetCurrentValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTrySetStatCurrentValueMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteTrySetValuesToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTrySetStatValuesMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteTrySetProduceChangeEventsForAllStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-                WriteTrySetProduceChangeEventsForStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTrySetStatProduceChangeEventsMethod(ref p, statDataCollection[i]);
-                }
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -3259,33 +3372,39 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
         private readonly void WriteReaderStruct(ref Printer p)
         {
-            p.Print("#region READER").PrintEndLine();
-            p.Print("#endregion ===").PrintEndLine();
-            p.PrintEndLine();
-
             var count = statDataCollection.Count;
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Reader{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public static partial class Reader");
+            p.Print("#region    READER").PrintEndLine();
+            p.Print("#endregion ======").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Reader");
             p.OpenScope();
             {
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static Reader<T> Create<T>(UECS.Entity entity, T statCollection, ")
-                    .PrintEndLine("UECS.DynamicBuffer<StatSystem.Stat> statBuffer)");
-                p = p.IncreasedIndent();
-                {
-                    p.PrintLine("where T : unmanaged");
-                }
-                p = p.DecreasedIndent();
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Factory class for creating <see cref=\"Reader{T}\"/> instances for <see cref=\"").Print(typeName).PrintEndLine("\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public static partial class Reader");
                 p.OpenScope();
                 {
-                    p.PrintBeginLine("return new() { entity = entity")
-                        .Print(", statBuffer = statBuffer.AsNativeArray().AsReadOnly()")
-                        .Print(", statCollection = ").Print(typeName).Print(".CastFrom(statCollection)")
-                        .PrintEndLine(" };");
+                    p.PrintLine(PR_AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static Reader<T> Create<T>(UECS.Entity entity, T statCollection, ")
+                        .PrintEndLine("UECS.DynamicBuffer<StatSystem.Stat> statBuffer)");
+                    p = p.IncreasedIndent();
+                    {
+                        p.PrintLine("where T : unmanaged");
+                    }
+                    p = p.DecreasedIndent();
+                    p.OpenScope();
+                    {
+                        p.PrintBeginLine("return new() { entity = entity")
+                            .Print(", statBuffer = statBuffer.AsNativeArray().AsReadOnly()")
+                            .Print(", statCollection = ").Print(typeName).Print(".CastFrom(statCollection)")
+                            .PrintEndLine(" };");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
                 p.CloseScope();
                 p.PrintEndLine();
@@ -3293,70 +3412,80 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.CloseScope();
             p.PrintEndLine();
 
-            p.PrintBeginLine("/// ").PrintEndLine("<summary>");
-            p.PrintBeginLine("/// ").Print("Provides read-only access to stat data for <see cref=\"").Print(typeName).PrintEndLine("\"/> on an entity.");
-            p.PrintBeginLine("/// ").PrintEndLine("</summary>");
-            p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Reader.Create\"/>.");
-            p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
-            p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to read from. Must be layout-compatible with the stat collection type.</typeparam>");
-            p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-            p.PrintLine("public partial struct Reader<T> where T : unmanaged");
+            p.Print("#region    READER").PrintEndLine();
+            p.Print("#endregion ======").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" // ").PrintEndLine("Reader<T>");
             p.OpenScope();
             {
-                p.PrintLine("public UECS.Entity entity;");
-                p.PrintLine("public UC.NativeArray<StatSystem.Stat>.ReadOnly statBuffer;");
-                p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
-                p.PrintEndLine();
-
-                p.PrintLine("static Reader()");
+                p.PrintBeginLine("/// ").PrintEndLine("<summary>");
+                p.PrintBeginLine("/// ").Print("Provides read-only access to stat data for <see cref=\"").Print(typeName).PrintEndLine("\"/> on an entity.");
+                p.PrintBeginLine("/// ").PrintEndLine("</summary>");
+                p.PrintBeginLine("/// ").PrintEndLine("<remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("Create via <see cref=\"Reader.Create\"/>.");
+                p.PrintBeginLine("/// ").PrintEndLine("</remarks>");
+                p.PrintBeginLine("/// ").PrintEndLine("<typeparam name=\"T\">The component data type to read from. Must be layout-compatible with the stat collection type.</typeparam>");
+                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                p.PrintLine("public partial struct Reader<T> where T : unmanaged");
                 p.OpenScope();
                 {
-                    p.PrintLine("ThrowIfCannotCastFromType<T>();");
+                    p.PrintLine("public UECS.Entity entity;");
+                    p.PrintLine("public UC.NativeArray<StatSystem.Stat>.ReadOnly statBuffer;");
+                    p.PrintBeginLine("public ").Print(typeName).PrintEndLine(" statCollection;");
+                    p.PrintEndLine();
+
+                    p.PrintLine("static Reader()");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("ThrowIfCannotCastFromType<T>();");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly bool IsCreated");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => entity != UECS.Entity.Null && statBuffer.IsCreated;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintLine("public readonly Indices Indices");
+                    p.OpenScope();
+                    {
+                        p.PrintLine(PR_AGGRESSIVE_INLINING);
+                        p.PrintLine("get => statCollection.indices;");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    WriteContainsTypeMethod(ref p);
+                    WriteContainsTStatDataMethod(ref p, statDataCollection.AsReadOnlySpan());
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteContainsMethod(ref p, statDataCollection[i]);
+                    }
+
+                    WriteFindValidStatsMethod(ref p);
+                    WriteGetStatDataOptionsMethod(ref p);
+                    WriteGetProduceChangeEventsOptionsMethod(ref p);
+                    WriteTryGetStatForTypeMethod(ref p);
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryGetStatMethod(ref p, statDataCollection[i]);
+                    }
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        WriteTryGetStatDataMethod(ref p, statDataCollection[i]);
+                    }
                 }
                 p.CloseScope();
                 p.PrintEndLine();
-
-                p.PrintLine("public readonly bool IsCreated");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => entity != UECS.Entity.Null && statBuffer.IsCreated;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine("public readonly Indices Indices");
-                p.OpenScope();
-                {
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintLine("get => statCollection.indices;");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                WriteContainsTypeMethod(ref p);
-                WriteContainsTStatDataMethod(ref p, statDataCollection.AsReadOnlySpan());
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteContainsMethod(ref p, statDataCollection[i]);
-                }
-
-                WriteFindValidStatsMethod(ref p);
-                WriteGetStatDataOptionsMethod(ref p);
-                WriteGetProduceChangeEventsOptionsMethod(ref p);
-                WriteTryGetStatForTypeMethod(ref p);
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryGetStatMethod(ref p, statDataCollection[i]);
-                }
-
-                for (var i = 0; i < count; i++)
-                {
-                    WriteTryGetStatDataMethod(ref p, statDataCollection[i]);
-                }
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -3641,8 +3770,12 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             var count = statDataCollection.Count;
             var statCollectionType = typeName;
 
-            p.Print("#region EXTENSIONS").PrintEndLine();
-            p.Print("#endregion =======").PrintEndLine();
+            p.Print("#region    EXTENSIONS").PrintEndLine();
+            p.Print("#endregion ==========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(typeName).Print(" { }")
+                .Print(" // ").Print(typeName).PrintEndLine("Extensions");
             p.PrintEndLine();
 
             p.PrintBeginLine("public static partial class ").Print(typeName).PrintEndLine("Extensions");

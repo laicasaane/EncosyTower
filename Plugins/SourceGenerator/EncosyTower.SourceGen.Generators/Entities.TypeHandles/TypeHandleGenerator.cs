@@ -186,7 +186,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.TypeHandles
                 context.OutputSource(
                       outputSourceGenFiles
                     , candidate.openingSource
-                    , TypeHandleCodeWriter.Write(candidate)
+                    , TypeHandleCodeWriter.WriteCode(candidate)
                     , candidate.closingSource
                     , candidate.hintName
                     , sourceFilePath

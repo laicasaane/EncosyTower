@@ -21,7 +21,23 @@ namespace EncosyTower.SourceGen.Generators.EnumTemplates
             p.PrintEndLine();
 
             WritePartialStruct(ref p);
+            WriteEnum(ref p);
+            WriteExtensions(ref p);
 
+            return p.Result;
+        }
+
+        private void WritePartialStruct(ref Printer p)
+        {
+            p.PrintBeginLine(EXCLUDE_COVERAGE).PrintEndLine(GENERATED_CODE);
+            p.PrintBeginLine("partial struct ").Print(TemplateSimpleName).Print(" ")
+                .Print(": ").Print(string.Format(IENUM_TEMPLATE, EnumName))
+                .Print(" { } // ").PrintEndLine(EnumName);
+            p.PrintEndLine();
+        }
+
+        private void WriteEnum(ref Printer p)
+        {
             var accessKeyword = Accessibility.ToKeyword();
 
             p.PrintLine(GENERATED_CODE);
@@ -35,21 +51,21 @@ namespace EncosyTower.SourceGen.Generators.EnumTemplates
             }
             p.CloseScope();
             p.PrintEndLine();
+        }
+
+        private void WriteExtensions(ref Printer p)
+        {
+            p.Print("#region    EXTENSIONS").PrintEndLine();
+            p.Print("#endregion ==========").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(TemplateSimpleName).Print(" { } ")
+                .Print(" // ").PrintEndLine(ExtensionsRef.ExtensionsName);
+            p.PrintEndLine();
 
             ExtensionsRef.WriteCode(ref p);
             WriteAdditionalWrapper(ref p);
             WriteAdditionalExtensions(ref p);
-
-            return p.Result;
-        }
-
-        private void WritePartialStruct(ref Printer p)
-        {
-            p.PrintBeginLine(EXCLUDE_COVERAGE).PrintEndLine(GENERATED_CODE);
-            p.PrintBeginLine("partial struct ").Print(TemplateSimpleName).Print(" ")
-                .Print(": ").Print(string.Format(IENUM_TEMPLATE, EnumName))
-                .PrintEndLine(" { }");
-            p.PrintEndLine();
         }
 
         private void WriteMembers(ref Printer p)
@@ -89,6 +105,19 @@ namespace EncosyTower.SourceGen.Generators.EnumTemplates
 
         private void WriteAdditionalWrapper(ref Printer p)
         {
+            if (ExtensionsRef.OnlyClass)
+            {
+                return;
+            }
+
+            p.Print("#region    EXTENDED STRUCT - ADDITIONAL API").PrintEndLine();
+            p.Print("#endregion ================================").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(TemplateSimpleName).Print(" { } ")
+                .Print("// ").Print(ExtensionsRef.StructName).PrintEndLine(" - Additional API");
+            p.PrintEndLine();
+
             var memberRefs = MemberRefs;
             var map = MemberIndexMap;
 
@@ -213,7 +242,16 @@ namespace EncosyTower.SourceGen.Generators.EnumTemplates
             var thisName = EnumName;
             var underTypeName = UnderlyingTypeName;
 
-            p.PrintBeginLine("static partial class ").PrintEndLine(ExtensionsRef.ExtensionsName);
+            p.Print("#region    EXTENSIONS - ADDITIONAL API").PrintEndLine();
+            p.Print("#endregion ===========================").PrintEndLine();
+            p.PrintEndLine();
+
+            p.PrintBeginLine("partial struct ").Print(TemplateSimpleName).Print(" { } ")
+                .Print(" // ").Print(ExtensionsRef.ExtensionsName).PrintEndLine(" - Additional API");
+            p.PrintEndLine();
+
+            p.PrintBeginLine("static partial class ").Print(ExtensionsRef.ExtensionsName)
+                .Print(" // ").Print(ExtensionsRef.ExtensionsName).PrintEndLine(" - Additional API");
             p.OpenScope();
             {
                 foreach (var kvp in map)

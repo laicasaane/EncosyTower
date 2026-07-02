@@ -31,7 +31,6 @@
                     WriteFields(ref p);
                     WriteConstructors(ref p);
                     WriteIStatData(ref p);
-
                 }
                 p.CloseScope();
             }
