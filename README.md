@@ -14,7 +14,7 @@ additional functionality powered by source generators, and so on.
 1. Open Package Manager in Unity Editor and click on the `+` button on the top left corner.
 2. Select `Add package from git URL...` and paste below URL:
     ```
-    https://github.com/laicasaane/EncosyTower.git?path=/Packages/com.laicasaane.encosy-tower#0.1.6-preview.2
+    https://github.com/laicasaane/EncosyTower.git?path=/Packages/com.laicasaane.encosy-tower#0.1.6-preview.3
     ```
 3. Click on the `Add` button and you are done!
 
