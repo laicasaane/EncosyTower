@@ -32,6 +32,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string IBUFFER_ELEMENT_DATA = $"UECS.IBufferElementData";
         private const string IBAKER = $"UECS.IBaker";
         private const string ENTITY = $"UECS.Entity";
+        private const string COMPONENT_TYPE_SET = $"UECS.ComponentTypeSet";
         private const string ENTITY_MANAGER = $"UECS.EntityManager";
         private const string ECB = $"UECS.EntityCommandBuffer";
         private const string ECB_WRITER = $"UECS.EntityCommandBuffer.ParallelWriter";
@@ -93,6 +94,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string TYPES_4_T_COMPOSER = "TValuePair, TStat, TStatData, TValuePairComposer";
         private const string TYPES_3_T_OBSERVER = "TValuePair, TStat, TStatObserver";
         private const string TYPES_3_T_DATA = "TValuePair, TStat, TStatData";
+        private const string TYPES_3_T = "TStat, TStatModifier, TStatObserver";
         private const string TYPES_2_T = "TValuePair, TStat";
         private const string TYPES_2_T_DATA = "TValuePair, TStatData";
 
@@ -1329,6 +1331,16 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             p.PrintLine("partial class API");
             p.OpenScope();
             {
+                p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
+                    .Print(".GetStatComponentTypeSet{").Print(TYPES_3_T).Print("}(")
+                    .PrintEndLine(")\"/>");
+                p.PrintLine(AGGRESSIVE_INLINING);
+                p.PrintBeginLine("public static ").Print(COMPONENT_TYPE_SET).PrintEndLine(" GetStatComponentTypeSet()");
+                p.WithIncreasedIndent().PrintBeginLine("=> ").Print(STAT_API).Print(".GetStatComponentTypeSet<")
+                        .Print("Stat, StatModifier, StatObserver")
+                        .PrintEndLine(">();");
+                p.PrintEndLine();
+
                 p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                     .Print(".AddStatComponents{").Print(TYPES_5_T).Print("}(")
                     .Print(ENTITY).Print(", ").Print(ENTITY_MANAGER)

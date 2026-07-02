@@ -114,6 +114,29 @@ namespace EncosyTower.Entities.Stats
         }
 
         /// <summary>
+        /// Returns a <see cref="ComponentTypeSet"/> containing the components used for stats.
+        /// <list type="bullet">
+        /// <item><see cref="StatOwner"/></item>
+        /// <item><typeparamref name="TStat"/></item>
+        /// <item><typeparamref name="TStatModifier"/></item>
+        /// <item><typeparamref name="TStatObserver"/></item>
+        /// </list>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ComponentTypeSet GetStatComponentTypeSet<TStat, TStatModifier, TStatObserver>()
+            where TStat : unmanaged
+            where TStatModifier : unmanaged
+            where TStatObserver : unmanaged
+        {
+            return new ComponentTypeSet(
+                  ComponentType.ReadWrite<StatOwner>()
+                , ComponentType.ReadWrite<TStat>()
+                , ComponentType.ReadWrite<TStatModifier>()
+                , ComponentType.ReadWrite<TStatObserver>()
+            );
+        }
+
+        /// <summary>
         /// Adds these components to the entity.
         /// <list type="bullet">
         /// <item><see cref="StatOwner"/></item>
@@ -137,13 +160,7 @@ namespace EncosyTower.Entities.Stats
             where TStatModifierStack : unmanaged, IStatModifierStack<TValuePair, TStat>
             where TStatObserver : unmanaged, IStatObserver
         {
-            var types = new ComponentTypeSet(
-                  ComponentType.ReadWrite<StatOwner>()
-                , ComponentType.ReadWrite<TStat>()
-                , ComponentType.ReadWrite<TStatModifier>()
-                , ComponentType.ReadWrite<TStatObserver>()
-            );
-
+            var types = GetStatComponentTypeSet<TStat, TStatModifier, TStatObserver>();
             entityManager.AddComponent(entity, types);
 
             var statBuffer = entityManager.GetBuffer<TStat>(entity, false);
@@ -174,13 +191,7 @@ namespace EncosyTower.Entities.Stats
             where TStatModifierStack : unmanaged, IStatModifierStack<TValuePair, TStat>
             where TStatObserver : unmanaged, IStatObserver
         {
-            var types = new ComponentTypeSet(
-                  ComponentType.ReadWrite<StatOwner>()
-                , ComponentType.ReadWrite<TStat>()
-                , ComponentType.ReadWrite<TStatModifier>()
-                , ComponentType.ReadWrite<TStatObserver>()
-            );
-
+            var types = GetStatComponentTypeSet<TStat, TStatModifier, TStatObserver>();
             ecb.AddComponent(entity, types);
 
             var statBuffer = ecb.SetBuffer<TStat>(entity);
@@ -212,13 +223,7 @@ namespace EncosyTower.Entities.Stats
             where TStatModifierStack : unmanaged, IStatModifierStack<TValuePair, TStat>
             where TStatObserver : unmanaged, IStatObserver
         {
-            var types = new ComponentTypeSet(
-                  ComponentType.ReadWrite<StatOwner>()
-                , ComponentType.ReadWrite<TStat>()
-                , ComponentType.ReadWrite<TStatModifier>()
-                , ComponentType.ReadWrite<TStatObserver>()
-            );
-
+            var types = GetStatComponentTypeSet<TStat, TStatModifier, TStatObserver>();
             ecb.AddComponent(sortKey, entity, types);
 
             var statBuffer = ecb.SetBuffer<TStat>(sortKey, entity);
