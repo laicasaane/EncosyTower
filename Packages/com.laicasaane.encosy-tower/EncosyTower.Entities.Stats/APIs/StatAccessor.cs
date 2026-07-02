@@ -1718,7 +1718,7 @@ namespace EncosyTower.Entities.Stats
 
                     var nextModifierRange = nextStatRef.ModifierRange;
                     nextModifierRange.startIndex++;
-                    nextStatRef.ModifierRange = modifierRange;
+                    nextStatRef.ModifierRange = nextModifierRange;
                 }
             }
 
