@@ -1158,15 +1158,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             static void WriteWorldDataConstructor(ref Printer p)
             {
                 p.PrintLine(AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public WorldData(").Print(ALLOCATOR_HANDLE).PrintEndLine(" allocator)");
-                p.OpenScope();
-                {
-                    p.PrintLine("this.worldData = new(allocator);");
-                }
-                p.CloseScope();
-                p.PrintEndLine();
-
-                p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintBeginLine("public WorldData(int initialCapacity, ").Print(ALLOCATOR_HANDLE).PrintEndLine(" allocator)");
                 p.OpenScope();
                 {
@@ -1570,47 +1561,53 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                         .Print(".CreateStatHandle{").Print(TYPES_4_T_COMPOSER).Print("}(")
-                        .Print(ENTITY).Print(", TStatData, bool, uint, ref ").Print(STAT_BUFFER_XML).Print(", TValuePairComposer")
+                        .Print(ENTITY).Print(", TStatData, bool, uint, ref ")
+                        .Print(STAT_BUFFER_XML).Print(", int, int, TValuePairComposer")
                         .PrintEndLine(")\"/>");
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public static ").Print(STAT_HANDLE_T).Print(" CreateStatHandle<TStatData>(")
                         .Print(ENTITY).Print(" entity, TStatData statData, bool produceChangeEvents, uint userData, ref ")
-                        .Print(STAT_BUFFER).PrintEndLine(" statBuffer, ValuePair.Composer valuePairComposer = default)");
+                        .Print(STAT_BUFFER).Print(" statBuffer, int modifierRangeStart, int observerRangeStart")
+                        .PrintEndLine(", ValuePair.Composer valuePairComposer = default)");
                     p.WithIncreasedIndent().PrintBeginLine("where TStatData : unmanaged, ").PrintEndLine(ISTAT_DATA);
                     p.WithIncreasedIndent()
                         .PrintBeginLine("=> ").Print(STAT_API)
                         .Print(".CreateStatHandle<ValuePair, Stat, TStatData, ValuePair.Composer>")
-                        .PrintEndLine("(entity, statData, produceChangeEvents, userData, ref statBuffer, valuePairComposer);");
+                        .Print("(entity, statData, produceChangeEvents, userData, ref statBuffer")
+                        .PrintEndLine(", modifierRangeStart, observerRangeStart, valuePairComposer);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                         .Print(".CreateStatHandle{").Print(TYPES_4_T_COMPOSER).Print("}(")
                         .Print(ENTITY).Print(", TValuePair, bool, uint, ref ")
-                        .Print(STAT_BUFFER_XML).Print(", out TStatData, TValuePairComposer")
+                        .Print(STAT_BUFFER_XML).Print(", int, int, out TStatData, TValuePairComposer")
                         .PrintEndLine(")\"/>");
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public static ").Print(STAT_HANDLE_T).Print(" CreateStatHandle<TStatData>(")
                         .Print(ENTITY).Print(" entity, ValuePair valuePair, bool produceChangeEvents, uint userData, ref ")
-                        .Print(STAT_BUFFER).Print(" statBuffer, out TStatData statData, ")
-                        .PrintEndLine("ValuePair.Composer valuePairComposer = default)");
+                        .Print(STAT_BUFFER).Print(" statBuffer, int modifierRangeStart, int observerRangeStart")
+                        .Print(", out TStatData statData, ValuePair.Composer valuePairComposer = default")
+                        .PrintEndLine(")");
                     p.WithIncreasedIndent().PrintBeginLine("where TStatData : unmanaged, ").PrintEndLine(ISTAT_DATA);
                     p.WithIncreasedIndent()
                         .PrintBeginLine("=> ").Print(STAT_API)
                         .Print(".CreateStatHandle<ValuePair, Stat, TStatData, ValuePair.Composer>")
-                        .PrintEndLine("(entity, valuePair, produceChangeEvents, userData, ref statBuffer, out statData, valuePairComposer);");
+                        .Print("(entity, valuePair, produceChangeEvents, userData, ref statBuffer")
+                        .PrintEndLine(", modifierRangeStart, observerRangeStart, out statData, valuePairComposer);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                         .Print(".CreateStatHandle{").Print(TYPES_2_T).Print("}(")
                         .Print(ENTITY).Print(", TValuePair, bool, uint, ref ").Print(STAT_BUFFER_XML)
-                        .PrintEndLine(")\"/>");
+                        .PrintEndLine(", int, int)\"/>");
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public static ").Print(STAT_HANDLE).Print(" CreateStatHandle(")
                         .Print(ENTITY).Print(" entity, ValuePair valuePair, bool produceChangeEvents, uint userData, ref ")
-                        .Print(STAT_BUFFER).PrintEndLine(" statBuffer)");
+                        .Print(STAT_BUFFER).PrintEndLine(" statBuffer, int modifierRangeStart, int observerRangeStart)");
                     p.WithIncreasedIndent()
                         .PrintBeginLine("=> ").Print(STAT_API)
-                        .PrintEndLine(".CreateStatHandle<ValuePair, Stat>(entity, valuePair, produceChangeEvents, userData, ref statBuffer);");
+                        .Print(".CreateStatHandle<ValuePair, Stat>(entity, valuePair, produceChangeEvents, userData")
+                        .PrintEndLine(", ref statBuffer, modifierRangeStart, observerRangeStart);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
