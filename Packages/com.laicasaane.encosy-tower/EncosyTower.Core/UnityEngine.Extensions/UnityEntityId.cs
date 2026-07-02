@@ -17,7 +17,7 @@ using UnityEngine;
 namespace EncosyTower.UnityExtensions
 {
     [Serializable, StructLayout(LayoutKind.Sequential, Size = 4)]
-    public struct UnityEntityId<T> : IEquatable<UnityEntityId<T>>, ISpanFormattable
+    public struct UnityEntityId<T> : IEquatable<UnityEntityId<T>>, ISpanFormattable, IIsValid
         where T : UnityEngine.Object
     {
         [SerializeField]

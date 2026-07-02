@@ -6,7 +6,7 @@ namespace EncosyTower.Types
     /// <summary>
     /// Provides information about a type.
     /// </summary>
-    public readonly struct TypeInfo
+    public readonly struct TypeInfo : IIsValid
     {
         /// <summary>
         /// The unique identifier of the type.

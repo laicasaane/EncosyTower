@@ -17,6 +17,7 @@ namespace EncosyTower.Common
         , ITryParse<DateTimeId>
         , ITryParseSpan<DateTimeId>
         , ISpanFormattable
+        , IIsValid
     {
         public static readonly DateTimeId MaxValue = DateTime.MaxValue;
         public static readonly DateTimeId MinValue = DateTime.MinValue;

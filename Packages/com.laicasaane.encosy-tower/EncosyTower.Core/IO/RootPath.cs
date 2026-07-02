@@ -2,10 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using EncosyTower.Common;
 
 namespace EncosyTower.IO
 {
-    public readonly record struct RootPath([NotNull] string Root)
+    public readonly record struct RootPath([NotNull] string Root) : IIsValid
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator RootPath(string value)

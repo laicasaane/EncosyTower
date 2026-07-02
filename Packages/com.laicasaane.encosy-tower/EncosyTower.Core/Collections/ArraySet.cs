@@ -587,7 +587,7 @@ namespace EncosyTower.Collections
             => Add(item);
     }
 
-    public struct ArraySetEnumerator<T> : IEnumerator<T>
+    public struct ArraySetEnumerator<T> : IEnumerator<T>, IIsValid
     {
         private readonly ArraySet<T> _set;
 

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Common;
 using EncosyTower.Debugging;
 
 namespace EncosyTower.Serialization.Collections
@@ -341,7 +342,7 @@ namespace EncosyTower.Serialization.Collections
             }
         }
 
-        private sealed class MapEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+        private sealed class MapEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IIsValid
         {
             private ArrayMap<TKey, TValue> _map;
 

@@ -149,7 +149,7 @@ namespace EncosyTower.Collections
         }
     }
 
-    public struct ArraySetNativeReadOnlyEnumerator<T> : IEnumerator<T>
+    public struct ArraySetNativeReadOnlyEnumerator<T> : IEnumerator<T>, IIsValid
         where T : unmanaged, IEquatable<T>
     {
         private readonly ArraySetNative<T>.ReadOnly _set;

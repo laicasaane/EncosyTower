@@ -23,7 +23,7 @@ namespace EncosyTower.UnityExtensions
     )]
 #endif
     [Serializable, StructLayout(LayoutKind.Sequential, Size = 4)]
-    public struct UnityInstanceId<T> : IEquatable<UnityInstanceId<T>>, ISpanFormattable
+    public struct UnityInstanceId<T> : IEquatable<UnityInstanceId<T>>, ISpanFormattable, IIsValid
         where T : UnityEngine.Object
     {
         [SerializeField]

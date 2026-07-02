@@ -9,7 +9,7 @@ using UnityEngine.Localization.Tables;
 namespace EncosyTower.Localization
 {
     [Serializable]
-    public partial struct L10nKey : IEquatable<L10nKey>
+    public partial struct L10nKey : IEquatable<L10nKey>, IIsValid
     {
         [SerializeField] internal TableReference _table;
         [SerializeField] internal TableEntryReference _entry;

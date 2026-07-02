@@ -9,7 +9,7 @@ using UnityEngine;
 namespace EncosyTower.Localization
 {
     [Serializable]
-    public partial struct L10nLanguage : IEquatable<L10nLanguage>
+    public partial struct L10nLanguage : IEquatable<L10nLanguage>, IIsValid
     {
         public const string DEFAULT_LOCALE_CODE = "en";
 

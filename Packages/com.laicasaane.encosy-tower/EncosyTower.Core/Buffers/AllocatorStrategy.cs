@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using EncosyTower.Common;
 using Unity.Collections;
 
 namespace EncosyTower.Buffers
@@ -12,7 +13,7 @@ namespace EncosyTower.Buffers
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct AllocatorStrategy
+    public readonly struct AllocatorStrategy : IIsValid
     {
         [FieldOffset(0)] private readonly Allocator _allocator;
         [FieldOffset(4)] private readonly AllocatorStrategyType _type;

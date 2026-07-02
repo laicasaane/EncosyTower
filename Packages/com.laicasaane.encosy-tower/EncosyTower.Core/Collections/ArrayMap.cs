@@ -787,7 +787,7 @@ namespace EncosyTower.Collections
             return Remove(item.Key);
         }
 
-        public readonly struct KeyEnumerable : IEnumerable<TKey>
+        public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
         {
             private readonly ArrayMap<TKey, TValue> _map;
 
@@ -816,7 +816,7 @@ namespace EncosyTower.Collections
                 => GetEnumerator();
         }
 
-        public struct KeyEnumerator : IEnumerator<TKey>
+        public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
         {
             private readonly ArrayMap<TKey, TValue> _map;
 
@@ -890,7 +890,7 @@ namespace EncosyTower.Collections
         }
     }
 
-    public struct ArrayMapKeyValueEnumerator<TKey, TValue> : IEnumerator<ArrayMapKeyValuePair<TKey, TValue>>
+    public struct ArrayMapKeyValueEnumerator<TKey, TValue> : IEnumerator<ArrayMapKeyValuePair<TKey, TValue>>, IIsValid
     {
         private readonly ArrayMap<TKey, TValue> _map;
 
@@ -964,7 +964,7 @@ namespace EncosyTower.Collections
 
     [DebuggerDisplay("[{Key}] = {Value}")]
     [DebuggerTypeProxy(typeof(ArrayMapKeyValuePairDebugProxy<,>))]
-    public readonly struct ArrayMapKeyValuePair<TKey, TValue>
+    public readonly struct ArrayMapKeyValuePair<TKey, TValue> : IIsValid
     {
         private readonly ManagedStrategy<TValue> _mapValues;
         private readonly TKey _key;

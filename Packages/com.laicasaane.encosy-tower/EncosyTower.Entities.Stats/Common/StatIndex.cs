@@ -23,6 +23,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Common;
 using EncosyTower.TypeWraps;
 using Unity.Collections;
 using Unity.Entities;
@@ -30,7 +31,7 @@ using Unity.Entities;
 namespace EncosyTower.Entities.Stats
 {
     [Serializable, WrapType(typeof(int), nameof(value))]
-    public partial struct StatIndex
+    public partial struct StatIndex : IIsValid
     {
         public static readonly StatIndex Null = default;
 
@@ -74,7 +75,7 @@ namespace EncosyTower.Entities.Stats
     }
 
     [Serializable, WrapType(typeof(int), nameof(value))]
-    public partial struct StatIndex<TStatData>
+    public partial struct StatIndex<TStatData> : IIsValid
         where TStatData : unmanaged, IStatData
     {
         public static readonly StatIndex<TStatData> Null = default;

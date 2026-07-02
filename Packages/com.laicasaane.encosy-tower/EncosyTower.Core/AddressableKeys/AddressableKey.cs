@@ -3,12 +3,13 @@
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.AssetKeys;
+using EncosyTower.Common;
 using UnityEngine;
 
 namespace EncosyTower.AddressableKeys
 {
     [Serializable]
-    public partial struct AddressableKey : IEquatable<AddressableKey>
+    public partial struct AddressableKey : IEquatable<AddressableKey>, IIsValid
     {
         [SerializeField] internal AssetKey _value;
 
@@ -64,7 +65,7 @@ namespace EncosyTower.AddressableKeys
     }
 
     [Serializable]
-    public partial struct AddressableKey<T> : IEquatable<AddressableKey<T>>, IEquatable<AddressableKey>
+    public partial struct AddressableKey<T> : IEquatable<AddressableKey<T>>, IEquatable<AddressableKey>, IIsValid
     {
         [SerializeField] internal AssetKey<T> _value;
 

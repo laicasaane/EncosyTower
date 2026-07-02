@@ -8,7 +8,7 @@ using UnityEngine.U2D;
 namespace EncosyTower.AtlasedSprites
 {
     [Serializable]
-    public struct AtlasedSpriteKey : IEquatable<AtlasedSpriteKey>
+    public struct AtlasedSpriteKey : IEquatable<AtlasedSpriteKey>, IIsValid
     {
         [SerializeField] private AssetKey<SpriteAtlas> _atlas;
         [SerializeField] private AssetKey<Sprite> _sprite;

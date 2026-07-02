@@ -13,7 +13,7 @@ namespace EncosyTower.ConfigKeys
     /// </summary>
     [Serializable]
     [TypeConverter(typeof(TypeConverter))]
-    public partial struct ConfigKey : IEquatable<ConfigKey>, ITryParse<ConfigKey>
+    public partial struct ConfigKey : IEquatable<ConfigKey>, ITryParse<ConfigKey>, IIsValid
     {
         /// <summary>
         /// The value of the key.

@@ -10,7 +10,8 @@ namespace EncosyTower.Common
     /// <typeparam name="TEnum">The enum type to be serialized as string.</typeparam>
     /// <typeparam name="TConverter">The converter to provide the specialized conversion APIs.</typeparam>
     [Serializable]
-    public struct StringEnum<TEnum, TConverter> : IEquatable<StringEnum<TEnum, TConverter>>, IEquatable<TEnum>
+    public struct StringEnum<TEnum, TConverter>
+        : IEquatable<StringEnum<TEnum, TConverter>>, IEquatable<TEnum>, IIsValid
         where TEnum : unmanaged, Enum
         where TConverter : struct, IStringEnumConverter<TEnum>
     {

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace EncosyTower.Localization
 {
     [Serializable]
-    public struct L10nLanguage<TEnum> : IEquatable<L10nLanguage<TEnum>>, IEquatable<L10nLanguage>
+    public struct L10nLanguage<TEnum> : IEquatable<L10nLanguage<TEnum>>, IEquatable<L10nLanguage>, IIsValid
         where TEnum : unmanaged, Enum
     {
         public readonly static L10nLanguage<TEnum> Default = new(0, L10nLanguage.DEFAULT_LOCALE_CODE);

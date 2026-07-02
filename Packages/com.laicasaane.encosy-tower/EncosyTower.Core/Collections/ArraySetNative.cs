@@ -617,7 +617,7 @@ namespace EncosyTower.Collections
         }
     }
 
-    public struct ArraySetNativeEnumerator<T> : IEnumerator<T>
+    public struct ArraySetNativeEnumerator<T> : IEnumerator<T>, IIsValid
         where T : unmanaged, IEquatable<T>
     {
         private ArraySetNative<T> _set;

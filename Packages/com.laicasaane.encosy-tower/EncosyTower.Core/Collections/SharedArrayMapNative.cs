@@ -643,7 +643,7 @@ namespace EncosyTower.Collections
                 => new(_map);
         }
 
-        public struct KeyEnumerator
+        public struct KeyEnumerator : IIsValid
         {
             private readonly SharedArrayMapNative< TKey, TValue > _map;
 
@@ -703,7 +703,7 @@ namespace EncosyTower.Collections
     }
 
     public struct SharedArrayMapNativeKeyValueEnumerator<TKey, TValue>
-        : IEnumerator<SharedArrayMapNativeKeyValuePair<TKey, TValue>>
+        : IEnumerator<SharedArrayMapNativeKeyValuePair<TKey, TValue>>, IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {

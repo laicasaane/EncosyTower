@@ -1,10 +1,11 @@
 using System.Runtime.CompilerServices;
+using EncosyTower.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace EncosyTower.UnityExtensions
 {
-    public readonly struct TransformOrScene
+    public readonly struct TransformOrScene : IIsValid
     {
         public const byte TRANSFORM_FLAG = 0b_0000_1111;
         public const byte SCENE_FLAG = 0b_1111_0000;

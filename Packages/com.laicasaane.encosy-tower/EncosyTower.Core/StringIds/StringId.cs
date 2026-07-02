@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using EncosyTower.Common;
 using EncosyTower.Ids;
 using EncosyTower.TypeWraps;
 
@@ -17,7 +18,7 @@ namespace EncosyTower.StringIds
     /// because it does not guarantee the uniqueness of a string or the associative <see cref="Id"/>.
     /// </remarks>
     [WrapRecord]
-    public readonly partial record struct StringId(Id Id)
+    public readonly partial record struct StringId(Id Id) : IIsValid
     {
         /// <summary>
         /// A <see cref="StringId"/> is invalid when it is registered within a string vault.
@@ -42,7 +43,7 @@ namespace EncosyTower.StringIds
     /// because it does not guarantee the uniqueness of a string or the associative <see cref="Id"/>.
     /// </remarks>
     [WrapRecord]
-    public readonly partial record struct StringId<T>(Id<T> Id)
+    public readonly partial record struct StringId<T>(Id<T> Id) : IIsValid
     {
         public bool IsValid
         {

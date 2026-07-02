@@ -1,12 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.AssetKeys;
+using EncosyTower.Common;
 using UnityEngine;
 
 namespace EncosyTower.ResourceKeys
 {
     [Serializable]
-    public partial struct ResourceKey : IEquatable<ResourceKey>
+    public partial struct ResourceKey : IEquatable<ResourceKey>, IIsValid
     {
         [SerializeField] internal AssetKey _value;
 
@@ -62,7 +63,7 @@ namespace EncosyTower.ResourceKeys
     }
 
     [Serializable]
-    public partial struct ResourceKey<T> : IEquatable<ResourceKey<T>>, IEquatable<ResourceKey>
+    public partial struct ResourceKey<T> : IEquatable<ResourceKey<T>>, IEquatable<ResourceKey>, IIsValid
         where T : UnityEngine.Object
     {
         [SerializeField] internal AssetKey<T> _value;

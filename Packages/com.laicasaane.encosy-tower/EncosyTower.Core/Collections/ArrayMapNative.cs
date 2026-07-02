@@ -740,7 +740,7 @@ namespace EncosyTower.Collections
             return hashcode;
         }
 
-        public readonly struct KeyEnumerable : IEnumerable<TKey>
+        public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
         {
             private readonly ReadOnly _map;
 
@@ -769,7 +769,7 @@ namespace EncosyTower.Collections
                 => GetEnumerator();
         }
 
-        public struct KeyEnumerator : IEnumerator<TKey>
+        public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
         {
             private readonly ReadOnly _map;
 
@@ -839,7 +839,8 @@ namespace EncosyTower.Collections
         }
     }
 
-    public struct ArrayMapNativeKeyValueEnumerator<TKey, TValue> : IEnumerator<ArrayMapNativeKeyValuePair<TKey, TValue>>
+    public struct ArrayMapNativeKeyValueEnumerator<TKey, TValue>
+        : IEnumerator<ArrayMapNativeKeyValuePair<TKey, TValue>>, IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {
@@ -915,7 +916,7 @@ namespace EncosyTower.Collections
 
     [DebuggerDisplay("[{Key}] = {Value}")]
     [DebuggerTypeProxy(typeof(ArrayMapNativeKeyValuePairDebugProxy<,>))]
-    public readonly struct ArrayMapNativeKeyValuePair<TKey, TValue>
+    public readonly struct ArrayMapNativeKeyValuePair<TKey, TValue> : IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {

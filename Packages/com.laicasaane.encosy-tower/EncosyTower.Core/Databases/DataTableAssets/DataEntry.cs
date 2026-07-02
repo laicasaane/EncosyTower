@@ -19,7 +19,7 @@ namespace EncosyTower.Databases
         }
     }
 
-    public readonly struct DataEntry<T> : IEquatable<DataEntry<T>>
+    public readonly struct DataEntry<T> : IEquatable<DataEntry<T>>, IIsValid
     {
         private readonly ReadOnlyMemory<T> _value;
 

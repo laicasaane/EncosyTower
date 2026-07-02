@@ -11,6 +11,7 @@ namespace EncosyTower.Scenes
         , IComparable<SceneBuildIndex>
         , IComparable
         , ISpanFormattable
+        , IIsValid
     {
         [SerializeField] private int _index;
         [SerializeField] private string _name;

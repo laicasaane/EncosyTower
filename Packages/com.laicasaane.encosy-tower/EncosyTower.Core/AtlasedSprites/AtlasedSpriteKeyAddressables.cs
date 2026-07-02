@@ -16,7 +16,7 @@ namespace EncosyTower.AtlasedSprites
 
     [Serializable]
     public partial struct AtlasedSpriteKeyAddressables : ILoad<Sprite>, ITryLoad<Sprite>, ILoadOrError<Sprite, Error>
-        , IEquatable<AtlasedSpriteKeyAddressables>
+        , IEquatable<AtlasedSpriteKeyAddressables>, IIsValid
     {
         [SerializeField] private AssetKey<SpriteAtlas> _atlas;
         [SerializeField] private AssetKey<Sprite> _sprite;

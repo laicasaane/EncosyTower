@@ -797,7 +797,7 @@ namespace EncosyTower.Collections
             return Remove(item.Key);
         }
 
-        public readonly struct KeyEnumerable : IEnumerable<TKey>
+        public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
         {
             private readonly SharedArrayMap<TKey, TValue, TValueNative> _map;
 
@@ -826,7 +826,7 @@ namespace EncosyTower.Collections
                 => GetEnumerator();
         }
 
-        public struct KeyEnumerator : IEnumerator<TKey>
+        public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
         {
             private readonly SharedArrayMap<TKey, TValue, TValueNative> _map;
 
@@ -897,7 +897,7 @@ namespace EncosyTower.Collections
     }
 
     public struct SharedArrayMapKeyValueEnumerator<TKey, TValue, TValueNative>
-        : IEnumerator<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>
+        : IEnumerator<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>, IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
         where TValueNative : unmanaged
@@ -974,7 +974,7 @@ namespace EncosyTower.Collections
 
     [DebuggerDisplay("[{Key}] = {Value}")]
     [DebuggerTypeProxy(typeof(SharedArrayMapKeyValuePairDebugProxy<,,>))]
-    public readonly struct SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>
+    public readonly struct SharedArrayMapKeyValuePair<TKey, TValue, TValueNative> : IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
         where TValueNative : unmanaged

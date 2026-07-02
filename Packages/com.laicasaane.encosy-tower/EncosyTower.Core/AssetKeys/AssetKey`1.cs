@@ -16,7 +16,7 @@ namespace EncosyTower.AssetKeys
     /// </remarks>
     [Serializable]
     [TypeConverter(typeof(AssetKey.TypeConverter))]
-    public partial struct AssetKey<T> : IEquatable<AssetKey<T>>, IEquatable<AssetKey>, ITryParse<AssetKey<T>>
+    public partial struct AssetKey<T> : IEquatable<AssetKey<T>>, IEquatable<AssetKey>, ITryParse<AssetKey<T>>, IIsValid
     {
         /// <summary>
         /// The value of the key.

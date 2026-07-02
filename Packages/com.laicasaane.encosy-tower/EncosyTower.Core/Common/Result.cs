@@ -7,10 +7,8 @@ using UnityEngine;
 
 namespace EncosyTower.Common
 {
-    public interface IResultSuccess<TValue>
+    public interface IResultSuccess<TValue> : IIsValid
     {
-        bool IsValid { get; }
-
         public bool IsSuccess { get; }
 
         TValue GetValueOrThrow();
@@ -20,10 +18,8 @@ namespace EncosyTower.Common
         bool TryGetValue(out TValue value);
     }
 
-    public interface IResultError<TError>
+    public interface IResultError<TError> : IIsValid
     {
-        bool IsValid { get; }
-
         public bool IsError { get; }
 
         TError GetErrorOrThrow();

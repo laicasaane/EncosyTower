@@ -163,7 +163,8 @@ namespace EncosyTower.Collections
         }
     }
 
-    public struct ArrayMapNativeReadOnlyKeyValueEnumerator<TKey, TValue> : IEnumerator<ArrayMapNativeReadOnlyKeyValuePair<TKey, TValue>>
+    public struct ArrayMapNativeReadOnlyKeyValueEnumerator<TKey, TValue>
+        : IEnumerator<ArrayMapNativeReadOnlyKeyValuePair<TKey, TValue>>, IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {
@@ -237,7 +238,7 @@ namespace EncosyTower.Collections
         public readonly void Dispose() { }
     }
 
-    public readonly struct ArrayMapNativeReadOnlyKeyValuePair<TKey, TValue>
+    public readonly struct ArrayMapNativeReadOnlyKeyValuePair<TKey, TValue> : IIsValid
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {

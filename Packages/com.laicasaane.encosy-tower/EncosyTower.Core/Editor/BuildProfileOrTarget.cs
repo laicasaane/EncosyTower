@@ -16,7 +16,7 @@ using UnityEngine;
 namespace EncosyTower.Editor
 {
     [ApiForEditor]
-    public readonly struct BuildProfileOrTarget
+    public readonly struct BuildProfileOrTarget : IIsValid
     {
         private readonly BuildProfile _profile;
         private readonly NamedBuildTarget _target;

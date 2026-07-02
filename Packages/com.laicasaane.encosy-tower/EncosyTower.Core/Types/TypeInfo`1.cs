@@ -6,7 +6,7 @@ namespace EncosyTower.Types
     /// <summary>
     /// Provides information about the type of <typeparamref name="T"/>.
     /// </summary>
-    public readonly record struct TypeInfo<T>
+    public readonly record struct TypeInfo<T> : IIsValid
     {
         /// <summary>
         /// The unique identifier of the type.
