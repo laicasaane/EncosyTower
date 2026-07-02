@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Ids;
+using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.Pooling;
 using EncosyTower.Processing;
@@ -33,7 +34,7 @@ namespace EncosyTower.PageFlows.MonoPages
 #endif
 
     [Serializable]
-    public sealed class MonoPageFlowContext : IPageFlowContext
+    public sealed class MonoPageFlowContext : IPageFlowContext, IIsInitialized
     {
         public bool autoInitializeOnAwake;
         public bool useProjectSettings = true;

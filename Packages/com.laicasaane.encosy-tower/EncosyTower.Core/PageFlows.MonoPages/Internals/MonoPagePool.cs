@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Common;
+using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.Pooling;
 using EncosyTower.StringIds;
@@ -21,7 +22,7 @@ namespace EncosyTower.PageFlows.MonoPages
     using GameObjectId = UnityInstanceId<GameObject>;
 #endif
 
-    internal class MonoPagePool : IDisposable
+    internal class MonoPagePool : IDisposable, IIsInitialized
     {
         private readonly GameObjectPool _pool = new();
         private readonly HashSet<GameObjectId> _gameObjectIds = new();

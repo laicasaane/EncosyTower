@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace EncosyTower.Databases
 {
-    public class DatabaseAsset : ScriptableObject, IInitializable, IDeinitializable
+    public class DatabaseAsset : ScriptableObject, IInitializable, IDeinitializable, IIsInitialized
     {
         [SerializeField]
         internal DataTableAssetBase[] _tables = new DataTableAssetBase[0];

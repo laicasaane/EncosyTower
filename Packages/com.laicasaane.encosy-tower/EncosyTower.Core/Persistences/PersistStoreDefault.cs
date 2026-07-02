@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Encryption;
+using EncosyTower.Initialization;
 using EncosyTower.StringIds;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace EncosyTower.Persistences
     using UnityTask = UnityEngine.Awaitable;
 #endif
 
-    public sealed class PersistStoreDefault<TData> : PersistStoreBase<TData>
+    public sealed class PersistStoreDefault<TData> : PersistStoreBase<TData>, IIsInitialized
         where TData : IPersist
     {
         private readonly PersistSourceDevice<TData> _source;

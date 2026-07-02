@@ -4,12 +4,13 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using EncosyTower.Initialization;
 using EncosyTower.IO;
 using EncosyTower.Logging;
 
 namespace EncosyTower.Encryption
 {
-    public abstract class EncryptionBase : IDisposable
+    public abstract class EncryptionBase : IDisposable, IIsInitialized
     {
         private ICryptoTransform _encryptor;
         private ICryptoTransform _decryptor;

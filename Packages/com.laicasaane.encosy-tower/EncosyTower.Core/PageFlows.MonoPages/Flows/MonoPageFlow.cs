@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Collections;
 using EncosyTower.Common;
+using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.Processing;
 using EncosyTower.PubSub;
@@ -29,7 +30,7 @@ namespace EncosyTower.PageFlows.MonoPages
 
     [RequireComponent(typeof(RectTransform))]
     [RequireComponent(typeof(CanvasGroup))]
-    public abstract class MonoPageFlow : MonoBehaviour
+    public abstract class MonoPageFlow : MonoBehaviour, IIsInitialized
     {
         [SerializeField] internal MonoPageFlowContext _context = new();
 

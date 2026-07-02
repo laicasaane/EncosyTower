@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Collections;
+using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.Mvvm.ComponentModel;
 using EncosyTower.Mvvm.ViewBinding.Contexts;
@@ -22,7 +23,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
     /// <summary>
     /// Represents a collection of <see cref="MonoBinder"/>.
     /// </summary>
-    public partial class MonoView : MonoBehaviour
+    public partial class MonoView : MonoBehaviour, IIsInitialized
     {
         [SerializeField, HideInInspector]
         internal MonoViewSettings _settings = new();

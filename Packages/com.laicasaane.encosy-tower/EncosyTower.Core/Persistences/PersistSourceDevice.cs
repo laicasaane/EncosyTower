@@ -9,6 +9,7 @@ using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Conversion;
 using EncosyTower.Encryption;
+using EncosyTower.Initialization;
 using EncosyTower.IO;
 using EncosyTower.Logging;
 using EncosyTower.Pooling;
@@ -23,7 +24,7 @@ namespace EncosyTower.Persistences
     using UnityTask = UnityEngine.Awaitable;
 #endif
 
-    public class PersistSourceDevice<TData> : PersistSourceBase<TData>
+    public class PersistSourceDevice<TData> : PersistSourceBase<TData>, IIsInitialized
         where TData : IPersist
     {
         private readonly RootPath _rootPath;
