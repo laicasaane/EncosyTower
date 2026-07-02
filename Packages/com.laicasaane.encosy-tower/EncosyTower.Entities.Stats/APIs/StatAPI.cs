@@ -100,6 +100,7 @@ namespace EncosyTower.Entities.Stats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void GetStatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>(
               this StatBaker<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer> _
+            , int initialCapacity
             , Allocator allocator
             , out StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
         )
@@ -110,7 +111,7 @@ namespace EncosyTower.Entities.Stats
             where TStatObserver : unmanaged, IStatObserver
             where TValuePairComposer : unmanaged, IStatValuePairComposer<TValuePair>
         {
-            worldData = new(allocator);
+            worldData = new(initialCapacity, allocator);
         }
 
         /// <summary>
@@ -236,6 +237,8 @@ namespace EncosyTower.Entities.Stats
             , TValuePair valuePair
             , bool produceChangeEvents
             , uint userData
+            , int modifierRangeStart
+            , int observerRangeStart
             , out TStat newStat
             , out StatHandle statHandle
         )
@@ -250,9 +253,17 @@ namespace EncosyTower.Entities.Stats
                 ValuePair = valuePair,
                 ProduceChangeEvents = produceChangeEvents,
                 UserData = userData,
+                ModifierRange = new ModifierRange { startIndex = modifierRangeStart, count = 0 },
+                ObserverRange = new ObserverRange { startIndex = observerRangeStart, count = 0 },
             };
         }
 
+        /// <param name="modifierRangeStart">
+        /// The starting index for the modifier range, which should be the current length of the modifier buffer.
+        /// </param>
+        /// <param name="observerRangeStart">
+        /// The starting index for the observer range, which should be the current length of the observer buffer.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StatHandle<TStatData> CreateStatHandle<TValuePair, TStat, TStatData, TValuePairComposer>(
               Entity entity
@@ -260,6 +271,8 @@ namespace EncosyTower.Entities.Stats
             , bool produceChangeEvents
             , uint userData
             , ref DynamicBuffer<TStat> statBuffer
+            , int modifierRangeStart
+            , int observerRangeStart
             , TValuePairComposer valuePairComposer = default
         )
             where TValuePair : unmanaged, IStatValuePair
@@ -269,7 +282,16 @@ namespace EncosyTower.Entities.Stats
         {
             var value = valuePairComposer.Compose(statData.IsValuePair, statData.BaseValue, statData.CurrentValue);
 
-            CreateStatCommon(entity, value, produceChangeEvents, userData, out TStat newStat, out var statHandle);
+            CreateStatCommon(
+                  entity
+                , value
+                , produceChangeEvents
+                , userData
+                , modifierRangeStart
+                , observerRangeStart
+                , out TStat newStat
+                , out var statHandle
+            );
 
             statHandle.index = statBuffer.Length;
             statBuffer.Add(newStat);
@@ -277,6 +299,12 @@ namespace EncosyTower.Entities.Stats
             return (StatHandle<TStatData>)statHandle;
         }
 
+        /// <param name="modifierRangeStart">
+        /// The starting index for the modifier range, which should be the current length of the modifier buffer.
+        /// </param>
+        /// <param name="observerRangeStart">
+        /// The starting index for the observer range, which should be the current length of the observer buffer.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StatHandle<TStatData> CreateStatHandle<TValuePair, TStat, TStatData, TValuePairComposer>(
               Entity entity
@@ -284,6 +312,8 @@ namespace EncosyTower.Entities.Stats
             , bool produceChangeEvents
             , uint userData
             , ref DynamicBuffer<TStat> statBuffer
+            , int modifierRangeStart
+            , int observerRangeStart
             , out TStatData statData
             , TValuePairComposer valuePairComposer = default
         )
@@ -299,7 +329,16 @@ namespace EncosyTower.Entities.Stats
                 , valuePair.GetCurrentValueOrDefault()
             );
 
-            CreateStatCommon(entity, valuePair, produceChangeEvents, userData, out TStat newStat, out var statHandle);
+            CreateStatCommon(
+                  entity
+                , valuePair
+                , produceChangeEvents
+                , userData
+                , modifierRangeStart
+                , observerRangeStart
+                , out TStat newStat
+                , out var statHandle
+            );
 
             statHandle.index = statBuffer.Length;
             statBuffer.Add(newStat);
@@ -307,6 +346,12 @@ namespace EncosyTower.Entities.Stats
             return (StatHandle<TStatData>)statHandle;
         }
 
+        /// <param name="modifierRangeStart">
+        /// The starting index for the modifier range, which should be the current length of the modifier buffer.
+        /// </param>
+        /// <param name="observerRangeStart">
+        /// The starting index for the observer range, which should be the current length of the observer buffer.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StatHandle CreateStatHandle<TValuePair, TStat>(
               Entity entity
@@ -314,11 +359,22 @@ namespace EncosyTower.Entities.Stats
             , bool produceChangeEvents
             , uint userData
             , ref DynamicBuffer<TStat> statBuffer
+            , int modifierRangeStart
+            , int observerRangeStart
         )
             where TValuePair : unmanaged, IStatValuePair
             where TStat : unmanaged, IStat<TValuePair>
         {
-            CreateStatCommon(entity, valuePair, produceChangeEvents, userData, out TStat newStat, out var statHandle);
+            CreateStatCommon(
+                  entity
+                , valuePair
+                , produceChangeEvents
+                , userData
+                , modifierRangeStart
+                , observerRangeStart
+                , out TStat newStat
+                , out var statHandle
+            );
 
             statHandle.index = statBuffer.Length;
             statBuffer.Add(newStat);
@@ -439,10 +495,9 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatObserver : unmanaged, IStatObserver
         {
-            var startIndex = statObservers.Length;
             var count = observerRange.count;
-            var statObserverSpan = statObservers.InsertRangeSpan(startIndex, count);
-            observerBuffer.Slice(startIndex, count).CopyTo(statObserverSpan);
+            var statObserverSpan = statObservers.InsertRangeSpan(statObservers.Length, count);
+            observerBuffer.Slice(observerRange.startIndex, count).CopyTo(statObserverSpan);
         }
 
         internal static unsafe void AddStatAsObserverOfOtherStat<TValuePair, TStat, TStatObserver>(
@@ -1047,9 +1102,9 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        /// <summary>
-        /// Note: does not clear the supplied list
-        /// </summary>
+        /// <remarks>
+        /// This method only appends to <paramref name="modifiers"/>.
+        /// </remarks>
         public static bool TryGetModifiersOfStat<TValuePair, TStat, TStatModifier, TStatModifierStack>(
               StatHandle statHandle
             , BufferLookup<TStat> lookupStats
@@ -1095,9 +1150,9 @@ namespace EncosyTower.Entities.Stats
             return true;
         }
 
-        /// <summary>
-        /// Note: does not clear the supplied list
-        /// </summary>
+        /// <remarks>
+        /// This method only appends to <paramref name="observers"/>.
+        /// </remarks>
         public static bool TryGetObserversOfStat<TValuePair, TStat, TStatObserver>(
               StatHandle statHandle
             , BufferLookup<TStat> lookupStats
@@ -1156,11 +1211,12 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        /// <summary>
-        /// Note: does not clear the supplied list
-        /// Note: useful to store observers before destroying an entity, and then manually update all observers after
+        /// <remarks>
+        /// This method only appends to <paramref name="observers"/>.
+        /// <br/>
+        /// It is useful to store observers before destroying an entity, and then manually update all observers after
         /// destroy. An observers update isn't automatically called when a stats entity is destroyed. (TODO:?)
-        /// </summary>
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryGetAllObservers<TStatObserver>(
               Entity entity
@@ -1178,10 +1234,10 @@ namespace EncosyTower.Entities.Stats
             return true;
         }
 
-        /// <summary>
-        /// Returns true if any entity other than the specified one depends on stats present on the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// <returns>
+        /// True if any entity other than the specified one depends on stats present on the specified entity;
+        /// otherwise, false.
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool EntityHasAnyOtherDependantStatEntities<TStatObserver>(
               Entity entity
@@ -1200,10 +1256,10 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        /// <summary>
-        /// Returns true if any entity other than the specified one depends on stats present on the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// <returns>
+        /// True if any entity other than the specified one depends on stats present on the specified entity;
+        /// otherwise, false.
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool EntityHasAnyOtherDependantStatEntities<TStatObserver>(
               Entity entity
@@ -1222,11 +1278,10 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetOtherDependantStatsOfEntity<TStatObserver>(
               Entity entity
@@ -1245,11 +1300,10 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetOtherDependantStatsOfEntity<TStatObserver>(
               Entity entity
@@ -1271,11 +1325,10 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetOtherDependantStatEntitiesOfEntity<TStatObserver>(
               Entity entity
@@ -1294,11 +1347,10 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetOtherDependantStatEntitiesOfEntity<TStatObserver>(
               Entity entity
@@ -1318,11 +1370,10 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetStatEntitiesThatEntityDependsOn<TValuePair, TStat, TStatModifier, TStatModifierStack>(
               Entity entity
@@ -1345,11 +1396,10 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Returns all entities that have stats and depend on stats present on the specified entity.
+        /// <returns>
+        /// All entities that have stats and depend on stats present on the specified entity.
         /// Excludes the specified entity.
-        /// Useful for netcode relevancy
-        /// </summary>
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetStatEntitiesThatEntityDependsOn<TValuePair, TStat, TStatModifier, TStatModifierStack>(
               ReadOnlySpan<TStatModifier> modifierBufferOnEntity

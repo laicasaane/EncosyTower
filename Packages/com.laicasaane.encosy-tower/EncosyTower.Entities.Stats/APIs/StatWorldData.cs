@@ -43,22 +43,9 @@ namespace EncosyTower.Entities.Stats
         internal NativeList<TStatObserver> _tmpStatObservers;
         internal NativeList<StatHandle> _tmpGlobalUpdatedStats;
         internal NativeList<StatHandle> _tmpSameEntityUpdatedStats;
+        internal NativeHashSet<StatHandle> _tmpVisitedObserverHandles;
 
         internal NativeReference<TStatModifierStack> _modifierStackRef;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatWorldData(AllocatorManager.AllocatorHandle allocator)
-        {
-            _statChangeEvents = new(allocator);
-            _modifierTriggerEvents = new(allocator);
-
-            _tmpModifierObservedStats = new(allocator);
-            _tmpStatObservers = new(allocator);
-            _tmpGlobalUpdatedStats = new(allocator);
-            _tmpSameEntityUpdatedStats = new(allocator);
-
-            _modifierStackRef = new(allocator);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StatWorldData(int initialCapacity, AllocatorManager.AllocatorHandle allocator)
@@ -70,6 +57,7 @@ namespace EncosyTower.Entities.Stats
             _tmpStatObservers = new(initialCapacity, allocator);
             _tmpGlobalUpdatedStats = new(initialCapacity, allocator);
             _tmpSameEntityUpdatedStats = new(initialCapacity, allocator);
+            _tmpVisitedObserverHandles = new(initialCapacity, allocator);
 
             _modifierStackRef = new(allocator);
         }
@@ -149,6 +137,7 @@ namespace EncosyTower.Entities.Stats
             _tmpStatObservers.Clear();
             _tmpGlobalUpdatedStats.Clear();
             _tmpSameEntityUpdatedStats.Clear();
+            _tmpVisitedObserverHandles.Clear();
 
             _modifierStackRef.Value = default;
         }
@@ -166,6 +155,7 @@ namespace EncosyTower.Entities.Stats
             _tmpStatObservers.Dispose();
             _tmpGlobalUpdatedStats.Dispose();
             _tmpSameEntityUpdatedStats.Dispose();
+            _tmpVisitedObserverHandles.Dispose();
             _modifierStackRef.Dispose();
         }
 
@@ -176,14 +166,16 @@ namespace EncosyTower.Entities.Stats
                 return inputDeps;
             }
 
-            var handles = new NativeArray<JobHandle>(7, Allocator.Temp);
+            var handles = new NativeArray<JobHandle>(8, Allocator.Temp);
+
             handles[0] = _statChangeEvents.Dispose(inputDeps);
             handles[1] = _modifierTriggerEvents.Dispose(inputDeps);
             handles[2] = _tmpModifierObservedStats.Dispose(inputDeps);
             handles[3] = _tmpStatObservers.Dispose(inputDeps);
             handles[4] = _tmpGlobalUpdatedStats.Dispose(inputDeps);
             handles[5] = _tmpSameEntityUpdatedStats.Dispose(inputDeps);
-            handles[6] = _modifierStackRef.Dispose(inputDeps);
+            handles[6] = _tmpVisitedObserverHandles.Dispose(inputDeps);
+            handles[7] = _modifierStackRef.Dispose(inputDeps);
 
             return JobHandle.CombineDependencies(handles);
         }

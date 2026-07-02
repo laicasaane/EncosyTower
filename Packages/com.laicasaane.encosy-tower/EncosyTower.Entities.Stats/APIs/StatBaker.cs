@@ -73,12 +73,17 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatData : unmanaged, IStatData
         {
+            var modifierRangeStart = GetModifierBufferLength();
+            var observerRangeStart = GetObserverBufferLength();
+
             return StatAPI.CreateStatHandle<TValuePair, TStat, TStatData, TValuePairComposer>(
                   _entity
                 , statData
                 , produceChangeEvents
                 , userData
                 , ref _statBuffer
+                , modifierRangeStart
+                , observerRangeStart
                 , _valuePairComposer
             );
         }
@@ -91,12 +96,17 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatData : unmanaged, IStatData
         {
+            var modifierRangeStart = GetModifierBufferLength();
+            var observerRangeStart = GetObserverBufferLength();
+
             return StatAPI.CreateStatHandle<TValuePair, TStat, TStatData, TValuePairComposer>(
                   _entity
                 , valuePair
                 , produceChangeEvents
                 , userData
                 , ref _statBuffer
+                , modifierRangeStart
+                , observerRangeStart
                 , out _
                 , _valuePairComposer
             );
@@ -111,12 +121,17 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatData : unmanaged, IStatData
         {
+            var modifierRangeStart = GetModifierBufferLength();
+            var observerRangeStart = GetObserverBufferLength();
+
             return StatAPI.CreateStatHandle<TValuePair, TStat, TStatData, TValuePairComposer>(
                   _entity
                 , valuePair
                 , produceChangeEvents
                 , userData
                 , ref _statBuffer
+                , modifierRangeStart
+                , observerRangeStart
                 , out statData
                 , _valuePairComposer
             );
@@ -125,7 +140,18 @@ namespace EncosyTower.Entities.Stats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StatHandle CreateStatHandle(TValuePair valuePair, bool produceChangeEvents, uint userData)
         {
-            return StatAPI.CreateStatHandle(_entity, valuePair, produceChangeEvents, userData, ref _statBuffer);
+            var modifierRangeStart = GetModifierBufferLength();
+            var observerRangeStart = GetObserverBufferLength();
+
+            return StatAPI.CreateStatHandle(
+                  _entity
+                , valuePair
+                , produceChangeEvents
+                , userData
+                , ref _statBuffer
+                , modifierRangeStart
+                , observerRangeStart
+            );
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -267,7 +293,7 @@ namespace EncosyTower.Entities.Stats
                 }
             }
 
-            this.GetStatWorldData(Allocator.Temp, out var worldData);
+            this.GetStatWorldData(16, Allocator.Temp, out var worldData);
             this.GetStatAccessor(out var accessor, _valuePairComposer);
 
             var success = accessor.TryAddStatModifierSingleEntity(
@@ -285,5 +311,13 @@ namespace EncosyTower.Entities.Stats
 
             return success;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int GetModifierBufferLength()
+            => _modifierBuffer.IsCreated ? _modifierBuffer.Length : 0;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int GetObserverBufferLength()
+            => _observerBuffer.IsCreated ? _observerBuffer.Length : 0;
     }
 }

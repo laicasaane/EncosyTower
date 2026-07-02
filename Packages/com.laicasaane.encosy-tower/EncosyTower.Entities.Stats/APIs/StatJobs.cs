@@ -1,17 +1,17 @@
 // MIT License
-// 
+//
 // Copyright (c) 2023 Philippe St-Amand
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,6 +24,7 @@ namespace EncosyTower.Entities.Stats
 {
     using System;
     using Unity.Collections;
+    using Unity.Jobs;
 
     /// <summary>
     /// Useful for making fast stat changes, potentially in parallel,
@@ -31,6 +32,7 @@ namespace EncosyTower.Entities.Stats
     /// NOTE: clears the list.
     /// </summary>
     public struct DeferredUpdateStatListJob<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>
+        : IJob
         where TValuePair : unmanaged, IStatValuePair, IEquatable<TValuePair>
         where TStat : unmanaged, IStat<TValuePair>
         where TStatModifier : unmanaged, IStatModifier<TValuePair, TStat, TStatModifierStack>
@@ -59,6 +61,7 @@ namespace EncosyTower.Entities.Stats
     /// NOTE: clears the queue.
     /// </summary>
     public struct DeferredUpdateStatQueueJob<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>
+        : IJob
         where TValuePair : unmanaged, IStatValuePair, IEquatable<TValuePair>
         where TStat : unmanaged, IStat<TValuePair>
         where TStatModifier : unmanaged, IStatModifier<TValuePair, TStat, TStatModifierStack>
@@ -87,6 +90,7 @@ namespace EncosyTower.Entities.Stats
     /// NOTE: you must dispose the stream afterwards.
     /// </summary>
     public struct DeferredUpdateStatStreamJob<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>
+        : IJob
         where TValuePair : unmanaged, IStatValuePair, IEquatable<TValuePair>
         where TStat : unmanaged, IStat<TValuePair>
         where TStatModifier : unmanaged, IStatModifier<TValuePair, TStat, TStatModifierStack>
@@ -122,6 +126,7 @@ namespace EncosyTower.Entities.Stats
 {
     using System;
     using Latios.Unsafe;
+    using Unity.Jobs;
 
     /// <summary>
     /// Useful for making fast stat changes, potentially in parallel,
@@ -129,6 +134,7 @@ namespace EncosyTower.Entities.Stats
     /// NOTE: you must dispose the stream afterwards.
     /// </summary>
     public struct DeferredUpdateStatUnsafeBlockListJob<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>
+        : IJob
         where TValuePair : unmanaged, IStatValuePair, IEquatable<TValuePair>
         where TStat : unmanaged, IStat<TValuePair>
         where TStatModifier : unmanaged, IStatModifier<TValuePair, TStat, TStatModifierStack>
