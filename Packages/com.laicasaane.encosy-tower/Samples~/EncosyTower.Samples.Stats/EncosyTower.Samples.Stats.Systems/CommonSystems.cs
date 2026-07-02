@@ -3,6 +3,7 @@ using EncosyTower.Entities.Stats;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine.Scripting;
 
 namespace EncosyTower.Samples.Stats
 {
@@ -138,6 +139,7 @@ namespace EncosyTower.Samples.Stats
         {
             public float deltaTime;
 
+            [Preserve]
             private void Execute(ref Lifetime lifetime, EnabledRefRW<IsLivingTag> isLivingRef)
             {
                 var time = lifetime.value -= deltaTime;

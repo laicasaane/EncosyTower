@@ -1,6 +1,5 @@
 using EncosyTower.Collections;
 using EncosyTower.Entities;
-using EncosyTower.Entities.Stats;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -165,7 +164,6 @@ namespace EncosyTower.Samples.Stats
             /// Establish a link between a affector entity and a random primary entity, so that when a stat on
             /// the affector changes, it will affect the primary entity.
             /// </summary>
-            [BurstCompile]
             public void Execute()
             {
                 var accessor = this.accessor;

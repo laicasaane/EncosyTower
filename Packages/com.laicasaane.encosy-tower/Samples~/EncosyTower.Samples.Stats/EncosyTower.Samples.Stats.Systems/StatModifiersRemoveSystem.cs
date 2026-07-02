@@ -3,6 +3,8 @@ using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Jobs;
+using UnityEngine.Scripting;
 
 namespace EncosyTower.Samples.Stats
 {
@@ -31,88 +33,54 @@ namespace EncosyTower.Samples.Stats
         {
             _accessor.Update(ref state);
 
-            state.Dependency = new RemoveOutOfTimeModifiersJob {
-                accessor = _accessor
+            var handleQueue = new NativeQueue<ModifierHandle>(state.WorldUpdateAllocator);
+
+            state.Dependency = new CollectOutOfTimeModifiersJob {
+                handleWriter = handleQueue.AsParallelWriter(),
             }.ScheduleParallel(_query, state.Dependency);
+
+            state.Dependency = new RemoveCollectedModifiersJob {
+                accessor = _accessor,
+                handleQueue = handleQueue,
+            }.Schedule(state.Dependency);
         }
 
         [BurstCompile]
-        private partial struct RemoveOutOfTimeModifiersJob : IJobEntity, IJobEntityChunkBeginEnd
+        private partial struct CollectOutOfTimeModifiersJob : IJobEntity
         {
-            [NativeDisableParallelForRestriction, NativeDisableContainerSafetyRestriction]
-            public StatSystem.Accessor accessor;
+            public NativeQueue<ModifierHandle>.ParallelWriter handleWriter;
 
-            [NativeDisableParallelForRestriction, NativeDisableContainerSafetyRestriction]
-            private StatSystem.WorldData _worldData;
-
-            [NativeDisableParallelForRestriction, NativeDisableContainerSafetyRestriction]
-            private NativeList<ModifierHandle> _tempHandles;
-
-            private void Execute(ref DynamicBuffer<ModifierHandle> modifierHandleBuffer)
+            public void Execute(ref DynamicBuffer<ModifierHandle> modifierHandleBuffer)
             {
-                if (modifierHandleBuffer.Length < 1)
+                var length = modifierHandleBuffer.Length;
+
+                for (var i = 0; i < length; i++)
+                {
+                    handleWriter.Enqueue(modifierHandleBuffer[i]);
+                }
+
+                modifierHandleBuffer.Clear();
+            }
+        }
+
+        [BurstCompile]
+        private struct RemoveCollectedModifiersJob : IJob
+        {
+            public StatSystem.Accessor accessor;
+            public NativeQueue<ModifierHandle> handleQueue;
+
+            public void Execute()
+            {
+                if (handleQueue.Count < 1)
                 {
                     return;
                 }
 
-                var accessor = this.accessor;
-                var worldData = _worldData;
-                var tempHandles = _tempHandles;
+                var worldData = new StatSystem.WorldData(handleQueue.Count, Allocator.Temp);
 
-                tempHandles.Clear();
-                tempHandles.AddRange(modifierHandleBuffer.AsNativeArray());
-                modifierHandleBuffer.Clear();
-
-                for (var i = 0; i < tempHandles.Length; i++)
+                while (handleQueue.TryDequeue(out var handle))
                 {
-                    var modifierHandle = tempHandles[i];
-                    var modifierHandleIndex = modifierHandle.value.affectedStatHandle.index;
-
-                    if (accessor.TryRemoveStatModifier(modifierHandle.value, ref worldData) == false)
-                    {
-                        continue;
-                    }
-
-                    for (var k = i + 1; k < tempHandles.Length; k++)
-                    {
-                        ref var nextHandleRef = ref tempHandles.ElementAt(k);
-                        ref var nextHandleIndex = ref nextHandleRef.value.affectedStatHandle.index;
-
-                        if (nextHandleIndex > modifierHandleIndex)
-                        {
-                            nextHandleIndex--;
-                        }
-                    }
-                }
-            }
-
-            [BurstCompile]
-            public bool OnChunkBegin(in ArchetypeChunk chunk, int __, bool ___, in v128 ____)
-            {
-                if (_worldData.IsCreated == false)
-                {
-                    _worldData = new(chunk.Count, Allocator.TempJob);
-                }
-
-                if (_tempHandles.IsCreated == false)
-                {
-                    _tempHandles = new NativeList<ModifierHandle>(8, Allocator.TempJob);
-                }
-
-                return true;
-            }
-
-            [BurstCompile]
-            public void OnChunkEnd(in ArchetypeChunk _, int __, bool ___, in v128 ____, bool _____)
-            {
-                if (_worldData.IsCreated)
-                {
-                    _worldData.Dispose();
-                }
-
-                if (_tempHandles.IsCreated)
-                {
-                    _tempHandles.Dispose();
+                    accessor.TryRemoveStatModifier(handle.value, ref worldData);
                 }
             }
         }
