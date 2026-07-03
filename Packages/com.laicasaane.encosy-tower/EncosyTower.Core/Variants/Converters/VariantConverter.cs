@@ -101,6 +101,10 @@ namespace EncosyTower.Variants.Converters
                 : variant.TypeId.ToType().ToString();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CanStore<T>() where T : struct
+            => UnsafeUtility.SizeOf<T>() <= VariantData.BYTE_COUNT;
+
         private static bool IsSizeValid<T>()
         {
             if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
