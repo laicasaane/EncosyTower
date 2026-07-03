@@ -3519,13 +3519,16 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                 for (var i = 0; i < singleTypes.Count; i++)
                 {
                     var (ns, type, typeName, _) = singleTypes[i];
-                    var customNs = string.IsNullOrEmpty(ns) == false;
+                    var isByteBool = TryGetByteBoolType(type, out var storageNs, out var storageType);
+                    var fieldNs = isByteBool ? storageNs : ns;
+                    var fieldType = isByteBool ? storageType : type;
+                    var customNs = string.IsNullOrEmpty(fieldNs) == false;
 
                     p.PrintBeginLine(SERIALIZED_FIELD).PrintEndLine(FIELD_OFFSET_0);
                     p.PrintBeginLine("private ")
-                        .PrintIf(customNs, ns)
+                        .PrintIf(customNs, fieldNs)
                         .PrintIf(customNs, ".")
-                        .Print(type).Print(" _").Print(typeName).PrintEndLine(";");
+                        .Print(fieldType).Print(" _").Print(typeName).PrintEndLine(";");
                     p.PrintEndLine();
                 }
 
@@ -3612,12 +3615,13 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         {
                             for (var i = 0; i < singleTypes.Count; i++)
                             {
-                                var (_, _, typeName, _) = singleTypes[i];
+                                var (ns, type, typeName, _) = singleTypes[i];
+                                var cast = GetByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
                                 {
-                                    p.PrintBeginLine("result = pair._data._").Print(typeName)
+                                    p.PrintBeginLine("result = ").Print(cast).Print("pair._data._").Print(typeName)
                                         .PrintEndLine(";");
                                     p.PrintLine("return true;");
                                 }
@@ -3648,7 +3652,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                             for (var i = 0; i < pairTypes.Count; i++)
                             {
                                 var (ns, type, typeName, _) = pairTypes[i];
-                                var cast = GetPairByteBoolCast(ns, type);
+                                var cast = GetByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
@@ -3693,12 +3697,13 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         {
                             for (var i = 0; i < singleTypes.Count; i++)
                             {
-                                var (_, _, typeName, _) = singleTypes[i];
+                                var (ns, type, typeName, _) = singleTypes[i];
+                                var cast = GetByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
                                 {
-                                    p.PrintBeginLine("result = pair._data._").Print(typeName).PrintEndLine(";");
+                                    p.PrintBeginLine("result = ").Print(cast).Print("pair._data._").Print(typeName).PrintEndLine(";");
                                     p.PrintLine("return true;");
                                 }
                                 p.CloseScope();
@@ -3728,7 +3733,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                             for (var i = 0; i < pairTypes.Count; i++)
                             {
                                 var (ns, type, typeName, _) = pairTypes[i];
-                                var cast = GetPairByteBoolCast(ns, type);
+                                var cast = GetByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
@@ -4145,7 +4150,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         {
             foreach (var (ns, type, typeName, size) in pairTypes)
             {
-                var isByteBool = TryGetPairByteBoolType(type, out var storageNs, out var storageType);
+                var isByteBool = TryGetByteBoolType(type, out var storageNs, out var storageType);
                 var fieldNs = isByteBool ? storageNs : ns;
                 var fieldType = isByteBool ? storageType : type;
                 var customNs = string.IsNullOrEmpty(fieldNs) == false;
@@ -4453,9 +4458,10 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         /// <summary>
         /// The <c>bool</c> family is not blittable, thus cannot be stored inside
         /// explicit layout structs compiled by Burst (error BC1063).
-        /// Pair structs must store the equivalent <c>EncosyTower.Common.ByteBool</c> variants instead.
+        /// <c>StatDataStore</c> and the Pair structs must store
+        /// the equivalent <c>EncosyTower.Common.ByteBool</c> variants instead.
         /// </summary>
-        private static bool TryGetPairByteBoolType(string type, out string storageNs, out string storageType)
+        private static bool TryGetByteBoolType(string type, out string storageNs, out string storageType)
         {
             if (type.StartsWith("bool", StringComparison.Ordinal))
             {
@@ -4470,13 +4476,13 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         }
 
         /// <summary>
-        /// Pair structs store <c>bool</c> family values as <c>ByteBool</c> variants.
+        /// <c>StatDataStore</c> and the Pair structs store <c>bool</c> family values as <c>ByteBool</c> variants.
         /// Reading them back into <c>StatVariant</c> requires an explicit cast to the original type,
         /// because C# never chains two user-defined implicit conversions.
         /// </summary>
-        private static string GetPairByteBoolCast(string ns, string type)
+        private static string GetByteBoolCast(string ns, string type)
         {
-            if (TryGetPairByteBoolType(type, out _, out _) == false)
+            if (TryGetByteBoolType(type, out _, out _) == false)
             {
                 return string.Empty;
             }
