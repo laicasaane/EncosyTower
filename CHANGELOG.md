@@ -4,13 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.6-preview.8
+
+### Core
+
+- Added ByteBool variants for bool2, bool2x2,... bool4x4 in Unity Mathematics
+
+### SourceGen
+
+- Entities.Stats: repaced bools with ByteBool variants to fix Burst error BC1063
+
+### Samples
+
+- Updated samples
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.6-preview.8`
+- `EncosyTower.SourceGen.*` to `0.1.6-preview.8`
+- `Samples.Data` to `0.1.6-preview.8`
+ 
 ## 0.1.6-preview.7
 
-## Core
+### Core
 
 - Variants: Added CanStore<T> method to VariantConverter
 
-## SourceGen
+### SourceGen
 
 - Variants: Replaced compiled time condition with VariantConverter.CanStore<T>
 - PolyEnumStructs: Improved algorithm to calculate struct size
