@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Threading;
 using EncosyTower.SourceGen.Helpers.UnionIds;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -144,7 +143,8 @@ namespace EncosyTower.SourceGen.Analyzers.UnionIds
             }
 
             var size = 0;
-            typeSymbol.GetUnmanagedSize(ref size, token);
+            var alignment = 1;
+            typeSymbol.GetUnmanagedSizeAndAlignment(ref size, ref alignment, token);
 
             if (size >= (int)UnionIdSize.ULong2)
             {

@@ -347,7 +347,8 @@ namespace EncosyTower.SourceGen.Generators.UnionIds
             };
 
             var size = 0;
-            kindSymbol.GetUnmanagedSize(ref size, token);
+            var alignment = 1;
+            kindSymbol.GetUnmanagedSizeAndAlignment(ref size, ref alignment, token);
             info.kindUnmanagedSize = size;
 
             var isEnum = kindSymbol.TypeKind == TypeKind.Enum;

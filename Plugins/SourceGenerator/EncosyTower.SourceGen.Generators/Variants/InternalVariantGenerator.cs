@@ -125,7 +125,8 @@ namespace EncosyTower.SourceGen.Generators.Variants
             if (isValueType)
             {
                 var size = 0;
-                typeArg.GetUnmanagedSize(ref size, token);
+                var alignment = 1;
+                typeArg.GetUnmanagedSizeAndAlignment(ref size, ref alignment, token);
                 unmanagedSize = size;
             }
 

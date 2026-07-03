@@ -110,7 +110,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
 
                     if (isExplicitLayout)
                     {
-                        WriteExplicitFields(ref p, structRefs, enumCaseType.ByteOffset);
+                        WriteExplicitFields(ref p, structRefs, mergedStructRef.Size);
                     }
                     else
                     {
@@ -557,23 +557,33 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
             p.PrintEndLine();
         }
 
-        private readonly void WriteExplicitFields(ref Printer p, List<StructRef> structRefs, int byteOffset)
+        private readonly void WriteExplicitFields(ref Printer p, List<StructRef> structRefs, int enumCaseAlignment)
         {
-            WriteFieldOffset(ref p, 0);
-            p.Print(" public ")
-                .PrintIf(isReadOnly, "readonly ")
-                .PrintEndLine("EnumCase enumCase;");
+            var maxFieldOffset = 0;
 
             foreach (var structRef in structRefs)
             {
                 var def = structRef.Value;
+                maxFieldOffset = Math.Max(maxFieldOffset, def.size);
 
-                WriteFieldOffset(ref p, byteOffset);
+                WriteFieldOffset(ref p, 0);
                 p.Print(" public ")
                     .PrintIf(isReadOnly, "readonly ")
                     .Print(def.name)
                     .Print(" case_").Print(def.identifier).PrintEndLine(";");
             }
+
+            var remainder = maxFieldOffset % enumCaseAlignment;
+
+            if (remainder != 0)
+            {
+                maxFieldOffset += enumCaseAlignment - remainder;
+            }
+
+            WriteFieldOffset(ref p, maxFieldOffset);
+            p.Print(" public ")
+                .PrintIf(isReadOnly, "readonly ")
+                .PrintEndLine("EnumCase enumCase;");
 
             p.PrintEndLine();
 

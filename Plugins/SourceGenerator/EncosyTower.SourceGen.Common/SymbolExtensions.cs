@@ -320,6 +320,165 @@ namespace EncosyTower.SourceGen
             }
         }
 
+        public static void GetUnmanagedSizeAndAlignment(
+              this ITypeSymbol symbol
+            , ref int size
+            , ref int alignment
+            , CancellationToken token = default
+        )
+        {
+            token.ThrowIfCancellationRequested();
+
+            if (symbol == null)
+            {
+                return;
+            }
+
+            if (symbol.IsReferenceType)
+            {
+                size += sizeof(ulong);
+                alignment = Math.Max(alignment, sizeof(ulong));
+                return;
+            }
+
+            switch (symbol.SpecialType)
+            {
+                case SpecialType.System_Char:
+                {
+                    size += sizeof(char);
+                    alignment = Math.Max(alignment, sizeof(char));
+                    return;
+                }
+
+                case SpecialType.System_Boolean:
+                case SpecialType.System_SByte:
+                case SpecialType.System_Byte:
+                {
+                    size += sizeof(byte);
+                    alignment = Math.Max(alignment, sizeof(byte));
+                    return;
+                }
+
+                case SpecialType.System_Int16:
+                case SpecialType.System_UInt16:
+                {
+                    size += sizeof(ushort);
+                    alignment = Math.Max(alignment, sizeof(ushort));
+                    return;
+                }
+
+                case SpecialType.System_Int32:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_Single:
+                {
+                    size += sizeof(uint);
+                    alignment = Math.Max(alignment, sizeof(uint));
+                    return;
+                }
+
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_Double:
+                case SpecialType.System_DateTime:
+                case SpecialType.System_IntPtr:
+                case SpecialType.System_UIntPtr:
+                {
+                    size += sizeof(ulong);
+                    alignment = Math.Max(alignment, sizeof(ulong));
+                    return;
+                }
+
+                case SpecialType.System_Decimal:
+                {
+                    size += sizeof(decimal);
+                    alignment = Math.Max(alignment, sizeof(decimal));
+                    return;
+                }
+            }
+
+            if (symbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsEnumType())
+            {
+                GetUnmanagedSizeAndAlignment(namedTypeSymbol.EnumUnderlyingType, ref size, ref alignment, token);
+                return;
+            }
+
+            if (symbol.IsUnmanagedType == false)
+            {
+                return;
+            }
+
+            var structSize = 0;
+            var structAlignment = 1;
+
+            foreach (var field in symbol.GetMembers().OfType<IFieldSymbol>())
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (field.IsStatic || field.IsConst)
+                {
+                    continue;
+                }
+
+                GetUnmanagedSizeAndAlignment(field, ref structSize, ref structAlignment, token);
+            }
+
+            var tailRemainder = structAlignment > 0 ? structSize % structAlignment : 0;
+
+            if (tailRemainder != 0)
+            {
+                structSize += structAlignment - tailRemainder;
+            }
+
+            size += structSize;
+            alignment = Math.Max(alignment, structAlignment);
+        }
+
+        public static void GetUnmanagedSizeAndAlignment(
+              this IFieldSymbol field
+            , ref int size
+            , ref int alignment
+            , CancellationToken token = default
+        )
+        {
+            token.ThrowIfCancellationRequested();
+
+            if (field == null || field.Type is not { } type)
+            {
+                return;
+            }
+
+            if (type.IsReferenceType || type.TypeKind == TypeKind.FunctionPointer)
+            {
+                size = Align(size, sizeof(ulong)) + sizeof(ulong);
+                alignment = Math.Max(alignment, sizeof(ulong));
+                return;
+            }
+
+            if (field.IsFixedSizeBuffer && type is IPointerTypeSymbol pointerType)
+            {
+                var elementSize = 0;
+                var elementAlignment = 1;
+                GetUnmanagedSizeAndAlignment(pointerType.PointedAtType, ref elementSize, ref elementAlignment, token);
+
+                size = Align(size, elementAlignment) + (field.FixedSize * elementSize);
+                alignment = Math.Max(alignment, elementAlignment);
+                return;
+            }
+
+            var fieldSize = 0;
+            var fieldAlignment = 1;
+            GetUnmanagedSizeAndAlignment(type, ref fieldSize, ref fieldAlignment, token);
+
+            size = Align(size, fieldAlignment) + fieldSize;
+            alignment = Math.Max(alignment, fieldAlignment);
+
+            static int Align(int offset, int fieldAlignment)
+            {
+                var remainder = fieldAlignment > 0 ? offset % fieldAlignment : 0;
+                return remainder == 0 ? offset : offset + (fieldAlignment - remainder);
+            }
+        }
+
         public static string ToFullName(this ITypeSymbol symbol)
             => symbol.ToDisplayString(QualifiedFormat);
 

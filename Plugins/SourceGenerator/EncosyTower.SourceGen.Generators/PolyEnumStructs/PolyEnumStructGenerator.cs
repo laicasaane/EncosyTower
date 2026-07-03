@@ -639,6 +639,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
             using var methodsBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.MethodDeclaration>.Rent();
 
             int structSize = 0;
+            int structAlignment = 1;
             var isReadOnly = symbol.IsReadOnly;
 
             foreach (var member in symbol.GetMembers())
@@ -686,8 +687,10 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
                     }
 
                     int fieldSize = 0;
-                    fieldSymbol.GetUnmanagedSize(ref fieldSize, token);
+                    int fieldAlignment = 1;
+                    fieldSymbol.GetUnmanagedSizeAndAlignment(ref fieldSize, ref fieldAlignment, token);
                     structSize += fieldSize;
+                    structAlignment = Math.Max(structAlignment, fieldAlignment);
 
                     fieldsBuilder.Add(new PolyEnumStructSpec.FieldSpec {
                         name = fieldName,
@@ -706,6 +709,13 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
                 {
                     GetStructMember(member, isReadOnly, token, propertiesBuilder, indexersBuilder, methodsBuilder);
                 }
+            }
+
+            var tailRemainder = structAlignment > 0 ? structSize % structAlignment : 0;
+
+            if (tailRemainder != 0)
+            {
+                structSize += structAlignment - tailRemainder;
             }
 
             structDef.fields = fieldsBuilder.ToImmutable();
