@@ -4,19 +4,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.6-preview.6
+
+### Entities.Stats
+
+- Fixed multiple bugs
+
+### SourceGen
+
+- Fixed missing generated API for Entities.Stats
+- Fixed wrong calculation of type size. Now corrected with field alignments.
+
+### Samples
+
+- Updated samples
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.6-preview.6`
+- `EncosyTower.SourceGen.*` to `0.1.6-preview.6`
+- `Samples.Data` to `0.1.6-preview.6`
+
 ## 0.1.6-preview.5
 
 ### Entities.Stats
 
-- Correct multiple bugs
+- Fixed multiple bugs
 
 ### SourceGen
 
-- Update code emission for `StatSystemSpec+WriteCode`
+- Updated code emission for `StatSystemSpec+WriteCode`
 
 ### Samples
 
-- Update sample for Stats
+- Updated sample for Stats
 
 ### Versioning
 
@@ -28,11 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Entities.Stats
 
-- Add method `GetStatComponentTypeSet` to `StatAPI`
+- Added method `GetStatComponentTypeSet` to `StatAPI`
 
 ### SourceGen
 
-- Emit additional markers to help navigating generated code
+- Emitted additional markers to help navigating generated code
 
 ### Versioning
 
