@@ -21,7 +21,8 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string FIELD_OFFSET_0 = "[SRIS.FieldOffset(0)]";
         private const string FIELD_OFFSET_X = "[SRIS.FieldOffset({0})]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\")]";
+            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\"), " +
+            "SD.Conditional(\"ENCOSY_STATS_RUNTIME_CHECKS\")]";
 
         private const string IEQUATABLE = "S.IEquatable";
         private const string HASH_VALUE = "ET.HashValue";
@@ -1844,19 +1845,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
-                        .Print(".TryGetModifierCount{").Print(TYPES_2_T).Print("}(")
-                        .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintBeginLine(AGGRESSIVE_INLINING).Print(GENERATED_CODE).PrintEndLine(EXCLUDE_COVERAGE);
-                    p.PrintBeginLine("public static bool TryGetModifierCount(")
-                        .Print(STAT_HANDLE).Print(" statHandle, ")
-                        .Print(LOOKUP_STAT).PrintEndLine(" lookupStats, out int modifierCount)");
-                    p.WithIncreasedIndent()
-                        .PrintBeginLine("=> ").Print(STAT_API)
-                        .PrintEndLine(".TryGetModifierCount<ValuePair, Stat>(statHandle, lookupStats, out modifierCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                         .Print(".TryGetModifiersOfStat{").Print(TYPES_4_T).Print("}(")
                         .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", ")
                         .Print(LOOKUP_MODIFIER_XML).Print(", ").Print(NATIVE_LIST_MODIFIER_RECORD_XML)
@@ -1882,19 +1870,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
-                        .Print(".TryGetObserverCount{").Print(TYPES_2_T).Print("}(")
-                        .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintLine(AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public static bool TryGetObserverCount(")
-                        .Print(STAT_HANDLE).Print(" statHandle, ")
-                        .Print(LOOKUP_STAT).PrintEndLine(" lookupStats, out int observerCount)");
-                    p.WithIncreasedIndent()
-                        .PrintBeginLine("=> ").Print(STAT_API)
-                        .PrintEndLine(".TryGetObserverCount<ValuePair, Stat>(statHandle, lookupStats, out observerCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
                         .Print(".TryGetObserversOfStat{").Print(TYPES_3_T_OBSERVER).Print("}(")
                         .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", ")
                         .Print(LOOKUP_OBSERVER_XML).Print(", ").Print(NATIVE_LIST_OBSERVER_XML)
@@ -1909,6 +1884,32 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         .PrintBeginLine("=> ").Print(STAT_API)
                         .Print(".TryGetObserversOfStat<ValuePair, Stat, StatObserver>(")
                         .PrintEndLine("statHandle, lookupStats, lookupObservers, observers);");
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
+                        .Print(".TryGetModifierCount{").Print(TYPES_2_T).Print("}(")
+                        .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintBeginLine(AGGRESSIVE_INLINING).Print(GENERATED_CODE).PrintEndLine(EXCLUDE_COVERAGE);
+                    p.PrintBeginLine("public static bool TryGetModifierCount(")
+                        .Print(STAT_HANDLE).Print(" statHandle, ")
+                        .Print(LOOKUP_STAT).PrintEndLine(" lookupStats, out int modifierCount)");
+                    p.WithIncreasedIndent()
+                        .PrintBeginLine("=> ").Print(STAT_API)
+                        .PrintEndLine(".TryGetModifierCount<ValuePair, Stat>(statHandle, lookupStats, out modifierCount);");
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
+                        .Print(".TryGetObserverCount{").Print(TYPES_2_T).Print("}(")
+                        .Print(STAT_HANDLE).Print(", ").Print(LOOKUP_STAT_XML).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public static bool TryGetObserverCount(")
+                        .Print(STAT_HANDLE).Print(" statHandle, ")
+                        .Print(LOOKUP_STAT).PrintEndLine(" lookupStats, out int observerCount)");
+                    p.WithIncreasedIndent()
+                        .PrintBeginLine("=> ").Print(STAT_API)
+                        .PrintEndLine(".TryGetObserverCount<ValuePair, Stat>(statHandle, lookupStats, out observerCount);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_API)
@@ -2277,17 +2278,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
-                        .Print(".TryGetObserverCount(")
-                        .Print(STAT_HANDLE).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintLine(AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public readonly bool TryGetObserverCount(")
-                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int observerCount)");
-                    p.WithIncreasedIndent()
-                        .PrintLine("=> this.accessor.TryGetObserverCount(statHandle, out observerCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
                         .Print(".TryGetStatData{TStatData}(")
                         .Print(STAT_HANDLE_T_XML).Print(", out TStatData")
                         .PrintEndLine(")\"/>");
@@ -2416,17 +2406,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
-                        .Print(".TryGetModifierCount(")
-                        .Print(STAT_HANDLE).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintLine(AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public readonly bool TryGetModifierCount(")
-                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int modifierCount)");
-                    p.WithIncreasedIndent()
-                        .PrintLine("=> this.accessor.TryGetModifierCount(statHandle, out modifierCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
                         .Print(".TryGetModifiersOfStat(")
                         .Print(STAT_HANDLE).Print(", ").Print(NATIVE_LIST_MODIFIER_RECORD_GENERIC_XML)
                         .PrintEndLine(")\"/>");
@@ -2444,6 +2423,43 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         p.PrintLine("return this.accessor.TryGetModifiersOfStat(statHandle, modifiersTemp);");
                     }
                     p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
+                        .Print(".TryGetObserversOfStat(")
+                        .Print(STAT_HANDLE).Print(", ").Print(NATIVE_LIST_OBSERVER)
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetObserversOfStat(")
+                        .Print(STAT_HANDLE).Print(" statHandle, ").Print(NATIVE_LIST_OBSERVER)
+                        .PrintEndLine(" observers)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return this.accessor.TryGetObserversOfStat(statHandle, observers);");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
+                        .Print(".TryGetModifierCount(")
+                        .Print(STAT_HANDLE).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetModifierCount(")
+                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int modifierCount)");
+                    p.WithIncreasedIndent()
+                        .PrintLine("=> this.accessor.TryGetModifierCount(statHandle, out modifierCount);");
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
+                        .Print(".TryGetObserverCount(")
+                        .Print(STAT_HANDLE).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetObserverCount(")
+                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int observerCount)");
+                    p.WithIncreasedIndent()
+                        .PrintLine("=> this.accessor.TryGetObserverCount(statHandle, out observerCount);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_XML)
@@ -2770,17 +2786,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
-                        .Print(".TryGetObserverCount(")
-                        .Print(STAT_HANDLE).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintLine(AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public readonly bool TryGetObserverCount(")
-                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int observerCount)");
-                    p.WithIncreasedIndent()
-                        .PrintLine("=> this.accessor.TryGetObserverCount(statHandle, out observerCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
                         .Print(".TryGetStatData{TStatData}(")
                         .Print(STAT_HANDLE_T_XML).Print(", out TStatData")
                         .PrintEndLine(")\"/>");
@@ -2909,17 +2914,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
-                        .Print(".TryGetModifierCount(")
-                        .Print(STAT_HANDLE).Print(", out int")
-                        .PrintEndLine(")\"/>");
-                    p.PrintLine(AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public readonly bool TryGetModifierCount(")
-                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int modifierCount)");
-                    p.WithIncreasedIndent()
-                        .PrintLine("=> this.accessor.TryGetModifierCount(statHandle, out modifierCount);");
-                    p.PrintEndLine();
-
-                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
                         .Print(".TryGetModifiersOfStat(")
                         .Print(STAT_HANDLE).Print(", ").Print(NATIVE_LIST_MODIFIER_RECORD_GENERIC_XML)
                         .PrintEndLine(")\"/>");
@@ -2937,6 +2931,43 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         p.PrintLine("return this.accessor.TryGetModifiersOfStat(statHandle, modifiersTemp);");
                     }
                     p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
+                        .Print(".TryGetObserversOfStat(")
+                        .Print(STAT_HANDLE).Print(", ").Print(NATIVE_LIST_OBSERVER)
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetObserversOfStat(")
+                        .Print(STAT_HANDLE).Print(" statHandle, ").Print(NATIVE_LIST_OBSERVER)
+                        .PrintEndLine(" observers)");
+                    p.OpenScope();
+                    {
+                        p.PrintLine("return this.accessor.TryGetObserversOfStat(statHandle, observers);");
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
+                        .Print(".TryGetModifierCount(")
+                        .Print(STAT_HANDLE).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetModifierCount(")
+                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int modifierCount)");
+                    p.WithIncreasedIndent()
+                        .PrintLine("=> this.accessor.TryGetModifierCount(statHandle, out modifierCount);");
+                    p.PrintEndLine();
+
+                    p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
+                        .Print(".TryGetObserverCount(")
+                        .Print(STAT_HANDLE).Print(", out int")
+                        .PrintEndLine(")\"/>");
+                    p.PrintLine(AGGRESSIVE_INLINING);
+                    p.PrintBeginLine("public readonly bool TryGetObserverCount(")
+                        .Print(STAT_HANDLE).PrintEndLine(" statHandle, out int observerCount)");
+                    p.WithIncreasedIndent()
+                        .PrintLine("=> this.accessor.TryGetObserverCount(statHandle, out observerCount);");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("/// <inheritdoc cref=\"").Print(STAT_ACCESSOR_READONLY_XML)
