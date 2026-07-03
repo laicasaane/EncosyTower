@@ -412,3 +412,54 @@ namespace Samples.PolyEnumStructs.Factories
         }
     }
 }
+
+namespace Samples.PolyEnumStructs.SizeChecks
+{
+    using System.Runtime.InteropServices;
+    using EncosyTower.PolyEnumStructs;
+
+    [PolyEnumStruct]
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct PaddingEnum
+    {
+        public partial struct Mixed
+        {
+            public int number;
+            public byte before;
+            public byte after;
+        }
+
+        public partial struct Nothing { }
+    }
+
+    [PolyEnumStruct]
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct DecimalEnum
+    {
+        public partial struct Money
+        {
+            public byte flag;
+            public decimal amount;
+        }
+
+        public partial struct Nothing { }
+    }
+
+    public struct PointerPayload
+    {
+        public unsafe int* head;
+        public int count;
+    }
+
+    [PolyEnumStruct]
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct PointerEnum
+    {
+        public partial struct Node
+        {
+            public PointerPayload payload;
+        }
+
+        public partial struct Nothing { }
+    }
+}

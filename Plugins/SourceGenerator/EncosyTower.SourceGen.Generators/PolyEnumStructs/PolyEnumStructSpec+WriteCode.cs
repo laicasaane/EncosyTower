@@ -110,7 +110,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
 
                     if (isExplicitLayout)
                     {
-                        WriteExplicitFields(ref p, structRefs, mergedStructRef.Size);
+                        WriteExplicitFields(ref p, structRefs, mergedStructRef.EnumCaseSize);
                     }
                     else
                     {

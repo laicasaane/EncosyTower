@@ -49,6 +49,8 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
 
             public int Size { get; set; }
 
+            public int EnumCaseSize { get; set; }
+
             public int GetMaxCount()
                 => Math.Max(Math.Max(PropertyDimMap.Count, IndexerDimMap.Count), MethodDimMap.Count);
         }
@@ -98,7 +100,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
             };
 
             structRefs = new List<StructRef>(structCount);
-            mergedStructRef = new MergedStructRef { Size = enumCaseSize };
+            mergedStructRef = new MergedStructRef { Size = enumCaseSize, EnumCaseSize = enumCaseSize };
             partialInterfaceRef = new PartialInterfaceRef();
             enumCaseType = new EnumCaseType {
                 UnderlyingType = (ulong)(structCount + 1) switch {

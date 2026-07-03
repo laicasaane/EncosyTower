@@ -686,9 +686,17 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
                         fieldName = fieldSymbol.Name;
                     }
 
-                    int fieldSize = 0;
-                    int fieldAlignment = 1;
+                    var fieldSize = 0;
+                    var fieldAlignment = 1;
                     fieldSymbol.GetUnmanagedSizeAndAlignment(ref fieldSize, ref fieldAlignment, token);
+
+                    var fieldRemainder = structSize % fieldAlignment;
+
+                    if (fieldRemainder != 0)
+                    {
+                        structSize += fieldAlignment - fieldRemainder;
+                    }
+
                     structSize += fieldSize;
                     structAlignment = Math.Max(structAlignment, fieldAlignment);
 
