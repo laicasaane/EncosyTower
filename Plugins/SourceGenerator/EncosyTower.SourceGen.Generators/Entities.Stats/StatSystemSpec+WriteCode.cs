@@ -296,11 +296,11 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintLine(SERIALIZED_FIELD);
-                    p.PrintLine("private bool _valueIsPair;");
+                    p.PrintLine("private ET.ByteBool _valueIsPair;");
                     p.PrintEndLine();
 
                     p.PrintLine(SERIALIZED_FIELD);
-                    p.PrintLine("private bool _produceChangeEvents;");
+                    p.PrintLine("private ET.ByteBool _produceChangeEvents;");
                     p.PrintEndLine();
 
                     p.PrintBeginLine("public ").Print(MODIFIER_RANGE).PrintEndLine(" ModifierRange");
@@ -495,7 +495,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                             p.PrintBeginLine("public ").Print(STAT_VARIANT_TYPE).PrintEndLine(" type;");
                             p.PrintEndLine();
 
-                            p.PrintLine("public bool isPair;");
+                            p.PrintLine("public ET.ByteBool isPair;");
                             p.PrintEndLine();
                         }
                         p.CloseScope();
@@ -533,7 +533,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
                         p.PrintBeginLine(AGGRESSIVE_INLINING).Print(GENERATED_CODE).PrintEndLine(EXCLUDE_COVERAGE);
                         p.PrintBeginLine("public static void Convert(ValuePair valuePair, ")
-                            .Print("ref StatDataStore data, ref bool isPair, ref ")
+                            .Print("ref StatDataStore data, ref ET.ByteBool isPair, ref ")
                             .Print(STAT_VARIANT_TYPE).PrintEndLine(" type)");
                         p.OpenScope();
                         {
@@ -1329,7 +1329,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintEndLine();
 
                     p.PrintLine(SERIALIZED_FIELD);
-                    p.PrintLine("internal bool _isPair;");
+                    p.PrintLine("internal ET.ByteBool _isPair;");
                     p.PrintEndLine();
 
                     p.PrintLine(AGGRESSIVE_INLINING);
@@ -3647,12 +3647,13 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         {
                             for (var i = 0; i < pairTypes.Count; i++)
                             {
-                                var (_, _, typeName, _) = pairTypes[i];
+                                var (ns, type, typeName, _) = pairTypes[i];
+                                var cast = GetPairByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
                                 {
-                                    p.PrintBeginLine("result = new Pair").Print(typeName)
+                                    p.PrintBeginLine("result = ").Print(cast).Print("new Pair").Print(typeName)
                                         .PrintEndLine("(pair._data).baseValue;");
                                     p.PrintLine("return true;");
                                 }
@@ -3726,12 +3727,13 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         {
                             for (var i = 0; i < pairTypes.Count; i++)
                             {
-                                var (_, _, typeName, _) = pairTypes[i];
+                                var (ns, type, typeName, _) = pairTypes[i];
+                                var cast = GetPairByteBoolCast(ns, type);
 
                                 p.PrintBeginLine("case ").Print(STAT_VARIANT_TYPE).Print(".").Print(typeName).PrintEndLine(":");
                                 p.OpenScope();
                                 {
-                                    p.PrintBeginLine("result = new Pair").Print(typeName)
+                                    p.PrintBeginLine("result = ").Print(cast).Print("new Pair").Print(typeName)
                                         .PrintEndLine("(pair._data).currentValue;");
                                     p.PrintLine("return true;");
                                 }
@@ -4143,7 +4145,10 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         {
             foreach (var (ns, type, typeName, size) in pairTypes)
             {
-                var customNs = string.IsNullOrEmpty(ns) == false;
+                var isByteBool = TryGetPairByteBoolType(type, out var storageNs, out var storageType);
+                var fieldNs = isByteBool ? storageNs : ns;
+                var fieldType = isByteBool ? storageType : type;
+                var customNs = string.IsNullOrEmpty(fieldNs) == false;
                 var typeNameUpper = typeName.ToUpperInvariant();
 
                 p.Print("#region    IMPL - PAIR ").PrintEndLine(typeNameUpper);
@@ -4166,16 +4171,16 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
 
                         p.PrintLine(FIELD_OFFSET_0);
                         p.PrintBeginLine("public ")
-                            .PrintIf(customNs, ns)
+                            .PrintIf(customNs, fieldNs)
                             .PrintIf(customNs, ".")
-                            .Print(type).PrintEndLine(" baseValue;");
+                            .Print(fieldType).PrintEndLine(" baseValue;");
                         p.PrintEndLine();
 
                         p.PrintLine(string.Format(FIELD_OFFSET_X, size));
                         p.PrintBeginLine("public ")
-                            .PrintIf(customNs, ns)
+                            .PrintIf(customNs, fieldNs)
                             .PrintIf(customNs, ".")
-                            .Print(type).PrintEndLine(" currentValue;");
+                            .Print(fieldType).PrintEndLine(" currentValue;");
                         p.PrintEndLine();
 
                         p.PrintLine(AGGRESSIVE_INLINING);
@@ -4190,9 +4195,9 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         p.PrintLine(AGGRESSIVE_INLINING);
                         p.PrintBeginLine("public Pair").Print(typeName).Print("(")
                             .PrintIf(size > 8, "in ")
-                            .PrintIf(customNs, ns).PrintIf(customNs, ".").Print(type).Print(" baseValue, ")
+                            .PrintIf(customNs, fieldNs).PrintIf(customNs, ".").Print(fieldType).Print(" baseValue, ")
                             .PrintIf(size > 8, "in ")
-                            .PrintIf(customNs, ns).PrintIf(customNs, ".").Print(type).Print(" currentValue")
+                            .PrintIf(customNs, fieldNs).PrintIf(customNs, ".").Print(fieldType).Print(" currentValue")
                             .PrintEndLine(") : this()");
                         p.OpenScope();
                         {
@@ -4443,6 +4448,40 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
             }
             p.CloseScope();
             p.PrintEndLine();
+        }
+
+        /// <summary>
+        /// The <c>bool</c> family is not blittable, thus cannot be stored inside
+        /// explicit layout structs compiled by Burst (error BC1063).
+        /// Pair structs must store the equivalent <c>EncosyTower.Common.ByteBool</c> variants instead.
+        /// </summary>
+        private static bool TryGetPairByteBoolType(string type, out string storageNs, out string storageType)
+        {
+            if (type.StartsWith("bool", StringComparison.Ordinal))
+            {
+                storageNs = "ET";
+                storageType = $"ByteBool{type.Substring(4)}";
+                return true;
+            }
+
+            storageNs = string.Empty;
+            storageType = string.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Pair structs store <c>bool</c> family values as <c>ByteBool</c> variants.
+        /// Reading them back into <c>StatVariant</c> requires an explicit cast to the original type,
+        /// because C# never chains two user-defined implicit conversions.
+        /// </summary>
+        private static string GetPairByteBoolCast(string ns, string type)
+        {
+            if (TryGetPairByteBoolType(type, out _, out _) == false)
+            {
+                return string.Empty;
+            }
+
+            return string.IsNullOrEmpty(ns) ? $"({type})" : $"({ns}.{type})";
         }
 
         private readonly record struct TypeRecord(
