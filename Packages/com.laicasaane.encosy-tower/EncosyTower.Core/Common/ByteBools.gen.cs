@@ -11,17 +11,17 @@
 
 #pragma warning disable
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Unity.Mathematics;
-
 namespace EncosyTower.Common
 {
+    using System;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using Unity.Mathematics;
+
     /// <summary>
     /// A blittable variant of <see cref="bool2"/> whose components are <see cref="ByteBool"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool2 : IEquatable<ByteBool2>
     {
         public ByteBool x;
@@ -77,7 +77,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool2x2"/> whose columns are <see cref="ByteBool2"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool2x2 : IEquatable<ByteBool2x2>
     {
         public ByteBool2 c0;
@@ -133,7 +133,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool2x3"/> whose columns are <see cref="ByteBool2"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool2x3 : IEquatable<ByteBool2x3>
     {
         public ByteBool2 c0;
@@ -192,7 +192,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool2x4"/> whose columns are <see cref="ByteBool2"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool2x4 : IEquatable<ByteBool2x4>
     {
         public ByteBool2 c0;
@@ -254,7 +254,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool3"/> whose components are <see cref="ByteBool"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool3 : IEquatable<ByteBool3>
     {
         public ByteBool x;
@@ -313,7 +313,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool3x2"/> whose columns are <see cref="ByteBool3"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool3x2 : IEquatable<ByteBool3x2>
     {
         public ByteBool3 c0;
@@ -369,7 +369,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool3x3"/> whose columns are <see cref="ByteBool3"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool3x3 : IEquatable<ByteBool3x3>
     {
         public ByteBool3 c0;
@@ -428,7 +428,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool3x4"/> whose columns are <see cref="ByteBool3"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool3x4 : IEquatable<ByteBool3x4>
     {
         public ByteBool3 c0;
@@ -490,7 +490,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool4"/> whose components are <see cref="ByteBool"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool4 : IEquatable<ByteBool4>
     {
         public ByteBool x;
@@ -552,7 +552,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool4x2"/> whose columns are <see cref="ByteBool4"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool4x2 : IEquatable<ByteBool4x2>
     {
         public ByteBool4 c0;
@@ -608,7 +608,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool4x3"/> whose columns are <see cref="ByteBool4"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool4x3 : IEquatable<ByteBool4x3>
     {
         public ByteBool4 c0;
@@ -667,7 +667,7 @@ namespace EncosyTower.Common
     /// <summary>
     /// A blittable variant of <see cref="bool4x4"/> whose columns are <see cref="ByteBool4"/>.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
+    [Serializable]
     public partial struct ByteBool4x4 : IEquatable<ByteBool4x4>
     {
         public ByteBool4 c0;
@@ -727,5 +727,474 @@ namespace EncosyTower.Common
     }
 
 }
+
+#if UNITY_COLLECTIONS
+
+namespace EncosyTower.Common
+{
+    using System.Runtime.CompilerServices;
+    using EncosyTower.Collections;
+    using EncosyTower.Conversion;
+    using Unity.Collections;
+
+    partial struct ByteBool2 : IToFixedString, IToFixedString<FixedString64Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString64Bytes ToFixedString()
+        {
+            FixedString64Bytes fs = "bool2(";
+            fs.Append(x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(y.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool2x2 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool2x2(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool2x3 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool2x3(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool2x4 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool2x4(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.y.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool3 : IToFixedString, IToFixedString<FixedString64Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString64Bytes ToFixedString()
+        {
+            FixedString64Bytes fs = "bool3(";
+            fs.Append(x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(z.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool3x2 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool3x2(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool3x3 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool3x3(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.z.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool3x4 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool3x4(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.z.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool4 : IToFixedString, IToFixedString<FixedString64Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString64Bytes ToFixedString()
+        {
+            FixedString64Bytes fs = "bool4(";
+            fs.Append(x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(w.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool4x2 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool4x2(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.w.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool4x3 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool4x3(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.w.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+    partial struct ByteBool4x4 : IToFixedString, IToFixedString<FixedString128Bytes>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly FixedString128Bytes ToFixedString()
+        {
+            FixedString128Bytes fs = "bool4x4(";
+            fs.Append(c0.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.x.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.y.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.z.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(' ');
+            fs.Append(c0.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c1.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c2.w.ToFixedString());
+            fs.Append(',');
+            fs.Append(' ');
+            fs.Append(c3.w.ToFixedString());
+            fs.Append(')');
+            return fs;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly TFixedString ToFixedString<TFixedString>()
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+            => ToFixedString().CastTo<TFixedString>();
+    }
+
+}
+
+#endif
 
 #endif

@@ -24,15 +24,16 @@ namespace EncosyTower.Editor.Common
             p.PrintEndLine();
             p.PrintLine("#pragma warning disable");
             p.PrintEndLine();
-            p.PrintLine("using System;");
-            p.PrintLine("using System.Runtime.CompilerServices;");
-            p.PrintLine("using System.Runtime.InteropServices;");
-            p.PrintLine("using Unity.Mathematics;");
-            p.PrintEndLine();
 
             p.PrintLine("namespace EncosyTower.Common");
             p.OpenScope();
             {
+                p.PrintLine("using System;");
+                p.PrintLine("using System.Runtime.CompilerServices;");
+                p.PrintLine("using System.Runtime.InteropServices;");
+                p.PrintLine("using Unity.Mathematics;");
+                p.PrintEndLine();
+
                 for (var rows = 2; rows <= 4; rows++)
                 {
                     WriteVector(ref p, rows);
@@ -44,6 +45,32 @@ namespace EncosyTower.Editor.Common
                 }
             }
             p.CloseScope();
+            p.PrintEndLine();
+
+            p.Print("#if UNITY_COLLECTIONS").PrintEndLine();
+            p.PrintEndLine();
+            p.PrintLine("namespace EncosyTower.Common");
+            p.OpenScope();
+            {
+                p.PrintLine("using System.Runtime.CompilerServices;");
+                p.PrintLine("using EncosyTower.Collections;");
+                p.PrintLine("using EncosyTower.Conversion;");
+                p.PrintLine("using Unity.Collections;");
+                p.PrintEndLine();
+
+                for (var rows = 2; rows <= 4; rows++)
+                {
+                    WriteVectorToFixedString(ref p, rows);
+
+                    for (var columns = 2; columns <= 4; columns++)
+                    {
+                        WriteMatrixToFixedString(ref p, rows, columns);
+                    }
+                }
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+            p.Print("#endif").PrintEndLine();
             p.PrintEndLine();
             p.Print("#endif").PrintEndLine();
 
@@ -60,7 +87,7 @@ namespace EncosyTower.Editor.Common
             p.PrintLine("/// <summary>");
             p.PrintLine($"/// A blittable variant of <see cref=\"{boolType}\"/> whose components are <see cref=\"ByteBool\"/>.");
             p.PrintLine("/// </summary>");
-            p.PrintLine("[StructLayout(LayoutKind.Sequential)]");
+            p.PrintLine("[Serializable]");
             p.PrintLine($"public partial struct {typeName} : IEquatable<{typeName}>");
             p.OpenScope();
             {
@@ -149,7 +176,7 @@ namespace EncosyTower.Editor.Common
             p.PrintLine("/// <summary>");
             p.PrintLine($"/// A blittable variant of <see cref=\"{boolType}\"/> whose columns are <see cref=\"{columnType}\"/>.");
             p.PrintLine("/// </summary>");
-            p.PrintLine("[StructLayout(LayoutKind.Sequential)]");
+            p.PrintLine("[Serializable]");
             p.PrintLine($"public partial struct {typeName} : IEquatable<{typeName}>");
             p.OpenScope();
             {
@@ -222,6 +249,97 @@ namespace EncosyTower.Editor.Common
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintLine($"public static implicit operator {typeName}({inModifier}{boolType} value)");
                 p.WithIncreasedIndent().PrintLine("=> new(value);");
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+        }
+
+        private static void WriteVectorToFixedString(ref Printer p, int size)
+        {
+            var typeName = $"ByteBool{size}";
+            var boolType = $"bool{size}";
+            var fsType = "FixedString64Bytes";
+            var components = s_components.AsSpan(0, size).ToArray();
+
+            p.PrintLine($"partial struct {typeName} : IToFixedString, IToFixedString<{fsType}>");
+            p.OpenScope();
+            {
+                p.PrintLine(AGGRESSIVE_INLINING);
+                p.PrintLine($"public readonly {fsType} ToFixedString()");
+                p.OpenScope();
+                {
+                    p.PrintLine($"{fsType} fs = \"{boolType}(\";");
+
+                    for (var i = 0; i < components.Length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            p.PrintLine("fs.Append(',');");
+                            p.PrintLine("fs.Append(' ');");
+                        }
+
+                        p.PrintLine($"fs.Append({components[i]}.ToFixedString());");
+                    }
+
+                    p.PrintLine("fs.Append(')');");
+                    p.PrintLine("return fs;");
+                }
+                p.CloseScope();
+                p.PrintEndLine();
+
+                p.PrintLine(AGGRESSIVE_INLINING);
+                p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
+                p.WithIncreasedIndent().PrintLine("where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes");
+                p.WithIncreasedIndent().PrintLine("=> ToFixedString().CastTo<TFixedString>();");
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+        }
+
+        private static void WriteMatrixToFixedString(ref Printer p, int rows, int columns)
+        {
+            var typeName = $"ByteBool{rows}x{columns}";
+            var boolType = $"bool{rows}x{columns}";
+            var fsType = "FixedString128Bytes";
+
+            p.PrintLine($"partial struct {typeName} : IToFixedString, IToFixedString<{fsType}>");
+            p.OpenScope();
+            {
+                p.PrintLine(AGGRESSIVE_INLINING);
+                p.PrintLine($"public readonly {fsType} ToFixedString()");
+                p.OpenScope();
+                {
+                    p.PrintLine($"{fsType} fs = \"{boolType}(\";");
+
+                    for (var r = 0; r < rows; r++)
+                    {
+                        for (var c = 0; c < columns; c++)
+                        {
+                            if (r > 0 || c > 0)
+                            {
+                                p.PrintLine("fs.Append(',');");
+                                p.PrintLine("fs.Append(' ');");
+                            }
+
+                            if (r > 0 && c == 0)
+                            {
+                                p.PrintLine("fs.Append(' ');");
+                            }
+
+                            p.PrintLine($"fs.Append(c{c}.{s_components[r]}.ToFixedString());");
+                        }
+                    }
+
+                    p.PrintLine("fs.Append(')');");
+                    p.PrintLine("return fs;");
+                }
+                p.CloseScope();
+                p.PrintEndLine();
+
+                p.PrintLine(AGGRESSIVE_INLINING);
+                p.PrintLine("public readonly TFixedString ToFixedString<TFixedString>()");
+                p.WithIncreasedIndent().PrintLine("where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes");
+                p.WithIncreasedIndent().PrintLine("=> ToFixedString().CastTo<TFixedString>();");
             }
             p.CloseScope();
             p.PrintEndLine();

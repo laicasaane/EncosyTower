@@ -5,12 +5,13 @@ namespace EncosyTower.Common
     using System.Runtime.CompilerServices;
     using EncosyTower.Conversion;
     using EncosyTower.Serialization;
+    using UnityEngine;
 
     /// <summary>
     /// Represents a boolean value as a byte.
     /// </summary>
-    [TypeConverter(typeof(TypeConverter))]
-    public readonly partial struct ByteBool : IEquatable<bool>, IEquatable<ByteBool>
+    [Serializable, TypeConverter(typeof(TypeConverter))]
+    public partial struct ByteBool : IEquatable<bool>, IEquatable<ByteBool>
         , IComparable, IComparable<bool>, IComparable<ByteBool>
         , ITryParse<ByteBool>, ITryParseSpan<ByteBool>
         , ISpanFormattable
@@ -37,7 +38,7 @@ namespace EncosyTower.Common
         }
 #endif
 
-        private readonly byte _raw;
+        [SerializeField] private byte _raw;
 
         public ByteBool(bool value)
         {
@@ -55,14 +56,14 @@ namespace EncosyTower.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(bool other)
+        public readonly bool Equals(bool other)
             => Equals(new ByteBool(other));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(ByteBool other)
+        public readonly bool Equals(ByteBool other)
             => _raw == other._raw;
 
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             if (obj is ByteBool other)
             {
@@ -78,26 +79,26 @@ namespace EncosyTower.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
             => ((bool)this).GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ToString()
+        public readonly override string ToString()
             => this ? bool.TrueString : bool.FalseString;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ToString(string format, IFormatProvider formatProvider = null)
+        public readonly string ToString(string format, IFormatProvider formatProvider = null)
             => ((bool)this).ToString(formatProvider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CompareTo(bool other)
+        public readonly int CompareTo(bool other)
             => ((bool)this).CompareTo(other);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CompareTo(ByteBool other)
+        public readonly int CompareTo(ByteBool other)
             => ((bool)this).CompareTo(other);
 
-        public int CompareTo(object obj)
+        public readonly int CompareTo(object obj)
         {
             return obj switch {
                 ByteBool other => CompareTo(other),
@@ -107,7 +108,7 @@ namespace EncosyTower.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryParse(
+        public readonly bool TryParse(
               string str
             , out ByteBool result
             , bool ignoreCase = true
@@ -117,7 +118,7 @@ namespace EncosyTower.Common
             return TryParse(str.AsSpan(), out result);
         }
 
-        public bool TryParse(
+        public readonly bool TryParse(
               ReadOnlySpan<char> str
             , out ByteBool result
             , bool ignoreCase = true
@@ -231,7 +232,7 @@ namespace EncosyTower.Common
     using EncosyTower.Conversion;
     using Unity.Collections;
 
-    public readonly partial struct ByteBool : IToFixedString, IToFixedString<FixedString32Bytes>
+    partial struct ByteBool : IToFixedString, IToFixedString<FixedString32Bytes>
     {
         public static FixedString32Bytes FalseString
         {
@@ -256,11 +257,11 @@ namespace EncosyTower.Common
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FixedString32Bytes ToFixedString()
+        public readonly FixedString32Bytes ToFixedString()
             => this ? TrueString : FalseString;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TFixedString ToFixedString<TFixedString>()
+        public readonly TFixedString ToFixedString<TFixedString>()
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
             => ToFixedString().CastTo<TFixedString>();
     }
