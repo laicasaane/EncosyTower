@@ -11,6 +11,7 @@
         public const string VARIANT_TYPE = "ETV.Variant";
         public const string VARIANT_DATA_TYPE = "ETV.VariantData";
         public const string VARIANT_TYPE_KIND = "ETV.VariantTypeKind";
+        public const string VARIANT_CONVERTER_TYPE = "ETVC.VariantConverter";
         public const string DOES_NOT_RETURN = "[SDCA.DoesNotReturn]";
         public const string RUNTIME_INITIALIZE_ON_LOAD_METHOD = "[UE.RuntimeInitializeOnLoadMethod(UE.RuntimeInitializeLoadType.BeforeSceneLoad)]";
         public const string PRESERVE = "[UES.Preserve]";
@@ -25,9 +26,9 @@
         {
             if (unmanagedSize.HasValue)
             {
-                p.PrintBeginLine("if (").Print(VARIANT_DATA_TYPE).Print(".BYTE_COUNT >= ")
-                    .Print(unmanagedSize.Value.ToString())
-                    .PrintEndLine(")");
+                p.PrintBeginLine("if (").Print(VARIANT_CONVERTER_TYPE).Print(".CanStore<")
+                    .Print(typeName)
+                    .PrintEndLine(">())");
                 p.OpenScope();
             }
 
