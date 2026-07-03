@@ -79,8 +79,6 @@ namespace EncosyTower.Entities.Stats
             {
                 statAccessor.TryUpdateStat(statHandle, ref statWorldData);
             }
-
-            statsToUpdate.Clear();
         }
     }
 

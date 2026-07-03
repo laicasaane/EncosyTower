@@ -12,7 +12,7 @@ namespace EncosyTower.Entities.Stats.Generators
         [ApiForEditor] public const string AGGRESSIVE_INLINING = "[MethodImpl(MethodImplOptions.AggressiveInlining)]";
         [ApiForEditor] public const string STRUCT_LAYOUT_EXPLICIT = "[StructLayout(LayoutKind.Explicit)]";
         [ApiForEditor] public const string FIELD_OFFSET_0 = "[FieldOffset(0)]";
-        [ApiForEditor] public const string FIELD_OFFSET_1 = "[FieldOffset(1)]";
+        [ApiForEditor] public const string FIELD_OFFSET_FORMAT = "[FieldOffset({0})]";
         [ApiForEditor] public const string COMMON_FOLDER = "../Common";
 
         [ApiForEditor]
@@ -414,6 +414,23 @@ namespace EncosyTower.Entities.Stats.Generators
             UnsafeUtility.SizeOf<ulong>(),
             UnsafeUtility.SizeOf<ushort>(),
         };
+
+        [ApiForEditor]
+        public static int MaxTypeSize
+        {
+            get
+            {
+                var max = 0;
+                var sizes = Sizes;
+
+                for (var i = 0; i < sizes.Length; i++)
+                {
+                    if (sizes[i] > max) max = sizes[i];
+                }
+
+                return max;
+            }
+        }
     }
 }
 

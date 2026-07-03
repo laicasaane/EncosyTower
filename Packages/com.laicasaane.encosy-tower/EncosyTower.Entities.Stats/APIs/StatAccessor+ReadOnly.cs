@@ -31,6 +31,8 @@ namespace EncosyTower.Entities.Stats
     {
         public struct ReadOnly
         {
+            // Kept intentionally: registers a read dependency on StatOwner so systems using
+            // ReadOnly schedule correctly against modifier-adding systems.
             internal ComponentLookup<StatOwner> _lookupOwner;
             internal BufferLookup<TStat> _lookupStats;
             internal BufferLookup<TStatModifier> _lookupModifiers;
@@ -66,9 +68,9 @@ namespace EncosyTower.Entities.Stats
                 return StatAPI.TryGetStatData<TValuePair, TStat, TStatData>(statHandle, _lookupStats, out statData);
             }
 
-            /// <summary>
-            /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-            /// </summary>
+            /// <remarks>
+            /// Assumes the "statBuffer" is on the entity of the statHandle
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetStatData<TStatData>(
                   StatHandle<TStatData> statHandle
@@ -86,9 +88,9 @@ namespace EncosyTower.Entities.Stats
                 return StatAPI.TryGetStat<TValuePair, TStat>(statHandle, _lookupStats, out stat);
             }
 
-            /// <summary>
-            /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-            /// </summary>
+            /// <remarks>
+            /// Assumes the "statBuffer" is on the entity of the statHandle
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetStat(
                   StatHandle statHandle
@@ -105,9 +107,9 @@ namespace EncosyTower.Entities.Stats
                 return StatAPI.TryGetStatValue(statHandle, _lookupStats, out valuePair);
             }
 
-            /// <summary>
-            /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-            /// </summary>
+            /// <remarks>
+            /// Assumes the "statBuffer" is on the entity of the statHandle
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetStatValue(
                   StatHandle statHandle
@@ -118,15 +120,9 @@ namespace EncosyTower.Entities.Stats
                 return StatAPI.TryGetStatValue(statHandle, statBuffer, out valuePair);
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly bool TryGetModifierCount(StatHandle statHandle, out int modifierCount)
-            {
-                return StatAPI.TryGetModifierCount<TValuePair, TStat>(statHandle, _lookupStats, out modifierCount);
-            }
-
-            /// <summary>
-            /// Note: does not clear the supplied list
-            /// </summary>
+            /// <remarks>
+            /// Does not clear the list <paramref name="modifiers"/>.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetModifiersOfStat(
                   StatHandle statHandle
@@ -136,17 +132,38 @@ namespace EncosyTower.Entities.Stats
                 return StatAPI.TryGetModifiersOfStat(statHandle, _lookupStats, _lookupModifiers, modifiers);
             }
 
+            /// <remarks>
+            /// Does not clear the list <paramref name="observers"/>.
+            /// </remarks>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly bool TryGetObserversOfStat(StatHandle statHandle, NativeList<TStatObserver> observers)
+            {
+                return StatAPI.TryGetObserversOfStat<TValuePair, TStat, TStatObserver>(
+                      statHandle
+                    , _lookupStats
+                    , _lookupObservers
+                    , observers
+                );
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly bool TryGetModifierCount(StatHandle statHandle, out int modifierCount)
+            {
+                return StatAPI.TryGetModifierCount<TValuePair, TStat>(statHandle, _lookupStats, out modifierCount);
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetObserverCount(StatHandle statHandle, out int observerCount)
             {
                 return StatAPI.TryGetObserverCount<TValuePair, TStat>(statHandle, _lookupStats, out observerCount);
             }
 
-            /// <summary>
-            /// Note: does not clear the supplied list
-            /// Note: useful to store observers before destroying an entity, and then manually update all observers after
-            /// destroy. An observers update isn't automatically called when a stats entity is destroyed. (TODO:?)
-            /// </summary>
+            /// <remarks>
+            /// Does not clear the list <paramref name="observers"/>.
+            /// <br/>
+            /// Useful to store observers before destroying an entity, and then manually update all observers after destroy.
+            /// An observers update isn't automatically called when a stats entity is destroyed. (TODO:?)
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool TryGetAllObservers(Entity entity, NativeList<TStatObserver> observers)
             {

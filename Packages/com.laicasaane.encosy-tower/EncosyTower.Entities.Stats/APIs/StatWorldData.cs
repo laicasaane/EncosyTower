@@ -28,6 +28,16 @@ using Unity.Jobs;
 
 namespace EncosyTower.Entities.Stats
 {
+    /// <summary>
+    /// Holds event lists and scratch buffers shared by all StatAccessor operations.
+    /// </summary>
+    /// <remarks>
+    /// NOT thread-safe and NOT re-entrant: every mutating StatAccessor method clears and reuses
+    /// the internal scratch lists.
+    /// Never share one StatWorldData between parallel jobs, and never call a mutating accessor method
+    /// while iterating events or from inside another accessor call.
+    /// Use one StatWorldData per single-threaded update stream (see DeferredUpdateStat*Job).
+    /// </remarks>
     public struct StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver>
         : IDisposable, INativeDisposable, IIsCreated
         where TValuePair : unmanaged, IStatValuePair

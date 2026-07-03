@@ -681,55 +681,59 @@ namespace EncosyTower.Entities.Stats
             ThrowHelper.ThrowIfUnsupportedType(lhs.Type);
 
             return lhs.Type switch {
-                StatVariantType.Bool    => new((lhs.Bool ^ rhs.Bool)),
-                StatVariantType.Bool2   => new((lhs.Bool2 ^ rhs.Bool2)),
+                StatVariantType.Bool => new((lhs.Bool ^ rhs.Bool)),
+                StatVariantType.Bool2 => new((lhs.Bool2 ^ rhs.Bool2)),
                 StatVariantType.Bool2x2 => new((lhs.Bool2x2 ^ rhs.Bool2x2)),
                 StatVariantType.Bool2x3 => new((lhs.Bool2x3 ^ rhs.Bool2x3)),
                 StatVariantType.Bool2x4 => new((lhs.Bool2x4 ^ rhs.Bool2x4)),
-                StatVariantType.Bool3   => new((lhs.Bool3 ^ rhs.Bool3)),
+                StatVariantType.Bool3 => new((lhs.Bool3 ^ rhs.Bool3)),
                 StatVariantType.Bool3x2 => new((lhs.Bool3x2 ^ rhs.Bool3x2)),
                 StatVariantType.Bool3x3 => new((lhs.Bool3x3 ^ rhs.Bool3x3)),
                 StatVariantType.Bool3x4 => new((lhs.Bool3x4 ^ rhs.Bool3x4)),
-                StatVariantType.Bool4   => new((lhs.Bool4 ^ rhs.Bool4)),
+                StatVariantType.Bool4 => new((lhs.Bool4 ^ rhs.Bool4)),
                 StatVariantType.Bool4x2 => new((lhs.Bool4x2 ^ rhs.Bool4x2)),
                 StatVariantType.Bool4x3 => new((lhs.Bool4x3 ^ rhs.Bool4x3)),
                 StatVariantType.Bool4x4 => new((lhs.Bool4x4 ^ rhs.Bool4x4)),
-                StatVariantType.Byte    => new((byte)(lhs.Byte ^ rhs.Byte)),
-                StatVariantType.Int     => new((int)(lhs.Int ^ rhs.Int)),
-                StatVariantType.Int2    => new((lhs.Int2 ^ rhs.Int2)),
-                StatVariantType.Int2x2  => new((lhs.Int2x2 ^ rhs.Int2x2)),
-                StatVariantType.Int2x3  => new((lhs.Int2x3 ^ rhs.Int2x3)),
-                StatVariantType.Int2x4  => new((lhs.Int2x4 ^ rhs.Int2x4)),
-                StatVariantType.Int3    => new((lhs.Int3 ^ rhs.Int3)),
-                StatVariantType.Int3x2  => new((lhs.Int3x2 ^ rhs.Int3x2)),
-                StatVariantType.Int3x3  => new((lhs.Int3x3 ^ rhs.Int3x3)),
-                StatVariantType.Int3x4  => new((lhs.Int3x4 ^ rhs.Int3x4)),
-                StatVariantType.Int4    => new((lhs.Int4 ^ rhs.Int4)),
-                StatVariantType.Int4x2  => new((lhs.Int4x2 ^ rhs.Int4x2)),
-                StatVariantType.Int4x3  => new((lhs.Int4x3 ^ rhs.Int4x3)),
-                StatVariantType.Int4x4  => new((lhs.Int4x4 ^ rhs.Int4x4)),
-                StatVariantType.Long    => new((long)(lhs.Long ^ rhs.Long)),
-                StatVariantType.SByte   => new((sbyte)(lhs.SByte ^ rhs.SByte)),
-                StatVariantType.Short   => new((short)(lhs.Short ^ rhs.Short)),
-                StatVariantType.UInt    => new((uint)(lhs.UInt ^ rhs.UInt)),
-                StatVariantType.UInt2   => new((lhs.UInt2 ^ rhs.UInt2)),
+                StatVariantType.Byte => new((byte)(lhs.Byte ^ rhs.Byte)),
+                StatVariantType.Int => new((int)(lhs.Int ^ rhs.Int)),
+                StatVariantType.Int2 => new((lhs.Int2 ^ rhs.Int2)),
+                StatVariantType.Int2x2 => new((lhs.Int2x2 ^ rhs.Int2x2)),
+                StatVariantType.Int2x3 => new((lhs.Int2x3 ^ rhs.Int2x3)),
+                StatVariantType.Int2x4 => new((lhs.Int2x4 ^ rhs.Int2x4)),
+                StatVariantType.Int3 => new((lhs.Int3 ^ rhs.Int3)),
+                StatVariantType.Int3x2 => new((lhs.Int3x2 ^ rhs.Int3x2)),
+                StatVariantType.Int3x3 => new((lhs.Int3x3 ^ rhs.Int3x3)),
+                StatVariantType.Int3x4 => new((lhs.Int3x4 ^ rhs.Int3x4)),
+                StatVariantType.Int4 => new((lhs.Int4 ^ rhs.Int4)),
+                StatVariantType.Int4x2 => new((lhs.Int4x2 ^ rhs.Int4x2)),
+                StatVariantType.Int4x3 => new((lhs.Int4x3 ^ rhs.Int4x3)),
+                StatVariantType.Int4x4 => new((lhs.Int4x4 ^ rhs.Int4x4)),
+                StatVariantType.Long => new((long)(lhs.Long ^ rhs.Long)),
+                StatVariantType.SByte => new((sbyte)(lhs.SByte ^ rhs.SByte)),
+                StatVariantType.Short => new((short)(lhs.Short ^ rhs.Short)),
+                StatVariantType.UInt => new((uint)(lhs.UInt ^ rhs.UInt)),
+                StatVariantType.UInt2 => new((lhs.UInt2 ^ rhs.UInt2)),
                 StatVariantType.UInt2x2 => new((lhs.UInt2x2 ^ rhs.UInt2x2)),
                 StatVariantType.UInt2x3 => new((lhs.UInt2x3 ^ rhs.UInt2x3)),
                 StatVariantType.UInt2x4 => new((lhs.UInt2x4 ^ rhs.UInt2x4)),
-                StatVariantType.UInt3   => new((lhs.UInt3 ^ rhs.UInt3)),
+                StatVariantType.UInt3 => new((lhs.UInt3 ^ rhs.UInt3)),
                 StatVariantType.UInt3x2 => new((lhs.UInt3x2 ^ rhs.UInt3x2)),
                 StatVariantType.UInt3x3 => new((lhs.UInt3x3 ^ rhs.UInt3x3)),
                 StatVariantType.UInt3x4 => new((lhs.UInt3x4 ^ rhs.UInt3x4)),
-                StatVariantType.UInt4   => new((lhs.UInt4 ^ rhs.UInt4)),
+                StatVariantType.UInt4 => new((lhs.UInt4 ^ rhs.UInt4)),
                 StatVariantType.UInt4x2 => new((lhs.UInt4x2 ^ rhs.UInt4x2)),
                 StatVariantType.UInt4x3 => new((lhs.UInt4x3 ^ rhs.UInt4x3)),
                 StatVariantType.UInt4x4 => new((lhs.UInt4x4 ^ rhs.UInt4x4)),
-                StatVariantType.ULong   => new((ulong)(lhs.ULong ^ rhs.ULong)),
-                StatVariantType.UShort  => new((ushort)(lhs.UShort ^ rhs.UShort)),
-                _                       => throw ThrowHelper.OperatorException("^", lhs.Type),
+                StatVariantType.ULong => new((ulong)(lhs.ULong ^ rhs.ULong)),
+                StatVariantType.UShort => new((ushort)(lhs.UShort ^ rhs.UShort)),
+                _ => throw ThrowHelper.OperatorException("^", lhs.Type),
             };
         }
 
+        /// <remarks>
+        /// Supported for scalar and vector types only.
+        /// Matrix and bool types throw <see cref="StatVariantOperatorException"/>.
+        /// </remarks>
         public static StatVariant Min(in StatVariant a, in StatVariant b)
         {
             ThrowHelper.ThrowIfMismatchedFunctionTypes(a.Type, b.Type, "Min");
@@ -762,10 +766,14 @@ namespace EncosyTower.Entities.Stats
                 StatVariantType.UInt4   => new StatVariant(math.min(a.UInt4, b.UInt4)),
                 StatVariantType.ULong   => new StatVariant((ulong)math.min(a.ULong, b.ULong)),
                 StatVariantType.UShort  => new StatVariant((ushort)math.min((uint)a.UShort, (uint)b.UShort)),
-                _                       => throw ThrowHelper.FuncException("Max", a.Type),
+                _                       => throw ThrowHelper.FuncException("Min", a.Type),
             };
         }
 
+        /// <remarks>
+        /// Supported for scalar and vector types only.
+        /// Matrix and bool types throw <see cref="StatVariantOperatorException"/>.
+        /// </remarks>
         public static StatVariant Max(in StatVariant a, in StatVariant b)
         {
             ThrowHelper.ThrowIfMismatchedFunctionTypes(a.Type, b.Type, "Max");
@@ -802,6 +810,10 @@ namespace EncosyTower.Entities.Stats
             };
         }
 
+        /// <remarks>
+        /// Supported for scalar and vector types only.
+        /// Matrix and bool types throw <see cref="StatVariantOperatorException"/>.
+        /// </remarks>
         public static StatVariant Clamp(
               in StatVariant valueToClamp
             , in StatVariant lowerBound

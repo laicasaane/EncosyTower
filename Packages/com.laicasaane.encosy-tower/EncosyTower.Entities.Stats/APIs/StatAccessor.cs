@@ -210,9 +210,9 @@ namespace EncosyTower.Entities.Stats
             return StatAPI.TryGetStatData<TValuePair, TStat, TStatData>(statHandle, _lookupStats, out statData);
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetStatData<TStatData>(
               StatHandle<TStatData> statHandle
@@ -236,9 +236,9 @@ namespace EncosyTower.Entities.Stats
             return StatAPI.GetStats<TValuePair, TStat>(entity, _lookupStats);
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetStat(
               StatHandle statHandle
@@ -255,9 +255,9 @@ namespace EncosyTower.Entities.Stats
             return StatAPI.TryGetStatValue(statHandle, _lookupStats, out valuePair);
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetStatValue(
               StatHandle statHandle
@@ -309,9 +309,9 @@ namespace EncosyTower.Entities.Stats
             return result;
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         public bool TrySetStatBaseValue(
               StatHandle statHandle
             , in TValuePair value
@@ -393,9 +393,9 @@ namespace EncosyTower.Entities.Stats
             return result;
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         public bool TrySetStatCurrentValue(
               StatHandle statHandle
             , in TValuePair value
@@ -436,13 +436,20 @@ namespace EncosyTower.Entities.Stats
             return result;
         }
 
+        /// <remarks>
+        /// When this method returns false, the stat is not modified in any way.
+        /// ProduceChangeEvents and UserData are applied only if the value set succeeds.
+        /// </remarks>
         public bool TrySetStatData<TStatData>(
               in StatDataParams<TStatData> statParams
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
         )
             where TStatData : unmanaged, IStatData
         {
-            if (statParams.IsCreated == false || statParams.Handle.TryGetValue(out var statHandle) == false)
+            if (statParams.IsCreated == false
+                || statParams.Handle.TryGetValue(out var statHandle) == false
+                || statParams.StatData.TryGetValue(out var statData) == false
+            )
             {
                 return false;
             }
@@ -465,6 +472,15 @@ namespace EncosyTower.Entities.Stats
                 return false;
             }
 
+            var result = statData.IsValuePair
+                ? statRef.TrySetValues(statData.BaseValue, statData.CurrentValue)
+                : statRef.TrySetCurrentValue(statData.CurrentValue);
+
+            if (result == false)
+            {
+                return false;
+            }
+
             if (statParams.ProduceChangeEvents.TryGetValue(out var produceChangeEvents))
             {
                 statRef.ProduceChangeEvents = produceChangeEvents;
@@ -475,36 +491,31 @@ namespace EncosyTower.Entities.Stats
                 statRef.UserData = userdata;
             }
 
-            var result = true;
-
-            if (statParams.StatData.TryGetValue(out var statData))
-            {
-                if (statRef.TrySetValues(statData.BaseValue, statData.CurrentValue))
-                {
-                    UpdateStatRef(
-                          statHandle
-                        , ref statRef
-                        , ref statBuffer
-                        , ref modifierBuffer
-                        , ref observerBuffer
-                        , ref worldData
-                    );
-                }
-                else
-                {
-                    result = false;
-                }
-            }
+            UpdateStatRef(
+                  statHandle
+                , ref statRef
+                , ref statBuffer
+                , ref modifierBuffer
+                , ref observerBuffer
+                , ref worldData
+            );
 
             return result;
         }
 
+        /// <remarks>
+        /// When this method returns false, the stat is not modified in any way.
+        /// ProduceChangeEvents and UserData are applied only if the value set succeeds.
+        /// </remarks>
         public bool TrySetStatData(
               in StatValueParams<TValuePair> statParams
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
         )
         {
-            if (statParams.IsCreated == false || statParams.Handle.TryGetValue(out var statHandle) == false)
+            if (statParams.IsCreated == false
+                || statParams.Handle.TryGetValue(out var statHandle) == false
+                || statParams.StatValues.TryGetValue(out var statValues) == false
+            )
             {
                 return false;
             }
@@ -527,6 +538,16 @@ namespace EncosyTower.Entities.Stats
                 return false;
             }
 
+            var result = statRef.TrySetValues(
+                  statValues.GetBaseValueOrDefault()
+                , statValues.GetCurrentValueOrDefault()
+            );
+
+            if (result == false)
+            {
+                return false;
+            }
+
             if (statParams.ProduceChangeEvents.TryGetValue(out var produceChangeEvents))
             {
                 statRef.ProduceChangeEvents = produceChangeEvents;
@@ -537,26 +558,14 @@ namespace EncosyTower.Entities.Stats
                 statRef.UserData = userdata;
             }
 
-            var result = true;
-
-            if (statParams.StatValues.TryGetValue(out var statValues))
-            {
-                if (statRef.TrySetValues(statValues.GetBaseValueOrDefault(), statValues.GetCurrentValueOrDefault()))
-                {
-                    UpdateStatRef(
-                          statHandle
-                        , ref statRef
-                        , ref statBuffer
-                        , ref modifierBuffer
-                        , ref observerBuffer
-                        , ref worldData
-                    );
-                }
-                else
-                {
-                    result = false;
-                }
-            }
+            UpdateStatRef(
+                  statHandle
+                , ref statRef
+                , ref statBuffer
+                , ref modifierBuffer
+                , ref observerBuffer
+                , ref worldData
+            );
 
             return result;
         }
@@ -591,7 +600,10 @@ namespace EncosyTower.Entities.Stats
             {
                 var statParams = paramsForStats[i];
 
-                if (statParams.Handle.TryGetValue(out var handle) && statParams.StatValues.HasValue)
+                if (statParams.IsCreated
+                    && statParams.Handle.TryGetValue(out var handle)
+                    && statParams.StatValues.HasValue
+                )
                 {
                     entityParamsIndexMap.Add(handle.entity, i);
                     uniqueEntities.Add(handle.entity);
@@ -669,7 +681,10 @@ namespace EncosyTower.Entities.Stats
             {
                 var statParams = paramsForStats[i];
 
-                if (statParams.Handle.TryGetValue(out var handle) && statParams.StatValues.HasValue)
+                if (statParams.IsCreated
+                    && statParams.Handle.TryGetValue(out var handle)
+                    && statParams.StatValues.HasValue
+                )
                 {
                     entityParamsIndexMap.Add(handle.entity, i);
                     uniqueEntities.Add(handle.entity);
@@ -747,7 +762,10 @@ namespace EncosyTower.Entities.Stats
             {
                 var statParams = paramsForStats[i];
 
-                if (statParams.IsCreated && statParams.Handle.TryGetValue(out var handle))
+                if (statParams.IsCreated
+                    && statParams.Handle.TryGetValue(out var handle)
+                    && statParams.StatValues.HasValue
+                )
                 {
                     entityParamsIndexMap.Add(handle.entity, i);
                     uniqueEntities.Add(handle.entity);
@@ -832,6 +850,10 @@ namespace EncosyTower.Entities.Stats
                     , ref worldData
                 );
             }
+            else
+            {
+                success = false;
+            }
 
             return success;
         }
@@ -864,6 +886,10 @@ namespace EncosyTower.Entities.Stats
                     , ref worldData
                 );
             }
+            else
+            {
+                success = false;
+            }
 
             return success;
         }
@@ -876,6 +902,11 @@ namespace EncosyTower.Entities.Stats
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
         )
         {
+            if (statParams.StatValues.TryGetValue(out var statValues) == false)
+            {
+                return false;
+            }
+
             ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                   statParams.Handle.GetValueOrThrow()
                 , ref statBuffer
@@ -883,31 +914,41 @@ namespace EncosyTower.Entities.Stats
                 , ref _nullStat
             );
 
-            if (success && statParams.ProduceChangeEvents.TryGetValue(out var produceChangeEvents))
+            if (success == false)
+            {
+                return false;
+            }
+
+            var result = statRef.TrySetValues(
+                  statValues.GetBaseValueOrDefault()
+                , statValues.GetCurrentValueOrDefault()
+            );
+
+            if (result == false)
+            {
+                return false;
+            }
+
+            if (statParams.ProduceChangeEvents.TryGetValue(out var produceChangeEvents))
             {
                 statRef.ProduceChangeEvents = produceChangeEvents;
             }
 
-            if (success && statParams.UserData.TryGetValue(out var userdata))
+            if (statParams.UserData.TryGetValue(out var userdata))
             {
                 statRef.UserData = userdata;
             }
 
-            if (success && statParams.StatValues.TryGetValue(out var statValues)
-                && statRef.TrySetValues(statValues.GetBaseValueOrDefault(), statValues.GetCurrentValueOrDefault())
-            )
-            {
-                UpdateStatRef(
-                      statParams.Handle.GetValueOrThrow()
-                    , ref statRef
-                    , ref statBuffer
-                    , ref modifierBuffer
-                    , ref observerBuffer
-                    , ref worldData
-                );
-            }
+            UpdateStatRef(
+                  statParams.Handle.GetValueOrThrow()
+                , ref statRef
+                , ref statBuffer
+                , ref modifierBuffer
+                , ref observerBuffer
+                , ref worldData
+            );
 
-            return success;
+            return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -918,17 +959,46 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatData : unmanaged, IStatData
         {
-            return TrySetStatValues(
+            var entity = statHandle.entity;
+
+            ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                   statHandle
-                , statData.BaseValue
-                , statData.CurrentValue
-                , ref worldData
+                , _lookupStats
+                , out var statBuffer
+                , out bool success
+                , ref _nullStat
             );
+
+            if (success == false
+                || _lookupModifiers.TryGetBuffer(entity, out var modifierBuffer) == false
+                || _lookupObservers.TryGetBuffer(entity, out var observerBuffer) == false
+            )
+            {
+                return false;
+            }
+
+            var result = statData.IsValuePair
+                ? statRef.TrySetValues(statData.BaseValue, statData.CurrentValue)
+                : statRef.TrySetCurrentValue(statData.CurrentValue);
+
+            if (result)
+            {
+                UpdateStatRef(
+                      statHandle
+                    , ref statRef
+                    , ref statBuffer
+                    , ref modifierBuffer
+                    , ref observerBuffer
+                    , ref worldData
+                );
+            }
+
+            return result;
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySetStatData<TStatData>(
               StatHandle<TStatData> statHandle
@@ -938,13 +1008,40 @@ namespace EncosyTower.Entities.Stats
         )
             where TStatData : unmanaged, IStatData
         {
-            return TrySetStatValues(
+            var entity = statHandle.entity;
+
+            ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                   statHandle
-                , statData.BaseValue
-                , statData.CurrentValue
                 , ref statBuffer
-                , ref worldData
+                , out bool success
+                , ref _nullStat
             );
+
+            if (success == false
+                || _lookupModifiers.TryGetBuffer(entity, out var modifierBuffer) == false
+                || _lookupObservers.TryGetBuffer(entity, out var observerBuffer) == false
+            )
+            {
+                return false;
+            }
+
+            var result = statData.IsValuePair
+                ? statRef.TrySetValues(statData.BaseValue, statData.CurrentValue)
+                : statRef.TrySetCurrentValue(statData.CurrentValue);
+
+            if (result)
+            {
+                UpdateStatRef(
+                      statHandle
+                    , ref statRef
+                    , ref statBuffer
+                    , ref modifierBuffer
+                    , ref observerBuffer
+                    , ref worldData
+                );
+            }
+
+            return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1021,9 +1118,9 @@ namespace EncosyTower.Entities.Stats
             );
         }
 
-        /// <summary>
-        /// Note: Assumes the "statBuffer" is on the entity of the statHandle
-        /// </summary>
+        /// <remarks>
+        /// Assumes the "statBuffer" is on the entity of the statHandle
+        /// </remarks>
         public bool TrySetStatValues(
               StatHandle statHandle
             , in StatVariant baseValue
@@ -1162,9 +1259,9 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        /// <summary>
-        /// Note: if the stat doesn't exist, it just does nothing (no error).
-        /// </summary>
+        /// <remarks>
+        /// If the stat doesn't exist, it just does nothing (no error).
+        /// </remarks>
         /// <param name="statHandle"></param>
         public void TryUpdateStat(
               StatHandle statHandle
@@ -1180,13 +1277,23 @@ namespace EncosyTower.Entities.Stats
             var statReader = new StatReader<TValuePair, TStat>(lookupStats);
             var tmpGlobalUpdatedStats = worldData._tmpGlobalUpdatedStats;
             var tmpSameEntityUpdatedStats = worldData._tmpSameEntityUpdatedStats;
+            var tmpVisitedHandles = worldData._tmpVisitedObserverHandles;
+
             tmpGlobalUpdatedStats.Clear();
+            tmpVisitedHandles.Clear();
             tmpGlobalUpdatedStats.Add(statHandle);
 
             for (var i = 0; i < tmpGlobalUpdatedStats.Length; i++)
             {
                 var newStatHandle = tmpGlobalUpdatedStats[i];
                 var newEntity = newStatHandle.entity;
+
+                // Each stat only needs one recalculation per propagation pass;
+                // diamond dependencies would otherwise enqueue it once per incoming path.
+                if (tmpVisitedHandles.Add(newStatHandle) == false)
+                {
+                    continue;
+                }
 
                 ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                       newStatHandle
@@ -1217,10 +1324,14 @@ namespace EncosyTower.Entities.Stats
                 );
 
                 // Then update same-entity list
-
                 for (var s = 0; s < tmpSameEntityUpdatedStats.Length; s++)
                 {
                     var sameEntityStatHandle = tmpSameEntityUpdatedStats[s];
+
+                    if (tmpVisitedHandles.Add(sameEntityStatHandle) == false)
+                    {
+                        continue;
+                    }
 
                     ref TStat sameEntityStatRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                           sameEntityStatHandle
@@ -1256,9 +1367,12 @@ namespace EncosyTower.Entities.Stats
             var tmpGlobalUpdatedStats = worldData._tmpGlobalUpdatedStats;
             var tmpSameEntityUpdatedStats = worldData._tmpSameEntityUpdatedStats;
             var valuePairComposer = _valuePairComposer;
+            var tmpVisitedHandles = worldData._tmpVisitedObserverHandles;
 
             tmpGlobalUpdatedStats.Clear();
             tmpSameEntityUpdatedStats.Clear();
+            tmpVisitedHandles.Clear();
+            tmpGlobalUpdatedStats.Add(statHandle);
 
             ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                   statHandle
@@ -1283,6 +1397,11 @@ namespace EncosyTower.Entities.Stats
                 for (var s = 0; s < tmpSameEntityUpdatedStats.Length; s++)
                 {
                     var sameEntityStatHandle = tmpSameEntityUpdatedStats[s];
+
+                    if (tmpVisitedHandles.Add(sameEntityStatHandle) == false)
+                    {
+                        continue;
+                    }
 
                     ref TStat sameEntityStatRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                           sameEntityStatHandle
@@ -1421,15 +1540,9 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool TryGetModifierCount(StatHandle statHandle, out int modifierCount)
-        {
-            return StatAPI.TryGetModifierCount<TValuePair, TStat>(statHandle, _lookupStats, out modifierCount);
-        }
-
-        /// <summary>
-        /// Note: does not clear the supplied list
-        /// </summary>
+        /// <remarks>
+        /// Does not clear the list <paramref name="modifiers"/>.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetModifiersOfStat(
               StatHandle statHandle
@@ -1439,17 +1552,39 @@ namespace EncosyTower.Entities.Stats
             return StatAPI.TryGetModifiersOfStat(statHandle, _lookupStats, _lookupModifiers, modifiers);
         }
 
+        /// <remarks>
+        /// Does not clear the list <paramref name="observers"/>.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryGetObserversOfStat(StatHandle statHandle, NativeList<TStatObserver> observers)
+        {
+            return StatAPI.TryGetObserversOfStat<TValuePair, TStat, TStatObserver>(
+                  statHandle
+                , _lookupStats
+                , _lookupObservers
+                , observers
+            );
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryGetModifierCount(StatHandle statHandle, out int modifierCount)
+        {
+            return StatAPI.TryGetModifierCount<TValuePair, TStat>(statHandle, _lookupStats, out modifierCount);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetObserverCount(StatHandle statHandle, out int observerCount)
         {
             return StatAPI.TryGetObserverCount<TValuePair, TStat>(statHandle, _lookupStats, out observerCount);
         }
 
-        /// <summary>
-        /// Note: does not clear the supplied list
-        /// Note: useful to store observers before destroying an entity, and then manually update all observers after
-        /// destroy. An observers update isn't automatically called when a stats entity is destroyed. (TODO:?)
-        /// </summary>
+        /// <remarks>
+        /// Does not clear the list <paramref name="observers"/>.
+        /// <br/>
+        /// Useful to store observers before destroying an entity, and then manually update all observers after destroy.
+        /// <br/>
+        /// An observers update isn't automatically called when a stats entity is destroyed. (TODO:?)
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryGetAllObservers(Entity entity, NativeList<TStatObserver> observers)
         {
@@ -1495,8 +1630,9 @@ namespace EncosyTower.Entities.Stats
                 , ref observerBufferOnAffectedEntity
                 , out statModifierHandle
                 , ref worldData
-                , false
-                , true
+                , isGuaranteedSingleEntity: false
+                , recalculateStat: true
+                , deferRangeShift: false
             );
         }
 
@@ -1531,8 +1667,16 @@ namespace EncosyTower.Entities.Stats
 
             statModifierHandles.IncreaseCapacityTo(statModifierHandles.Length + modifiers.Length);
 
+            var statModifierHandlesLength = statModifierHandles.Length;
+
             for (var i = 0; i < modifiers.Length; i++)
             {
+                // NOTE: deferRangeShift: true
+                // While deferred, ModifierRange.startIndex of stats after the affected stat is stale during the batch.
+                // This is safe only because nothing inside the batch reads other stats' modifier ranges,
+                // loop detection walks observers only, and recalculateStat is false for every call in the batch.
+                // Any future change that reads modifier ranges mid-batch must shift first.
+
                 var result = TryAddStatModifier(
                       affectedStatHandle
                     , modifiers[i]
@@ -1543,8 +1687,9 @@ namespace EncosyTower.Entities.Stats
                     , ref observerBufferOnAffectedEntity
                     , out StatModifierHandle statModifierHandle
                     , ref worldData
-                    , false
-                    , false
+                    , isGuaranteedSingleEntity: false
+                    , recalculateStat: false
+                    , deferRangeShift: true
                 );
 
                 if (result)
@@ -1553,6 +1698,21 @@ namespace EncosyTower.Entities.Stats
                 }
 
                 success &= result;
+            }
+
+            var acceptedCount = statModifierHandles.Length - statModifierHandlesLength;
+
+            // Single range shift for all accepted modifiers of this batch.
+            if (acceptedCount > 0)
+            {
+                for (var n = affectedStatHandle.index + 1; n < statBuffer.Length; n++)
+                {
+                    ref TStat nextStatRef = ref statBuffer.ElementAt(n);
+
+                    var nextModifierRange = nextStatRef.ModifierRange;
+                    nextModifierRange.startIndex += acceptedCount;
+                    nextStatRef.ModifierRange = nextModifierRange;
+                }
             }
 
             UpdateStatRef(
@@ -1598,8 +1758,9 @@ namespace EncosyTower.Entities.Stats
                     , ref observerBufferOnAffectedEntity
                     , out statModifierHandle
                     , ref worldData
-                    , true
-                    , true
+                    , isGuaranteedSingleEntity: true
+                    , recalculateStat: true
+                    , deferRangeShift: false
                 );
             }
 
@@ -1619,6 +1780,7 @@ namespace EncosyTower.Entities.Stats
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
             , bool isGuaranteedSingleEntity
             , bool recalculateStat
+            , bool deferRangeShift
         )
         {
             ThrowHelper.ThrowIfStatWorldDataIsNotCreated(worldData.IsCreated);
@@ -1634,6 +1796,35 @@ namespace EncosyTower.Entities.Stats
             tmpModifierObservedStats.Clear();
             tmpVisitedObserverHandles.Clear();
 
+            // Get observed stats of modifier
+            modifier.AddObservedStatsToList(tmpModifierObservedStats);
+
+            // Validate that every observed stat is reachable.
+            // Otherwise the modifier would be added but never react to its observed stats — fail up front instead.
+            for (var k = 0; k < tmpModifierObservedStats.Length; k++)
+            {
+                var observedStatHandle = tmpModifierObservedStats[k];
+
+                if (isGuaranteedSingleEntity)
+                {
+                    if (observedStatHandle.entity != affectedStatHandle.entity
+                        || observedStatHandle.index.IsValidInRange(statBufferOnAffectedEntity.Length) == false
+                    )
+                    {
+                        statModifierHandle = default;
+                        return false;
+                    }
+                }
+                else if (lookupStats.TryGetBuffer(observedStatHandle.entity, out var observedStatBuffer) == false
+                    || lookupObservers.TryGetBuffer(observedStatHandle.entity, out _) == false
+                    || observedStatHandle.index.IsValidInRange(observedStatBuffer.Length) == false
+                )
+                {
+                    statModifierHandle = default;
+                    return false;
+                }
+            }
+
             // Increment modifier Id (local to entity)
             affectStatOwnerRef.modifierIdCounter++;
             modifier.Id = affectStatOwnerRef.modifierIdCounter;
@@ -1642,9 +1833,6 @@ namespace EncosyTower.Entities.Stats
                 affectedStatHandle = affectedStatHandle,
                 modifierId = modifier.Id,
             };
-
-            // Get observed stats of modifier
-            modifier.AddObservedStatsToList(tmpModifierObservedStats);
 
             var modifierCanBeAdded = true;
 
@@ -1766,13 +1954,17 @@ namespace EncosyTower.Entities.Stats
                 affectedStatRef.ModifierRange = modifierRange;
 
                 // update next stat start indexes
-                for (var n = affectedStatHandle.index + 1; n < statBufferOnAffectedEntity.Length; n++)
+                // (skipped when the caller batches several adds and shifts once at the end)
+                if (deferRangeShift == false)
                 {
-                    ref TStat nextStatRef = ref statBufferOnAffectedEntity.ElementAt(n);
+                    for (var n = affectedStatHandle.index + 1; n < statBufferOnAffectedEntity.Length; n++)
+                    {
+                        ref TStat nextStatRef = ref statBufferOnAffectedEntity.ElementAt(n);
 
-                    var nextModifierRange = nextStatRef.ModifierRange;
-                    nextModifierRange.startIndex++;
-                    nextStatRef.ModifierRange = nextModifierRange;
+                        var nextModifierRange = nextStatRef.ModifierRange;
+                        nextModifierRange.startIndex++;
+                        nextStatRef.ModifierRange = nextModifierRange;
+                    }
                 }
             }
 
@@ -1977,6 +2169,15 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
+        /// <summary>
+        /// Removes all modifiers of the stat, one at a time.
+        /// </summary>
+        /// <remarks>
+        /// If an individual removal fails the method returns false immediately;
+        /// modifiers already removed stay removed.
+        /// With intact internal invariants an individual removal cannot fail
+        /// once the stat and its buffers were resolved.
+        /// </remarks>
         public bool TryRemoveModifiersOfStat(
               StatHandle statHandle
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData

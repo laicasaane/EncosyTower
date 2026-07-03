@@ -12,7 +12,7 @@ namespace EncosyTower.Entities.Stats
     /// <item>
     /// By default, TypeId values will be casted to Stat.UserData as-is. If there are multiple stat collections,
     /// it is desirable to offset the TypeId of each collection so their Stat.UserData values won't overlap.
-    /// In this case, use the constructor which also takes in a TypeId osset value.
+    /// In this case, use the constructor which also takes in a TypeId offset value.
     /// The sum of <see cref="TypeIdOffset"/> and the number of TypeId values
     /// should not exceed <see cref="uint.MaxValue"/>.
     /// </item>

@@ -37,18 +37,20 @@ using Unity.Mathematics;
                 p.PrintLine("partial struct StatVariant : IEquatable<StatVariant>");
                 p.OpenScope();
                 {
-                    p.PrintBeginLine(GeneratorAPI.FIELD_OFFSET_0)
-                        .PrintEndLine(" public StatVariantType Type;");
-
                     for (var i = 0; i < typeNames.Length; i++)
                     {
                         var type = types[i];
                         var typeName = typeNames[i];
 
-                        p.PrintBeginLine(GeneratorAPI.FIELD_OFFSET_1)
+                        p.PrintBeginLine(GeneratorAPI.FIELD_OFFSET_0)
                             .Print(" public ").Print(type)
                             .Print(" ").Print(typeName).PrintEndLine(";");
                     }
+
+                    var typeFieldOffset = string.Format(GeneratorAPI.FIELD_OFFSET_FORMAT, GeneratorAPI.MaxTypeSize);
+
+                    p.PrintBeginLine(typeFieldOffset)
+                        .PrintEndLine(" public StatVariantType Type;");
 
                     p.PrintEndLine();
 

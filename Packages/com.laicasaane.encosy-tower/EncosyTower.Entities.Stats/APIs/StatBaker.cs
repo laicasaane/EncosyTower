@@ -61,6 +61,7 @@ namespace EncosyTower.Entities.Stats
             _valuePairComposer = valuePairComposer;
             _statOwner = default;
             _statBuffer.Clear();
+            _statBuffer.Add(new TStat());
             _modifierBuffer.Clear();
             _observerBuffer.Clear();
         }

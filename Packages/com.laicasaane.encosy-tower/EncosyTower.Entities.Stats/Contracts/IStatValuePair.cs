@@ -20,6 +20,6 @@ namespace EncosyTower.Entities.Stats
     public interface IStatValuePairComposer<TValuePair>
         where TValuePair : IStatValuePair
     {
-        TValuePair Compose(bool isPar, in StatVariant baseValue, in StatVariant currentValue);
+        TValuePair Compose(bool isPair, in StatVariant baseValue, in StatVariant currentValue);
     }
 }
