@@ -232,7 +232,13 @@ namespace EncosyTower.Buffers
                 array.Dispose();
             }
 
+            if (_nativeAllocator.IsCreated)
+            {
+                _nativeAllocator.Dispose();
+            }
+
             _realBuffer = default;
+            _nativeAllocator = default;
         }
 
         public readonly struct ReadOnly : IReadOnlyBufferStrategy<T>, IAsNativeSliceReadOnly<T>
