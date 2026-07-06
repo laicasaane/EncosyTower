@@ -440,11 +440,22 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
-            => IndexOf(item, Comparer<T>.Default);
+            => Array.IndexOf(_buffer, item, 0, _count);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, [NotNull] IComparer<T> comparer)
-            => AsReadOnlySpan().BinarySearch(item, comparer);
+        {
+            var span = AsReadOnlySpan();
+
+            for (var i = 0; i < span.Length; i++)
+            {
+                if (comparer.Compare(span[i], item) == 0)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index)
@@ -461,11 +472,22 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item)
-            => IndexOf(in item, Comparer<T>.Default);
+            => Array.IndexOf(_buffer, item, 0, _count);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, [NotNull] IComparer<T> comparer)
-            => AsReadOnlySpan().BinarySearch(item, comparer);
+        {
+            var span = AsReadOnlySpan();
+
+            for (var i = 0; i < span.Length; i++)
+            {
+                if (comparer.Compare(span[i], item) == 0)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index)
@@ -808,7 +830,7 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            var index = AsSpan().BinarySearch(item, Comparer<T>.Default);
+            var index = Array.IndexOf(_buffer, item, 0, _count);
 
             if (index < 0)
                 return false;
