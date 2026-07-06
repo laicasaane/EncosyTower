@@ -127,7 +127,7 @@ namespace EncosyTower.Collections
 
             ref var count = ref CountRW;
 
-            Checks.IsTrue((uint)index < (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
+            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
             Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
 
             _buffer.MemoryCopyUnsafe(index, index + 1, count - index);
@@ -143,7 +143,7 @@ namespace EncosyTower.Collections
 
             ref var count = ref CountRW;
 
-            Checks.IsTrue((uint)index < (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
+            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
             Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
 
             _buffer.MemoryCopyUnsafe(index, index + 1, count - index);

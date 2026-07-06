@@ -320,7 +320,7 @@ namespace EncosyTower.Collections
         {
             Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
             Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex < _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
+            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex + count;
@@ -348,7 +348,7 @@ namespace EncosyTower.Collections
         {
             Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
             Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex < _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
+            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex + count;
@@ -527,7 +527,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
 
             _version++;
 
@@ -543,7 +543,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
 
             _version++;
 

@@ -253,7 +253,7 @@ namespace EncosyTower.Collections
 
             ref var count = ref _count.ValueRW;
 
-            Checks.IsTrue((uint)index < (uint)count, "index is outside the range of valid indices for the SharedList<T>");
+            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indices for the SharedList<T>");
 
             if (count == _buffer.Length)
                 AllocateMore();
@@ -272,7 +272,7 @@ namespace EncosyTower.Collections
 
             ref var count = ref _count.ValueRW;
 
-            Checks.IsTrue((uint)index < (uint)count, "index is outside the range of valid indices for the SharedList<T>");
+            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indices for the SharedList<T>");
 
             if (count == _buffer.Length)
                 AllocateMore();
