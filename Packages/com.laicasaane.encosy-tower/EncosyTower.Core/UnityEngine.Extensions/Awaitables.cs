@@ -1043,30 +1043,24 @@ namespace EncosyTower.UnityExtensions
 
         private static class Completed
         {
-            private readonly static AwaitableCompletionSource s_source = new();
-
             public static Awaitable Awaitable
             {
                 get
                 {
-                    s_source.SetResult();
-                    var awaitable = s_source.Awaitable;
-                    s_source.Reset();
-                    return awaitable;
+                    var source = new AwaitableCompletionSource();
+                    source.SetResult();
+                    return source.Awaitable;
                 }
             }
         }
 
         private static class Completed<T>
         {
-            private readonly static AwaitableCompletionSource<T> s_source = new();
-
             public static Awaitable<T> Awaitable(T value)
             {
-                s_source.SetResult(value);
-                var awaitable = s_source.Awaitable;
-                s_source.Reset();
-                return awaitable;
+                var source = new AwaitableCompletionSource<T>();
+                source.SetResult(value);
+                return source.Awaitable;
             }
         }
     }
