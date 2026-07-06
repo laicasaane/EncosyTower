@@ -39,7 +39,7 @@ namespace EncosyTower.Common
         public static bool Equals<TValue>(in Result<TValue> a, in Result<TValue> b)
             where TValue : IEquatable<TValue>
         {
-            return Option.Equals(a.Value, b.Value) || Error.Equals(a.Error, b.Error);
+            return Option.Equals(a.Value, b.Value) && Error.Equals(a.Error, b.Error);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,7 +47,7 @@ namespace EncosyTower.Common
             where TValue : IEquatable<TValue>
             where TError : IEquatable<TError>
         {
-            return Option.Equals(a.Value, b.Value) || Error.Equals(a.Error, b.Error);
+            return Option.Equals(a.Value, b.Value) && Error.Equals(a.Error, b.Error);
         }
     }
 
@@ -236,7 +236,7 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static bool DefaultEquals(in Result<TValue> a, in Result<TValue> b)
-            => Option<TValue>.DefaultEquals(a.Value, b.Value) || a.Error.Equals(b.Error);
+            => Option<TValue>.DefaultEquals(a.Value, b.Value) && a.Error.Equals(b.Error);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsDifferentType()
@@ -402,7 +402,7 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static bool DefaultEquals(in Result<TValue, TError> a, in Result<TValue, TError> b)
-            => Option<TValue>.DefaultEquals(a.Value, b.Value) || Option<TError>.DefaultEquals(a.Error, b.Error);
+            => Option<TValue>.DefaultEquals(a.Value, b.Value) && Option<TError>.DefaultEquals(a.Error, b.Error);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsDifferentType()
