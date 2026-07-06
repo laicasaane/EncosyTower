@@ -98,7 +98,7 @@ namespace EncosyTower.Common
         public bool IsValid
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _year < UnixEpoch.Year;
+            get => _year >= UnixEpoch.Year;
         }
 
         public sbyte Zone
