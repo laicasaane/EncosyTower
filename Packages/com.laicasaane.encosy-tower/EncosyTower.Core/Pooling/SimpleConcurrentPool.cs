@@ -55,9 +55,10 @@ namespace EncosyTower.Pooling
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Return(T value)
         {
+            _actionOnReturn?.Invoke(value);
+
             if (_fastItem != null || Interlocked.CompareExchange(ref _fastItem, value, null) != null)
             {
-                _actionOnReturn?.Invoke(value);
                 _items.Enqueue(value);
             }
         }
