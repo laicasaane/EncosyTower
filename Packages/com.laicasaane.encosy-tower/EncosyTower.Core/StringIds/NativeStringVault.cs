@@ -12,21 +12,22 @@ using EncosyTower.Common;
 using EncosyTower.Debugging;
 using EncosyTower.Ids;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace EncosyTower.StringIds
 {
-    public readonly partial struct NativeStringVault : IDisposable, IClearable, IIncreaseCapacity, IIsCreated
+    public partial struct NativeStringVault : IDisposable, IClearable, IIncreaseCapacity, IIsCreated
         , IReadOnlyList<UnmanagedString>
         , ICopyToSpan<UnmanagedString>, ITryCopyToSpan<UnmanagedString>
     {
-        internal readonly NativeHashMap<StringHash, StringId> _map;
-        internal readonly NativeHashMap<UnmanagedString, StringId> _collisionMap;
-        internal readonly NativeList<Range> _stringRanges;
-        internal readonly NativeList<byte> _stringBuffer;
-        internal readonly NativeList<Option<StringHash>> _hashes;
-        internal readonly NativeReference<int> _count;
+        internal NativeHashMap<StringHash, StringId> _map;
+        internal NativeHashMap<UnmanagedString, StringId> _collisionMap;
+        internal NativeList<Range> _stringRanges;
+        internal NativeList<byte> _stringBuffer;
+        internal NativeList<Option<StringHash>> _hashes;
+        internal NativeReference<int> _count;
 
         public NativeStringVault(
               int initialCapacity
@@ -88,12 +89,36 @@ namespace EncosyTower.StringIds
 
         public void Dispose()
         {
+            if (_map.IsCreated == false)
+            {
+                return;
+            }
+
             _map.Dispose();
             _collisionMap.Dispose();
             _stringRanges.Dispose();
             _stringBuffer.Dispose();
             _hashes.Dispose();
             _count.Dispose();
+        }
+
+        public JobHandle Dispose(JobHandle inputDeps)
+        {
+            if (_map.IsCreated == false)
+            {
+                return inputDeps;
+            }
+
+            var handles = NativeArray.CreateFast<JobHandle>(6, Allocator.Temp);
+
+            handles[0] = _map.Dispose(inputDeps);
+            handles[1] = _collisionMap.Dispose(inputDeps);
+            handles[2] = _stringRanges.Dispose(inputDeps);
+            handles[3] = _stringBuffer.Dispose(inputDeps);
+            handles[4] = _hashes.Dispose(inputDeps);
+            handles[5] = _count.Dispose(inputDeps);
+
+            return JobHandle.CombineDependencies(handles);
         }
 
         public void Clear()

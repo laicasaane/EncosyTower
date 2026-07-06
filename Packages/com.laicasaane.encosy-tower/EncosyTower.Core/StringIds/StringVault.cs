@@ -22,13 +22,13 @@ namespace EncosyTower.StringIds
         /// </summary>
         public static StringVault Default => GlobalStringVault.s_vault;
 
-        internal readonly SharedArrayMap<StringHash, StringId> _map;
-        internal readonly SharedArrayMap<UnmanagedString, StringId> _collisionMap;
-        internal readonly SharedList<Range> _unmanagedStringRanges;
-        internal readonly SharedList<byte> _unmanagedStringBuffer;
-        internal readonly FasterList<string> _managedStrings;
-        internal readonly SharedList<Option<StringHash>> _hashes;
-        internal readonly SharedReference<int> _count;
+        internal SharedArrayMap<StringHash, StringId> _map;
+        internal SharedArrayMap<UnmanagedString, StringId> _collisionMap;
+        internal SharedList<Range> _unmanagedStringRanges;
+        internal SharedList<byte> _unmanagedStringBuffer;
+        internal FasterList<string> _managedStrings;
+        internal SharedList<Option<StringHash>> _hashes;
+        internal SharedReference<int> _count;
         internal readonly object _lock = new();
 
         public StringVault(int initialCapacity, bool allowEmptyString = false)
@@ -86,12 +86,24 @@ namespace EncosyTower.StringIds
 
         public void Dispose()
         {
+            if (_map == null)
+            {
+                return;
+            }
+
             _map.Dispose();
             _collisionMap.Dispose();
             _unmanagedStringRanges.Dispose();
             _unmanagedStringBuffer.Dispose();
             _hashes.Dispose();
             _count.Dispose();
+
+            _map = null;
+            _collisionMap = null;
+            _unmanagedStringRanges = null;
+            _unmanagedStringBuffer = null;
+            _hashes = null;
+            _count = null;
         }
 
         public void Clear()
