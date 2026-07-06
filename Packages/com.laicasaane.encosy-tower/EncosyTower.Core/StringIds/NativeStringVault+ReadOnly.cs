@@ -20,6 +20,7 @@ namespace EncosyTower.StringIds
             , ICopyToSpan<UnmanagedString>, ITryCopyToSpan<UnmanagedString>
         {
             internal readonly NativeHashMap<StringHash, StringId>.ReadOnly _map;
+            internal readonly NativeHashMap<UnmanagedString, StringId>.ReadOnly _collisionMap;
             internal readonly NativeArray<Range>.ReadOnly _stringRanges;
             internal readonly NativeArray<byte>.ReadOnly _stringBuffer;
             internal readonly NativeArray<Option<StringHash>>.ReadOnly _hashes;
@@ -29,6 +30,7 @@ namespace EncosyTower.StringIds
             public ReadOnly(in NativeStringVault vault)
             {
                 _map = vault._map.AsReadOnly();
+                _collisionMap = vault._collisionMap.AsReadOnly();
                 _stringRanges = vault._stringRanges.AsArray().AsReadOnly();
                 _stringBuffer = vault._stringBuffer.AsArray().AsReadOnly();
                 _hashes = vault._hashes.AsArray().AsReadOnly();
@@ -41,6 +43,7 @@ namespace EncosyTower.StringIds
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => _map.IsCreated
+                    && _collisionMap.IsCreated
                     && _stringRanges.IsCreated
                     && _stringBuffer.IsCreated
                     && _hashes.IsCreated;
@@ -81,10 +84,21 @@ namespace EncosyTower.StringIds
                 var hash = str.GetHashCode64();
                 var registered = _map.TryGetValue(hash, out var id);
 
-                if (registered && TryGetString(id, out var registeredString) && str == registeredString)
+                if (registered)
                 {
-                    result = id;
-                    return true;
+                    TryGetString(id, out var registeredString);
+
+                    if (str == registeredString)
+                    {
+                        result = id;
+                        return true;
+                    }
+
+                    if (_collisionMap.TryGetValue(str, out var collidedId))
+                    {
+                        result = collidedId;
+                        return true;
+                    }
                 }
 
                 result = default;

@@ -23,6 +23,7 @@ namespace EncosyTower.StringIds
         public static StringVault Default => GlobalStringVault.s_vault;
 
         internal readonly SharedArrayMap<StringHash, StringId> _map;
+        internal readonly SharedArrayMap<UnmanagedString, StringId> _collisionMap;
         internal readonly SharedList<Range> _unmanagedStringRanges;
         internal readonly SharedList<byte> _unmanagedStringBuffer;
         internal readonly FasterList<string> _managedStrings;
@@ -33,6 +34,7 @@ namespace EncosyTower.StringIds
         public StringVault(int initialCapacity, bool allowEmptyString = false)
         {
             _map = new(initialCapacity);
+            _collisionMap = new(initialCapacity);
             _unmanagedStringRanges = new(initialCapacity);
             _unmanagedStringBuffer = new(initialCapacity * 512);
             _managedStrings = new(initialCapacity);
@@ -85,6 +87,7 @@ namespace EncosyTower.StringIds
         public void Dispose()
         {
             _map.Dispose();
+            _collisionMap.Dispose();
             _unmanagedStringRanges.Dispose();
             _unmanagedStringBuffer.Dispose();
             _hashes.Dispose();
@@ -96,13 +99,15 @@ namespace EncosyTower.StringIds
             lock (_lock)
             {
                 _map.Clear();
+                _collisionMap.Clear();
                 _unmanagedStringRanges.Clear();
                 _unmanagedStringBuffer.Clear();
                 _managedStrings.Clear();
                 _hashes.Clear();
 
                 // The first item represent an invalid id
-                _map.Add(default, default);
+                _map.Add(default(UnmanagedString).GetHashCode64(), default);
+                _collisionMap.Add(default, default);
                 _unmanagedStringRanges.Add(default);
                 _managedStrings.Add(string.Empty);
                 _hashes.Add(default);
@@ -114,14 +119,8 @@ namespace EncosyTower.StringIds
         /// <summary>
         /// Creates or retrieves a <see cref="StringId"/> from an <see cref="UnmanagedString"/>.
         /// </summary>
-        /// <param name="str">
-        /// The managed string to create or retrieve the <see cref="StringId"/> for.
-        /// It should have a maximum length of 125 UTF8 characters.
-        /// </param>
+        /// <param name="str">The unmanaged string to create or retrieve the <see cref="StringId"/> for.</param>
         /// <returns></returns>
-        /// <remarks>
-        /// The unmanaged string will be synchronized with its managed representation.
-        /// </remarks>
         public StringId GetOrMakeId(in UnmanagedString str)
         {
             if (AllowEmptyString == false && str.IsEmpty)
@@ -143,6 +142,11 @@ namespace EncosyTower.StringIds
                         return id;
                     }
 
+                    if (_collisionMap.TryGetValue(str, out var collidedId))
+                    {
+                        return collidedId;
+                    }
+
                     ref var count = ref _count.ValueRW;
                     var index = count;
                     id = new Id(index);
@@ -150,6 +154,7 @@ namespace EncosyTower.StringIds
                     count += 1;
                     EnsureCapacity();
 
+                    _collisionMap[str] = id;
                     _unmanagedStringRanges[index] = WriteToBuffer(str);
                     _managedStrings[index] = str.ToString();
                     _hashes[index] = Option.Some<StringHash>(hash);
@@ -182,34 +187,37 @@ namespace EncosyTower.StringIds
         /// <summary>
         /// Creates or retrieves a <see cref="StringId"/> from a managed <see cref="string"/>.
         /// </summary>
-        /// <param name="str">
-        /// The managed string to create or retrieve the <see cref="StringId"/> for.
-        /// It should have a maximum length of 125 UTF8 characters.
-        /// </param>
+        /// <param name="managedString">The managed string to create or retrieve the <see cref="StringId"/> for.</param>
         /// <returns></returns>
         /// <remarks>
-        /// The managed string will be synchronized with its unmanaged representation.
+        /// The managed string will be capped at the maximum length of 125 UTF8 characters
+        /// to fit within the <see cref="UnmanagedString"/> representation.
         /// </remarks>
-        public StringId GetOrMakeId([NotNull] string str)
+        public StringId GetOrMakeId([NotNull] string managedString)
         {
-            if (AllowEmptyString == false && str.IsEmpty())
+            if (AllowEmptyString == false && managedString.IsEmpty())
             {
                 return default;
             }
 
             lock (_lock)
             {
-                UnmanagedString unmanagedStr = str;
-                var hash = unmanagedStr.GetHashCode64();
+                UnmanagedString str = managedString;
+                var hash = str.GetHashCode64();
                 var registered = _map.TryGetValue(hash, out var id);
 
                 if (registered)
                 {
-                    TryGetManagedString(id, out var registeredString);
+                    TryGetUnmanagedString(id, out var registeredString);
 
                     if (str == registeredString)
                     {
                         return id;
+                    }
+
+                    if (_collisionMap.TryGetValue(str, out var collidedId))
+                    {
+                        return collidedId;
                     }
 
                     ref var count = ref _count.ValueRW;
@@ -219,8 +227,9 @@ namespace EncosyTower.StringIds
                     count += 1;
                     EnsureCapacity();
 
+                    _collisionMap[str] = id;
                     _unmanagedStringRanges[index] = WriteToBuffer(str);
-                    _managedStrings[index] = str;
+                    _managedStrings[index] = managedString;
                     _hashes[index] = Option.Some<StringHash>(hash);
                 }
                 else
@@ -234,12 +243,12 @@ namespace EncosyTower.StringIds
                         count += 1;
                         EnsureCapacity();
                         _unmanagedStringRanges[index] = WriteToBuffer(str);
-                        _managedStrings[index] = str;
+                        _managedStrings[index] = managedString;
                         _hashes[index] = Option.Some<StringHash>(hash);
                     }
                     else
                     {
-                        ThrowIfFailedRegistering(false, str, id);
+                        ThrowIfFailedRegistering(false, managedString, id);
                     }
                 }
 
@@ -262,10 +271,21 @@ namespace EncosyTower.StringIds
             var hash = str.GetHashCode64();
             var registered = _map.TryGetValue(hash, out var id);
 
-            if (registered && TryGetManagedString(id, out var registeredString) && str == registeredString)
+            if (registered)
             {
-                result = id;
-                return true;
+                TryGetUnmanagedString(id, out var registeredString);
+
+                if (str == registeredString)
+                {
+                    result = id;
+                    return true;
+                }
+
+                if (_collisionMap.TryGetValue(str, out var collidedId))
+                {
+                    result = collidedId;
+                    return true;
+                }
             }
 
             result = default;
@@ -273,24 +293,36 @@ namespace EncosyTower.StringIds
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Option<StringId> TryGetId(string str)
-            => Option.SomeIf(TryGetId(str, out var result), result);
+        public Option<StringId> TryGetId(string managedString)
+            => Option.SomeIf(TryGetId(managedString, out var result), result);
 
-        public bool TryGetId(string str, out StringId result)
+        public bool TryGetId(string managedString, out StringId result)
         {
-            if (AllowEmptyString == false && str.IsEmpty())
+            if (AllowEmptyString == false && managedString.IsEmpty())
             {
                 result = default;
                 return false;
             }
 
-            var hash = HashValue64.FNV1a(str).ToHashCode();
+            UnmanagedString str = managedString;
+            var hash = str.GetHashCode64();
             var registered = _map.TryGetValue(hash, out var id);
 
-            if (registered && TryGetManagedString(id, out var registeredString) && str == registeredString)
+            if (registered)
             {
-                result = id;
-                return true;
+                TryGetUnmanagedString(id, out var registeredString);
+
+                if (str == registeredString)
+                {
+                    result = id;
+                    return true;
+                }
+
+                if (_collisionMap.TryGetValue(str, out var collidedId))
+                {
+                    result = collidedId;
+                    return true;
+                }
             }
 
             result = default;

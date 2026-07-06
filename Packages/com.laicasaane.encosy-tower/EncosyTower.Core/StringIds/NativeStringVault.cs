@@ -22,6 +22,7 @@ namespace EncosyTower.StringIds
         , ICopyToSpan<UnmanagedString>, ITryCopyToSpan<UnmanagedString>
     {
         internal readonly NativeHashMap<StringHash, StringId> _map;
+        internal readonly NativeHashMap<UnmanagedString, StringId> _collisionMap;
         internal readonly NativeList<Range> _stringRanges;
         internal readonly NativeList<byte> _stringBuffer;
         internal readonly NativeList<Option<StringHash>> _hashes;
@@ -34,6 +35,7 @@ namespace EncosyTower.StringIds
         )
         {
             _map = new(initialCapacity, allocator);
+            _collisionMap = new(initialCapacity, allocator);
             _stringRanges = new(initialCapacity, allocator);
             _stringBuffer = new(initialCapacity * 512, allocator);
             _hashes = new(initialCapacity, allocator);
@@ -87,6 +89,7 @@ namespace EncosyTower.StringIds
         public void Dispose()
         {
             _map.Dispose();
+            _collisionMap.Dispose();
             _stringRanges.Dispose();
             _stringBuffer.Dispose();
             _hashes.Dispose();
@@ -96,12 +99,14 @@ namespace EncosyTower.StringIds
         public void Clear()
         {
             _map.Clear();
+            _collisionMap.Clear();
             _stringRanges.Clear();
             _stringBuffer.Clear();
             _hashes.Clear();
 
             // The first item represent an invalid id
-            _map.Add(default, default);
+            _map.Add(default(UnmanagedString).GetHashCode64(), default);
+            _collisionMap.Add(default, default);
             _stringRanges.Add(default);
             _hashes.Add(default);
             _count.ValueAsUnsafeRefRW() = 1;
@@ -110,14 +115,8 @@ namespace EncosyTower.StringIds
         /// <summary>
         /// Creates or retrieves a <see cref="StringId"/> from an <see cref="UnmanagedString"/>.
         /// </summary>
-        /// <param name="str">
-        /// The managed string to create or retrieve the <see cref="StringId"/> for.
-        /// It should have a maximum length of 125 UTF8 characters.
-        /// </param>
+        /// <param name="str">The unmanaged string to create or retrieve the <see cref="StringId"/> for.</param>
         /// <returns></returns>
-        /// <remarks>
-        /// The unmanaged string will be synchronized with its managed representation.
-        /// </remarks>
         public StringId GetOrMakeId(in UnmanagedString str)
         {
             if (AllowEmptyString == false && str.IsEmpty)
@@ -137,6 +136,11 @@ namespace EncosyTower.StringIds
                     return id;
                 }
 
+                if (_collisionMap.TryGetValue(str, out var collidedId))
+                {
+                    return collidedId;
+                }
+
                 ref var count = ref _count.ValueAsUnsafeRefRW();
                 var index = count;
 
@@ -145,6 +149,7 @@ namespace EncosyTower.StringIds
                 count += 1;
                 EnsureCapacity();
 
+                _collisionMap.TryAdd(str, id);
                 _stringRanges.ElementAsUnsafeRefRW(index) = WriteToBuffer(str);
                 _hashes.ElementAsUnsafeRefRW(index) = Option.Some<StringHash>(hash);
             }
@@ -187,10 +192,21 @@ namespace EncosyTower.StringIds
             var hash = str.GetHashCode64();
             var registered = _map.TryGetValue(hash, out var id);
 
-            if (registered && TryGetString(id, out var registeredString) && str == registeredString)
+            if (registered)
             {
-                result = id;
-                return true;
+                TryGetString(id, out var registeredString);
+
+                if (str == registeredString)
+                {
+                    result = id;
+                    return true;
+                }
+
+                if (_collisionMap.TryGetValue(str, out var collidedId))
+                {
+                    result = collidedId;
+                    return true;
+                }
             }
 
             result = default;
