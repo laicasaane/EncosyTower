@@ -93,7 +93,6 @@ namespace EncosyTower.Variants
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(byte value) => new(value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(sbyte value) => new(value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(char value) => new(value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(decimal value) => new(value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(double value) => new(value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(float value) => new(value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static implicit operator Variant(int value) => new(value);
