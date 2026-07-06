@@ -41,15 +41,14 @@ namespace EncosyTower.Collections.Unsafe
         )
             where T : struct
         {
-            var arrayLength = array.Length;
             var sizeOf = UnsafeUtility.SizeOf<T>();
             var ptr = (IntPtr)array.GetUnsafePtr();
 
             Buffer.MemoryCopy(
                   (void*)(ptr + sourceIndex * sizeOf)
                 , (void*)(ptr + destinationIndex * sizeOf)
-                , (arrayLength - length - destinationIndex) * sizeOf
-                , (arrayLength - sourceIndex) * sizeOf
+                , (long)(array.Length - destinationIndex) * sizeOf
+                , (long)length * sizeOf
             );
         }
 
