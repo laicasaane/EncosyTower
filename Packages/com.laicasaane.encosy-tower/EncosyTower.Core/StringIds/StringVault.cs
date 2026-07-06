@@ -199,7 +199,8 @@ namespace EncosyTower.StringIds
 
             lock (_lock)
             {
-                var hash = HashValue64.FNV1a(str).ToHashCode();
+                UnmanagedString unmanagedStr = str;
+                var hash = unmanagedStr.GetHashCode64();
                 var registered = _map.TryGetValue(hash, out var id);
 
                 if (registered)
