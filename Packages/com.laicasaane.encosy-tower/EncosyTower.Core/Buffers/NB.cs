@@ -337,7 +337,7 @@ namespace EncosyTower.Buffers
         {
             unsafe
             {
-                UnsafeUtility.MemClear(_buffer.GetUnsafePtr(), _buffer.Length);
+                UnsafeUtility.MemClear(_buffer.GetUnsafePtr(), (long)_buffer.Length * UnsafeUtility.SizeOf<T>());
             }
         }
 
