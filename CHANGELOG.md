@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.6-preview.10
+
+### Core
+
+- Added parameter for customizing AES iterations
+- Added overloads with `count` param to WhenAll tasks
+- Fixed incorrect ByteBool conversion
+- Fixed incorrect Dispose method for StringVaults
+- Fixed incorrect string collisions handling in StringVaults
+- Fixed incorrect implementation of Awaitables.Completed.Awaitable
+- Fixed incorrect empty separator handling for SpanSplitExtensions.Split overloads
+- Fixed missing invocation of _actionOnReturn in SimpleConcurrentPool
+- Fixed missing character W in RandomStringGenerator.CHARSET
+- Fixed incorrect range checks for Insert and FindIndex
+- Fixed incorrect hash calculation for managed string in StringVault
+- Fixed incorrect method call syntax in SharedArray & SharedReference
+- Fixed leak in NativeStrategy<T>.Dispose
+- Fixed incorrect range check for CopyFromSpan & CopyToSpan
+- Fixed incorrect implementation of DateTimeId.IsValid
+- Fixed incorrect implementation of MessageBroker<T>.PublishAsync
+- Fixed incorrect return value for CachedPublisher`2.Validate
+- Fixed incorrect implementation for IndexOf and Remove in StatelessList
+- Fixed incorrect implementation of EncosyNativeArrayExtensionsUnsafe.MemoryCopyUnsafe
+- Fixed incorrect implementation of NB<T>.Clear
+- Fixed wrong implementation of equality for Result type
+- Prevented possible null exception for Option.Equals<T> when T is reference type
+- Removed implicit conversion of decimal to Variant
+
+### Entities.Stats
+
+- Fixed an incorrection that makes Assert always fails for TryUpdateStatAssumeSingleEntity
+
+### Samples
+
+- Updated samples
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.6-preview.10`
+- `EncosyTower.SourceGen.*` to `0.1.6-preview.10`
+- `Samples.Data` to `0.1.6-preview.10`
+
 ## 0.1.6-preview.9
 
 ### Core
