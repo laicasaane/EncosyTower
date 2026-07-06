@@ -202,7 +202,7 @@ namespace EncosyTower.PubSub
                 return false;
             }
 
-            return false;
+            return true;
         }
 
         private readonly bool Validate(TMessage message, ILogger logger)
