@@ -55,7 +55,12 @@ namespace EncosyTower.Common
         public static bool Equals<T>(in Option<T> a, in Option<T> b)
             where T : IEquatable<T>
         {
-            return a._hasValue == b._hasValue && a._value.Equals(b._value);
+            if (a._hasValue != b._hasValue)
+            {
+                return false;
+            }
+
+            return a._hasValue == false || EqualityComparer<T>.Default.Equals(a._value, b._value);
         }
     }
 
