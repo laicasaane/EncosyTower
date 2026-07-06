@@ -1372,7 +1372,6 @@ namespace EncosyTower.Entities.Stats
             tmpGlobalUpdatedStats.Clear();
             tmpSameEntityUpdatedStats.Clear();
             tmpVisitedHandles.Clear();
-            tmpGlobalUpdatedStats.Add(statHandle);
 
             ref TStat statRef = ref StatAPI.GetStatRefUnsafe<TValuePair, TStat>(
                   statHandle
