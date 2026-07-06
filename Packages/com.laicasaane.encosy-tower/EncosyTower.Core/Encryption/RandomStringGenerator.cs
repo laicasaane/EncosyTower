@@ -9,7 +9,7 @@ namespace EncosyTower.Encryption
     {
         public static string Generate(int length)
         {
-            const string CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
+            const string CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._";
             const int RANDOM_LENGTH = 16;
 
             using var cryptoProvider = new RNGCryptoServiceProvider();
