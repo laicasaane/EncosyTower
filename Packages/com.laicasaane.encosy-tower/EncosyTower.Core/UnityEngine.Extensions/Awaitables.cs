@@ -120,7 +120,7 @@ namespace EncosyTower.UnityExtensions
 
         /// <summary>
         /// Gets an <see cref="Awaitable"/> that will complete when
-        /// all of the supplied <see cref="Awaitable"/> have completed.
+        /// all of <paramref name="awaitables"/> have completed.
         /// </summary>
         public static async Awaitable WhenAll([NotNull] params Awaitable[] awaitables)
         {
@@ -146,7 +146,7 @@ namespace EncosyTower.UnityExtensions
 
         /// <summary>
         /// Gets an <see cref="Awaitable"/> that will complete when
-        /// all of the supplied <see cref="Awaitable"/> have completed.
+        /// all of <paramref name="awaitables"/> have completed.
         /// </summary>
         public static async Awaitable WhenAll([NotNull] IEnumerable<Awaitable> awaitables)
         {
@@ -174,8 +174,42 @@ namespace EncosyTower.UnityExtensions
         }
 
         /// <summary>
+        /// Gets an <see cref="Awaitable"/> that will complete when the first
+        /// <paramref name="count"/> of <paramref name="awaitables"/> have completed.
+        /// </summary>
+        public static async Awaitable WhenAll([NotNull] Awaitable[] awaitables, int count)
+        {
+            Option<Exception> exceptionOpt = Option.None;
+
+            using (ListPool<Exception>.Get(out var exceptions))
+            {
+                exceptions.AsListFast().IncreaseCapacityTo(count);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var awaitable = awaitables[i];
+
+                    if (awaitable is not null)
+                    {
+                        await CaptureExceptionsAsync(awaitable, exceptions);
+                    }
+                }
+
+                if (exceptions.Count > 0)
+                {
+                    exceptionOpt = CreateAggregateException(exceptions);
+                }
+            }
+
+            if (exceptionOpt.TryGetValue(out var ex))
+            {
+                throw ex;
+            }
+        }
+
+        /// <summary>
         /// Gets an <see cref="Awaitable"/> that will complete when
-        /// all of the supplied <see cref="Awaitable"/> have completed.
+        /// all of <paramref name="awaitables"/> have completed.
         /// </summary>
         public static async Awaitable<T[]> WhenAll<T>([NotNull] params Awaitable<T>[] awaitables)
         {
@@ -209,7 +243,7 @@ namespace EncosyTower.UnityExtensions
 
         /// <summary>
         /// Gets an <see cref="Awaitable"/> that will complete when
-        /// all of the supplied <see cref="Awaitable"/> have completed.
+        /// all of <paramref name="awaitables"/> have completed.
         /// </summary>
         public static async Awaitable<T[]> WhenAll<T>([NotNull] IEnumerable<Awaitable<T>> awaitables)
         {
@@ -223,6 +257,40 @@ namespace EncosyTower.UnityExtensions
                     results.AsListFast().IncreaseCapacityTo(count);
                     exceptions.AsListFast().IncreaseCapacityTo(count);
                 }
+
+                await CaptureExceptionsAsync(awaitables, results, exceptions);
+
+                if (exceptions.Count > 0)
+                {
+                    result = CreateAggregateException(exceptions);
+                }
+                else
+                {
+                    result = results.ToArray();
+                }
+            }
+
+            if (result.TryGetError(out var ex))
+            {
+                throw ex;
+            }
+
+            return result.GetValueOrDefault(Array.Empty<T>());
+        }
+
+        /// <summary>
+        /// Gets an <see cref="Awaitable"/> that will complete when
+        /// first <paramref name="count"/> <paramref name="awaitables"/> have completed.
+        /// </summary>
+        public static async Awaitable<T[]> WhenAll<T>([NotNull] Awaitable<T>[] awaitables, int count)
+        {
+            Result<T[], Exception> result = default;
+
+            using (ListPool<T>.Get(out var results))
+            using (ListPool<Exception>.Get(out var exceptions))
+            {
+                results.AsListFast().IncreaseCapacityTo(count);
+                exceptions.AsListFast().IncreaseCapacityTo(count);
 
                 await CaptureExceptionsAsync(awaitables, results, exceptions);
 

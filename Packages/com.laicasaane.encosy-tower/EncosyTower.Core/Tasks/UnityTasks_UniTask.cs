@@ -44,8 +44,36 @@ namespace EncosyTower.Tasks
             => UniTask.WhenAll(tasks);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UniTask WhenAll(UniTask[] tasks, int count)
+        {
+            var span = tasks.AsSpan();
+
+            if (span.Length > count)
+            {
+                var excess = span[count..];
+                excess.Fill(UniTask.CompletedTask);
+            }
+
+            return UniTask.WhenAll(tasks);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UniTask<T[]> WhenAll<T>(UniTask<T>[] tasks)
             => UniTask.WhenAll(tasks);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static UniTask<T[]> WhenAll<T>(UniTask<T>[] tasks, int count)
+        {
+            var span = tasks.AsSpan();
+
+            if (span.Length > count)
+            {
+                var excess = span[count..];
+                excess.Fill(default);
+            }
+
+            return UniTask.WhenAll(tasks);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Forget(this UniTask self)

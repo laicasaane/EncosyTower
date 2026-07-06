@@ -50,6 +50,14 @@ namespace EncosyTower.Tasks
             => Awaitables.WhenAll(tasks);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Awaitable<T[]> WhenAll<T>(Awaitable<T>[] tasks, int count)
+            => Awaitables.WhenAll(tasks, count);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Awaitable WhenAll(Awaitable[] tasks, int count)
+            => Awaitables.WhenAll(tasks, count);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Forget(this Awaitable self)
             => Awaitables.Forget(self);
 
