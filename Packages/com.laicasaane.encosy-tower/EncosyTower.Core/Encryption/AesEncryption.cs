@@ -7,20 +7,25 @@ namespace EncosyTower.Encryption
 {
     public sealed class AesEncryption : EncryptionBase
     {
-        public AesEncryption([NotNull] string password, [NotNull] string saltKey, [NotNull] ILogger logger)
+        /// <param name="iterations">
+        /// The number of iterations for the key derivation function.
+        /// <br/>
+        /// Default is 10_000, which is a recommended value by security experts.
+        /// However, you can adjust this value based on your security requirements and performance considerations.
+        /// </param>
+        public AesEncryption(
+              [NotNull] string password
+            , [NotNull] string saltKey
+            , [NotNull] ILogger logger
+            , int iterations = 10_000
+        )
             : base(logger)
         {
-            // 10000 iterations is recommended by many security experts
-            // But this library focuses on providing cross-platform solution,
-            // including low processing-power devices such as mobile
-            // So I stay at 100 iterations
-            // You can freely increase this value to improve security
-            int numberIteration = 100;
-
             using var rfc2898 = new Rfc2898DeriveBytes(
                   password
                 , Encoding.UTF8.GetBytes(saltKey)
-                , numberIteration
+                , iterations
+                , HashAlgorithmName.SHA256
             );
 
             using var algorithm = new AesManaged {
