@@ -143,7 +143,7 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator bool(ByteBool value)
-            => value._raw > FALSE;
+            => value._raw != FALSE;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ByteBool(bool value)
@@ -211,7 +211,7 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator true(ByteBool value)
-            => value._raw == TRUE;
+            => value._raw != FALSE;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator false(ByteBool value)
