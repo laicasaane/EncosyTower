@@ -254,7 +254,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static bool AreTypesEqualSize()
         {
-            return UnsafeUtility.SizeOf<T> == UnsafeUtility.SizeOf<TNative>;
+            return UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<TNative>();
         }
 
         [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
