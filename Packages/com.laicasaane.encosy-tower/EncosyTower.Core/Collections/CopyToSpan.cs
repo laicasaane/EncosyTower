@@ -96,7 +96,7 @@ namespace EncosyTower.Collections
                 return false;
             }
 
-            if ((uint)sourceStartIndex > (uint)destination.Length)
+            if ((uint)length > (uint)destination.Length)
             {
                 return false;
             }

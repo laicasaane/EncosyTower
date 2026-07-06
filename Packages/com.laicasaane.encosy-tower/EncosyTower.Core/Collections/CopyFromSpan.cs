@@ -92,7 +92,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
         {
-            if ((uint)destinationStartIndex > (uint)source.Length)
+            if ((uint)length > (uint)source.Length)
             {
                 return false;
             }
