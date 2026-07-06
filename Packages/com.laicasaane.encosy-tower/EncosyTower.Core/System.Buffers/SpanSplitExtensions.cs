@@ -15,7 +15,11 @@ namespace System.Buffers
         public static SpanSplitEnumerator<T> Split<T>(this ReadOnlySpan<T> source, ReadOnlySpan<T> separator)
             where T : IEquatable<T>
         {
-            return new SpanSplitEnumerator<T>(source, separator, SpanSplitEnumeratorMode.Sequence);
+            return new SpanSplitEnumerator<T>(
+                  source
+                , separator
+                , separator.IsEmpty ? SpanSplitEnumeratorMode.EmptySequence : SpanSplitEnumeratorMode.Sequence
+            );
         }
 
         public static SpanSplitEnumerator<T> SplitAny<T>(this ReadOnlySpan<T> source, ReadOnlySpan<T> separators)
@@ -33,7 +37,11 @@ namespace System.Buffers
         public static SpanSplitEnumerator<T> Split<T>(this Span<T> source, ReadOnlySpan<T> separator)
             where T : IEquatable<T>
         {
-            return new SpanSplitEnumerator<T>(source, separator, SpanSplitEnumeratorMode.Sequence);
+            return new SpanSplitEnumerator<T>(
+                  source
+                , separator
+                , separator.IsEmpty ? SpanSplitEnumeratorMode.EmptySequence : SpanSplitEnumeratorMode.Sequence
+            );
         }
 
         public static SpanSplitEnumerator<T> SplitAny<T>(this Span<T> source, ReadOnlySpan<T> separators)
