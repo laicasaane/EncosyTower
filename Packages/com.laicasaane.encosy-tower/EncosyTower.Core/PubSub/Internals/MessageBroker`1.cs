@@ -297,21 +297,19 @@ namespace EncosyTower.PubSub.Internals
 
             var tasks = taskArrayPool.Rent(handlerList.Count);
 
-#if __ENCOSY_VALIDATION__
             try
-#endif
             {
                 GetTasks(handlerList, message, context, tasks);
 
-                await UnityTasks.WhenAll(tasks);
+                await UnityTasks.WhenAll(tasks, handlerList.Count);
             }
 #if __ENCOSY_VALIDATION__
             catch (Exception ex)
             {
                 context.Logger.LogException(ex);
             }
-            finally
 #endif
+            finally
             {
                 taskArrayPool.Return(tasks, true);
             }
