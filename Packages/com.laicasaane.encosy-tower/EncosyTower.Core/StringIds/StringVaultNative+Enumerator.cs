@@ -9,7 +9,7 @@ using Unity.Collections;
 
 namespace EncosyTower.StringIds
 {
-    partial struct NativeStringVault
+    partial struct StringVaultNative
     {
         public struct Enumerator : IEnumerator<UnmanagedString>
         {

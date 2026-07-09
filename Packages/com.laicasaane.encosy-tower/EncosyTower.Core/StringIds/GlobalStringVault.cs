@@ -15,9 +15,10 @@ namespace EncosyTower.StringIds
         private static void InitWhenDomainReloadDisabled()
         {
             // DO NOT clear the `s_vault`!!!
-            // Allocated StringId value stored in static fields should persist upon entering play mode every time.
-            // Because when Domain Reload is disabled, the Unity Editor is always in a single session,
-            // string.GetHashCode will persist as well.
+            // StringId values cached in static fields persist when Domain Reload is disabled.
+            // A StringId is an index into this vault; clearing the vault would leave those
+            // persisted ids dangling or silently remap them to different strings.
+
         }
 #endif
 

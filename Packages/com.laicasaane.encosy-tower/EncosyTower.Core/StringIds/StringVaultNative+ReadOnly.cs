@@ -10,14 +10,14 @@ using Unity.Collections;
 
 namespace EncosyTower.StringIds
 {
-    partial struct NativeStringVault
+    partial struct StringVaultNative
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnly AsReadOnly()
             => new(this);
 
-        public readonly struct ReadOnly : IReadOnlyList<UnmanagedString>, IIsCreated
-            , ICopyToSpan<UnmanagedString>, ITryCopyToSpan<UnmanagedString>
+        public readonly struct ReadOnly : IReadOnlyStringVault
+            , IReadOnlyList<UnmanagedString>
         {
             internal readonly NativeHashMap<StringHash, StringId>.ReadOnly _map;
             internal readonly NativeHashMap<UnmanagedString, StringId>.ReadOnly _collisionMap;
@@ -27,7 +27,7 @@ namespace EncosyTower.StringIds
             internal readonly NativeReference<int>.ReadOnly _count;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnly(in NativeStringVault vault)
+            public ReadOnly(in StringVaultNative vault)
             {
                 _map = vault._map.AsReadOnly();
                 _collisionMap = vault._collisionMap.AsReadOnly();
@@ -86,7 +86,7 @@ namespace EncosyTower.StringIds
 
                 if (registered)
                 {
-                    TryGetString(id, out var registeredString);
+                    TryGetUnmanagedString(id, out var registeredString);
 
                     if (str == registeredString)
                     {
@@ -106,10 +106,10 @@ namespace EncosyTower.StringIds
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Option<UnmanagedString> TryGetString(StringId id)
-                => Option.SomeIf(TryGetString(id, out var result), result);
+            public Option<UnmanagedString> TryGetUnmanagedString(StringId id)
+                => Option.SomeIf(TryGetUnmanagedString(id, out var result), result);
 
-            public bool TryGetString(StringId id, out UnmanagedString result)
+            public bool TryGetUnmanagedString(StringId id, out UnmanagedString result)
             {
                 var indexUnsigned = (uint)id.Id;
                 var index = (int)indexUnsigned;
@@ -179,7 +179,7 @@ namespace EncosyTower.StringIds
                 => GetEnumerator();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(in NativeStringVault vault)
+            public static implicit operator ReadOnly(in StringVaultNative vault)
                 => new(vault);
         }
     }

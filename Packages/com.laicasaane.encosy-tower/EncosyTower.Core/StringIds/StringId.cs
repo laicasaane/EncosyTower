@@ -10,7 +10,7 @@ namespace EncosyTower.StringIds
     /// <list type="bullet">
     /// <item>The global API <see cref="StringToId"/></item>
     /// <item>A local <see cref="StringVault"/></item>
-    /// <item>A local <see cref="NativeStringVault"/></item>
+    /// <item>A local <see cref="StringVaultNative"/></item>
     /// </list>
     /// </summary>
     /// <remarks>
@@ -35,7 +35,7 @@ namespace EncosyTower.StringIds
     /// <list type="bullet">
     /// <item>The global API <see cref="StringToId"/></item>
     /// <item>A local <see cref="StringVault"/></item>
-    /// <item>A local <see cref="NativeStringVault"/></item>
+    /// <item>A local <see cref="StringVaultNative"/></item>
     /// </list>
     /// </summary>
     /// <remarks>

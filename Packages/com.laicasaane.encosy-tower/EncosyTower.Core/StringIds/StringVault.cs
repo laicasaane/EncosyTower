@@ -12,10 +12,9 @@ using UnityEngine;
 
 namespace EncosyTower.StringIds
 {
-    public sealed partial class StringVault : IDisposable, IClearable, IIncreaseCapacity
+    public sealed partial class StringVault : IStringVault
         , IReadOnlyList<string>
         , ICopyToSpan<string>, ITryCopyToSpan<string>
-        , ICopyToSpan<UnmanagedString>, ITryCopyToSpan<UnmanagedString>
     {
         /// <summary>
         /// The default instance used by <see cref="StringToId"/> and <see cref="IdToString"/>.
@@ -62,6 +61,12 @@ namespace EncosyTower.StringIds
             {
                 GetOrMakeId(str);
             }
+        }
+
+        public bool IsCreated
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _map is not null;
         }
 
         public int Capacity
