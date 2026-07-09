@@ -34,9 +34,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Common;
 using EncosyTower.Debugging;
 using EncosyTower.Types;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -47,7 +49,13 @@ namespace EncosyTower.Buffers
     /// Through the IBufferStrategy interface, with these, datastructure can use interchangeably
     /// native and managed memory and other strategies.
     /// </summary>
-    public struct NativeStrategy<T> : IBufferStrategy<T>, IAsNativeSlice<T>, IAsNativeSliceReadOnly<T>
+    public struct NativeStrategy<T> : IBufferStrategy<T>, IRefIndexer<T>
+        , IHasCapacity, IIsCreated, IClearable, IDisposable
+        , IAsSpan<T>, IAsReadOnlySpan<T>
+        , IAsNativeSlice<T>, IAsNativeSliceReadOnly<T>
+#if UNITY_COLLECTIONS
+        , INativeDisposable
+#endif
         where T : unmanaged
     {
 #if __ENCOSY_VALIDATION__
@@ -241,7 +249,40 @@ namespace EncosyTower.Buffers
             _nativeAllocator = default;
         }
 
-        public readonly struct ReadOnly : IReadOnlyBufferStrategy<T>, IAsNativeSliceReadOnly<T>
+        public JobHandle Dispose(JobHandle inputDeps)
+        {
+            var array = _realBuffer.AsNativeArray();
+            ThrowIfAlreadyDisposed(array.IsCreated);
+
+            if (array.IsCreated && _nativeAllocator.IsCreated)
+            {
+                inputDeps = JobHandle.CombineDependencies(
+                      array.Dispose(inputDeps)
+                    , _nativeAllocator.Dispose(inputDeps)
+                );
+            }
+            else
+            {
+                if (array.IsCreated)
+                {
+                    inputDeps = array.Dispose(inputDeps);
+                }
+
+                if (_nativeAllocator.IsCreated)
+                {
+                    inputDeps = _nativeAllocator.Dispose(inputDeps);
+                }
+            }
+
+            _realBuffer = default;
+            _nativeAllocator = default;
+
+            return inputDeps;
+        }
+
+        public readonly struct ReadOnly : IReadOnlyBufferStrategy<T>, IRefReadOnlyIndexer<T>
+            , IHasCapacity, IIsCreated
+            , IAsNativeSliceReadOnly<T>, IAsReadOnlySpan<T>
         {
 #if __ENCOSY_VALIDATION__
             static ReadOnly()

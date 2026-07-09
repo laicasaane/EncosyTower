@@ -24,8 +24,8 @@ namespace EncosyTower.Collections
     /// <para>SharedListNative is not thread safe.</para>
     /// <para>The capacity of SharedListNative is immutable, cannot change.</para>
     /// </remarks>
-    public readonly partial struct SharedListNative<T>
-        : IReadOnlyList<T>, IIsCreated, IToArray<T>
+    public readonly partial struct SharedListNative<T> : IReadOnlyList<T>, IIndexer<T>
+        , IIsCreated, IToArray<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IAsNativeSlice<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>

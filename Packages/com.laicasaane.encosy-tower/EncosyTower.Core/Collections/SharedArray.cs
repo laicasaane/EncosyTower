@@ -29,6 +29,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.CompilerServices.Exposed;
 using System.Runtime.InteropServices;
 using EncosyTower.Common;
+using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -72,7 +73,7 @@ namespace EncosyTower.Collections
     /// </summary>
     /// <typeparam name="T">The element type in the managed representation.</typeparam>
     /// <typeparam name="TNative">The element type in the NativeArray representation. Must be the same size as <typeparamref name="T"/>.</typeparam>
-    public class SharedArray<T, TNative> : IDisposable, IClearable, IResizable, IEnumerable<T>
+    public class SharedArray<T, TNative> : IDisposable, IClearable, IResizable, IEnumerable<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IAsMemory<T>, IAsReadOnlyMemory<T>
         , IAsNativeArray<TNative>, IAsNativeSlice<TNative>, IHasLength
         where T : unmanaged
@@ -164,6 +165,24 @@ namespace EncosyTower.Collections
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _managed.Length;
+        }
+
+        public T this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                Checks.IsTrue((uint)index < (uint)_managed.Length, "index is outside the range of valid indices for the SharedArray<T>");
+                return _managed[index];
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                Checks.IsTrue((uint)index < (uint)_managed.Length, "index is outside the range of valid indices for the SharedArray<T>");
+                _version++;
+                _managed[index] = value;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -52,7 +52,7 @@ namespace EncosyTower.Collections
         }
     }
 
-    public partial class SharedList<T, TNative> : IList<T>, IReadOnlyList<T>
+    public partial class SharedList<T, TNative> : IList<T>, IReadOnlyList<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IToArray<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>

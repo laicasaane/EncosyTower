@@ -19,7 +19,7 @@ namespace EncosyTower.Collections
     /// <para>The size of <typeparamref name="TBuffer"/> (in bytes) must be greater than
     /// or equal to the size of <typeparamref name="T"/>.</para>
     /// </typeparam>
-    public unsafe readonly struct FixedArray<T, TBuffer> : IReadOnlyList<T>
+    public unsafe readonly struct FixedArray<T, TBuffer> : IReadOnlyList<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
@@ -294,7 +294,8 @@ namespace EncosyTower.Collections
             }
         }
 
-        public readonly struct ReadOnly : IReadOnlyList<T>, IAsReadOnlySpan<T>, ICopyToSpan<T>, ITryCopyToSpan<T>
+        public readonly struct ReadOnly : IReadOnlyList<T>, IReadOnlyIndexer<T>
+            , IAsReadOnlySpan<T>, ICopyToSpan<T>, ITryCopyToSpan<T>
         {
             private readonly FixedArray<T, TBuffer> _array;
 

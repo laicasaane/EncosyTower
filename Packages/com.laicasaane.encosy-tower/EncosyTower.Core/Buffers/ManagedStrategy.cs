@@ -25,6 +25,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Common;
 
 namespace EncosyTower.Buffers
 {
@@ -33,7 +34,10 @@ namespace EncosyTower.Buffers
     /// Through the IBufferStrategy interface, external datastructure can use interchangeably native and managed memory.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public struct ManagedStrategy<T> : IBufferStrategy<T>, IAsMemory<T>, IAsReadOnlyMemory<T>
+    public struct ManagedStrategy<T> : IBufferStrategy<T>, IRefIndexer<T>
+        , IHasCapacity, IIsCreated, IClearable
+        , IAsSpan<T>, IAsReadOnlySpan<T>
+        , IAsMemory<T>, IAsReadOnlyMemory<T>
     {
         internal MBInternal<T> _realBuffer;
 
@@ -148,7 +152,9 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Dispose() { }
 
-        public struct ReadOnly : IReadOnlyBufferStrategy<T>, IAsReadOnlyMemory<T>
+        public struct ReadOnly : IReadOnlyBufferStrategy<T>, IRefReadOnlyIndexer<T>
+            , IHasCapacity, IIsCreated
+            , IAsReadOnlySpan<T>, IAsReadOnlyMemory<T>
         {
             internal MBInternal<T>.ReadOnly _realBuffer;
 
