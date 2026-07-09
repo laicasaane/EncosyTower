@@ -14,11 +14,28 @@ namespace EncosyTower.StringIds
         [UnityEditor.InitializeOnEnterPlayMode, UnityEngine.Scripting.Preserve]
         private static void InitWhenDomainReloadDisabled()
         {
+#if ENCOSY_CLEAR_GLOBAL_STRING_VAULT_ON_ENTER_PLAY_MODE
+            // The user has explicitly opted in to clearing the vault on entering play mode
+            // by defining ENCOSY_CLEAR_GLOBAL_STRING_VAULT_ON_ENTER_PLAY_MODE in Player Settings.
+            // They are responsible for re-making every StringId cached in their own static fields,
+            // otherwise those ids become dangling or silently remap to different strings.
+            s_vault.Clear();
+
+#if !ENCOSY_DISABLE_LOG_INFO
+            Logging.StaticDevLogger.LogInfo(
+                "GlobalStringVault has been cleared on entering play mode " +
+                "because ENCOSY_CLEAR_GLOBAL_STRING_VAULT_ON_ENTER_PLAY_MODE is defined. " +
+                "Any StringId cached in static fields must be re-made via StringToId.Get()."
+            );
+#endif
+#else
             // DO NOT clear the `s_vault`!!!
             // StringId values cached in static fields persist when Domain Reload is disabled.
             // A StringId is an index into this vault; clearing the vault would leave those
             // persisted ids dangling or silently remap them to different strings.
-
+            // To opt in to clearing anyway, define ENCOSY_CLEAR_GLOBAL_STRING_VAULT_ON_ENTER_PLAY_MODE
+            // in Player Settings and re-make every cached StringId manually.
+#endif
         }
 #endif
 
