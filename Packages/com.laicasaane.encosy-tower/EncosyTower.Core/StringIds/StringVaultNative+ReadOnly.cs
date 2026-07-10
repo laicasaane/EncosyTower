@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using EncosyTower.Collections;
 using EncosyTower.Common;
 using Unity.Collections;
 
@@ -13,7 +12,7 @@ namespace EncosyTower.StringIds
     partial struct StringVaultNative
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
+        public readonly ReadOnly AsReadOnly()
             => new(this);
 
         public readonly struct ReadOnly : IReadOnlyStringVault
