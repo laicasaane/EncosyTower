@@ -83,7 +83,7 @@ namespace EncosyTower.Collections
         private GCHandle _gcHandle;
 
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-        private AtomicSafetyHandle m_SafetyHandle;
+        private AtomicSafetyHandle m_Safety;
 #endif
 
         internal T[] _managed;
@@ -268,8 +268,8 @@ namespace EncosyTower.Collections
             }
 
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckDeallocateAndThrow(m_SafetyHandle);
-            AtomicSafetyHandle.Release(m_SafetyHandle);
+            AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
+            AtomicSafetyHandle.Release(m_Safety);
 #endif
 
             if (_gcHandle.IsAllocated)
@@ -292,7 +292,7 @@ namespace EncosyTower.Collections
         public void Clear()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
             Array.Clear(_managed, 0, _managed.Length);
@@ -313,8 +313,8 @@ namespace EncosyTower.Collections
             _version++;
 
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckDeallocateAndThrow(m_SafetyHandle);
-            AtomicSafetyHandle.Release(m_SafetyHandle);
+            AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
+            AtomicSafetyHandle.Release(m_Safety);
 #endif
 
             if (_gcHandle.IsAllocated)
@@ -329,7 +329,7 @@ namespace EncosyTower.Collections
         public T[] AsManagedArray()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
             return _managed;
@@ -339,7 +339,7 @@ namespace EncosyTower.Collections
         public ArraySegment<T> AsArraySegment()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
             return _managed;
@@ -349,7 +349,7 @@ namespace EncosyTower.Collections
         public Span<T> AsSpan()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
             return _managed.AsSpan();
@@ -359,7 +359,7 @@ namespace EncosyTower.Collections
         public ReadOnlySpan<T> AsReadOnlySpan()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckReadAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
 
             return _managed.AsSpan();
@@ -369,7 +369,7 @@ namespace EncosyTower.Collections
         public Memory<T> AsMemory()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
             return _managed.AsMemory();
@@ -379,7 +379,7 @@ namespace EncosyTower.Collections
         public ReadOnlyMemory<T> AsReadOnlyMemory()
         {
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckReadAndThrow(m_SafetyHandle);
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
 
             return _managed.AsMemory();
@@ -457,8 +457,8 @@ namespace EncosyTower.Collections
                 }
 
 #if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
-                m_SafetyHandle = AtomicSafetyHandle.Create();
-                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref _native, m_SafetyHandle);
+                m_Safety = AtomicSafetyHandle.Create();
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref _native, m_Safety);
 #endif
             }
         }
@@ -485,7 +485,7 @@ namespace EncosyTower.Collections
                 // Unlike the other safety checks, only check if it's safe to read.
                 // Enumerating an array of structs gives the user copies of each element, since structs pass by value.
                 // This means that the source memory can't be modified while enumerating.
-                AtomicSafetyHandle.CheckReadAndThrow(sharedArray.m_SafetyHandle);
+                AtomicSafetyHandle.CheckReadAndThrow(sharedArray.m_Safety);
 #endif
 
                 _sharedArray = sharedArray;
