@@ -9,36 +9,6 @@ namespace EncosyTower.Collections.Extensions
 {
     public static class SharedListExtensions
     {
-        /// <remarks>
-        /// This method allocates an internal <see cref="SharedListProxy{T, TNative, SharedList{T}}"/>
-        /// which implements <see cref="IListProxy{T}"/> for <paramref name="self"/>.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ProxiedList<T> ToProxiedList<T>([NotNull] this SharedList<T> self)
-            where T : unmanaged
-            => new(new SharedListProxy<T, T, SharedList<T>>(self));
-
-        /// <remarks>
-        /// This method allocates an internal <see cref="SharedListProxy{T, TNative, SharedList{T, TNative}}"/>
-        /// which implements <see cref="IListProxy{T}"/> for <paramref name="self"/>.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ProxiedList<T> ToProxiedList<T, TNative>([NotNull] this SharedList<T, TNative> self)
-            where T : unmanaged
-            where TNative : unmanaged
-            => new(new SharedListProxy<T, TNative, SharedList<T, TNative>>(self));
-
-        /// <remarks>
-        /// This method allocates an internal <see cref="SharedListProxy{T, TNative, TSharedList}"/>
-        /// which implements <see cref="IListProxy{T}"/> for <paramref name="self"/>.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ProxiedList<T> ToProxiedList<T, TNative, TSharedList>([NotNull] this TSharedList self)
-            where T : unmanaged
-            where TNative : unmanaged
-            where TSharedList : SharedList<T, TNative>
-            => new(new SharedListProxy<T, TNative, TSharedList>(self));
-
         public static bool Contains<T, TNative, TComparer>(
               [NotNull] this SharedList<T, TNative> self
             , T item
@@ -293,48 +263,6 @@ namespace EncosyTower.Collections.Extensions
 
             self._version.ValueRW++;
             ArraySortHelper<T, TComparer>.Sort(self.AsSpan().Slice(index, count), comparer);
-        }
-
-        internal sealed class SharedListProxy<T, TNative, TList> : IListProxy<T>
-            where T : unmanaged
-            where TNative : unmanaged
-            where TList : SharedList<T, TNative>
-        {
-            internal readonly TList _list;
-
-            public SharedListProxy(TList list)
-            {
-                _list = list;
-            }
-
-            public T[] Items
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _list._buffer._managed;
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                set => _list._buffer.Initialize(value);
-            }
-
-            public ref int Size
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref _list._count.ValueRW;
-            }
-
-            public ref int Version
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref _list._version.ValueRW;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Resize(int newCapacity, bool _)
-                => Resize(newCapacity);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Resize(int newCapacity)
-                => _list.IncreaseCapacityTo(newCapacity);
         }
     }
 }
