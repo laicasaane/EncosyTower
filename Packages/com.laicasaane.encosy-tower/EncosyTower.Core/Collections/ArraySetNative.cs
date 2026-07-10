@@ -81,9 +81,9 @@ namespace EncosyTower.Collections
 #endif
         }
 
-        internal NativeStrategy<ArrayMapNode<T>> _valuesInfo;
-        internal NativeStrategy<T> _values;
-        internal NativeStrategy<int> _buckets;
+        internal NativeBuffer<ArrayMapNode<T>> _valuesInfo;
+        internal NativeBuffer<T> _values;
+        internal NativeBuffer<int> _buckets;
 
         internal NativeReference<ulong> _fastModBucketsMultiplier;
         internal NativeReference<uint> _collisions;
@@ -139,9 +139,9 @@ namespace EncosyTower.Collections
         }
 
         private ArraySetNative(
-              NativeStrategy<ArrayMapNode<T>> valuesInfo
-            , NativeStrategy<T> values
-            , NativeStrategy<int> buckets
+              NativeBuffer<ArrayMapNode<T>> valuesInfo
+            , NativeBuffer<T> values
+            , NativeBuffer<int> buckets
             , NativeReference<ulong> fastModBucketsMultiplier
             , NativeReference<uint> collisions
             , NativeReference<int> freeValueCellIndex

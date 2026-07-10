@@ -1,8 +1,9 @@
 namespace EncosyTower.Buffers
 {
-    public interface IBufferProvider<T>
+    public interface IBufferProvider<TBuffer, T>
+        where TBuffer : IBuffer<T>
     {
-        ref T[] Buffer { get; }
+        ref TBuffer Buffer { get; }
 
         ref int Count { get; }
 

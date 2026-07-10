@@ -9,18 +9,20 @@ using EncosyTower.Debugging;
 
 namespace EncosyTower.Buffers
 {
-    public struct BufferProviderEnumerator<T> : IEnumerator<T>, IEnumerator
+    public struct BufferProviderEnumerator<TProvider, TBuffer, T> : IEnumerator<T>, IEnumerator
+        where TProvider : IBufferProvider<TBuffer, T>
+        where TBuffer : IBuffer<T>
     {
-        private readonly IBufferProvider<T> _list;
-        private int _index;
+        private readonly TProvider _provider;
         private readonly int _version;
+        private int _index;
         private T _current;
 
-        internal BufferProviderEnumerator([NotNull] IBufferProvider<T> list)
+        internal BufferProviderEnumerator([NotNull] TProvider provider)
         {
-            _list = list;
+            _provider = provider;
             _index = 0;
-            _version = list.Version;
+            _version = provider.Version;
             _current = default;
         }
 
@@ -30,7 +32,7 @@ namespace EncosyTower.Buffers
 
         public bool MoveNext()
         {
-            var localList = _list;
+            var localList = _provider;
 
             if (_version == localList.Version && ((uint)_index < (uint)localList.Count))
             {
@@ -43,12 +45,12 @@ namespace EncosyTower.Buffers
 
         private bool MoveNextRare()
         {
-            if (_version != _list.Version)
+            if (_version != _provider.Version)
             {
                 ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
             }
 
-            _index = _list.Count + 1;
+            _index = _provider.Count + 1;
             _current = default;
             return false;
         }
@@ -61,7 +63,7 @@ namespace EncosyTower.Buffers
 
         public void Reset()
         {
-            if (_version != _list.Version)
+            if (_version != _provider.Version)
             {
                 ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
             }
@@ -74,7 +76,7 @@ namespace EncosyTower.Buffers
         {
             get
             {
-                if (_index == 0 || _index == _list.Count + 1)
+                if (_index == 0 || _index == _provider.Count + 1)
                 {
                     ThrowHelper.ThrowInvalidOperationException_EnumOpCantHappen();
                 }

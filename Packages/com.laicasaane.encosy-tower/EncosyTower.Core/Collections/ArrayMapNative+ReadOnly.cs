@@ -25,9 +25,9 @@ namespace EncosyTower.Collections
 
         public readonly struct ReadOnly : IIsCreated, IHasCount, IHasCapacity, ITryGetValue<TKey, TValue>
         {
-            internal readonly NativeStrategy<ArrayMapNode<TKey>>.ReadOnly _valuesInfo;
-            internal readonly NativeStrategy<TValue>.ReadOnly _values;
-            internal readonly NativeStrategy<int>.ReadOnly _buckets;
+            internal readonly NativeBuffer<ArrayMapNode<TKey>>.ReadOnly _valuesInfo;
+            internal readonly NativeBuffer<TValue>.ReadOnly _values;
+            internal readonly NativeBuffer<int>.ReadOnly _buckets;
 
             internal readonly NativeReference<ulong>.ReadOnly _fastModBucketsMultiplier;
             internal readonly NativeReference<uint>.ReadOnly _collisions;

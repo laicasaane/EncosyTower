@@ -59,9 +59,9 @@ namespace EncosyTower.Collections
         , IReadOnlyCollection<ArrayMapKeyValuePair<TKey, TValue>>
         , IClearable, IIncreaseCapacity, IHasCount, ITryGetValue<TKey, TValue>
     {
-        internal ManagedStrategy<ArrayMapNode<TKey>> _valuesInfo;
-        internal ManagedStrategy<TValue> _values;
-        internal ManagedStrategy<int> _buckets;
+        internal ManagedBuffer<ArrayMapNode<TKey>> _valuesInfo;
+        internal ManagedBuffer<TValue> _values;
+        internal ManagedBuffer<int> _buckets;
 
         internal ulong _fastModBucketsMultiplier;
         internal uint _collisions;
@@ -966,12 +966,12 @@ namespace EncosyTower.Collections
     [DebuggerTypeProxy(typeof(ArrayMapKeyValuePairDebugProxy<,>))]
     public readonly struct ArrayMapKeyValuePair<TKey, TValue> : IIsValid
     {
-        private readonly ManagedStrategy<TValue> _mapValues;
+        private readonly ManagedBuffer<TValue> _mapValues;
         private readonly TKey _key;
         private readonly int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ArrayMapKeyValuePair(in TKey key, in ManagedStrategy<TValue> mapValues, int index)
+        public ArrayMapKeyValuePair(in TKey key, in ManagedBuffer<TValue> mapValues, int index)
         {
             _mapValues = mapValues;
             _index = index;

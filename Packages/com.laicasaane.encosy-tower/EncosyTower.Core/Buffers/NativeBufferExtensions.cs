@@ -6,10 +6,10 @@ using EncosyTower.Debugging;
 
 namespace EncosyTower.Buffers
 {
-    public static class NativeStrategyExtensions
+    public static class NativeBufferExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ShiftLeft<T>(this NativeStrategy<T> self, int index, int count)
+        public static void ShiftLeft<T>(this NativeBuffer<T> self, int index, int count)
             where T : unmanaged
         {
             Checks.IsTrue(index < self.Capacity, "Out of bounds index");
@@ -20,12 +20,12 @@ namespace EncosyTower.Buffers
 
             Checks.IsTrue(count > index, "Count is lesser than index");
 
-            var array = self._realBuffer.AsNativeArray();
+            var array = self.AsNativeArray();
             array.MemoryCopyUnsafe(index + 1, index, count - index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ShiftRight<T>(this NativeStrategy<T> self, int index, int count)
+        public static void ShiftRight<T>(this NativeBuffer<T> self, int index, int count)
             where T : unmanaged
         {
             Checks.IsTrue(index < self.Capacity, "Out of bounds index");
@@ -36,7 +36,7 @@ namespace EncosyTower.Buffers
 
             Checks.IsTrue(count > index, "Count is lesser than index");
 
-            var array = self._realBuffer.AsNativeArray();
+            var array = self.AsNativeArray();
             array.MemoryCopyUnsafe(index, index + 1, count - index);
         }
     }

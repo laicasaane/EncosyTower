@@ -90,9 +90,9 @@ namespace EncosyTower.Collections
 #endif
         }
 
-        internal NativeStrategy<ArrayMapNode<TKey>> _valuesInfo;
-        internal NativeStrategy<TValue> _values;
-        internal NativeStrategy<int> _buckets;
+        internal NativeBuffer<ArrayMapNode<TKey>> _valuesInfo;
+        internal NativeBuffer<TValue> _values;
+        internal NativeBuffer<int> _buckets;
 
         internal NativeReference<ulong> _fastModBucketsMultiplier;
         internal NativeReference<uint> _collisions;
@@ -148,9 +148,9 @@ namespace EncosyTower.Collections
         }
 
         private ArrayMapNative(
-              NativeStrategy<ArrayMapNode<TKey>> valuesInfo
-            , NativeStrategy<TValue> values
-            , NativeStrategy<int> buckets
+              NativeBuffer<ArrayMapNode<TKey>> valuesInfo
+            , NativeBuffer<TValue> values
+            , NativeBuffer<int> buckets
             , NativeReference<ulong> fastModBucketsMultiplier
             , NativeReference<uint> collisions
             , NativeReference<int> freeValueCellIndex
@@ -920,12 +920,12 @@ namespace EncosyTower.Collections
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {
-        private readonly NativeStrategy<TValue> _mapValues;
+        private readonly NativeBuffer<TValue> _mapValues;
         private readonly TKey _key;
         private readonly int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ArrayMapNativeKeyValuePair(in TKey key, in NativeStrategy<TValue> mapValues, int index)
+        public ArrayMapNativeKeyValuePair(in TKey key, in NativeBuffer<TValue> mapValues, int index)
         {
             _mapValues = mapValues;
             _index = index;

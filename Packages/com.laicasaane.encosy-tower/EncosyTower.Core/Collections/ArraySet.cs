@@ -51,9 +51,9 @@ namespace EncosyTower.Collections
         , IClearable, IIncreaseCapacity, IHasCount
         , ICopyToSpan<T>, ITryCopyToSpan<T>
     {
-        internal ManagedStrategy<ArrayMapNode<T>> _valuesInfo;
-        internal ManagedStrategy<T> _values;
-        internal ManagedStrategy<int> _buckets;
+        internal ManagedBuffer<ArrayMapNode<T>> _valuesInfo;
+        internal ManagedBuffer<T> _values;
+        internal ManagedBuffer<int> _buckets;
 
         internal ulong _fastModBucketsMultiplier;
         internal uint _collisions;

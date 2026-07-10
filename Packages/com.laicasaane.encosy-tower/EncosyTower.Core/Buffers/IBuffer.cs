@@ -22,17 +22,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using EncosyTower.Collections;
 using EncosyTower.Common;
 
 namespace EncosyTower.Buffers
 {
-    public interface IBuffer<T> : IClearable, IAsSpan<T>, IAsReadOnlySpan<T>
+    public interface IBuffer<T> : IAlloc
+        , IClearable, IAsSpan<T>, IAsReadOnlySpan<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>
-        , IHasCapacity, IIsCreated
+        , IResizable, IHasCapacity, IIsCreated
+        , IDisposable
     {
         ref T this[int index] { get; }
+
+        void Resize(int newCapacity, bool copyContent, bool memClear);
+
+        void FastClear();
     }
 
     public interface IReadOnlyBuffer<T> : IAsReadOnlySpan<T>

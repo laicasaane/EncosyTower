@@ -34,10 +34,10 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
-using EncosyTower.Common;
 using EncosyTower.Debugging;
 using EncosyTower.Types;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
@@ -45,31 +45,33 @@ using UnityEngine;
 namespace EncosyTower.Buffers
 {
     /// <summary>
-    /// They are called strategy because they abstract the handling of the memory type used.
-    /// Through the IBufferStrategy interface, with these, datastructure can use interchangeably
-    /// native and managed memory and other strategies.
+    /// A buffer backed by a <see cref="NativeArray{T}"/>.
+    /// <br/>
+    /// <see cref="NativeBuffer{T}"/> abstracts the handling of native memory so that
+    /// data structures can use it interchangeably with <see cref="ManagedBuffer{T}"/>
+    /// and <see cref="UnsafeBuffer{T}"/> through the <see cref="IBuffer{T}"/> contract.
     /// </summary>
-    public struct NativeStrategy<T> : IBufferStrategy<T>, IRefIndexer<T>
-        , IHasCapacity, IIsCreated, IClearable, IDisposable
-        , IAsSpan<T>, IAsReadOnlySpan<T>
+    public struct NativeBuffer<T> : IBuffer<T>, IRefIndexer<T>
         , IAsNativeSlice<T>, IAsNativeSliceReadOnly<T>
-#if UNITY_COLLECTIONS
         , INativeDisposable
-#endif
         where T : unmanaged
     {
 #if __ENCOSY_VALIDATION__
-        static NativeStrategy()
+        static NativeBuffer()
         {
             ThrowHelper.ThrowIfNotUnmanagedType<T>(EncosyTypeExtensions.IsUnmanaged<T>());
         }
 #endif
 
         internal NativeReference<AllocatorStrategy> _nativeAllocator;
-        internal NBInternal<T> _realBuffer;
+
+#if UNITY_BURST
+        [Unity.Burst.NoAlias]
+#endif
+        internal NativeArray<T> _buffer;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeStrategy(int size, AllocatorStrategy allocatorStrategy, bool clear = true) : this()
+        public NativeBuffer(int size, AllocatorStrategy allocatorStrategy, bool clear = true) : this()
         {
             ThrowIfInvalidAllocatorStrategy(allocatorStrategy.IsValid);
 
@@ -77,34 +79,44 @@ namespace EncosyTower.Buffers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private NativeStrategy(NativeReference<AllocatorStrategy> nativeAllocator, NBInternal<T> realBuffer)
+        public NativeBuffer(NativeReference<AllocatorStrategy> nativeAllocator, NativeArray<T> buffer)
         {
             _nativeAllocator = nativeAllocator;
-            _realBuffer = realBuffer;
+            _buffer = buffer;
         }
 
         public readonly int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _realBuffer.Capacity;
+            get => _buffer.Length;
         }
 
         public readonly bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _realBuffer.IsCreated;
+            get => _buffer.IsCreated;
         }
 
         public ref T this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _realBuffer[index];
+            get
+            {
+#if __ENCOSY_VALIDATION__
+                ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
+#endif
+
+                unsafe
+                {
+                    return ref UnsafeUtility.ArrayElementAsRef<T>(_buffer.GetUnsafePtr(), index);
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Alloc(int newCapacity, AllocatorStrategy allocatorStrategy, bool memClear = true)
         {
-            ThrowIfBufferAlreadyAllocated(_realBuffer.AsNativeArray().IsCreated);
+            ThrowIfBufferAlreadyAllocated(_buffer.IsCreated);
 
             if (allocatorStrategy.TryGetAllocatorHandle(out var handle))
             {
@@ -127,11 +139,9 @@ namespace EncosyTower.Buffers
                 Value = allocator
             };
 
-            var array = memClear
+            _buffer = memClear
                 ? NativeArray.Create<T>(newCapacity, allocator)
                 : NativeArray.CreateFast<T>(newCapacity, allocator);
-
-            _realBuffer = new NBInternal<T>(array);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -145,7 +155,7 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resize(int newSize, bool copyContent, bool memClear)
         {
-            ThrowIfResizeUninitializedBuffer(_nativeAllocator.IsCreated && _realBuffer.AsNativeArray().IsCreated);
+            ThrowIfResizeUninitializedBuffer(_nativeAllocator.IsCreated && _buffer.IsCreated);
 
             var capacity = Capacity;
 
@@ -173,7 +183,7 @@ namespace EncosyTower.Buffers
 
         private void Resize(int newSize, bool copyContent, bool memClear, AllocatorManager.AllocatorHandle allocator)
         {
-            var oldBuffer = _realBuffer.AsNativeArray();
+            var oldBuffer = _buffer;
             var oldLength = oldBuffer.Length;
             var newBuffer = memClear
                 ? NativeArray.Create<T>(newSize, allocator)
@@ -186,7 +196,7 @@ namespace EncosyTower.Buffers
             }
 
             oldBuffer.Dispose();
-            _realBuffer = new NBInternal<T>(newBuffer);
+            _buffer = newBuffer;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,50 +204,113 @@ namespace EncosyTower.Buffers
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Clear()
-            => _realBuffer.Clear();
+        {
+            unsafe
+            {
+                UnsafeUtility.MemClear(_buffer.GetUnsafePtr(), (long)_buffer.Length * UnsafeUtility.SizeOf<T>());
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyFrom(ReadOnlySpan<T> source)
+            => CopyFrom(0, source);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyFrom(ReadOnlySpan<T> source, int length)
+            => CopyFrom(0, source, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyFrom(int destinationStartIndex, ReadOnlySpan<T> source)
+            => CopyFrom(destinationStartIndex, source, source.Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
+            => new CopyFromSpan<T>(AsSpan()).CopyFrom(destinationStartIndex, source, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyFrom(ReadOnlySpan<T> source)
+            => TryCopyFrom(0, source);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyFrom(ReadOnlySpan<T> source, int length)
+            => TryCopyFrom(0, source, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyFrom(int destinationStartIndex, ReadOnlySpan<T> source)
+            => TryCopyFrom(destinationStartIndex, source, source.Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
+            => new CopyFromSpan<T>(AsSpan()).TryCopyFrom(destinationStartIndex, source, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(Span<T> destination)
+            => CopyTo(0, destination);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(Span<T> destination, int length)
+            => CopyTo(0, destination, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(int sourceStartIndex, Span<T> destination)
+            => CopyTo(sourceStartIndex, destination, destination.Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(int sourceStartIndex, Span<T> destination, int length)
+            => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(Span<T> destination)
+            => TryCopyTo(0, destination);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(Span<T> destination, int length)
+            => TryCopyTo(0, destination, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination)
+            => TryCopyTo(sourceStartIndex, destination, destination.Length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
+            => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal readonly NativeArray<T> AsNativeArray()
-            => _realBuffer.AsNativeArray();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly NB<T> AsRealBuffer()
-            => _realBuffer;
+            => _buffer;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly NativeSlice<T> AsNativeSlice()
-            => _realBuffer.AsNativeSlice();
+            => new(_buffer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly NativeSliceReadOnly<T> AsNativeSliceReadOnly()
-            => _realBuffer.AsNativeSliceReadOnly();
+            => new(_buffer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Span<T> AsSpan()
-            => _realBuffer.AsSpan();
+            => _buffer.AsSpan();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<T> AsReadOnlySpan()
-            => _realBuffer.AsSpan();
+            => _buffer.AsSpan();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnly AsReadOnly()
             => this;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly NativeStrategy<U> Reinterpret<U>()
+        public readonly NativeBuffer<U> Reinterpret<U>()
             where U : unmanaged
-            => new(_nativeAllocator, _realBuffer.Reinterpret<U>());
+            => new(_nativeAllocator, _buffer.Reinterpret<U>());
 
         public void Dispose()
         {
-            var array = _realBuffer.AsNativeArray();
+            ThrowIfAlreadyDisposed(_buffer.IsCreated);
 
-            ThrowIfAlreadyDisposed(array.IsCreated);
-
-            if (array.IsCreated)
+            if (_buffer.IsCreated)
             {
-                array.Dispose();
+                _buffer.Dispose();
             }
 
             if (_nativeAllocator.IsCreated)
@@ -245,27 +318,26 @@ namespace EncosyTower.Buffers
                 _nativeAllocator.Dispose();
             }
 
-            _realBuffer = default;
+            _buffer = default;
             _nativeAllocator = default;
         }
 
         public JobHandle Dispose(JobHandle inputDeps)
         {
-            var array = _realBuffer.AsNativeArray();
-            ThrowIfAlreadyDisposed(array.IsCreated);
+            ThrowIfAlreadyDisposed(_buffer.IsCreated);
 
-            if (array.IsCreated && _nativeAllocator.IsCreated)
+            if (_buffer.IsCreated && _nativeAllocator.IsCreated)
             {
                 inputDeps = JobHandle.CombineDependencies(
-                      array.Dispose(inputDeps)
+                      _buffer.Dispose(inputDeps)
                     , _nativeAllocator.Dispose(inputDeps)
                 );
             }
             else
             {
-                if (array.IsCreated)
+                if (_buffer.IsCreated)
                 {
-                    inputDeps = array.Dispose(inputDeps);
+                    inputDeps = _buffer.Dispose(inputDeps);
                 }
 
                 if (_nativeAllocator.IsCreated)
@@ -274,85 +346,119 @@ namespace EncosyTower.Buffers
                 }
             }
 
-            _realBuffer = default;
+            _buffer = default;
             _nativeAllocator = default;
 
             return inputDeps;
         }
 
-        public readonly struct ReadOnly : IReadOnlyBufferStrategy<T>, IRefReadOnlyIndexer<T>
-            , IHasCapacity, IIsCreated
-            , IAsNativeSliceReadOnly<T>, IAsReadOnlySpan<T>
+        public readonly struct ReadOnly : IReadOnlyBuffer<T>, IRefReadOnlyIndexer<T>
+            , IAsNativeSliceReadOnly<T>
         {
-#if __ENCOSY_VALIDATION__
-            static ReadOnly()
-            {
-                ThrowHelper.ThrowIfNotUnmanagedType<T>(EncosyTypeExtensions.IsUnmanaged<T>());
-            }
-#endif
-
             internal readonly NativeReference<AllocatorStrategy>.ReadOnly _nativeAllocator;
-            internal readonly NBInternal<T>.ReadOnly _realBuffer;
+
+#if UNITY_BURST
+            [Unity.Burst.NoAlias]
+#endif
+            internal readonly NativeArray<T>.ReadOnly _buffer;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnly(NativeStrategy<T> strategy)
+            private ReadOnly(NativeBuffer<T> buffer)
             {
-                _nativeAllocator = strategy._nativeAllocator;
-                _realBuffer = strategy._realBuffer;
+                _nativeAllocator = buffer._nativeAllocator;
+                _buffer = buffer._buffer.AsReadOnly();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnly(
                   NativeReference<AllocatorStrategy>.ReadOnly nativeAllocator
-                , NBInternal<T>.ReadOnly realBuffer
+                , NativeArray<T>.ReadOnly buffer
             )
             {
                 _nativeAllocator = nativeAllocator;
-                _realBuffer = realBuffer;
+                _buffer = buffer;
             }
 
-            public readonly int Capacity
+            public int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _realBuffer.Capacity;
+                get => _buffer.Length;
             }
 
-            public readonly bool IsCreated
+            public bool IsCreated
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _realBuffer.IsCreated;
+                get => _buffer.IsCreated;
             }
 
             public ref readonly T this[int index]
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref _realBuffer[index];
+                get
+                {
+#if __ENCOSY_VALIDATION__
+                    ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
+#endif
+
+                    unsafe
+                    {
+                        return ref UnsafeUtility.ArrayElementAsRef<T>(_buffer.GetUnsafeReadOnlyPtr(), index);
+                    }
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal readonly NativeArray<T>.ReadOnly AsNativeArray()
-                => _realBuffer.AsNativeArray();
+            public readonly void CopyTo(Span<T> destination)
+                => CopyTo(0, destination);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly NB<T>.ReadOnly AsRealBuffer()
-                => _realBuffer;
+            public readonly void CopyTo(Span<T> destination, int length)
+                => CopyTo(0, destination, length);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly NativeSliceReadOnly<T> AsNativeSliceReadOnly()
-                => _realBuffer.AsNativeSliceReadOnly();
+            public readonly void CopyTo(int sourceStartIndex, Span<T> destination)
+                => CopyTo(sourceStartIndex, destination, destination.Length);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly ReadOnlySpan<T> AsReadOnlySpan()
-                => _realBuffer.AsReadOnlySpan();
+            public readonly void CopyTo(int sourceStartIndex, Span<T> destination, int length)
+                => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly NativeStrategy<U>.ReadOnly Reinterpret<U>()
+            public readonly bool TryCopyTo(Span<T> destination)
+                => TryCopyTo(0, destination);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly bool TryCopyTo(Span<T> destination, int length)
+                => TryCopyTo(0, destination, length);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination)
+                => TryCopyTo(sourceStartIndex, destination, destination.Length);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
+                => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal NativeArray<T>.ReadOnly AsNativeArray()
+                => _buffer;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public NativeSliceReadOnly<T> AsNativeSliceReadOnly()
+                => new(_buffer);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ReadOnlySpan<T> AsReadOnlySpan()
+                => _buffer.AsReadOnlySpan();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public NativeBuffer<U>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
-                => new(_nativeAllocator, _realBuffer.Reinterpret<U>());
+                => new(_nativeAllocator, _buffer.Reinterpret<U>());
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(NativeStrategy<T> strategy)
-                => new(strategy);
+            public static implicit operator ReadOnly(NativeBuffer<T> buffer)
+                => new(buffer);
         }
 
         [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
