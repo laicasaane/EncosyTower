@@ -60,6 +60,31 @@ namespace EncosyTower.Collections
             get => _length;
         }
 
+        /// <summary>
+        /// Creates a read-only slice over raw memory, borrowing an external safety handle
+        /// instead of creating or copying one. The caller is responsible for passing a
+        /// handle that guards the lifetime of <paramref name="buffer"/>.
+        /// </summary>
+        internal NativeSliceReadOnly(
+              void* buffer
+            , int stride
+            , int length
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            , AtomicSafetyHandle safety
+#endif
+        )
+        {
+            _buffer = (byte*)buffer;
+            _stride = stride;
+            _length = length;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            _minIndex = 0;
+            _maxIndex = length - 1;
+            m_Safety = safety;
+#endif
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeSliceReadOnly(NativeSlice<T> slice)
             : this(slice, 0, slice.Length)
