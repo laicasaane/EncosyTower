@@ -1,17 +1,18 @@
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using NUnit.Framework;
 
 namespace EncosyTower.Tests.EncosyTower.Collections
 {
-    public class BufferProvider<T> : IBufferProvider<T>
+    public class BufferProvider<T> : IBufferProvider<ManagedBuffer<T>, T>
     {
-        private T[] _buffer = new T[4];
+        private ManagedBuffer<T> _buffer = new(4);
         private int _count;
         private int _version;
 
-        public ref T[] Buffer
+        public ref ManagedBuffer<T> Buffer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ref _buffer;
@@ -26,7 +27,7 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer.Length;
+            get => _buffer.Capacity;
         }
 
         public ref int Version
@@ -42,7 +43,7 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         public void StatelessList_Tests()
         {
             var buffer = new BufferProvider<int>();
-            var list = new StatelessList<BufferProvider<int>, int>(buffer);
+            var list = new StatelessList<BufferProvider<int>, ManagedBuffer<int>, int>(buffer);
 
             Assert.AreEqual(true, list.IsCreated);
             Assert.AreEqual(4, list.Capacity);

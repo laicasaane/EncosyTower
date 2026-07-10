@@ -12,35 +12,36 @@ namespace EncosyTower.Collections
 {
     /// <summary>
     /// 'Stateless' means the list does not own an internal buffer and related data.
-    /// Instead, it relies on an <see cref="IBufferProvider{T}"/> to have access to those data.
-    /// Effectively, anything implementing <see cref="IBufferProvider{T}"/> can be used
+    /// Instead, it relies on an <see cref="IBufferProvider{TBuffer, T}"/> to have access to those data.
+    /// Effectively, anything implementing <see cref="IBufferProvider{TBuffer, T}"/> can be used
     /// as the external state for this list.
     /// </summary>
-    public readonly partial struct StatelessList<TState, T> : IList<T>, IReadOnlyList<T>, IIndexer<T>
+    public readonly partial struct StatelessList<TProvider, TBuffer, T> : IReadOnlyList<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IToArray<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>
-        , IAddRangeSpan<T>, IContains<T>
+        , IAddRangeSpan<T>
         , IClearable, IIncreaseCapacity, IHasCount, IIsCreated
-        where TState : IBufferProvider<T>
+        where TProvider : IBufferProvider<TBuffer, T>
+        where TBuffer : IBuffer<T>
     {
-        public readonly TState State;
+        public readonly TProvider Provider;
 
         private readonly bool _isCreated;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatelessList([NotNull] TState state)
+        public StatelessList([NotNull] TProvider provider)
         {
-            this.State = state;
+            Provider = provider;
             _isCreated = true;
         }
 
-        public StatelessList([NotNull] TState state, int capacity)
+        public StatelessList([NotNull] TProvider provider, int capacity)
         {
-            this.State = state;
+            Provider = provider;
             _isCreated = true;
 
-            if (capacity > this.State.Buffer.Length)
+            if (capacity > provider.Buffer.Capacity)
             {
                 AllocateMore(capacity);
             }
@@ -61,19 +62,19 @@ namespace EncosyTower.Collections
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer.Length;
+            get => _buffer.Capacity;
         }
 
         public bool IsReadOnly => false;
 
 #pragma warning disable IDE1006 // Naming Styles
-        internal ref T[] _buffer
+        internal ref TBuffer _buffer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(State != null, "StatelessList<T> is not initialized");
-                return ref State.Buffer;
+                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                return ref Provider.Buffer;
             }
         }
 
@@ -82,8 +83,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(State != null, "StatelessList<T> is not initialized");
-                return ref State.Count;
+                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                return ref Provider.Count;
             }
         }
 
@@ -92,8 +93,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(State != null, "StatelessList<T> is not initialized");
-                return ref State.Version;
+                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                return ref Provider.Version;
             }
         }
 #pragma warning restore IDE1006 // Naming Styles
@@ -117,397 +118,11 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int BinarySearch(T item)
-            => BinarySearch(0, _count, item, Comparer<T>.Default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int BinarySearch(T item, [NotNull] IComparer<T> comparer)
-            => BinarySearch(0, _count, item, comparer);
-
-        public int BinarySearch(int index, int count, T item, [NotNull] IComparer<T> comparer)
-        {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(_count - index >= count, "index and count do not denote a valid range in the StatelessList<TState, T>");
-
-            return AsReadOnlySpan().BinarySearch(item, comparer);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int BinarySearch(in T item)
-            => BinarySearch(0, _count, in item, Comparer<T>.Default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int BinarySearch(in T item, [NotNull] IComparer<T> comparer)
-            => BinarySearch(0, _count, in item, comparer);
-
-        public int BinarySearch(int index, int count, in T item, [NotNull] IComparer<T> comparer)
-        {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(_count - index >= count, "index and count do not denote a valid range in the StatelessList<TState, T>");
-
-            return AsReadOnlySpan().BinarySearch(item, comparer);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Exists([NotNull] Predicate<T> match)
-            => FindIndex(match) != -1;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Exists([NotNull] PredicateIn<T> match)
-            => FindIndex(match) != -1;
-
-        public Option<T> Find([NotNull] Predicate<T> match)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(item))
-                    return item;
-            }
-
-            return Option.None;
-        }
-
-        public Option<T> Find([NotNull] PredicateIn<T> match)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(in item))
-                    return item;
-            }
-
-            return Option.None;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FasterList<T> FindAll([NotNull] Predicate<T> match)
-        {
-            var result = new FasterList<T>();
-            FindAll(match, result);
-
-            return result;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FasterList<T> FindAll([NotNull] PredicateIn<T> match)
-        {
-            var result = new FasterList<T>();
-            FindAll(match, result);
-
-            return result;
-        }
-
-        public void FindAll([NotNull] Predicate<T> match, [NotNull] ListFast<T> result)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(item))
-                {
-                    result.Add(item);
-                }
-            }
-        }
-
-        public void FindAll([NotNull] PredicateIn<T> match, [NotNull] ListFast<T> result)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(in item))
-                {
-                    result.Add(in item);
-                }
-            }
-        }
-
-        public void FindAll([NotNull] Predicate<T> match, [NotNull] FasterList<T> result)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(item))
-                {
-                    result.Add(item);
-                }
-            }
-        }
-
-        public void FindAll([NotNull] PredicateIn<T> match, [NotNull] FasterList<T> result)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-
-            for (var i = 0; i < length; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(in item))
-                {
-                    result.Add(in item);
-                }
-            }
-        }
-
-        public void FindAll([NotNull] Predicate<T> match, [NotNull] ICollection<T> result)
-        {
-            if (result is FasterList<T> fasterResult)
-            {
-                FindAll(match, fasterResult);
-                return;
-            }
-
-            if (result is List<T> listResult)
-            {
-                FindAll(match, listResult);
-                return;
-            }
-
-            var items = AsReadOnlySpan();
-            result.AddRangeFast(items);
-        }
-
-        public void FindAll([NotNull] PredicateIn<T> match, [NotNull] ICollection<T> result)
-        {
-            if (result is FasterList<T> fasterResult)
-            {
-                FindAll(match, fasterResult);
-                return;
-            }
-
-            if (result is List<T> listResult)
-            {
-                FindAll(match, listResult);
-                return;
-            }
-
-            var items = AsReadOnlySpan();
-            result.AddRangeFast(items);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindIndex([NotNull] Predicate<T> match)
-            => FindIndex(0, _count, match);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindIndex(int startIndex, Predicate<T> match)
-            => FindIndex(startIndex, _count - startIndex, match);
-
-        public int FindIndex(int startIndex, int count, [NotNull] Predicate<T> match)
-        {
-            Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
-
-            var items = AsReadOnlySpan();
-            var endIndex = startIndex + count;
-
-            for (var i = startIndex; i < endIndex; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(item))
-                    return i;
-            }
-
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindIndex([NotNull] PredicateIn<T> match)
-            => FindIndex(0, _count, match);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindIndex(int startIndex, PredicateIn<T> match)
-            => FindIndex(startIndex, _count - startIndex, match);
-
-        public int FindIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
-        {
-            Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
-
-            var items = AsReadOnlySpan();
-            var endIndex = startIndex + count;
-
-            for (var i = startIndex; i < endIndex; i++)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(in item))
-                    return i;
-            }
-
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindLastIndex([NotNull] Predicate<T> match)
-            => FindLastIndex(_count - 1, _count, match);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindLastIndex(int startIndex, [NotNull] Predicate<T> match)
-            => FindLastIndex(startIndex, startIndex + 1, match);
-
-        public int FindLastIndex(int startIndex, int count, [NotNull] Predicate<T> match)
-        {
-            if (_count == 0)
-            {
-                Checks.IsTrue(startIndex == -1, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            }
-            else
-            {
-                Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            }
-
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex - count + 1 >= 0, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
-
-            var items = AsReadOnlySpan();
-            var endIndex = startIndex - count;
-
-            for (var i = startIndex; i > endIndex; i--)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(item))
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindLastIndex([NotNull] PredicateIn<T> match)
-            => FindLastIndex(_count - 1, _count, match);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int FindLastIndex(int startIndex, [NotNull] PredicateIn<T> match)
-            => FindLastIndex(startIndex, startIndex + 1, match);
-
-        public int FindLastIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
-        {
-            if (_count == 0)
-            {
-                Checks.IsTrue(startIndex == -1, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            }
-            else
-            {
-                Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the StatelessList<TState, T>");
-            }
-
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex - count + 1 >= 0, "startIndex and count do not specify a valid section in the StatelessList<TState, T>");
-
-            var items = AsReadOnlySpan();
-            var endIndex = startIndex - count;
-
-            for (var i = startIndex; i > endIndex; i--)
-            {
-                ref readonly var item = ref items[i];
-
-                if (match(in item))
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(T item)
-            => Array.IndexOf(_buffer, item, 0, _count);
-
-        public int IndexOf(T item, [NotNull] IComparer<T> comparer)
-        {
-            var span = AsReadOnlySpan();
-
-            for (var i = 0; i < span.Length; i++)
-            {
-                if (comparer.Compare(span[i], item) == 0)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(T item, int index)
-            => IndexOf(item, index, _count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(T item, int index, int count)
-        {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count, "index and count do not specify a valid section in the StatelessList<TState, T>");
-            return Array.IndexOf(_buffer, item, index, count);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(in T item)
-            => Array.IndexOf(_buffer, item, 0, _count);
-
-        public int IndexOf(in T item, [NotNull] IComparer<T> comparer)
-        {
-            var span = AsReadOnlySpan();
-
-            for (var i = 0; i < span.Length; i++)
-            {
-                if (comparer.Compare(span[i], item) == 0)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(in T item, int index)
-            => IndexOf(in item, index, _count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int IndexOf(in T item, int index, int count)
-        {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count, "index and count do not specify a valid section in the StatelessList<TState, T>");
-            return Array.IndexOf(_buffer, item, index, count);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
             _version++;
 
-            if (_count == _buffer.Length)
+            if (_count == _buffer.Capacity)
                 AllocateMore();
 
             _buffer[_count++] = item;
@@ -518,7 +133,7 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (_count == _buffer.Length)
+            if (_count == _buffer.Capacity)
                 AllocateMore();
 
             _buffer[_count++] = item;
@@ -531,10 +146,10 @@ namespace EncosyTower.Collections
 
             _version++;
 
-            if (_count == _buffer.Length)
+            if (_count == _buffer.Capacity)
                 AllocateMore();
 
-            Array.Copy(_buffer, index, _buffer, index + 1, _count - index);
+            CopyBuffer(index, index + 1, _count - index);
             ++_count;
 
             _buffer[index] = item;
@@ -547,10 +162,10 @@ namespace EncosyTower.Collections
 
             _version++;
 
-            if (_count == _buffer.Length)
+            if (_count == _buffer.Capacity)
                 AllocateMore();
 
-            Array.Copy(_buffer, index, _buffer, index + 1, _count - index);
+            CopyBuffer(index, index + 1, _count - index);
             ++_count;
 
             _buffer[index] = item;
@@ -573,10 +188,10 @@ namespace EncosyTower.Collections
 
             if (count == 0) return;
 
-            if (_buffer.Length - _count < count)
+            if (_buffer.Capacity - _count < count)
                 AllocateMore(checked(_count + count));
 
-            Array.Copy(items, 0, _buffer, _count, count);
+            CopyBuffer(0, _count, count);
             _count += count;
         }
 
@@ -590,111 +205,11 @@ namespace EncosyTower.Collections
 
             if (count == 0) return;
 
-            if (_buffer.Length - _count < count)
+            if (_buffer.Capacity - _count < count)
                 AllocateMore(checked(_count + count));
 
-            items[..count].CopyTo(_buffer.AsSpan(_count, count));
+            items[..count].CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
-        }
-
-        public void AddRange([NotNull] IEnumerable<T> collection)
-        {
-            if (collection is ICollection<T> c)
-            {
-                var count = c.Count;
-
-                if (count > 0)
-                {
-                    if (_buffer.Length - _count < count)
-                    {
-                        AllocateMore(checked(_count + count));
-                    }
-
-                    c.CopyTo(_buffer, _count);
-                    _count += count;
-                    _version++;
-                }
-            }
-            else
-            {
-                using IEnumerator<T> en = collection.GetEnumerator();
-
-                while (en.MoveNext())
-                {
-                    Add(en.Current);
-                }
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(T item)
-        {
-            return _count > 0 && Array.IndexOf(_buffer, item, 0, _count) >= 0;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(in T item)
-        {
-            return _count > 0 && Array.IndexOf(_buffer, item, 0, _count) >= 0;
-        }
-
-        public void ForEach([NotNull] Action<T> action)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-            var version = _version;
-
-            for (var i = 0; i < length; i++)
-            {
-                if (version != _version)
-                {
-                    break;
-                }
-
-                ref readonly var item = ref items[i];
-                action(item);
-            }
-
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
-        }
-
-        public void ForEach([NotNull] ActionIn<T> action)
-        {
-            var items = AsReadOnlySpan();
-            var length = items.Length;
-            var version = _version;
-
-            for (var i = 0; i < length; i++)
-            {
-                if (version != _version)
-                {
-                    break;
-                }
-
-                ref readonly var item = ref items[i];
-                action(in item);
-            }
-
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
-        }
-
-        public void ForEach([NotNull] ActionRef<T> action)
-        {
-            var items = AsSpan();
-            var length = items.Length;
-            var version = _version;
-
-            for (var i = 0; i < length; i++)
-            {
-                if (version != _version)
-                {
-                    break;
-                }
-
-                action(ref items[i]);
-            }
-
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -702,9 +217,12 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            var shouldClear = false;
+            ShouldClear(ref shouldClear);
+
+            if (shouldClear)
             {
-                Array.Clear(_buffer, 0, _buffer.Length);
+                ClearBuffer(0, _buffer.Capacity);
             }
 
             _count = 0;
@@ -779,25 +297,23 @@ namespace EncosyTower.Collections
             => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public BufferProviderEnumerator<T> GetEnumerator()
-            => new(State);
+        public BufferProviderEnumerator<TProvider, TBuffer, T> GetEnumerator()
+            => new(Provider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncreaseCapacityBy(int amount)
-            => IncreaseCapacityTo(_buffer.Length + amount);
+            => IncreaseCapacityTo(_buffer.Capacity + amount);
 
         public void IncreaseCapacityTo(int newCapacity)
         {
             _version++;
 
-            if (newCapacity <= _buffer.Length)
+            if (newCapacity <= _buffer.Capacity)
             {
                 return;
             }
 
-            var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
-            _buffer = newList;
+            _buffer.Resize(newCapacity, true);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -826,45 +342,6 @@ namespace EncosyTower.Collections
             return _count - 1;
         }
 
-        public bool Remove(T item)
-        {
-            _version++;
-
-            var index = Array.IndexOf(_buffer, item, 0, _count);
-
-            if (index < 0)
-                return false;
-
-            if (index < --_count)
-            {
-                Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
-            }
-
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                _buffer[_count] = default;
-            }
-
-            return true;
-        }
-
-        public void RemoveAt(int index)
-        {
-            _version++;
-
-            Checks.IsTrue(index < _count, "out of bound index");
-
-            if (index < --_count)
-            {
-                Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
-            }
-
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                _buffer[_count] = default;
-            }
-        }
-
         public void RemoveRange(int startIndex, int length)
         {
             _version++;
@@ -886,12 +363,15 @@ namespace EncosyTower.Collections
 
             if (startIndex < count)
             {
-                Array.Copy(_buffer, startIndex + length, _buffer, startIndex, count - startIndex);
+                CopyBuffer(startIndex + length, startIndex, count - startIndex);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            var shouldClear = false;
+            ShouldClear(ref shouldClear);
+
+            if (shouldClear)
             {
-                Array.Clear(_buffer, count, length);
+                ClearBuffer(count, length);
             }
         }
 
@@ -904,7 +384,10 @@ namespace EncosyTower.Collections
             var copyFrom = --_count;
             _buffer[index] = _buffer[copyFrom];
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            var shouldClear = false;
+            ShouldClear(ref shouldClear);
+
+            if (shouldClear)
             {
                 _buffer[copyFrom] = default;
             }
@@ -918,46 +401,22 @@ namespace EncosyTower.Collections
         public Span<T> AsSpan()
         {
             _version++;
-            return _buffer.AsSpan(0, _count);
+            return _buffer.AsSpan()[.._count];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<T> AsReadOnlySpan()
-            => _buffer.AsSpan(0, _count);
+            => _buffer.AsSpan()[.._count];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Trim()
         {
             _version++;
 
-            if (_count < _buffer.Length)
+            if (_count < _buffer.Capacity)
             {
-                Array.Resize(ref _buffer, _count);
+                _buffer.Resize(_count);
             }
-        }
-
-        public Span<T> AddReplicate(int amount, [NotNull] Func<T> createFunc)
-        {
-            _version++;
-
-            var oldCount = _count;
-            var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
-
-            if (offset > 0)
-            {
-                AllocateMore(newCount);
-            }
-
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
-            _count = newCount;
-
-            for (var i = 0; i < amount; i++)
-            {
-                buffer[i] = createFunc();
-            }
-
-            return buffer;
         }
 
         public Span<T> AddReplicate(int amount)
@@ -966,7 +425,7 @@ namespace EncosyTower.Collections
 
             var oldCount = _count;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
@@ -986,7 +445,7 @@ namespace EncosyTower.Collections
 
             var oldCount = _count;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
@@ -1006,7 +465,7 @@ namespace EncosyTower.Collections
 
             var oldCount = _count;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
@@ -1019,83 +478,36 @@ namespace EncosyTower.Collections
             return buffer;
         }
 
-        /// <summary>
-        /// Sorts the elements in this list. Uses the default comparer and Array.Sort.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Sort()
-            => Sort(0, _count, Comparer<T>.Default);
-
-        /// <summary>
-        /// Sorts the elements in this list. Uses Array.Sort with the provided comparer.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Sort([NotNull] IComparer<T> comparer)
-            => Sort(0, _count, comparer);
-
-        /// <summary>
-        /// Sorts the elements in a section of this list. The sort compares the
-        /// elements to each other using the given IComparer interface. If
-        /// comparer is null, the elements are compared to each other using
-        /// the IComparable interface, which in that case must be implemented by all
-        /// elements of the list.
-        /// <br/>
-        /// This method uses the Array.Sort method to sort the elements.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Sort(int index, int count, [NotNull] IComparer<T> comparer)
+        public static StatelessList<TProvider, TBuffer, T> Prefill(
+              [NotNull] TProvider provider
+            , int amount
+        )
         {
-            Checks.IsTrue(index >= 0, "'index' must be non-negative number");
-            Checks.IsTrue(count >= 0, "'count' must be non-negative number");
-            Checks.IsTrue(_count - index >= count, "Invalid offset length");
-
-            if (count > 1)
-            {
-                Array.Sort(_buffer, index, count, comparer);
-            }
-
-            _version++;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Sort([NotNull] Comparison<T> comparison)
-        {
-            if (_count > 1)
-            {
-                Array.Sort(_buffer, 0, _count, Comparer<T>.Create(comparison));
-            }
-
-            _version++;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TState, T> Prefill([NotNull] TState state, int amount, [NotNull] Func<T> createFunc)
-        {
-            var list = new StatelessList<TState, T>(state, amount);
-            list.AddReplicate(amount, createFunc);
-            return list;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TState, T> Prefill([NotNull] TState state, int amount)
-        {
-            var list = new StatelessList<TState, T>(state, amount);
+            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TState, T> Prefill([NotNull] TState state, T value, int amount)
+        public static StatelessList<TProvider, TBuffer, T> Prefill(
+              [NotNull] TProvider provider
+            , T value
+            , int amount
+        )
         {
-            var list = new StatelessList<TState, T>(state, amount);
+            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(value, amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TState, T> PrefillNoInit([NotNull] TState state, int amount)
+        public static StatelessList<TProvider, TBuffer, T> PrefillNoInit(
+              [NotNull] TProvider provider
+            , int amount
+        )
         {
-            var list = new StatelessList<TState, T>(state, amount);
+            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicateNoInit(amount);
             return list;
         }
@@ -1110,29 +522,45 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore()
         {
-            var newCapacity = CalcNewCapacity(_buffer.Length + 1);
-            var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
-            _buffer = newList;
+            var newCapacity = CalcNewCapacity(_buffer.Capacity + 1);
+            _buffer.Resize(newCapacity, true);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore(int newSize)
         {
-            Checks.IsTrue(newSize > _buffer.Length, "newSize is not greater than the current capacity");
+            Checks.IsTrue(newSize > _buffer.Capacity, "newSize is not greater than the current capacity");
 
             var newCapacity = CalcNewCapacity(newSize);
-            var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
-            _buffer = newList;
+            _buffer.Resize(newCapacity, true);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void CopyBuffer(int sourceIndex, int destinationIndex, int length)
+        {
+
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void ClearBuffer(int index, int length)
+        {
+
+        }
+
+#if UNITY_BURST
+        [Unity.Burst.BurstDiscard]
+        internal static void ShouldClear(ref bool result)
+        {
+            result = RuntimeHelpers.IsReferenceOrContainsReferences<T>();
+        }
+#endif
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => new BufferProviderEnumerator<T>(State);
+            => new BufferProviderEnumerator<TProvider, TBuffer, T>(Provider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator()
-            => new BufferProviderEnumerator<T>(State);
+            => new BufferProviderEnumerator<TProvider, TBuffer, T>(Provider);
     }
 }
