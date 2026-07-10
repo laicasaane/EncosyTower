@@ -7,11 +7,11 @@ using EncosyTower.Debugging;
 
 namespace EncosyTower.Collections.Extensions
 {
-    public static class StatelessListReadOnlyExtensions
+    public static class ListProxyReadOnlyExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -25,7 +25,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -38,7 +38,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
             , TComparer comparer
         )
@@ -61,7 +61,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
             , TComparer comparer
         )
@@ -85,7 +85,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
             , TComparer comparer
         )
@@ -98,7 +98,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , int index
             , int count
             , T item
@@ -120,7 +120,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
             , TComparer comparer
         )
@@ -133,7 +133,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , int index
             , int count
             , in T item
@@ -155,7 +155,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -167,7 +167,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
             , int index
         )
@@ -180,7 +180,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
             , int index
             , int count
@@ -202,7 +202,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -214,7 +214,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
             , int index
         )
@@ -227,7 +227,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
             , int index
             , int count
@@ -249,7 +249,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , T item
             , TComparer comparer
         )
@@ -262,7 +262,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T>.ReadOnly self
+              this ref ListProxy<TProvider, TBuffer, T>.ReadOnly self
             , in T item
             , TComparer comparer
         )

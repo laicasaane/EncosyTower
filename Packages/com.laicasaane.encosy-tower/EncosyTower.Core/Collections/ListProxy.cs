@@ -11,12 +11,13 @@ using EncosyTower.Debugging;
 namespace EncosyTower.Collections
 {
     /// <summary>
-    /// 'Stateless' means the list does not own an internal buffer and related data.
-    /// Instead, it relies on an <see cref="IBufferProvider{TBuffer, T}"/> to have access to those data.
+    /// Represents a list that does not own the internal buffer and related data.
+    /// Instead, it relies on an <see cref="IBufferProvider{TBuffer, T}"/>
+    /// to provide access to the buffer, count, and version.
     /// Effectively, anything implementing <see cref="IBufferProvider{TBuffer, T}"/> can be used
     /// as the external state for this list.
     /// </summary>
-    public readonly partial struct StatelessList<TProvider, TBuffer, T> : IReadOnlyList<T>, IIndexer<T>
+    public readonly partial struct ListProxy<TProvider, TBuffer, T> : IReadOnlyList<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IToArray<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
         , ICopyToSpan<T>, ITryCopyToSpan<T>
@@ -27,16 +28,16 @@ namespace EncosyTower.Collections
     {
         public readonly TProvider Provider;
 
-        private readonly bool _isCreated;
+        private readonly ByteBool _isCreated;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatelessList([NotNull] TProvider provider)
+        public ListProxy([NotNull] TProvider provider)
         {
             Provider = provider;
             _isCreated = true;
         }
 
-        public StatelessList([NotNull] TProvider provider, int capacity)
+        public ListProxy([NotNull] TProvider provider, int capacity)
         {
             Provider = provider;
             _isCreated = true;
@@ -104,14 +105,20 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+                Checks.IsTrue(
+                      (uint)index < (uint)_count
+                    , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
+                );
                 return _buffer[index];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+                Checks.IsTrue(
+                      (uint)index < (uint)_count
+                    , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
+                );
                 _version++;
                 _buffer[index] = value;
             }
@@ -142,7 +149,10 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+            Checks.IsTrue(
+                  (uint)index <= (uint)_count
+                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
+            );
 
             _version++;
 
@@ -158,7 +168,10 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+            Checks.IsTrue(
+                  (uint)index <= (uint)_count
+                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
+            );
 
             _version++;
 
@@ -174,7 +187,10 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T ElementAt(int index)
         {
-            Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the StatelessList<TState, T>");
+            Checks.IsTrue(
+                  (uint)index < (uint)_count
+                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
+            );
             return ref _buffer[index];
         }
 
@@ -191,7 +207,7 @@ namespace EncosyTower.Collections
             if (_buffer.Capacity - _count < count)
                 AllocateMore(checked(_count + count));
 
-            CopyBuffer(0, _count, count);
+            items.AsSpan().CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
         }
 
@@ -210,6 +226,28 @@ namespace EncosyTower.Collections
 
             items[..count].CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
+        }
+
+        public void AddRange([NotNull] IEnumerable<T> items)
+        {
+            switch (items)
+            {
+                case IReadOnlyList<T> list:
+                    AddRangeFromReadOnlyList(list);
+                    return;
+
+                case IList<T> list:
+                    AddRangeFromList(list);
+                    return;
+
+                case IReadOnlyIndexer<T> indexer when items is IHasCount || items is IHasLength:
+                    AddRangeFromIndexer(items, indexer);
+                    return;
+
+                default:
+                    AddRangeFromCollection(items);
+                    return;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -479,35 +517,35 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TProvider, TBuffer, T> Prefill(
+        public static ListProxy<TProvider, TBuffer, T> Prefill(
               [NotNull] TProvider provider
             , int amount
         )
         {
-            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
+            var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TProvider, TBuffer, T> Prefill(
+        public static ListProxy<TProvider, TBuffer, T> Prefill(
               [NotNull] TProvider provider
             , T value
             , int amount
         )
         {
-            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
+            var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(value, amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static StatelessList<TProvider, TBuffer, T> PrefillNoInit(
+        public static ListProxy<TProvider, TBuffer, T> PrefillNoInit(
               [NotNull] TProvider provider
             , int amount
         )
         {
-            var list = new StatelessList<TProvider, TBuffer, T>(provider, amount);
+            var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicateNoInit(amount);
             return list;
         }
@@ -538,22 +576,134 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void CopyBuffer(int sourceIndex, int destinationIndex, int length)
         {
+            if (length < 1)
+            {
+                return;
+            }
 
+            var span = _buffer.AsSpan();
+            span.Slice(sourceIndex, length).CopyTo(span.Slice(destinationIndex, length));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ClearBuffer(int index, int length)
         {
+            if (length < 1)
+            {
+                return;
+            }
 
+            _buffer.AsSpan().Slice(index, length).Clear();
         }
 
 #if UNITY_BURST
         [Unity.Burst.BurstDiscard]
+#endif
         internal static void ShouldClear(ref bool result)
         {
             result = RuntimeHelpers.IsReferenceOrContainsReferences<T>();
         }
-#endif
+
+        private void AddRangeFromReadOnlyList(IReadOnlyList<T> items)
+        {
+            var length = items.Count;
+
+            if (length > 0)
+            {
+                if (_buffer.Capacity - _count < length)
+                {
+                    AllocateMore(checked(_count + length));
+                }
+
+                var span = _buffer.AsSpan().Slice(_count, length);
+
+                for (int i = 0; i < length; i++)
+                {
+                    span[i] = items[i];
+                }
+
+                _count += length;
+                _version++;
+            }
+        }
+
+        private void AddRangeFromList(IList<T> items)
+        {
+            var length = items.Count;
+
+            if (length > 0)
+            {
+                if (_buffer.Capacity - _count < length)
+                {
+                    AllocateMore(checked(_count + length));
+                }
+
+                var span = _buffer.AsSpan().Slice(_count, length);
+
+                for (int i = 0; i < length; i++)
+                {
+                    span[i] = items[i];
+                }
+
+                _count += length;
+                _version++;
+            }
+        }
+
+        private void AddRangeFromIndexer(IEnumerable<T> items, IReadOnlyIndexer<T> indexer)
+        {
+            var length = 0;
+
+            if (items is IHasCount hasCount)
+            {
+                length = hasCount.Count;
+            }
+            else if (items is IHasLength hasLength)
+            {
+                length = hasLength.Length;
+            }
+
+            if (length > 0)
+            {
+                if (_buffer.Capacity - _count < length)
+                {
+                    AllocateMore(checked(_count + length));
+                }
+
+                var span = _buffer.AsSpan().Slice(_count, length);
+
+                for (int i = 0; i < length; i++)
+                {
+                    span[i] = indexer[i];
+                }
+
+                _count += length;
+                _version++;
+            }
+        }
+
+        private void AddRangeFromCollection(IEnumerable<T> items)
+        {
+            if (items is ICollection<T> c)
+            {
+                var count = c.Count;
+
+                if (count > 0)
+                {
+                    if (_buffer.Capacity - _count < count)
+                    {
+                        AllocateMore(checked(_count + count));
+                    }
+                }
+            }
+
+            using IEnumerator<T> en = items.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                Add(en.Current);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator<T> IEnumerable<T>.GetEnumerator()

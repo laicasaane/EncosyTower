@@ -37,13 +37,13 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         }
     }
 
-    public class StatelessListTests
+    public class ListProxyTests
     {
         [Test]
         public void StatelessList_Tests()
         {
             var buffer = new BufferProvider<int>();
-            var list = new StatelessList<BufferProvider<int>, ManagedBuffer<int>, int>(buffer);
+            var list = new ListProxy<BufferProvider<int>, ManagedBuffer<int>, int>(buffer);
 
             Assert.AreEqual(true, list.IsCreated);
             Assert.AreEqual(4, list.Capacity);

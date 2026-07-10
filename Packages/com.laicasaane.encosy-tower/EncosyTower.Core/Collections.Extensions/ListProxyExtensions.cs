@@ -7,10 +7,10 @@ using EncosyTower.Debugging;
 
 namespace EncosyTower.Collections.Extensions
 {
-    public static class StatelessListExtensions
+    public static class ListProxyExtensions
     {
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -32,7 +32,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -54,7 +54,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , TComparer comparer
         )
@@ -77,7 +77,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Contains<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , TComparer comparer
         )
@@ -100,7 +100,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Remove<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -120,7 +120,7 @@ namespace EncosyTower.Collections.Extensions
             }
 
             var shouldClear = false;
-            StatelessList<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
+            ListProxy<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
 
             if (shouldClear)
             {
@@ -131,7 +131,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Remove<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -151,7 +151,7 @@ namespace EncosyTower.Collections.Extensions
             }
 
             var shouldClear = false;
-            StatelessList<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
+            ListProxy<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
 
             if (shouldClear)
             {
@@ -162,7 +162,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Remove<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , TComparer comparer
         )
@@ -183,7 +183,7 @@ namespace EncosyTower.Collections.Extensions
             }
 
             var shouldClear = false;
-            StatelessList<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
+            ListProxy<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
 
             if (shouldClear)
             {
@@ -194,7 +194,7 @@ namespace EncosyTower.Collections.Extensions
         }
 
         public static bool Remove<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , TComparer comparer
         )
@@ -215,7 +215,7 @@ namespace EncosyTower.Collections.Extensions
             }
 
             var shouldClear = false;
-            StatelessList<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
+            ListProxy<TProvider, TBuffer, T>.ShouldClear(ref shouldClear);
 
             if (shouldClear)
             {
@@ -227,7 +227,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , TComparer comparer
         )
@@ -240,7 +240,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , int index
             , int count
             , T item
@@ -262,7 +262,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , TComparer comparer
         )
@@ -275,7 +275,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , int index
             , int count
             , in T item
@@ -297,7 +297,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -309,7 +309,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , int index
         )
@@ -322,7 +322,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , int index
             , int count
@@ -344,7 +344,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -356,7 +356,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , int index
         )
@@ -369,7 +369,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , int index
             , int count
@@ -391,7 +391,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , T item
             , TComparer comparer
         )
@@ -404,7 +404,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
             , TComparer comparer
         )
@@ -417,7 +417,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , TComparer comparer
         )
             where TProvider : IBufferProvider<TBuffer, T>
@@ -429,7 +429,7 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<TProvider, TBuffer, T, TComparer>(
-              this ref StatelessList<TProvider, TBuffer, T> self
+              this ref ListProxy<TProvider, TBuffer, T> self
             , int index
             , int count
             , TComparer comparer

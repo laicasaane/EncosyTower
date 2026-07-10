@@ -32,7 +32,7 @@ using EncosyTower.Common;
 
 namespace EncosyTower.Collections
 {
-    partial struct StatelessList<TProvider, TBuffer, T>
+    partial struct ListProxy<TProvider, TBuffer, T>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnly AsReadOnly()
@@ -41,10 +41,10 @@ namespace EncosyTower.Collections
         public readonly struct ReadOnly : IReadOnlyList<T>, IAsReadOnlySpan<T>, IToArray<T>, IReadOnlyIndexer<T>
             , ICopyToSpan<T>, ITryCopyToSpan<T>, IHasCapacity, IHasCount, IIsCreated
         {
-            internal readonly StatelessList<TProvider, TBuffer, T> _list;
+            internal readonly ListProxy<TProvider, TBuffer, T> _list;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnly([NotNull] StatelessList<TProvider, TBuffer, T> list)
+            public ReadOnly([NotNull] ListProxy<TProvider, TBuffer, T> list)
             {
                 _list = list;
             }
@@ -67,7 +67,7 @@ namespace EncosyTower.Collections
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(StatelessList<TProvider, TBuffer, T> list)
+            public static implicit operator ReadOnly(ListProxy<TProvider, TBuffer, T> list)
                 => new(list);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
