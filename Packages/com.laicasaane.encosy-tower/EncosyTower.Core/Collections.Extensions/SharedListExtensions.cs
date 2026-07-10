@@ -1,9 +1,9 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
-using Unity.Collections;
 
 namespace EncosyTower.Collections.Extensions
 {
@@ -92,11 +92,11 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TNative : unmanaged
-            where TComparer : IComparer<T>
+            where TComparer : IEqualityComparer<T>
         {
             self._version.ValueRW++;
 
-            var index = self.AsSpan().BinarySearch(item, comparer);
+            var index = IndexOf(self, item, comparer);
 
             if ((uint)index >= (uint)self._count.ValueRO)
                 return false;
@@ -117,11 +117,11 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TNative : unmanaged
-            where TComparer : IComparer<T>
+            where TComparer : IEqualityComparer<T>
         {
             self._version.ValueRW++;
 
-            var index = self.AsSpan().BinarySearch(item, comparer);
+            var index = IndexOf(self, in item, comparer);
 
             if ((uint)index >= (uint)self._count.ValueRO)
                 return false;
@@ -218,7 +218,12 @@ namespace EncosyTower.Collections.Extensions
             => IndexOf(self, item, index, self._count.ValueRO);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T, TNative>([NotNull] this SharedList<T, TNative> self, T item, int index, int count)
+        public static int IndexOf<T, TNative>(
+              [NotNull] this SharedList<T, TNative> self
+            , T item
+            , int index
+            , int count
+        )
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
         {
@@ -234,25 +239,42 @@ namespace EncosyTower.Collections.Extensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T, TNative, TComparer>([NotNull] this SharedList<T, TNative> self, T item, TComparer comparer)
+        public static int IndexOf<T, TNative, TComparer>(
+              [NotNull] this SharedList<T, TNative> self
+            , T item
+            , TComparer comparer
+        )
             where T : unmanaged
             where TNative : unmanaged
-            where TComparer : IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : IEqualityComparer<T>
+        {
+            return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T, TNative, TComparer>([NotNull] this SharedList<T, TNative> self, in T item, TComparer comparer)
+        public static int IndexOf<T, TNative, TComparer>(
+              [NotNull] this SharedList<T, TNative> self
+            , in T item
+            , TComparer comparer
+        )
             where T : unmanaged
             where TNative : unmanaged
-            where TComparer : IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : IEqualityComparer<T>
+        {
+            return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<T, TNative, TComparer>([NotNull] this SharedList<T, TNative> self, TComparer comparer)
+        public static void Sort<T, TNative, TComparer>(
+              [NotNull] this SharedList<T, TNative> self
+            , TComparer comparer
+        )
             where T : unmanaged
             where TNative : unmanaged
             where TComparer : IComparer<T>
-            => Sort(self, 0, self._count.ValueRO, comparer);
+        {
+            Sort(self, 0, self._count.ValueRO, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T, TNative, TComparer>(

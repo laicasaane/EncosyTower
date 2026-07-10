@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -51,7 +52,7 @@ namespace EncosyTower.Collections.Extensions
         {
             self.VersionRW++;
 
-            var index = IndexOf(self, item);
+            var index = IndexOf(self, in item);
 
             if (index < 0)
                 return false;
@@ -184,14 +185,14 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TComparer>([NotNull] this in SharedListNative<T> self, T item, TComparer comparer)
             where T : unmanaged
-            where TComparer : unmanaged, IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : unmanaged, IEqualityComparer<T>
+            => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TComparer>([NotNull] this in SharedListNative<T> self, in T item, TComparer comparer)
             where T : unmanaged
-            where TComparer : unmanaged, IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : unmanaged, IEqualityComparer<T>
+            => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T, TComparer>([NotNull] this in SharedListNative<T> self, TComparer comparer)

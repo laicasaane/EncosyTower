@@ -1,8 +1,8 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
-using Unity.Collections;
 
 namespace EncosyTower.Collections.Extensions
 {
@@ -145,13 +145,13 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TComparer>(this in SharedListNative<T>.ReadOnly self, T item, TComparer comparer)
             where T : unmanaged
-            where TComparer : unmanaged, IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : unmanaged, IEqualityComparer<T>
+            => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TComparer>(this in SharedListNative<T>.ReadOnly self, in T item, TComparer comparer)
             where T : unmanaged
-            where TComparer : unmanaged, IComparer<T>
-            => MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            where TComparer : unmanaged, IEqualityComparer<T>
+            => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
     }
 }
