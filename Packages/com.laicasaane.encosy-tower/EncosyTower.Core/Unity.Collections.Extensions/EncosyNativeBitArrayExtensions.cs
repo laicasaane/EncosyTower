@@ -1,28 +1,40 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_COLLECTIONS
 
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
     public static class EncosyNativeBitArrayExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityBy(this NativeBitArray array, int amount)
+        public static int IncreaseCapacityBy(this NativeBitArray array, int amount)
         {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(array, array.Capacity + amount);
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
+            return IncreaseCapacityTo(array, array.Capacity + amount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityTo(this NativeBitArray array, int newCapacity)
+        public static int IncreaseCapacityTo(this NativeBitArray array, int newCapacity)
         {
             if (newCapacity > array.Capacity)
             {
                 array.SetCapacity(newCapacity);
             }
+
+            return array.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,6 +83,18 @@ namespace EncosyTower.Collections
             }
 
             return inputDeps;
+        }
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfAmountIsPositive([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Amount must be greater than 0.");
         }
     }
 }

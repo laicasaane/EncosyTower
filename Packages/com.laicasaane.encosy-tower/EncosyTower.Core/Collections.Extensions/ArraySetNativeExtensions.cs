@@ -1,5 +1,3 @@
-#if UNITY_COLLECTIONS
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
@@ -11,7 +9,7 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<T> GetItems<T>(this in ArraySetNative<T> self)
             where T : unmanaged, IEquatable<T>
-            => self._values.AsSpan()[..self._freeValueCellIndex.Value];
+                => self.AsValuesSpan();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref T GetOrAdd<T>(
@@ -23,13 +21,13 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            self._values[index] = builder();
+            self.GetValueRefAt(index) = builder();
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,13 +41,13 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            self._values[index] = builder(ref parameter);
+            self.GetValueRefAt(index) = builder(ref parameter);
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
@@ -74,16 +72,20 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            if (shouldBeRecycled(ref self._values[index]))
-                recycler(ref self._values[index]);
+            if (shouldBeRecycled(ref self.GetValueRefAt(index)))
+            {
+                recycler(ref self.GetValueRefAt(index));
+            }
             else
-                self._values[index] = builder();
+            {
+                self.GetValueRefAt(index) = builder();
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
@@ -111,16 +113,20 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            if (shouldBeRecycled(ref self._values[index]))
-                recycler(ref self._values[index], ref parameter);
+            if (shouldBeRecycled(ref self.GetValueRefAt(index)))
+            {
+                recycler(ref self.GetValueRefAt(index), ref parameter);
+            }
             else
-                self._values[index] = builder(ref parameter);
+            {
+                self.GetValueRefAt(index) = builder(ref parameter);
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,13 +140,13 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            self._values[index] = builder.Invoke();
+            self.GetValueRefAt(index) = builder.Invoke();
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -155,13 +161,13 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            self._values[index] = builder.Invoke(ref parameter);
+            self.GetValueRefAt(index) = builder.Invoke(ref parameter);
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
@@ -189,16 +195,20 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            if (shouldBeRecycled.Invoke(ref self._values[index]))
-                recycler.Invoke(ref self._values[index]);
+            if (shouldBeRecycled.Invoke(ref self.GetValueRefAt(index)))
+            {
+                recycler.Invoke(ref self.GetValueRefAt(index));
+            }
             else
-                self._values[index] = builder.Invoke();
+            {
+                self.GetValueRefAt(index) = builder.Invoke();
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
@@ -229,26 +239,20 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.AddValue(value, out var index) == false)
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
-            if (shouldBeRecycled.Invoke(ref self._values[index]))
-                recycler.Invoke(ref self._values[index], ref parameter);
+            if (shouldBeRecycled.Invoke(ref self.GetValueRefAt(index)))
+            {
+                recycler.Invoke(ref self.GetValueRefAt(index), ref parameter);
+            }
             else
-                self._values[index] = builder.Invoke(ref parameter);
+            {
+                self.GetValueRefAt(index) = builder.Invoke(ref parameter);
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
     }
-
-    public static class ArraySetNativeReadOnlyExtensions
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<T> GetValues<T>(this in ArraySetNative<T>.ReadOnly self)
-            where T : unmanaged, IEquatable<T>
-            => self._values.AsReadOnlySpan()[..self._freeValueCellIndex.Value];
-    }
 }
-
-#endif

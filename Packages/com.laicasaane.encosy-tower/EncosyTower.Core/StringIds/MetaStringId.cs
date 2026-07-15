@@ -23,12 +23,15 @@ namespace EncosyTower.StringIds
         , IComparable
         , ISpanFormattable
     {
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0), SerializeField, HideInInspector]
         private readonly ulong _value;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0), NonSerialized]
         private readonly StringId _id;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(4), NonSerialized]
         private readonly Id _meta;
 

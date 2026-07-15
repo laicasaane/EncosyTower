@@ -38,20 +38,18 @@ using EncosyTower.Buffers;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
     /// <summary>
-    /// This map has been created for just one reason: I needed a map that would have let me iterate
-    /// over the values as an array, directly, without generating one or using an iterator.
-    /// For this goal is N times faster than the standard Dictionary. This map is also faster than
-    /// the standard Dictionary for most of the operations, but the difference is negligible. The only slower operation
-    /// is resizing the memory on add, as this implementation needs to use two separate arrays compared to the standard
-    /// one.
+    /// A dictionary that stores its values in a contiguous array, so the values
+    /// can be iterated directly as an array, without an enumerator.
+    /// Most operations perform on par with <see cref="Dictionary{TKey, TValue}"/>.
+    /// Growing on add is slower, because two internal arrays must be resized.
     /// </summary>
     /// <remarks>
-    /// ArrayMap is not thread safe. A thread safe version should take care of possible setting of
-    /// value with shared hash hence bucket list index.
+    /// Not thread-safe.
     /// </remarks>
     [DebuggerTypeProxy(typeof(ArrayMapDebugProxy<,>))]
     public partial class ArrayMap<TKey, TValue> : IDisposable
@@ -59,21 +57,21 @@ namespace EncosyTower.Collections
         , IReadOnlyCollection<ArrayMapKeyValuePair<TKey, TValue>>
         , IClearable, IIncreaseCapacity, IHasCount, ITryGetValue<TKey, TValue>
     {
-        internal ManagedBuffer<ArrayMapNode<TKey>> _valuesInfo;
-        internal ManagedBuffer<TValue> _values;
-        internal ManagedBuffer<int> _buckets;
+        internal BufferManaged<ArrayMapNode<TKey>> _valuesInfo;
+        internal BufferManaged<TValue> _values;
+        internal BufferManaged<int> _buckets;
 
         internal ulong _fastModBucketsMultiplier;
         internal uint _collisions;
         internal int _freeValueCellIndex;
         internal int _version;
 
-        public ArrayMap() : this(0) { }
+        public ArrayMap() : this(0)
+        {
+        }
 
         public ArrayMap(int capacity)
         {
-            // AllocationStrategy must be passed external for TValue because ArrayMap doesn't have struct
-            // constraint needed for the NativeVersion
             _version = default;
             _valuesInfo = default;
             _valuesInfo.Alloc(capacity);
@@ -83,7 +81,9 @@ namespace EncosyTower.Collections
             _buckets.Alloc(HashHelpers.GetPrime(capacity));
 
             if (capacity > 0)
-                _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)capacity);
+            {
+                _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
+            }
         }
 
         public ArrayMap([NotNull] ArrayMap<TKey, TValue> source)
@@ -96,7 +96,10 @@ namespace EncosyTower.Collections
             _values = default;
             _values.Alloc(capacity);
             _buckets = default;
-            _buckets.Alloc(HashHelpers.GetPrime(capacity));
+            // Buckets may have grown past GetPrime(capacity) via RecomputeBuckets;
+            // the copied bucket data and _fastModBucketsMultiplier are only valid
+            // for the exact source bucket count.
+            _buckets.Alloc(source._buckets.Capacity);
 
             source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
             source._values.AsSpan().CopyTo(_values.AsSpan());
@@ -108,7 +111,8 @@ namespace EncosyTower.Collections
         }
 
         public ArrayMap(ReadOnly source) : this(source._map)
-        { }
+        {
+        }
 
         public int Capacity
         {
@@ -167,9 +171,6 @@ namespace EncosyTower.Collections
             _buckets.Dispose();
         }
 
-        /// <remarks>
-        /// This returns readonly because the enumerator cannot be, but at the same time, it cannot be modified
-        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ArrayMapKeyValueEnumerator<TKey, TValue> GetEnumerator()
             => new(this);
@@ -179,15 +180,9 @@ namespace EncosyTower.Collections
         {
             var itemAdded = AddValue(key, out var index);
 
-#if __ENCOSY_VALIDATION__
-            if (itemAdded == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_KeyPresent();
-            }
-            else
-#else
+            ThrowHelper.ThrowIfKeyIsPresent(itemAdded);
+
             if (itemAdded)
-#endif
             {
                 _values[index] = value;
             }
@@ -199,7 +194,9 @@ namespace EncosyTower.Collections
             var itemAdded = AddValue(key, out var index);
 
             if (itemAdded)
+            {
                 _values[index] = value;
+            }
 
             return itemAdded;
         }
@@ -210,7 +207,9 @@ namespace EncosyTower.Collections
             var itemAdded = AddValue(key, out index);
 
             if (itemAdded)
+            {
                 _values[index] = value;
+            }
 
             return itemAdded;
         }
@@ -219,7 +218,9 @@ namespace EncosyTower.Collections
         public void Clear()
         {
             if (_freeValueCellIndex == 0)
+            {
                 return;
+            }
 
             _version++;
             _freeValueCellIndex = 0;
@@ -313,15 +314,16 @@ namespace EncosyTower.Collections
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared and store class values: when the new
+        /// slot still holds an object from before the clear, that object is recycled
+        /// instead of creating a new one.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when there is no object to recycle.</param>
+        /// <param name="recycler">Resets a leftover object before it is reused.</param>
+        /// <typeparam name="TValueProxy">The concrete class type stored as the value.</typeparam>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref TValue RecycleOrAdd<TValueProxy>(
               TKey key
@@ -339,25 +341,31 @@ namespace EncosyTower.Collections
             AddValue(key, out index);
 
             if (_values[index] == null)
+            {
                 _values[index] = builder();
+            }
             else
+            {
                 recycler(ref UnsafeUtility.As<TValue, TValueProxy>(ref _values[index]));
+            }
 
             return ref _values[index];
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared and store class values: when the new
+        /// slot still holds an object from before the clear, that object is recycled
+        /// instead of creating a new one.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <param name="parameter"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <typeparam name="W"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when there is no object to recycle.</param>
+        /// <param name="recycler">Resets a leftover object before it is reused.</param>
+        /// <param name="parameter">State passed by reference to <paramref name="builder"/>
+        /// and <paramref name="recycler"/>.</param>
+        /// <typeparam name="TValueProxy">The concrete class type stored as the value.</typeparam>
+        /// <typeparam name="TParam">The type of <paramref name="parameter"/>.</typeparam>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref TValue RecycleOrAdd<TValueProxy, TParam>(
               TKey key
@@ -376,9 +384,13 @@ namespace EncosyTower.Collections
             AddValue(key, out index);
 
             if (_values[index] == null)
+            {
                 _values[index] = builder(ref parameter);
+            }
             else
+            {
                 recycler(ref UnsafeUtility.As<TValue, TValueProxy>(ref _values[index]), ref parameter);
+            }
 
             return ref _values[index];
         }
@@ -388,19 +400,14 @@ namespace EncosyTower.Collections
         {
             var found = TryFindIndex(key, out var index);
 
-#if __ENCOSY_VALIDATION__
-            if (found == false)
-            {
-                ThrowHelper.ThrowKeyNotFoundException_KeyNotFound();
-            }
-#endif
+            ThrowHelper.ThrowIfKeyIsNotFound(found);
 
             _version++;
             return ref _values[index];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void EnsureCapacity(int size)
+        public int EnsureCapacity(int size)
         {
             if (_values.Capacity < size)
             {
@@ -410,14 +417,16 @@ namespace EncosyTower.Collections
                 _values.Resize(expandPrime, true, false);
                 _valuesInfo.Resize(expandPrime);
             }
+
+            return _values.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
             => EnsureCapacity(_values.Capacity + amount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityTo(int size)
+        public int IncreaseCapacityTo(int size)
             => EnsureCapacity(size);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -436,7 +445,7 @@ namespace EncosyTower.Collections
             var itemAfterCurrentOne = -1;
             var comparer = EqualityComparer<TKey>.Default;
 
-            //Part one: look for the actual key in the bucket list if found I update the bucket list so that it doesn't
+            // Part one: find the key in the bucket list and update the list so that it does not
             //point anymore to the cell to remove
             while (indexToValueToRemove != -1)
             {
@@ -456,17 +465,19 @@ namespace EncosyTower.Collections
                         //--> insert order
                         _buckets[bucketIndex] = node._previous + 1;
                     }
-                    else //we need to update the previous pointer if it's not the last element that is removed
+                    else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        Checks.IsTrue(itemAfterCurrentOne != -1, "This should never happen");
-                        //update the previous pointer of the item after the one to remove with the previous pointer of the item to remove
+                        ThrowIfMissingLinkedListNode(itemAfterCurrentOne != -1);
+                        //update the previous pointer of the item after the one to remove with the
+                        //previous pointer of the item to remove
                         _valuesInfo[itemAfterCurrentOne]._previous = node._previous;
                     }
 
-                    break; //don't miss this, at this point it must break and not update indexToValueToRemove
+                    break; // Stop here without updating indexToValueToRemove.
                 }
 
-                //a bucket always points to the last element of the list, so if the item is not found we need to iterate backward
+                // A bucket always points to the last element of the list, so a missing item
+                // requires backward iteration.
                 itemAfterCurrentOne = indexToValueToRemove;
                 indexToValueToRemove = node._previous;
             }
@@ -479,25 +490,25 @@ namespace EncosyTower.Collections
             }
 
             _version++;
-            index = indexToValueToRemove; //index is a out variable, for internal use we want to know the index of the element to remove
+            index = indexToValueToRemove; // The out parameter exposes the index of the element to remove.
 
             _freeValueCellIndex--; //one less value to iterate
-            value = _values[indexToValueToRemove]; //value is a out variable, we want to know the value of the element to remove
+            value = _values[indexToValueToRemove]; // The out parameter exposes the value of the element to remove.
 
             //Part two:
             //At this point nodes pointers and buckets are updated, but the _values array
-            //still has got the value to delete. Remember the goal of this map is to be able
+            //still contains the value to delete. The map must support
             //to iterate over the values like an array, so the values array must always be up to date
 
-            //if the cell to remove is the last one in the list, we can perform less operations (no swapping needed)
-            //otherwise we want to move the last value cell over the value to remove
+            // Removing the last cell requires fewer operations because no swap is needed.
+            // Otherwise, the last value cell replaces the removed value.
 
             var lastValueCellIndex = _freeValueCellIndex;
             if (indexToValueToRemove != lastValueCellIndex)
             {
-                //we can transfer the last value of both arrays to the index of the value to remove.
-                //in order to do so, we need to be sure that the bucket pointer is updated.
-                //first we find the index in the bucket list of the pointer that points to the cell
+                // Transfer the last value of both arrays to the index of the value being removed.
+                // The bucket pointer must be updated accordingly.
+                // First, find the bucket-list index of the pointer to the cell.
                 //to move
                 ref var modeToMove = ref _valuesInfo[lastValueCellIndex];
 
@@ -510,17 +521,25 @@ namespace EncosyTower.Collections
                 var linkedListIterationIndex = _buckets[movingBucketIndex] - 1;
 
                 //if the key is found and the bucket points directly to the node to remove
-                //it must now point to the cell where it's going to be moved (update bucket list first linked list node to iterate from)
+                //it must now point to the cell where it's going to be moved (update bucket list
+                //first linked list node to iterate from)
                 if (linkedListIterationIndex == lastValueCellIndex)
+                {
                     _buckets[movingBucketIndex] = indexToValueToRemove + 1;
+                }
 
                 //find the prev element of the last element in the valuesInfo array
-                while (_valuesInfo[linkedListIterationIndex]._previous != -1 && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                while (_valuesInfo[linkedListIterationIndex]._previous != -1
+                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                {
                     linkedListIterationIndex = _valuesInfo[linkedListIterationIndex]._previous;
+                }
 
-                //if we find any value that has the last value cell as previous, we need to update it to point to the new value index that is going to be replaced
+                // Any value whose previous node is the last value cell must point to the replacement index.
                 if (_valuesInfo[linkedListIterationIndex]._previous != -1)
+                {
                     _valuesInfo[linkedListIterationIndex]._previous = indexToValueToRemove;
+                }
 
                 //finally, actually move the values
                 _valuesInfo[indexToValueToRemove] = modeToMove;
@@ -540,22 +559,25 @@ namespace EncosyTower.Collections
             _valuesInfo.Resize(size);
         }
 
-        //I store all the index with an offset + 1, so that in the bucket list 0 means actually not existing.
+        // Indices are stored with an offset of 1 so that 0 represents a missing entry in the bucket list.
         //When read the offset must be offset by -1 again to be the real one. In this way
-        //I avoid to initialize the array to -1
+        // This avoids initializing the array to -1.
 
         //WARNING this method must stay stateless (not relying on states that can change, it's ok to read
         //constant states) because it will be used in multithreaded parallel code
         public bool TryFindIndex(TKey key, out int index)
         {
-            Checks.IsTrue(_buckets.Capacity > 0, "Map arrays are not correctly initialized (0 size)");
+            ThrowHelper.ThrowIfBucketsAreUninitialized(
+                _buckets.Capacity > 0,
+                ThrowHelper.CollectionType.ArrayMap
+            );
 
             var hash = key.GetHashCode();
             var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Capacity, _fastModBucketsMultiplier);
             var valueIndex = _buckets[bucketIndex] - 1;
             var comparer = EqualityComparer<TKey>.Default;
 
-            //even if we found an existing value we need to be sure it's the one we requested
+            // An existing value must still be checked against the requested key.
             while (valueIndex != -1)
             {
                 ref var node = ref _valuesInfo[valueIndex];
@@ -573,6 +595,19 @@ namespace EncosyTower.Collections
             return false;
         }
 
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("The linked-list successor is missing.");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex(TKey key)
         {
@@ -580,7 +615,6 @@ namespace EncosyTower.Collections
             return found ? index : -1;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Intersect<UValue>([NotNull] ArrayMap<TKey, UValue> otherMapKeys)
         {
             var keys = _valuesInfo.AsSpan();
@@ -596,7 +630,6 @@ namespace EncosyTower.Collections
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Exclude<UValue>([NotNull] ArrayMap<TKey, UValue> otherMapKeys)
         {
             var keys = _valuesInfo.AsSpan();
@@ -612,7 +645,6 @@ namespace EncosyTower.Collections
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Union([NotNull] ArrayMap<TKey, TValue> otherMapKeys)
         {
             foreach (var other in otherMapKeys)
@@ -662,14 +694,14 @@ namespace EncosyTower.Collections
                 //_freeValueCellIndex = valueIndex + 1
                 _valuesInfo[_freeValueCellIndex] = new ArrayMapNode<TKey>(key, hash, valueIndex);
                 //Important: the new node is always the one that will be pointed by the bucket cell
-                //so I can assume that the one pointed by the bucket is always the last value added
+                // Therefore, the bucket always points to the last value added.
             }
 
             _version++;
 
             //item with this bucketIndex will point to the last value created
-            //ToDo: if instead I assume that the original one is the one in the bucket
-            //I wouldn't need to update the bucket here. Small optimization but important
+            // TODO: If the original node is assumed to be the one in the bucket,
+            // the bucket would not need to be updated here. This is a small but important optimization.
             _buckets[bucketIndex] = _freeValueCellIndex + 1;
 
             indexSet = _freeValueCellIndex;
@@ -679,9 +711,13 @@ namespace EncosyTower.Collections
             if (_collisions > _buckets.Capacity)
             {
                 if (_buckets.Capacity < 100)
+                {
                     RecomputeBuckets((int)_collisions << 1);
+                }
                 else
+                {
                     RecomputeBuckets(HashHelpers.ExpandPrime((int)_collisions));
+                }
             }
 
             return true;
@@ -689,24 +725,29 @@ namespace EncosyTower.Collections
 
         private void RecomputeBuckets(int newSize)
         {
-            //we need more space and less collisions
+            // More space is needed to reduce collisions.
             _buckets.Resize(newSize, false);
             _collisions = 0;
             _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
             var bucketsCapacity = (uint)_buckets.Capacity;
 
-            //we need to get all the hash code of all the values stored so far and spread them over the new bucket
+            // Redistribute the hash codes of all stored values across the new buckets.
             //length
             var freeValueCellIndex = _freeValueCellIndex;
             for (var newValueIndex = 0; newValueIndex < freeValueCellIndex; ++newValueIndex)
             {
                 //get the original hash code and find the new bucketIndex due to the new length
                 ref var valueInfoNode = ref _valuesInfo[newValueIndex];
-                var bucketIndex = (int)Reduce((uint)valueInfoNode._hashcode, bucketsCapacity, _fastModBucketsMultiplier);
+                var bucketIndex = (int)Reduce(
+                      (uint)valueInfoNode._hashcode
+                    , bucketsCapacity
+                    , _fastModBucketsMultiplier
+                );
                 //bucketsIndex can be -1 or a next value. If it's -1 means no collisions. If there is collision,
-                //we create a new node which prev points to the old one. Old one next points to the new one.
+                // Create a new node whose previous pointer targets the old node, then point the
+                // old node to the new one.
                 //the bucket will now points to the new one
-                //In this way we can rebuild the linkedlist.
+                // This rebuilds the linked list.
                 //get the current valueIndex, it's -1 if no collision happens
                 var existingValueIndex = _buckets[bucketIndex] - 1;
                 //update the bucket index to the index of the current item that share the bucketIndex
@@ -714,7 +755,7 @@ namespace EncosyTower.Collections
                 _buckets[bucketIndex] = newValueIndex + 1;
                 if (existingValueIndex == -1)
                 {
-                    //ok nothing was indexed, the bucket was empty. We need to update the previous
+                    // Nothing was indexed because the bucket was empty, so the previous pointer must be updated.
                     //values of next and previous
                     valueInfoNode._previous = -1;
                 }
@@ -748,9 +789,11 @@ namespace EncosyTower.Collections
         private static uint Reduce(uint hashcode, uint N, ulong fastModBucketsMultiplier)
         {
             if (hashcode >= N) //is the condition return actually an optimization?
+            {
                 return Environment.Is64BitProcess
-                    ? HashHelpers.FastMod(hashcode, N, fastModBucketsMultiplier)
-                    : hashcode % N;
+                ? HashHelpers.FastMod(hashcode, N, fastModBucketsMultiplier)
+                : hashcode % N;
+            }
 
             return hashcode;
         }
@@ -776,10 +819,18 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ICollection<ArrayMapKeyValuePair<TKey, TValue>>.CopyTo(ArrayMapKeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        void ICollection<ArrayMapKeyValuePair<TKey, TValue>>.CopyTo(
+              ArrayMapKeyValuePair<TKey, TValue>[] array
+            , int arrayIndex
+        )
         {
-            throw new NotImplementedException("This method is not implemented by design.");
+            ThrowNotImplementedException();
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        private static void ThrowNotImplementedException()
+            => throw new NotImplementedException("This method is not implemented by design.");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         bool ICollection<ArrayMapKeyValuePair<TKey, TValue>>.Remove(ArrayMapKeyValuePair<TKey, TValue> item)
@@ -819,10 +870,7 @@ namespace EncosyTower.Collections
         public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
         {
             private readonly ArrayMap<TKey, TValue> _map;
-
-#if __ENCOSY_VALIDATION__
             private readonly int _version;
-#endif
 
             private int _index;
 
@@ -831,10 +879,7 @@ namespace EncosyTower.Collections
             {
                 _map = map;
                 _index = -1;
-
-#if __ENCOSY_VALIDATION__
                 _version = map._version;
-#endif
             }
 
             public readonly bool IsValid
@@ -852,17 +897,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-#if __ENCOSY_VALIDATION__
-                if (IsValid == false)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-                }
-
-                if (_version != _map._version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-                }
-#endif
+                ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+                ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map._version);
 
                 if (_index < _map.Count - 1)
                 {
@@ -880,7 +916,9 @@ namespace EncosyTower.Collections
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly void Dispose() { }
+            public readonly void Dispose()
+            {
+            }
 
             readonly object IEnumerator.Current
             {
@@ -893,10 +931,7 @@ namespace EncosyTower.Collections
     public struct ArrayMapKeyValueEnumerator<TKey, TValue> : IEnumerator<ArrayMapKeyValuePair<TKey, TValue>>, IIsValid
     {
         private readonly ArrayMap<TKey, TValue> _map;
-
-#if __ENCOSY_VALIDATION__
         private readonly int _version;
-#endif
 
         private int _index;
 
@@ -904,10 +939,7 @@ namespace EncosyTower.Collections
         {
             _map = map;
             _index = -1;
-
-#if __ENCOSY_VALIDATION__
             _version = map._version;
-#endif
         }
 
         public readonly bool IsValid
@@ -919,17 +951,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-#if __ENCOSY_VALIDATION__
-            if (IsValid == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-            }
-
-            if (_version != _map._version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-            }
-#endif
+            ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+            ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map._version);
 
             if (_index >= _map.Count - 1)
             {
@@ -959,19 +982,21 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Dispose() { }
+        public readonly void Dispose()
+        {
+        }
     }
 
     [DebuggerDisplay("[{Key}] = {Value}")]
     [DebuggerTypeProxy(typeof(ArrayMapKeyValuePairDebugProxy<,>))]
     public readonly struct ArrayMapKeyValuePair<TKey, TValue> : IIsValid
     {
-        private readonly ManagedBuffer<TValue> _mapValues;
+        private readonly BufferManaged<TValue> _mapValues;
         private readonly TKey _key;
         private readonly int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ArrayMapKeyValuePair(in TKey key, in ManagedBuffer<TValue> mapValues, int index)
+        public ArrayMapKeyValuePair(in TKey key, in BufferManaged<TValue> mapValues, int index)
         {
             _mapValues = mapValues;
             _index = index;

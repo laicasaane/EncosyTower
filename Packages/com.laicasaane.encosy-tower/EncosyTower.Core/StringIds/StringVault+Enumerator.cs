@@ -47,10 +47,7 @@ namespace EncosyTower.StringIds
 
             private bool MoveNextRare()
             {
-                if (_version != _ranges.Version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-                }
+                ThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
 
                 _index = _ranges.Count + 1;
                 _current = default;
@@ -65,10 +62,7 @@ namespace EncosyTower.StringIds
 
             public void Reset()
             {
-                if (_version != _ranges.Version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-                }
+                ThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
 
                 _index = 0;
                 _current = default;
@@ -83,10 +77,7 @@ namespace EncosyTower.StringIds
             {
                 get
                 {
-                    if (_index == 0 || _index == _ranges.Count + 1)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException_EnumOpCantHappen();
-                    }
+                    ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _ranges.Count + 1);
 
                     return Current;
                 }

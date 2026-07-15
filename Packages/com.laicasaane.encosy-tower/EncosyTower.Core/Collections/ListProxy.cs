@@ -1,12 +1,20 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -66,7 +74,8 @@ namespace EncosyTower.Collections
             get => _buffer.Capacity;
         }
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly
+            => false;
 
 #pragma warning disable IDE1006 // Naming Styles
         internal ref TBuffer _buffer
@@ -74,7 +83,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Buffer;
             }
         }
@@ -84,7 +93,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Count;
             }
         }
@@ -94,7 +103,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(Provider != null, "StatelessList<T> is not initialized");
+                ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Version;
             }
         }
@@ -105,20 +114,14 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue(
-                      (uint)index < (uint)_count
-                    , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
-                );
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListProxy);
                 return _buffer[index];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                Checks.IsTrue(
-                      (uint)index < (uint)_count
-                    , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
-                );
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListProxy);
                 _version++;
                 _buffer[index] = value;
             }
@@ -130,7 +133,9 @@ namespace EncosyTower.Collections
             _version++;
 
             if (_count == _buffer.Capacity)
+            {
                 AllocateMore();
+            }
 
             _buffer[_count++] = item;
         }
@@ -141,7 +146,9 @@ namespace EncosyTower.Collections
             _version++;
 
             if (_count == _buffer.Capacity)
+            {
                 AllocateMore();
+            }
 
             _buffer[_count++] = item;
         }
@@ -149,15 +156,14 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            Checks.IsTrue(
-                  (uint)index <= (uint)_count
-                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
-            );
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)_count, ThrowHelper.CollectionType.ListProxy);
 
             _version++;
 
             if (_count == _buffer.Capacity)
+            {
                 AllocateMore();
+            }
 
             CopyBuffer(index, index + 1, _count - index);
             ++_count;
@@ -168,15 +174,14 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            Checks.IsTrue(
-                  (uint)index <= (uint)_count
-                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
-            );
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)_count, ThrowHelper.CollectionType.ListProxy);
 
             _version++;
 
             if (_count == _buffer.Capacity)
+            {
                 AllocateMore();
+            }
 
             CopyBuffer(index, index + 1, _count - index);
             ++_count;
@@ -187,10 +192,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T ElementAt(int index)
         {
-            Checks.IsTrue(
-                  (uint)index < (uint)_count
-                , "index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>"
-            );
+            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListProxy);
             return ref _buffer[index];
         }
 
@@ -202,12 +204,17 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Capacity - _count < count)
+            {
                 AllocateMore(checked(_count + count));
+            }
 
-            items.AsSpan().CopyTo(_buffer.AsSpan().Slice(_count, count));
+            items.AsSpan()[..count].CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
         }
 
@@ -219,10 +226,15 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Capacity - _count < count)
+            {
                 AllocateMore(checked(_count + count));
+            }
 
             items[..count].CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
@@ -339,19 +351,20 @@ namespace EncosyTower.Collections
             => new(Provider);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
             => IncreaseCapacityTo(_buffer.Capacity + amount);
 
-        public void IncreaseCapacityTo(int newCapacity)
+        public int IncreaseCapacityTo(int newCapacity)
         {
             _version++;
 
             if (newCapacity <= _buffer.Capacity)
             {
-                return;
+                return _buffer.Capacity;
             }
 
             _buffer.Resize(newCapacity, true);
+            return _buffer.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -382,15 +395,15 @@ namespace EncosyTower.Collections
 
         public void RemoveRange(int startIndex, int length)
         {
-            _version++;
-
             var count = _count;
 
-            Checks.IsTrue(startIndex < count, "out of bound start index");
+            ThrowIfStartIndexIsOutOfRange(startIndex < count);
 
             var end = startIndex + length;
 
-            Checks.IsTrue(end <= count, "out of bound length");
+            ThrowIfRemovalRangeIsOutOfRange(end <= count);
+
+            _version++;
 
             if (length < 1)
             {
@@ -415,9 +428,9 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            _version++;
+            ThrowIfSwapBackIndexIsOutOfRange(index < _count);
 
-            Checks.IsTrue(index < _count, "out of bound index");
+            _version++;
 
             var copyFrom = --_count;
             _buffer[index] = _buffer[copyFrom];
@@ -567,10 +580,101 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore(int newSize)
         {
-            Checks.IsTrue(newSize > _buffer.Capacity, "newSize is not greater than the current capacity");
+            ThrowHelper.ThrowIfNewCapacityIsInvalid(newSize > _buffer.Capacity);
 
             var newCapacity = CalcNewCapacity(newSize);
             _buffer.Resize(newCapacity, true);
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfProviderIsNull([DoesNotReturnIf(false)] bool isInitialized)
+        {
+            if (isInitialized == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("ListProxy<TProvider, TBuffer, T> is not initialized");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound start index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound length");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSwapBackIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
+        {
+            if (exceedsCapacity == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("newSize is not greater than the current capacity");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

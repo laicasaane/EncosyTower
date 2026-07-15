@@ -1,8 +1,16 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections.Extensions
 {
@@ -45,7 +53,9 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (comparer.Equals(item, item2))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -68,7 +78,9 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (comparer.Equals(item, item2))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -99,14 +111,16 @@ namespace EncosyTower.Collections.Extensions
             where TNative : unmanaged
             where TComparer : IComparer<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  self.Count - index >= count
-                , "index and count do not denote a valid range in the SharedList<T, TNative>.ReadOnly"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfRangeIsWithinList(self.Count - index >= count);
 
-            return MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            var result = MemoryExtensions.BinarySearch(
+                  self.AsReadOnlySpan().Slice(index, count)
+                , item
+                , comparer
+            );
+            return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,39 +148,38 @@ namespace EncosyTower.Collections.Extensions
             where TNative : unmanaged
             where TComparer : IComparer<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  self.Count - index >= count
-                , "index and count do not denote a valid range in the SharedList<T, TNative>.ReadOnly"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfRangeIsWithinList(self.Count - index >= count);
 
-            return MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            var result = MemoryExtensions.BinarySearch(
+                  self.AsReadOnlySpan().Slice(index, count)
+                , item
+                , comparer
+            );
+            return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, T item)
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
-            => IndexOf(self, item, 0);
+                => IndexOf(self, item, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, T item, int index)
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
-            => IndexOf(self, item, index, self.Count);
+                => IndexOf(self, item, index, self.Count - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, T item, int index, int count)
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  index + count <= self.Count
-                , "index and count do not specify a valid section in the SharedList<T, TNative>.ReadOnly"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfSectionIsWithinList(index + count <= self.Count);
 
             var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
             return result < 0 ? result : result + index;
@@ -176,25 +189,27 @@ namespace EncosyTower.Collections.Extensions
         public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, in T item)
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
-            => IndexOf(self, in item, 0);
+                => IndexOf(self, in item, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, in T item, int index)
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
-            => IndexOf(self, in item, index, self.Count);
+                => IndexOf(self, in item, index, self.Count - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T, TNative>(this SharedList<T, TNative>.ReadOnly self, in T item, int index, int count)
+        public static int IndexOf<T, TNative>(
+              this SharedList<T, TNative>.ReadOnly self
+            , in T item
+            , int index
+            , int count
+        )
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  index + count <= self.Count
-                , "index and count do not specify a valid section in the SharedList<T, TNative>.ReadOnly"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfSectionIsWithinList(index + count <= self.Count);
 
             var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
             return result < 0 ? result : result + index;
@@ -224,6 +239,57 @@ namespace EncosyTower.Collections.Extensions
             where TComparer : IEqualityComparer<T>
         {
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
+        }
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index is less than 0.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfCountIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Count is less than 0.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRangeIsWithinList([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index and count do not denote a valid range in SharedList<T, TNative>.ReadOnly.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSectionIsWithinList([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index and count do not specify a valid section in SharedList<T, TNative>.ReadOnly.");
         }
     }
 }

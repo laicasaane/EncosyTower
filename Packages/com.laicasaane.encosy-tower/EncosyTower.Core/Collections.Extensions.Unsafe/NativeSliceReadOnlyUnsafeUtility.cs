@@ -4,6 +4,7 @@ namespace EncosyTower.Collections.Unsafe
 {
     public static class NativeSliceReadOnlyUnsafeUtility
     {
+        /// <safety>Caller must keep the slice's backing allocation alive and respect its bounds.</safety>
         public static unsafe void* GetUnsafePtr<T>(this NativeSliceReadOnly<T> nativeSlice)
             where T : struct
         {
@@ -11,9 +12,14 @@ namespace EncosyTower.Collections.Unsafe
             AtomicSafetyHandle.CheckWriteAndThrow(nativeSlice.m_Safety);
 #endif
 
-            return nativeSlice._buffer;
+            // SAFETY: The write safety handle was checked before exposing the slice backing pointer.
+            unsafe
+            {
+                return nativeSlice._buffer;
+            }
         }
 
+        /// <safety>Caller must keep the slice's backing allocation alive and respect its bounds.</safety>
         public static unsafe void* GetUnsafeReadOnlyPtr<T>(this NativeSliceReadOnly<T> nativeSlice)
             where T : struct
         {
@@ -21,7 +27,11 @@ namespace EncosyTower.Collections.Unsafe
             AtomicSafetyHandle.CheckReadAndThrow(nativeSlice.m_Safety);
 #endif
 
-            return nativeSlice._buffer;
+            // SAFETY: The read safety handle was checked before exposing the slice backing pointer.
+            unsafe
+            {
+                return nativeSlice._buffer;
+            }
         }
     }
 }

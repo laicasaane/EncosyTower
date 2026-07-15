@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace EncosyTower.LowLevel.Unsafe
 {
-    internal unsafe static class ILSupport
+    internal static class ILSupport
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void* AddressOf<T>(in T thing)
+        public static unsafe void* AddressOf<T>(in T thing)
         {
             throw new NotImplementedException();
 

@@ -71,7 +71,7 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int sourceStartIndex, Span<T> destination)
-            => CopyTo(sourceStartIndex, destination, Length);
+            => CopyTo(sourceStartIndex, destination, destination.Length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int sourceStartIndex, Span<T> destination, int length)
@@ -87,7 +87,7 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(int sourceStartIndex, Span<T> destination)
-            => TryCopyTo(sourceStartIndex, destination, Length);
+            => TryCopyTo(sourceStartIndex, destination, destination.Length);
 
         public bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
         {
@@ -101,7 +101,7 @@ namespace EncosyTower.Collections
                 return false;
             }
 
-            return source.TryCopyTo(destination[..length]);
+            return source._span.TryCopyTo(destination[..length]);
         }
     }
 }

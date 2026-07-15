@@ -1,54 +1,59 @@
-#if UNITY_COLLECTIONS && UNITY_MATHEMATICS
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Collections;
+using System.Runtime.InteropServices;
+using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
-using EncosyTower.Ids;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using Unity.Mathematics;
-using UnityEngine;
 
 namespace EncosyTower.StringIds
 {
-    public partial struct StringVaultNative : IStringVault, INativeDisposable
+    [StructLayout(LayoutKind.Sequential)]
+    [NativeContainer]
+    public partial struct StringVaultNative : IStringVault
+#if UNITY_COLLECTIONS
+        , INativeDisposable
+#endif
         , IReadOnlyList<UnmanagedString>
     {
-        internal NativeHashMap<StringHash, StringId> _map;
-        internal NativeHashMap<UnmanagedString, StringId> _collisionMap;
-        internal NativeList<Range> _stringRanges;
-        internal NativeList<byte> _stringBuffer;
-        internal NativeList<Option<StringHash>> _hashes;
-        internal NativeReference<int> _count;
+#pragma warning disable IDE1006 // Naming Styles
+        [NativeDisableUnsafePtrRestriction]
+        internal unsafe StringVaultUnsafe* m_Data;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+        internal AtomicSafetyHandle m_Safety;
+
+#if UNITY_BURST
+        private static readonly Unity.Burst.SharedStatic<int> s_SafetyId
+            = Unity.Burst.SharedStatic<int>.GetOrCreate<StringVaultNative>();
+#else
+        private static int s_SafetyId;
+#endif
+#endif
+#pragma warning restore IDE1006 // Naming Styles
 
         public StringVaultNative(
               int initialCapacity
-            , AllocatorManager.AllocatorHandle allocator
+            , AllocatorStrategy allocator
             , bool allowEmptyString = false
         )
+            : this()
         {
-            _map = new(initialCapacity, allocator);
-            _collisionMap = new(initialCapacity, allocator);
-            _stringRanges = new(initialCapacity, allocator);
-            _stringBuffer = new(initialCapacity * 512, allocator);
-            _hashes = new(initialCapacity, allocator);
-            _count = new(allocator);
-
-            AllowEmptyString = allowEmptyString;
-
-            Clear();
+            // SAFETY: The allocation returns an owned native vault header kept alive by this container.
+            unsafe
+            {
+                m_Data = StringVaultUnsafe.Alloc(initialCapacity, allocator, allowEmptyString);
+            }
+            CreateSafety(allocator.ToAllocator());
         }
 
         public StringVaultNative(
               ReadOnlySpan<UnmanagedString> strings
-            , AllocatorManager.AllocatorHandle allocator
+            , AllocatorStrategy allocator
             , bool allowEmptyString = false
         )
             : this(strings.Length, allocator, allowEmptyString)
@@ -59,329 +64,430 @@ namespace EncosyTower.StringIds
             }
         }
 
-        public bool IsCreated
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CreateSafety(Allocator allocator)
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _map.IsCreated && _stringRanges.IsCreated
-                && _hashes.IsCreated && _count.IsCreated;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            m_Safety = EncosyCollectionSafetyAPI.CreateSafetyHandle(allocator);
+
+            EncosyCollectionSafetyAPI.SetStaticSafetyId<StringVaultNative>(
+                  ref m_Safety
+#if UNITY_BURST
+                , ref s_SafetyId.Data
+#else
+                , ref s_SafetyId
+#endif
+            );
+
+            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(m_Safety, true);
+#endif
         }
 
-        public int Capacity
+        public readonly bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _hashes.Length;
+            get
+            {
+                // SAFETY: The pointer is checked for null before observing the owned vault header.
+                unsafe
+                {
+                    return m_Data != null && m_Data->IsCreated;
+                }
+            }
         }
 
-        public int Count
+        public readonly int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _count.Value;
+            get
+            {
+                CheckRead();
+                // SAFETY: CheckRead validates the owner before reading the live vault header.
+                unsafe
+                {
+                    return m_Data->Capacity;
+                }
+            }
         }
 
-        public bool AllowEmptyString { get; }
-
-        public UnmanagedString this[int index]
+        public readonly int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => UnmanagedString.FromBufferAt(_stringRanges.AsReadOnly()[index], _stringBuffer.AsReadOnly()).GetValueOrThrow();
+            get
+            {
+                CheckRead();
+                // SAFETY: CheckRead validates the owner before reading the live vault header.
+                unsafe
+                {
+                    return m_Data->Count;
+                }
+            }
+        }
+
+        public readonly bool AllowEmptyString
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckRead();
+                // SAFETY: CheckRead validates the owner before reading the live vault header.
+                unsafe
+                {
+                    return m_Data->AllowEmptyString;
+                }
+            }
+        }
+
+        public readonly UnmanagedString this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckRead();
+                // SAFETY: CheckRead validates the owner and the vault performs its own index validation.
+                unsafe
+                {
+                    return (*m_Data)[index];
+                }
+            }
         }
 
         public void Dispose()
         {
-            if (_map.IsCreated == false)
+            // SAFETY: The native vault header is owned by this container and released exactly once.
+            unsafe
             {
-                return;
+                if (m_Data == null)
+                {
+                    return;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (AtomicSafetyHandle.IsDefaultValue(m_Safety) == false)
+            {
+                AtomicSafetyHandle.CheckExistsAndThrow(m_Safety);
             }
 
-            _map.Dispose();
-            _collisionMap.Dispose();
-            _stringRanges.Dispose();
-            _stringBuffer.Dispose();
-            _hashes.Dispose();
-            _count.Dispose();
+            EncosyCollectionSafetyAPI.DisposeSafetyHandle(ref m_Safety);
+#endif
+
+                StringVaultUnsafe.Free(m_Data);
+                m_Data = null;
+            }
         }
 
         public JobHandle Dispose(JobHandle inputDeps)
         {
-            if (_map.IsCreated == false)
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (AtomicSafetyHandle.IsDefaultValue(m_Safety) == false)
+            {
+                AtomicSafetyHandle.CheckExistsAndThrow(m_Safety);
+            }
+#endif
+
+            if (IsCreated == false)
             {
                 return inputDeps;
             }
 
-            var handles = NativeArray.CreateFast<JobHandle>(6, Allocator.Temp);
+            // SAFETY: The scheduled job receives the live vault header and takes ownership of its release.
+            unsafe
+            {
+                var handle = new StringVaultNativeDisposeJob {
+                    _data = new StringVaultNativeDispose {
+                        m_Data = m_Data,
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                        m_Safety = m_Safety,
+#endif
+                    },
+                }.Schedule(inputDeps);
 
-            handles[0] = _map.Dispose(inputDeps);
-            handles[1] = _collisionMap.Dispose(inputDeps);
-            handles[2] = _stringRanges.Dispose(inputDeps);
-            handles[3] = _stringBuffer.Dispose(inputDeps);
-            handles[4] = _hashes.Dispose(inputDeps);
-            handles[5] = _count.Dispose(inputDeps);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                EncosyCollectionSafetyAPI.ReleaseSafetyHandleAfterSchedule(ref m_Safety);
+#endif
 
-            return JobHandle.CombineDependencies(handles);
+                m_Data = null;
+                return handle;
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            _map.Clear();
-            _collisionMap.Clear();
-            _stringRanges.Clear();
-            _stringBuffer.Clear();
-            _hashes.Clear();
-
-            // The first item represent an invalid id
-            _map.Add(default(UnmanagedString).GetHashCode64(), default);
-            _collisionMap.Add(default, default);
-            _stringRanges.Add(default);
-            _hashes.Add(default);
-            _count.ValueAsUnsafeRefRW() = 1;
+            CheckWrite();
+            // SAFETY: CheckWrite validates the owner before mutating the live vault.
+            unsafe
+            {
+                m_Data->Clear();
+            }
         }
 
-        /// <summary>
-        /// Creates or retrieves a <see cref="StringId"/> from an <see cref="UnmanagedString"/>.
-        /// </summary>
-        /// <param name="str">The unmanaged string to create or retrieve the <see cref="StringId"/> for.</param>
-        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StringId GetOrMakeId(in UnmanagedString str)
         {
-            if (AllowEmptyString == false && str.IsEmpty)
+            CheckWriteAndBumpSecondaryVersion();
+            // SAFETY: CheckWrite validates the owner before mutating the live vault.
+            unsafe
             {
-                return default;
+                return m_Data->GetOrMakeId(str);
             }
-
-            var hash = str.GetHashCode64();
-            var registered = _map.TryGetValue(hash, out var id);
-
-            if (registered)
-            {
-                TryGetUnmanagedString(id, out var registeredString);
-
-                if (str == registeredString)
-                {
-                    return id;
-                }
-
-                if (_collisionMap.TryGetValue(str, out var collidedId))
-                {
-                    return collidedId;
-                }
-
-                ref var count = ref _count.ValueAsUnsafeRefRW();
-                var index = count;
-
-                id = new Id(index);
-
-                count += 1;
-                EnsureCapacity();
-
-                _collisionMap.TryAdd(str, id);
-                _stringRanges.ElementAsUnsafeRefRW(index) = WriteToBuffer(str);
-                _hashes.ElementAsUnsafeRefRW(index) = Option.Some<StringHash>(hash);
-            }
-            else
-            {
-                ref var count = ref _count.ValueAsUnsafeRefRW();
-                var index = count;
-
-                id = new Id(index);
-
-                if (_map.TryAdd(hash, id))
-                {
-                    count += 1;
-                    EnsureCapacity();
-
-                    _stringRanges.ElementAsUnsafeRefRW(index) = WriteToBuffer(str);
-                    _hashes.ElementAsUnsafeRefRW(index) = Option.Some<StringHash>(hash);
-                }
-                else
-                {
-                    ThrowIfFailedRegistering(false, str, id);
-                }
-            }
-
-            return id;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Option<StringId> TryGetId(in UnmanagedString str)
-            => Option.SomeIf(TryGetId(str, out var result), result);
-
-        public bool TryGetId(in UnmanagedString str, out StringId result)
+        public readonly Option<StringId> TryGetId(in UnmanagedString str)
         {
-            if (AllowEmptyString == false && str.IsEmpty)
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before reading the live vault.
+            unsafe
             {
-                result = default;
-                return false;
-            }
-
-            var hash = str.GetHashCode64();
-            var registered = _map.TryGetValue(hash, out var id);
-
-            if (registered)
-            {
-                TryGetUnmanagedString(id, out var registeredString);
-
-                if (str == registeredString)
-                {
-                    result = id;
-                    return true;
-                }
-
-                if (_collisionMap.TryGetValue(str, out var collidedId))
-                {
-                    result = collidedId;
-                    return true;
-                }
-            }
-
-            result = default;
-            return false;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Option<UnmanagedString> TryGetUnmanagedString(StringId id)
-            => Option.SomeIf(TryGetUnmanagedString(id, out var result), result);
-
-        public bool TryGetUnmanagedString(StringId id, out UnmanagedString result)
-        {
-            var indexUnsigned = (uint)id.Id;
-            var index = (int)indexUnsigned;
-            var validIndex = indexUnsigned < (uint)_hashes.Length;
-
-            var resultOpt = validIndex
-                ? UnmanagedString.FromBufferAt(_stringRanges.AsReadOnly()[index], _stringBuffer.AsReadOnly())
-                : Option.None;
-
-            result = resultOpt.GetValueOrDefault();
-            return resultOpt.HasValue;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ContainsId(StringId id)
-        {
-            var indexUnsigned = (uint)id.Id;
-            var index = (int)indexUnsigned;
-            var validIndex = indexUnsigned < (uint)_hashes.Length;
-            return validIndex && _hashes[index].HasValue;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(Span<UnmanagedString> destination)
-            => CopyTo(destination, Count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(Span<UnmanagedString> destination, int length)
-            => CopyTo(0, destination, length);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination)
-            => CopyTo(sourceStartIndex, destination, Count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-            => new UnmanagedStringSpan(_stringRanges.AsReadOnlySpan()[1..Count], _stringBuffer.AsReadOnly())
-                .Slice(sourceStartIndex, length).CopyTo(destination[..length]);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryCopyTo(Span<UnmanagedString> destination)
-            => TryCopyTo(destination, Count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryCopyTo(Span<UnmanagedString> destination, int length)
-            => TryCopyTo(0, destination, length);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination)
-            => TryCopyTo(sourceStartIndex, destination, Count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-            => new UnmanagedStringSpan(_stringRanges.AsReadOnlySpan()[1..Count], _stringBuffer.AsReadOnly())
-                .Slice(sourceStartIndex, length).TryCopyTo(destination[..length]);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
-        {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(Capacity + amount);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityTo(int newCapacity)
-        {
-            _map.IncreaseCapacityTo(newCapacity);
-            EnsureCapacity();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Enumerator GetEnumerator()
-            => new(_stringRanges.AsReadOnly(), _stringBuffer.AsReadOnly());
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<UnmanagedString> IEnumerable<UnmanagedString>.GetEnumerator()
-            => GetEnumerator();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        private void EnsureCapacity()
-        {
-            var oldCapacity = math.min(_hashes.Capacity, _stringRanges.Capacity);
-            var newCapacity = math.max(_map.Capacity, _count.Value);
-
-            if (newCapacity > 0 && newCapacity > oldCapacity)
-            {
-                _hashes.IncreaseCapacityTo(newCapacity);
-                _stringRanges.IncreaseCapacityTo(newCapacity);
-            }
-
-            if (_hashes.Length < newCapacity)
-            {
-                _hashes.ResizeUninitialized(newCapacity);
-            }
-
-            if (_stringRanges.Length < newCapacity)
-            {
-                _stringRanges.ResizeUninitialized(newCapacity);
-            }
-
-            var newBufferCapacity = newCapacity * 512;
-
-            if (_stringBuffer.Capacity < newBufferCapacity)
-            {
-                _stringBuffer.IncreaseCapacityTo(newBufferCapacity);
+                return m_Data->TryGetId(str);
             }
         }
 
-        private Range WriteToBuffer(in UnmanagedString str)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryGetId(in UnmanagedString str, out StringId result)
         {
-            var buffer = _stringBuffer;
-            var startIndex = buffer.Length;
-            var amount = str.Length;
-            var strSpan = buffer.InsertRangeSpan(startIndex, amount);
-
-            str.AsReadOnlySpan().CopyTo(strSpan);
-
-            return new(startIndex, startIndex + amount);
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before reading the live vault.
+            unsafe
+            {
+                return m_Data->TryGetId(str, out result);
+            }
         }
 
-        [HideInCallstack, StackTraceHidden]
-        private static void ThrowIfFailedRegistering(
-              [DoesNotReturnIf(false)] bool check
-            , in UnmanagedString str
-            , StringId id
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Option<UnmanagedString> TryGetUnmanagedString(StringId id)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before reading the live vault.
+            unsafe
+            {
+                return m_Data->TryGetUnmanagedString(id);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryGetUnmanagedString(StringId id, out UnmanagedString result)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before reading the live vault.
+            unsafe
+            {
+                return m_Data->TryGetUnmanagedString(id, out result);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool ContainsId(StringId id)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before reading the live vault.
+            unsafe
+            {
+                return m_Data->ContainsId(id);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(Span<UnmanagedString> destination)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                m_Data->CopyTo(destination);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(Span<UnmanagedString> destination, int length)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                m_Data->CopyTo(destination, length);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                m_Data->CopyTo(sourceStartIndex, destination);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly void CopyTo(
+              int sourceStartIndex
+            , Span<UnmanagedString> destination
+            , int length
         )
         {
-            if (check == false)
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
             {
-                throw CreateException(str, id);
+                m_Data->CopyTo(sourceStartIndex, destination, length);
             }
+        }
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(in UnmanagedString str, StringId id)
-                => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(Span<UnmanagedString> destination)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                return m_Data->TryCopyTo(destination);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(Span<UnmanagedString> destination, int length)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                return m_Data->TryCopyTo(destination, length);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination)
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                return m_Data->TryCopyTo(sourceStartIndex, destination);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryCopyTo(
+              int sourceStartIndex
+            , Span<UnmanagedString> destination
+            , int length
+        )
+        {
+            CheckRead();
+            // SAFETY: CheckRead validates the owner before copying from the live vault.
+            unsafe
+            {
+                return m_Data->TryCopyTo(sourceStartIndex, destination, length);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int IncreaseCapacityBy(int amount)
+        {
+            CheckWriteAndBumpSecondaryVersion();
+            // SAFETY: CheckWrite validates the owner before mutating the live vault.
+            unsafe
+            {
+                return m_Data->IncreaseCapacityBy(amount);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int IncreaseCapacityTo(int newCapacity)
+        {
+            CheckWriteAndBumpSecondaryVersion();
+            // SAFETY: CheckWrite validates the owner before mutating the live vault.
+            unsafe
+            {
+                return m_Data->IncreaseCapacityTo(newCapacity);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Enumerator GetEnumerator()
+        {
+            CheckRead();
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            // SAFETY: CheckRead validates the owner before borrowing its live header for enumeration.
+            unsafe
+            {
+                return new(m_Data, m_Safety);
+            }
+#else
+            // SAFETY: CheckRead validates the owner before borrowing its live header for enumeration.
+            unsafe
+            {
+                return new(m_Data);
+            }
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        readonly IEnumerator<UnmanagedString> IEnumerable<UnmanagedString>.GetEnumerator()
+            => GetEnumerator();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        readonly IEnumerator IEnumerable.GetEnumerator()
+            => GetEnumerator();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private readonly void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private readonly void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private readonly void CheckWriteAndBumpSecondaryVersion()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(m_Safety);
+#endif
+        }
+    }
+
+#if UNITY_BURST
+    [Unity.Burst.BurstCompile]
+#endif
+    internal struct StringVaultNativeDisposeJob : IJob
+    {
+        internal StringVaultNativeDispose _data;
+
+        public readonly void Execute()
+            => _data.Dispose();
+    }
+
+    [NativeContainer]
+    internal struct StringVaultNativeDispose
+    {
+#pragma warning disable IDE1006 // Naming Styles
+        [NativeDisableUnsafePtrRestriction]
+        internal unsafe StringVaultUnsafe* m_Data;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+        internal AtomicSafetyHandle m_Safety;
+#endif
+#pragma warning restore IDE1006 // Naming Styles
+
+        public readonly void Dispose()
+        {
+            // SAFETY: The dispose job owns this vault header and releases it exactly once.
+            unsafe
+            {
+                StringVaultUnsafe.Free(m_Data);
+            }
         }
     }
 }
-
-#endif

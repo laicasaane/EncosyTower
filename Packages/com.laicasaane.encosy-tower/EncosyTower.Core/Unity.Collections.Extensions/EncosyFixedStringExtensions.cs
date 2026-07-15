@@ -115,33 +115,33 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TDest>(in this FixedString32Bytes fs)
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TDest>(in this FixedString64Bytes fs)
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TDest>(in this FixedString128Bytes fs)
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TDest>(in this FixedString512Bytes fs)
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TDest>(in this FixedString4096Bytes fs)
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest Cast<TSource, TDest>(this TSource fs)
             where TSource : unmanaged, INativeList<byte>, IUTF8Bytes
             where TDest : unmanaged, INativeList<byte>, IUTF8Bytes
-            => fs.CastTo(T<TDest>());
+                => fs.CastTo(T<TDest>());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TDest CastTo<TSource, TDest>(this TSource fs, T<TDest> _)
@@ -197,6 +197,8 @@ namespace EncosyTower.Collections
         public static CopyError CopyFromTruncated<T>(this ref T fs, ReadOnlySpan<char> utf16Chars)
             where T : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 fixed (char* chars = utf16Chars)
@@ -231,6 +233,8 @@ namespace EncosyTower.Collections
         public static FormatError Append<TFixedString>(this ref TFixedString fs, ReadOnlySpan<char> utf16Chars)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 // we don't know how big the expansion from UTF-16 to UTF8 will be, so we account for worst case.
@@ -303,6 +307,8 @@ namespace EncosyTower.Collections
         public static CopyError CopyFromTruncated<TFixedString>(this ref TFixedString fs, ReadOnlySpan<byte> utf8Chars)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 fixed (byte* chars = utf8Chars)
@@ -333,6 +339,8 @@ namespace EncosyTower.Collections
         public static CopyError CopyTo<TFixedString>(this TFixedString fs, Span<char> dest, out int destLength)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 fixed (char* chars = dest)
@@ -365,6 +373,8 @@ namespace EncosyTower.Collections
         )
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 Span<char> utf16Chars = stackalloc char[fs.Length];
@@ -390,6 +400,8 @@ namespace EncosyTower.Collections
         public static FormatError Append<TFixedString>(this ref TFixedString fs, ReadOnlySpan<byte> utf8Chars)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 fixed (byte* chars = utf8Chars)
@@ -402,10 +414,17 @@ namespace EncosyTower.Collections
         /// <summary>
         /// Returns a span covering the entire length of <paramref name="fs"/>.
         /// </summary>
+        /// <safety>The returned span borrows the fixed-string storage and must not outlive the value.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe Span<byte> AsSpan<TFixedString>(this ref TFixedString fs)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
-            => new(fs.GetUnsafePtr(), fs.Length);
+        {
+            // SAFETY: The returned span is bounded by the fixed string's length and borrows its storage.
+            unsafe
+            {
+                return new Span<byte>(fs.GetUnsafePtr(), fs.Length);
+            }
+        }
 
         /// <summary>
         /// Returns a readonly span covering the entire length of <paramref name="fs"/>.
@@ -414,6 +433,8 @@ namespace EncosyTower.Collections
         public static ReadOnlySpan<byte> AsReadOnlySpan<TFixedString>(this TFixedString fs)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 return new(fs.GetUnsafePtr(), fs.Length);
@@ -431,7 +452,10 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeText ToNativeText<TFixedString>(this TFixedString fs, AllocatorManager.AllocatorHandle allocator)
+        public static NativeText ToNativeText<TFixedString>(
+              this TFixedString fs
+            , AllocatorManager.AllocatorHandle allocator
+        )
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
             var result = new NativeText(fs.Length, allocator);

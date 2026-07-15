@@ -131,7 +131,11 @@ namespace EncosyTower.Collections
         public static NativeArray<T> CreateFast<T>(int length, RewindableAllocator allocator)
             where T : unmanaged
         {
-            return CollectionHelper.CreateNativeArray<T>(length, allocator.Handle, NativeArrayOptions.UninitializedMemory);
+            return CollectionHelper.CreateNativeArray<T>(
+                  length
+                , allocator.Handle
+                , NativeArrayOptions.UninitializedMemory
+            );
         }
 
         /// <summary>

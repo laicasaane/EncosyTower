@@ -7,8 +7,8 @@ namespace EncosyTower.Collections
 
     public interface IIncreaseCapacity : IHasCapacity
     {
-        void IncreaseCapacityBy(int amount);
+        int IncreaseCapacityBy(int amount);
 
-        void IncreaseCapacityTo(int newCapacity);
+        int IncreaseCapacityTo(int newCapacity);
     }
 }

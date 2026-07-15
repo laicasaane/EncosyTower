@@ -3,7 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace Unity.Collections.Internals
 {
-    internal unsafe readonly struct NativeSliceAccessor<T> where T : struct
+    internal readonly struct NativeSliceAccessor<T> where T : struct
     {
         public readonly NativeSlice<T> Slice;
 
@@ -13,10 +13,18 @@ namespace Unity.Collections.Internals
             Slice = slice;
         }
 
-        public byte* Buffer
+        /// <safety>The returned pointer borrows Unity's live NativeSlice storage and must not outlive the slice.</safety>
+        public unsafe byte* Buffer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Slice.m_Buffer;
+            get
+            {
+                // SAFETY: Unity owns the NativeSlice buffer and the accessor only exposes its existing pointer.
+                unsafe
+                {
+                    return Slice.m_Buffer;
+                }
+            }
         }
 
         public int Stride

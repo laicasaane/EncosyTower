@@ -1,5 +1,3 @@
-#if UNITY_COLLECTIONS
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
@@ -9,44 +7,50 @@ namespace EncosyTower.Collections.Extensions.Unsafe
     public static class ArrayMapNativeExtensionsUnsafe
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeBuffer<ArrayMapNode<TKey>> GetKeysUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue> self)
+        /// <safety>Caller must keep the native map created and valid while using the returned buffer view.</safety>
+        public static unsafe BufferUnsafe<ArrayMapNode<TKey>> GetKeysUnsafe<TKey, TValue>(
+            this in ArrayMapNative<TKey, TValue> self
+        )
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-            => self._valuesInfo;
+        {
+            // SAFETY: The caller owns the map lifetime and this view borrows its values-info buffer.
+            unsafe
+            {
+                return self.m_Data->_valuesInfo;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeBuffer<TValue> GetValuesUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue> self)
+        /// <safety>Caller must keep the native map created and valid while using the returned buffer view.</safety>
+        public static unsafe BufferUnsafe<TValue> GetValuesUnsafe<TKey, TValue>(
+            this in ArrayMapNative<TKey, TValue> self
+        )
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-            => self._values;
+        {
+            // SAFETY: The caller owns the map lifetime and this view borrows its values buffer.
+            unsafe
+            {
+                return self.m_Data->_values;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ref TValue GetValueAtUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue> self, int index)
+        /// <safety>Caller must keep the native map created and valid for the lifetime of the
+        /// returned reference.</safety>
+        public static unsafe ref TValue GetValueAtUnsafe<TKey, TValue>(
+              this in ArrayMapNative<TKey, TValue> self
+            , int index
+        )
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-            => ref self._values[index];
-    }
-
-    public static class ArrayMapNativeReadOnlyExtensionsUnsafe
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeBuffer<ArrayMapNode<TKey>>.ReadOnly GetKeysUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue>.ReadOnly self)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-            => self._valuesInfo;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeBuffer<TValue>.ReadOnly GetValuesUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue>.ReadOnly self)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-            => self._values;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ref readonly TValue GetValueAtUnsafe<TKey, TValue>(this in ArrayMapNative<TKey, TValue>.ReadOnly self, int index)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-            => ref self._values[index];
+        {
+            // SAFETY: Caller supplies an index within the live values buffer and keeps the map alive.
+            unsafe
+            {
+                return ref self.m_Data->_values[index];
+            }
+        }
     }
 }
-
-#endif

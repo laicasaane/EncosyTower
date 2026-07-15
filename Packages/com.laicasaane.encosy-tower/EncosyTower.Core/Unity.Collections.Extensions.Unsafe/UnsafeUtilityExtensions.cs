@@ -1,10 +1,18 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if !UNITY_COLLECTIONS
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.LowLevel.Unsafe;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace Unity.Collections.LowLevel.Unsafe
 {
@@ -12,7 +20,7 @@ namespace Unity.Collections.LowLevel.Unsafe
     /// Provides utility methods for unsafe, untyped buffers.
     /// </summary>
     [GenerateTestsForBurstCompatibility]
-    public unsafe static class UnsafeUtilityExtensions
+    public static class UnsafeUtilityExtensions
     {
         /// <summary>
         /// Swaps bytes between two buffers.
@@ -20,26 +28,31 @@ namespace Unity.Collections.LowLevel.Unsafe
         /// <param name="ptr">A buffer.</param>
         /// <param name="otherPtr">Another buffer.</param>
         /// <param name="size">The number of bytes to swap.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the two ranges of bytes to swap overlap in memory.</exception>
-        internal static void MemSwap(void* ptr, void* otherPtr, long size)
+        /// <exception cref="InvalidOperationException">Thrown if the two ranges of bytes to
+        /// swap overlap in memory.</exception>
+        internal static unsafe void MemSwap(void* ptr, void* otherPtr, long size)
         {
-            byte* dst = (byte*) ptr;
-            byte* src = (byte*) otherPtr;
-
-            CheckMemSwapOverlap(dst, src, size);
-
-            var tmp = stackalloc byte[1024];
-
-            while (size > 0)
+            // SAFETY: The caller provides disjoint writable buffers and a bounded byte count.
+            unsafe
             {
-                var numBytes = math.min(size, 1024);
-                UnsafeUtility.MemCpy(tmp, dst, numBytes);
-                UnsafeUtility.MemCpy(dst, src, numBytes);
-                UnsafeUtility.MemCpy(src, tmp, numBytes);
+                byte* dst = (byte*) ptr;
+                byte* src = (byte*) otherPtr;
 
-                size -= numBytes;
-                src += numBytes;
-                dst += numBytes;
+                CheckMemSwapOverlap(dst, src, size);
+
+                var tmp = stackalloc byte[1024];
+
+                while (size > 0)
+                {
+                    var numBytes = math.min(size, 1024);
+                    UnsafeUtility.MemCpy(tmp, dst, numBytes);
+                    UnsafeUtility.MemCpy(dst, src, numBytes);
+                    UnsafeUtility.MemCpy(src, tmp, numBytes);
+
+                    size -= numBytes;
+                    src += numBytes;
+                    dst += numBytes;
+                }
             }
         }
 
@@ -50,15 +63,19 @@ namespace Unity.Collections.LowLevel.Unsafe
         /// <param name="source">The buffer to read from.</param>
         /// <param name="index">The index of the element.</param>
         /// <param name="capacity">The buffer capacity (in number of elements). Used for the bounds checking.</param>
+        /// <safety>source must reference capacity readable unmanaged elements.</safety>
         /// <returns>The element read from the buffer.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
-        [GenerateTestsForBurstCompatibility(GenericTypeArguments = new[] { typeof(int) })]
         public unsafe static T ReadArrayElementBoundsChecked<T>(void* source, int index, int capacity)
             where T : unmanaged
         {
             CheckIndexRange(index, capacity);
 
-            return UnsafeUtility.ReadArrayElement<T>(source, index);
+            // SAFETY: CheckIndexRange bounds the read within source capacity.
+            unsafe
+            {
+                return UnsafeUtility.ReadArrayElement<T>(source, index);
+            }
         }
 
         /// <summary>
@@ -69,14 +86,18 @@ namespace Unity.Collections.LowLevel.Unsafe
         /// <param name="value">The value to write.</param>
         /// <param name="index">The index at which to store the element.</param>
         /// <param name="capacity">The buffer capacity (in number of elements). Used for the bounds checking.</param>
+        /// <safety>destination must reference capacity writable unmanaged elements.</safety>
         /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
-        [GenerateTestsForBurstCompatibility(GenericTypeArguments = new[] { typeof(int) })]
         public unsafe static void WriteArrayElementBoundsChecked<T>(void* destination, int index, T value, int capacity)
             where T : unmanaged
         {
             CheckIndexRange(index, capacity);
 
-            UnsafeUtility.WriteArrayElement<T>(destination, index, value);
+            // SAFETY: CheckIndexRange bounds the write within destination capacity.
+            unsafe
+            {
+                UnsafeUtility.WriteArrayElement<T>(destination, index, value);
+            }
         }
 
         /// <summary>
@@ -85,50 +106,89 @@ namespace Unity.Collections.LowLevel.Unsafe
         /// <typeparam name="T">The type of referenced value.</typeparam>
         /// <param name="value">A read-only reference.</param>
         /// <returns>A pointer to the referenced value.</returns>
+        /// <safety>The returned pointer is valid only while value remains alive and must not be
+        /// dereferenced after its lifetime ends.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [GenerateTestsForBurstCompatibility(GenericTypeArguments = new[] { typeof(int) })]
-        public static void* AddressOf<T>(in T value)
+        public static unsafe void* AddressOf<T>(in T value)
             where T : unmanaged
         {
-            return ILSupport.AddressOf(in value);
+            // SAFETY: The returned pointer is borrowed from the caller's referenced value.
+            unsafe
+            {
+                return ILSupport.AddressOf(in value);
+            }
         }
 
         /// <summary>
         /// Returns a read-write reference from a read-only reference.
-        /// <remarks>Useful when you want to pass an `in` arg (read-only reference) where a `ref` arg (read-write reference) is expected.
+        /// <remarks>Useful when you want to pass an `in` arg (read-only reference) where a `ref`
+        /// arg (read-write reference) is expected.
         /// Do not mutate the referenced value, as doing so may break the runtime's assumptions.</remarks>
         /// </summary>
         /// <typeparam name="T">The type of referenced value.</typeparam>
         /// <param name="value">A read-only reference.</param>
         /// <returns>A read-write reference to the value referenced by `item`.</returns>
+        /// <safety>The caller must keep value alive and must not mutate through the returned
+        /// reference when value is read-only.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [GenerateTestsForBurstCompatibility(GenericTypeArguments = new[] { typeof(int) })]
-        public static ref T AsRef<T>(in T value)
+        public static unsafe ref T AsRef<T>(in T value)
             where T : unmanaged
         {
-            return ref ILSupport.AsRef(in value);
-        }
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS"), Conditional("UNITY_DOTS_DEBUG")]
-        static unsafe void CheckMemSwapOverlap(byte* dst, byte* src, long size)
-        {
-            if (dst + size > src && src + size > dst)
+            // SAFETY: The caller must keep the referenced value alive and must not violate its read-only contract.
+            unsafe
             {
-                throw new InvalidOperationException("MemSwap memory blocks are overlapped.");
+                return ref ILSupport.AsRef(in value);
             }
         }
 
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS"), Conditional("UNITY_DOTS_DEBUG")]
+        [Conditional("__ENCOSY_VALIDATION__")]
+        static unsafe void CheckMemSwapOverlap(byte* dst, byte* src, long size)
+        {
+            // SAFETY: The pointers are used only for range comparison; no memory is dereferenced.
+            unsafe
+            {
+                ThrowIfMemSwapBlocksOverlap(dst + size > src && src + size > dst);
+            }
+        }
+
+        [Conditional("__ENCOSY_VALIDATION__")]
         static void CheckIndexRange(int index, int capacity)
         {
-            if ((index > capacity - 1) || (index < 0))
+            ThrowIfIndexIsOutOfRange(index > capacity - 1 || index < 0, index, capacity);
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfMemSwapBlocksOverlap([DoesNotReturnIf(true)] bool overlap)
+        {
+            if (overlap)
             {
-                throw new IndexOutOfRangeException(
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("MemSwap memory blocks overlap.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsOutOfRange(
+            [DoesNotReturnIf(true)] bool outOfRange
+          , int index
+          , int capacity
+        )
+        {
+            if (outOfRange)
+            {
+                throw CreateException(index, capacity);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static IndexOutOfRangeException CreateException(int index, int capacity)
+                => new(
                     $"Attempt to read or write from array index {index}, which is out of bounds. " +
                     $"Array capacity is {capacity}. " +
                     "This may lead to a crash, data corruption, or reading invalid data."
                 );
-            }
         }
     }
 }

@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -47,7 +53,7 @@ namespace EncosyTower.Collections
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _set.Entries.Length;
+            get => _set.Buckets.Length;
         }
 
         public bool IsReadOnly
@@ -97,12 +103,12 @@ namespace EncosyTower.Collections
                 ThrowHelper.ThrowArgumentException_ArrayPlusOffTooSmall();
             }
 
-            var entries = _set.Entries;
+            var slots = _set.Slots;
             var setCount = _set.Count;
 
             for (int i = 0; i < setCount && count != 0; i++)
             {
-                ref readonly var entry = ref entries[i];
+                ref readonly var entry = ref slots[i];
 
                 if (entry.next >= -1)
                 {
@@ -114,11 +120,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
-            => obj switch {
-                HashSetReadOnly<T> other => ReferenceEquals(_set.Set, other._set.Set),
-                HashSet<T> other => ReferenceEquals(_set.Set, other),
+        {
+            var set = _set.Set;
+
+            return obj switch {
+                HashSetReadOnly<T> other => ReferenceEquals(set, other._set.Set),
+                HashSet<T> other => ReferenceEquals(set, other),
                 _ => false,
             };
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()

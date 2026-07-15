@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Exposed;
@@ -98,11 +104,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
-            => obj switch {
-                DictionaryReadOnly<TKey, TValue> other => ReferenceEquals(_dictionary.Dictionary, other._dictionary.Dictionary),
-                Dictionary<TKey, TValue> other => ReferenceEquals(_dictionary.Dictionary, other),
+        {
+            var dic = _dictionary.Dictionary;
+
+            return obj switch {
+                DictionaryReadOnly<TKey, TValue> other => ReferenceEquals(dic, other._dictionary.Dictionary),
+                Dictionary<TKey, TValue> other => ReferenceEquals(dic, other),
                 _ => false
             };
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()

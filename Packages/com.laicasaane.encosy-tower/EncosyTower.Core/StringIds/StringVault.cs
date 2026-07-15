@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using EncosyTower.Ids;
 using UnityEngine;
 
@@ -457,16 +462,17 @@ namespace EncosyTower.StringIds
             => new UnmanagedStringSpan(_unmanagedStringRanges.AsReadOnlySpan()[1..Count], _unmanagedStringBuffer.AsReadOnlySpan())
                 .TryCopyTo(sourceStartIndex, destination, length);
 
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
         {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(Capacity + amount);
+            ThrowIfAmountIsNotValid(amount > 0, amount);
+            return IncreaseCapacityTo(Capacity + amount);
         }
 
-        public void IncreaseCapacityTo(int newCapacity)
+        public int IncreaseCapacityTo(int newCapacity)
         {
             _map.IncreaseCapacityTo(newCapacity);
             EnsureCapacity();
+            return _hashes.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -527,7 +533,7 @@ namespace EncosyTower.StringIds
             return new(startIndex, startIndex + amount);
         }
 
-        [HideInCallstack, StackTraceHidden]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfFailedRegistering(
               [DoesNotReturnIf(false)] bool check
             , in UnmanagedString str
@@ -544,7 +550,7 @@ namespace EncosyTower.StringIds
                 => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
         }
 
-        [HideInCallstack, StackTraceHidden]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfFailedRegistering(
               [DoesNotReturnIf(false)] bool check
             , string str
@@ -559,6 +565,19 @@ namespace EncosyTower.StringIds
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException(string str, StringId id)
                 => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfAmountIsNotValid([DoesNotReturnIf(false)] bool isValid, int amount)
+        {
+            if (isValid == false)
+            {
+                throw CreateException(amount);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException(int amount)
+                => new(nameof(amount), amount, "amount must be greater than 0");
         }
     }
 }

@@ -7,11 +7,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Extensions;
+using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -33,6 +38,11 @@ namespace EncosyTower.Collections
             internal readonly NativeArray<uint>.ReadOnly _collisions;
             internal readonly NativeArray<int>.ReadOnly _freeValueCellIndex;
             internal readonly NativeArray<int>.ReadOnly _version;
+            internal readonly unsafe SharedArrayMapUnsafe<TKey, TValueNative>* _nativeData;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            internal readonly AtomicSafetyHandle _nativeSafety;
+#endif
 
             public ReadOnly(SharedArrayMap<TKey, TValue, TValueNative> map)
             {
@@ -43,6 +53,15 @@ namespace EncosyTower.Collections
                 _version = map._version.AsNativeArray().AsReadOnly();
                 _collisions = map._collisions.AsNativeArray().AsReadOnly();
                 _fastModBucketsMultiplier = map._fastModBucketsMultiplier.AsNativeArray().AsReadOnly();
+                // SAFETY: The read-only view borrows the live map header without taking ownership.
+                unsafe
+                {
+                    _nativeData = map._nativeData;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                _nativeSafety = map._values.GetSafetyHandle();
+#endif
             }
 
             public static ReadOnly Empty
@@ -126,31 +145,26 @@ namespace EncosyTower.Collections
                 var found = TryFindIndex(key, out var findIndex);
 
                 //Burst is not able to vectorise code if throw is found, regardless if it's actually ever thrown
-#if __ENCOSY_VALIDATION__
-                if (found == false)
-                {
-                    ThrowHelper.ThrowKeyNotFoundException_KeyNotFound();
-                }
-#endif
+                ThrowHelper.ThrowIfKeyIsNotFound(found);
 
                 return findIndex;
             }
 
-            //I store all the index with an offset + 1, so that in the bucket list 0 means actually not existing.
+            // Indices are stored with an offset of 1 so that 0 represents a missing entry in the bucket list.
             //When read the offset must be offset by -1 again to be the real one. In this way
-            //I avoid to initialize the array to -1
+            // This avoids initializing the array to -1.
 
             //WARNING this method must stay stateless (not relying on states that can change, it's ok to read
             //constant states) because it will be used in multithreaded parallel code
             public readonly bool TryFindIndex(TKey key, out int findIndex)
             {
-                Checks.IsTrue(_buckets.Length > 0, "Map arrays are not correctly initialized (0 size)");
+                ThrowIfBucketsAreNotInitialized(_buckets.Length > 0);
 
                 var hash = key.GetHashCode();
                 var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Length, _fastModBucketsMultiplier[0]);
                 var valueIndex = _buckets[bucketIndex] - 1;
 
-                //even if we found an existing value we need to be sure it's the one we requested
+                // An existing value must still be checked against the requested key.
                 while (valueIndex != -1)
                 {
                     //Comparer<TKey>.default needs to create a new comparer, so it is much slower
@@ -169,6 +183,19 @@ namespace EncosyTower.Collections
 
                 findIndex = 0;
                 return false;
+            }
+
+            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            private static void ThrowIfBucketsAreNotInitialized([DoesNotReturnIf(false)] bool areInitialized)
+            {
+                if (areInitialized == false)
+                {
+                    throw CreateException();
+                }
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static InvalidOperationException CreateException()
+                    => new("Map arrays are not correctly initialized (0 size)");
             }
 
             public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
@@ -203,10 +230,7 @@ namespace EncosyTower.Collections
             public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
             {
                 private readonly ReadOnly _map;
-
-#if __ENCOSY_VALIDATION__
                 private readonly int _version;
-#endif
 
                 private int _index;
 
@@ -215,10 +239,7 @@ namespace EncosyTower.Collections
                 {
                     _map = map;
                     _index = -1;
-
-#if __ENCOSY_VALIDATION__
                     _version = map.Version;
-#endif
                 }
 
                 public readonly bool IsValid
@@ -236,17 +257,8 @@ namespace EncosyTower.Collections
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public bool MoveNext()
                 {
-#if __ENCOSY_VALIDATION__
-                    if (IsValid == false)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-                    }
-
-                    if (_version != _map.Version)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-                    }
-#endif
+                    ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+                    ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.Version);
 
                     if (_index < _map.Count - 1)
                     {
@@ -265,9 +277,11 @@ namespace EncosyTower.Collections
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public readonly void Dispose()
-                { }
+                {
+                }
 
-                readonly object IEnumerator.Current => Current;
+                readonly object IEnumerator.Current
+                    => Current;
             }
         }
     }
@@ -279,21 +293,17 @@ namespace EncosyTower.Collections
         where TValueNative : unmanaged
     {
         private readonly SharedArrayMap<TKey, TValue, TValueNative>.ReadOnly _map;
-
-#if __ENCOSY_VALIDATION__
         private readonly int _version;
-#endif
 
         private int _index;
 
-        public SharedArrayMapReadOnlyKeyValueEnumerator(in SharedArrayMap<TKey, TValue, TValueNative>.ReadOnly map) : this()
+        public SharedArrayMapReadOnlyKeyValueEnumerator(
+            in SharedArrayMap<TKey, TValue, TValueNative>.ReadOnly map
+        ) : this()
         {
             _map = map;
             _index = -1;
-
-#if __ENCOSY_VALIDATION__
             _version = map.Version;
-#endif
         }
 
         public readonly bool IsValid
@@ -305,17 +315,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-#if __ENCOSY_VALIDATION__
-            if (IsValid == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-            }
-
-            if (_version != _map.Version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-            }
-#endif
+            ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+            ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.Version);
 
             if (_index >= _map.Count - 1)
             {
@@ -345,7 +346,9 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Dispose() { }
+        public readonly void Dispose()
+        {
+        }
     }
 
     public readonly struct SharedArrayMapReadOnlyKeyValuePair<TKey, TValue, TValueNative> : IIsValid

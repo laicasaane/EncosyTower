@@ -1,10 +1,18 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
-using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Collections
 {
@@ -13,8 +21,20 @@ namespace EncosyTower.Collections
         partial struct ReadOnly
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SharedListNative<TNative>.ReadOnly AsNative()
-                => new(_buffer.Reinterpret<TNative>(), _count, _version);
+            /// <safety>The returned native view borrows the shared list allocation and must not
+            /// outlive the list.</safety>
+            public unsafe SharedListNative<TNative>.ReadOnly AsNative()
+            {
+                // SAFETY: The returned native view borrows the shared list's live header and safety handle.
+                unsafe
+                {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                    return new(_nativeData, _nativeSafety);
+#else
+                    return new(_nativeData);
+#endif
+                }
+            }
         }
     }
 
@@ -22,57 +42,113 @@ namespace EncosyTower.Collections
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnly AsReadOnly()
-            => new(
-                  _buffer.AsReadOnly()
-                , _count.AsReadOnly()
-                , _version.AsReadOnly()
-            );
+        {
+            // SAFETY: The returned view borrows this shared list's live header and safety handle.
+            unsafe
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                return new(m_Data, m_Safety);
+#else
+                return new(m_Data);
+#endif
+            }
+        }
 
+        [StructLayout(LayoutKind.Sequential)]
+        [NativeContainer]
+        [NativeContainerIsReadOnly]
         public readonly struct ReadOnly : IReadOnlyList<T>, IReadOnlyIndexer<T>
             , IAsReadOnlySpan<T>, IToArray<T>
             , ICopyToSpan<T>, ITryCopyToSpan<T>
             , IHasCapacity, IHasCount, IIsCreated
         {
-            internal readonly NativeArray<T>.ReadOnly _buffer;
-            internal readonly NativeArray<int>.ReadOnly _count;
-            internal readonly NativeArray<int>.ReadOnly _version;
+#pragma warning disable IDE1006 // Naming Styles
+            [NativeDisableUnsafePtrRestriction]
+            internal readonly unsafe SharedListUnsafe<T>* m_Data;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            internal readonly AtomicSafetyHandle m_Safety;
+#endif
+#pragma warning restore IDE1006 // Naming Styles
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal ReadOnly(
-                  NativeArray<T>.ReadOnly buffer
-                , NativeArray<int>.ReadOnly count
-                , NativeArray<int>.ReadOnly version
+            internal unsafe ReadOnly(
+                  SharedListUnsafe<T>* data
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                , AtomicSafetyHandle safety
+#endif
             )
             {
-                _buffer = buffer;
-                _count = count;
-                _version = version;
+                // SAFETY: The constructor receives a borrowed live header from the owning shared list.
+                unsafe
+                {
+                    m_Data = data;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                m_Safety = safety;
+#endif
             }
 
             public bool IsCreated
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _buffer.IsCreated && _count.IsCreated && _version.IsCreated;
+                get
+                {
+                    // SAFETY: Reading the pointer field only observes whether the borrowed header exists.
+                    unsafe
+                    {
+                        return m_Data != null;
+                    }
+                }
             }
 
             public int Count
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _count[0];
+                get
+                {
+                    CheckRead();
+
+                    // SAFETY: The read check validates the live shared list header.
+                    unsafe
+                    {
+                        return m_Data->Count;
+                    }
+                }
             }
 
             public int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _buffer.Length;
+                get
+                {
+                    CheckRead();
+
+                    // SAFETY: The read check validates the live shared list header.
+                    unsafe
+                    {
+                        return m_Data->Capacity;
+                    }
+                }
             }
 
-            public bool IsReadOnly => true;
+            public bool IsReadOnly
+                => true;
 
             internal int Version
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _version[0];
+                get
+                {
+                    CheckRead();
+
+                    // SAFETY: The read check validates the live header before reading its version.
+                    unsafe
+                    {
+                        return m_Data->Version;
+                    }
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,12 +160,13 @@ namespace EncosyTower.Collections
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    Checks.IsTrue(
-                          (uint)index < (uint)Count
-                        , "index is outside the range of valid indices for the SharedList<T>.ReadOnly"
-                    );
+                    CheckRead();
 
-                    return _buffer.AsReadOnlySpan()[index];
+                    // SAFETY: The read check validates the live header before indexed access.
+                    unsafe
+                    {
+                        return (*m_Data)[index];
+                    }
                 }
             }
 
@@ -103,7 +180,15 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnlySpan<T> AsReadOnlySpan()
-                => _buffer.AsReadOnlySpan()[..Count];
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live header for the returned span.
+                unsafe
+                {
+                    return m_Data->AsReadOnlySpan();
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(T[] destination, int destinationIndex)
@@ -123,7 +208,15 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(int sourceStartIndex, Span<T> destination, int length)
-                => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before copying from it.
+                unsafe
+                {
+                    m_Data->CopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(Span<T> destination)
@@ -139,21 +232,54 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-                => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before attempting the copy.
+                unsafe
+                {
+                    return m_Data->TryCopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public T[] ToArray()
-                => AsReadOnlySpan().ToArray();
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before copying its values.
+                unsafe
+                {
+                    return m_Data->ToArray();
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public SharedListNative<U>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
             {
-                return new SharedListNative<U>.ReadOnly(
-                      _buffer.Reinterpret<U>()
-                    , _count
-                    , _version
+                CheckRead();
+                ThrowHelper.ThrowIfTypesHaveDifferentSize(
+                    UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                 );
+
+                // SAFETY: Equal-size validation preserves the shared header layout and the result borrows this view.
+                unsafe
+                {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                    return new SharedListNative<U>.ReadOnly((SharedListUnsafe<U>*)m_Data, m_Safety);
+#else
+                    return new SharedListNative<U>.ReadOnly((SharedListUnsafe<U>*)m_Data);
+#endif
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void CheckRead()
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
             }
 
             IEnumerator<T> IEnumerable<T>.GetEnumerator()

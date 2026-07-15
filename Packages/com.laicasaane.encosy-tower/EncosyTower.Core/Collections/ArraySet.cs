@@ -37,6 +37,7 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -51,16 +52,18 @@ namespace EncosyTower.Collections
         , IClearable, IIncreaseCapacity, IHasCount
         , ICopyToSpan<T>, ITryCopyToSpan<T>
     {
-        internal ManagedBuffer<ArrayMapNode<T>> _valuesInfo;
-        internal ManagedBuffer<T> _values;
-        internal ManagedBuffer<int> _buckets;
+        internal BufferManaged<ArrayMapNode<T>> _valuesInfo;
+        internal BufferManaged<T> _values;
+        internal BufferManaged<int> _buckets;
 
         internal ulong _fastModBucketsMultiplier;
         internal uint _collisions;
         internal int _freeValueCellIndex;
         internal int _version;
 
-        public ArraySet() : this(0) { }
+        public ArraySet() : this(0)
+        {
+        }
 
         public ArraySet(int capacity)
         {
@@ -75,7 +78,9 @@ namespace EncosyTower.Collections
             _buckets.Alloc(HashHelpers.GetPrime(capacity));
 
             if (capacity > 0)
-                _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)capacity);
+            {
+                _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
+            }
         }
 
         public ArraySet([NotNull] ArraySet<T> source)
@@ -88,7 +93,10 @@ namespace EncosyTower.Collections
             _values = default;
             _values.Alloc(capacity);
             _buckets = default;
-            _buckets.Alloc(HashHelpers.GetPrime(capacity));
+            // Buckets may have grown past GetPrime(capacity) via RecomputeBuckets;
+            // the copied bucket data and _fastModBucketsMultiplier are only valid
+            // for the exact source bucket count.
+            _buckets.Alloc(source._buckets.Capacity);
 
             source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
             source._values.AsSpan().CopyTo(_values.AsSpan());
@@ -100,7 +108,8 @@ namespace EncosyTower.Collections
         }
 
         public ArraySet(ReadOnly source) : this(source._set)
-        { }
+        {
+        }
 
         public int Capacity
         {
@@ -177,7 +186,9 @@ namespace EncosyTower.Collections
         public void Clear()
         {
             if (_freeValueCellIndex == 0)
+            {
                 return;
+            }
 
             _version++;
             _freeValueCellIndex = 0;
@@ -234,7 +245,7 @@ namespace EncosyTower.Collections
             => _values.AsArraySegment().Slice(0, _freeValueCellIndex).CopyTo(array, arrayIndex);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void EnsureCapacity(int size)
+        public int EnsureCapacity(int size)
         {
             if (_values.Capacity < size)
             {
@@ -244,14 +255,16 @@ namespace EncosyTower.Collections
                 _values.Resize(expandPrime, true, false);
                 _valuesInfo.Resize(expandPrime);
             }
+
+            return _values.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
             => EnsureCapacity(_values.Capacity + amount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityTo(int size)
+        public int IncreaseCapacityTo(int size)
             => EnsureCapacity(size);
 
         public bool Remove(T value)
@@ -267,7 +280,7 @@ namespace EncosyTower.Collections
             var itemAfterCurrentOne = -1;
             var comparer = EqualityComparer<T>.Default;
 
-            //Part one: look for the actual key in the bucket list if found I update the bucket list so that it doesn't
+            // Part one: find the key in the bucket list and update the list so that it does not
             //point anymore to the cell to remove
             while (indexToValueToRemove != -1)
             {
@@ -287,17 +300,19 @@ namespace EncosyTower.Collections
                         //--> insert order
                         _buckets[bucketIndex] = node._previous + 1;
                     }
-                    else //we need to update the previous pointer if it's not the last element that is removed
+                    else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        Checks.IsTrue(itemAfterCurrentOne != -1, "This should never happen");
-                        //update the previous pointer of the item after the one to remove with the previous pointer of the item to remove
+                        ThrowIfMissingLinkedListNode(itemAfterCurrentOne != -1);
+                        //update the previous pointer of the item after the one to remove with the
+                        //previous pointer of the item to remove
                         _valuesInfo[itemAfterCurrentOne]._previous = node._previous;
                     }
 
-                    break; //don't miss this, at this point it must break and not update indexToValueToRemove
+                    break; // Stop here without updating indexToValueToRemove.
                 }
 
-                //a bucket always points to the last element of the list, so if the item is not found we need to iterate backward
+                // A bucket always points to the last element of the list, so a missing item
+                // requires backward iteration.
                 itemAfterCurrentOne = indexToValueToRemove;
                 indexToValueToRemove = node._previous;
             }
@@ -312,18 +327,18 @@ namespace EncosyTower.Collections
 
             //Part two:
             //At this point nodes pointers and buckets are updated, but the _values array
-            //still has got the value to delete. Remember the goal of this map is to be able
+            //still contains the value to delete. The map must support
             //to iterate over the values like an array, so the values array must always be up to date
 
-            //if the cell to remove is the last one in the list, we can perform less operations (no swapping needed)
-            //otherwise we want to move the last value cell over the value to remove
+            // Removing the last cell requires fewer operations because no swap is needed.
+            // Otherwise, the last value cell replaces the removed value.
 
             var lastValueCellIndex = _freeValueCellIndex;
             if (indexToValueToRemove != lastValueCellIndex)
             {
-                //we can transfer the last value of both arrays to the index of the value to remove.
-                //in order to do so, we need to be sure that the bucket pointer is updated.
-                //first we find the index in the bucket list of the pointer that points to the cell
+                // Transfer the last value of both arrays to the index of the value being removed.
+                // The bucket pointer must be updated accordingly.
+                // First, find the bucket-list index of the pointer to the cell.
                 //to move
                 ref var modeToMove = ref _valuesInfo[lastValueCellIndex];
 
@@ -336,17 +351,25 @@ namespace EncosyTower.Collections
                 var linkedListIterationIndex = _buckets[movingBucketIndex] - 1;
 
                 //if the key is found and the bucket points directly to the node to remove
-                //it must now point to the cell where it's going to be moved (update bucket list first linked list node to iterate from)
+                //it must now point to the cell where it's going to be moved (update bucket list
+                //first linked list node to iterate from)
                 if (linkedListIterationIndex == lastValueCellIndex)
+                {
                     _buckets[movingBucketIndex] = indexToValueToRemove + 1;
+                }
 
                 //find the prev element of the last element in the valuesInfo array
-                while (_valuesInfo[linkedListIterationIndex]._previous != -1 && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                while (_valuesInfo[linkedListIterationIndex]._previous != -1
+                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                {
                     linkedListIterationIndex = _valuesInfo[linkedListIterationIndex]._previous;
+                }
 
-                //if we find any value that has the last value cell as previous, we need to update it to point to the new value index that is going to be replaced
+                // Any value whose previous node is the last value cell must point to the replacement index.
                 if (_valuesInfo[linkedListIterationIndex]._previous != -1)
+                {
                     _valuesInfo[linkedListIterationIndex]._previous = indexToValueToRemove;
+                }
 
                 //finally, actually move the values
                 _valuesInfo[indexToValueToRemove] = modeToMove;
@@ -366,22 +389,25 @@ namespace EncosyTower.Collections
             _valuesInfo.Resize(size);
         }
 
-        //I store all the index with an offset + 1, so that in the bucket list 0 means actually not existing.
+        // Indices are stored with an offset of 1 so that 0 represents a missing entry in the bucket list.
         //When read the offset must be offset by -1 again to be the real one. In this way
-        //I avoid to initialize the array to -1
+        // This avoids initializing the array to -1.
 
         //WARNING this method must stay stateless (not relying on states that can change, it's ok to read
         //constant states) because it will be used in multithreaded parallel code
         private bool TryFindIndex(in T value, out int index)
         {
-            Checks.IsTrue(_buckets.Capacity > 0, "Set arrays are not correctly initialized (0 size)");
+            ThrowHelper.ThrowIfBucketsAreUninitialized(
+                _buckets.Capacity > 0,
+                ThrowHelper.CollectionType.ArraySet
+            );
 
             var hash = value.GetHashCode();
             var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Capacity, _fastModBucketsMultiplier);
             var valueIndex = _buckets[bucketIndex] - 1;
             var comparer = EqualityComparer<T>.Default;
 
-            //even if we found an existing value we need to be sure it's the one we requested
+            // An existing value must still be checked against the requested key.
             while (valueIndex != -1)
             {
                 ref var node = ref _valuesInfo[valueIndex];
@@ -399,7 +425,19 @@ namespace EncosyTower.Collections
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("The linked-list successor is missing.");
+        }
+
         public void Intersect([NotNull] ArraySet<T> otherSet)
         {
             var items = Items.Span;
@@ -415,7 +453,6 @@ namespace EncosyTower.Collections
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Exclude([NotNull] ArraySet<T> otherSet)
         {
             var items = Items.Span;
@@ -431,7 +468,6 @@ namespace EncosyTower.Collections
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Union([NotNull] ArraySet<T> otherMapKeys)
         {
             foreach (var other in otherMapKeys)
@@ -481,14 +517,14 @@ namespace EncosyTower.Collections
                 //_freeValueCellIndex = valueIndex + 1
                 _valuesInfo[_freeValueCellIndex] = new ArrayMapNode<T>(value, hash, valueIndex);
                 //Important: the new node is always the one that will be pointed by the bucket cell
-                //so I can assume that the one pointed by the bucket is always the last value added
+                // Therefore, the bucket always points to the last value added.
             }
 
             _version++;
 
             //item with this bucketIndex will point to the last value created
-            //ToDo: if instead I assume that the original one is the one in the bucket
-            //I wouldn't need to update the bucket here. Small optimization but important
+            // TODO: If the original node is assumed to be the one in the bucket,
+            // the bucket would not need to be updated here. This is a small but important optimization.
             _buckets[bucketIndex] = _freeValueCellIndex + 1;
 
             indexSet = _freeValueCellIndex;
@@ -498,9 +534,13 @@ namespace EncosyTower.Collections
             if (_collisions > _buckets.Capacity)
             {
                 if (_buckets.Capacity < 100)
+                {
                     RecomputeBuckets((int)_collisions << 1);
+                }
                 else
+                {
                     RecomputeBuckets(HashHelpers.ExpandPrime((int)_collisions));
+                }
             }
 
             return true;
@@ -508,24 +548,29 @@ namespace EncosyTower.Collections
 
         private void RecomputeBuckets(int newSize)
         {
-            //we need more space and less collisions
+            // More space is needed to reduce collisions.
             _buckets.Resize(newSize, false);
             _collisions = 0;
             _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
             var bucketsCapacity = (uint)_buckets.Capacity;
 
-            //we need to get all the hash code of all the values stored so far and spread them over the new bucket
+            // Redistribute the hash codes of all stored values across the new buckets.
             //length
             var freeValueCellIndex = _freeValueCellIndex;
             for (var newValueIndex = 0; newValueIndex < freeValueCellIndex; ++newValueIndex)
             {
                 //get the original hash code and find the new bucketIndex due to the new length
                 ref var valueInfoNode = ref _valuesInfo[newValueIndex];
-                var bucketIndex = (int)Reduce((uint)valueInfoNode._hashcode, bucketsCapacity, _fastModBucketsMultiplier);
+                var bucketIndex = (int)Reduce(
+                      (uint)valueInfoNode._hashcode
+                    , bucketsCapacity
+                    , _fastModBucketsMultiplier
+                );
                 //bucketsIndex can be -1 or a next value. If it's -1 means no collisions. If there is collision,
-                //we create a new node which prev points to the old one. Old one next points to the new one.
+                // Create a new node whose previous pointer targets the old node, then point the
+                // old node to the new one.
                 //the bucket will now points to the new one
-                //In this way we can rebuild the linkedlist.
+                // This rebuilds the linked list.
                 //get the current valueIndex, it's -1 if no collision happens
                 var existingValueIndex = _buckets[bucketIndex] - 1;
                 //update the bucket index to the index of the current item that share the bucketIndex
@@ -533,7 +578,7 @@ namespace EncosyTower.Collections
                 _buckets[bucketIndex] = newValueIndex + 1;
                 if (existingValueIndex == -1)
                 {
-                    //ok nothing was indexed, the bucket was empty. We need to update the previous
+                    // Nothing was indexed because the bucket was empty, so the previous pointer must be updated.
                     //values of next and previous
                     valueInfoNode._previous = -1;
                 }
@@ -567,9 +612,11 @@ namespace EncosyTower.Collections
         private static uint Reduce(uint hashcode, uint N, ulong fastModBucketsMultiplier)
         {
             if (hashcode >= N) //is the condition return actually an optimization?
+            {
                 return Environment.Is64BitProcess
-                    ? HashHelpers.FastMod(hashcode, N, fastModBucketsMultiplier)
-                    : hashcode % N;
+                ? HashHelpers.FastMod(hashcode, N, fastModBucketsMultiplier)
+                : hashcode % N;
+            }
 
             return hashcode;
         }
@@ -590,10 +637,7 @@ namespace EncosyTower.Collections
     public struct ArraySetEnumerator<T> : IEnumerator<T>, IIsValid
     {
         private readonly ArraySet<T> _set;
-
-#if __ENCOSY_VALIDATION__
         private readonly int _version;
-#endif
 
         private int _index;
 
@@ -601,10 +645,7 @@ namespace EncosyTower.Collections
         {
             _set = set;
             _index = -1;
-
-#if __ENCOSY_VALIDATION__
             _version = set._version;
-#endif
         }
 
         public readonly bool IsValid
@@ -616,17 +657,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-#if __ENCOSY_VALIDATION__
-            if (IsValid == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-            }
-
-            if (_version != _set._version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Set();
-            }
-#endif
+            ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+            ThrowHelper.ThrowIfSetIsBeingIterated(_version == _set._version);
 
             if (_index >= _set.Count - 1)
             {
@@ -656,7 +688,9 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Dispose() { }
+        public readonly void Dispose()
+        {
+        }
     }
 
     internal sealed class ArraySetDebugProxy<T>

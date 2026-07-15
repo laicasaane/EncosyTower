@@ -13,7 +13,9 @@ namespace EncosyTower.Collections.Extensions
             => dict == null || dict.Count < 1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DictionaryReadOnly<TKey, TValue> AsReadOnly<TKey, TValue>(this Dictionary<TKey, TValue> dictionary)
+        public static DictionaryReadOnly<TKey, TValue> AsReadOnly<TKey, TValue>(
+            this Dictionary<TKey, TValue> dictionary
+        )
             => dictionary;
 
         public static void AddRange<TKey, TValue>(
@@ -75,9 +77,16 @@ namespace EncosyTower.Collections.Extensions
             where TKey : IEquatable<TKey>
             where TValue : IEquatable<TValue>
         {
-            if (self.ReferenceEquals(other, out var bothIsNotNull) == false || bothIsNotNull == false)
+            var sameReference = self.ReferenceEquals(other, out var bothIsNotNull);
+
+            if (bothIsNotNull == false)
             {
                 return false;
+            }
+
+            if (sameReference)
+            {
+                return true;
             }
 
             if (self.Count != other.Count)

@@ -1,9 +1,16 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Buffers;
 using EncosyTower.Common;
-using Unity.Burst;
+using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
@@ -25,11 +32,11 @@ namespace EncosyTower.Collections.Unsafe
         [NativeDisableUnsafePtrRestriction]
         private unsafe void* _data;
 
-        private Allocator _allocatorLabel;
+        private AllocatorStrategy _allocator;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe ReferenceUnsafe(
-              Allocator allocator
+        public ReferenceUnsafe(
+              AllocatorStrategy allocator
             , NativeArrayOptions options = NativeArrayOptions.ClearMemory
         )
         {
@@ -40,20 +47,35 @@ namespace EncosyTower.Collections.Unsafe
                 return;
             }
 
-            UnsafeUtility.MemClear(_data, UnsafeUtility.SizeOf<T>());
+            // SAFETY: Allocate produced one writable T-sized allocation owned by this value.
+            unsafe
+            {
+                UnsafeUtility.MemClear(_data, UnsafeUtility.SizeOf<T>());
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe ReferenceUnsafe(T value, Allocator allocator)
+        public ReferenceUnsafe(T value, AllocatorStrategy allocator)
         {
             Allocate(allocator, out this);
-            *(T*)_data = value;
+            // SAFETY: Allocate produced one writable T-sized allocation owned by this value.
+            unsafe
+            {
+                *(T*)_data = value;
+            }
         }
 
-        public readonly unsafe bool IsCreated
+        public readonly bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (IntPtr)_data != IntPtr.Zero;
+            get
+            {
+                // SAFETY: Reading the pointer field only observes the allocation state.
+                unsafe
+                {
+                    return (IntPtr)_data != IntPtr.Zero;
+                }
+            }
         }
 
         public readonly int Length
@@ -62,30 +84,62 @@ namespace EncosyTower.Collections.Unsafe
             get => IsCreated ? 1 : 0;
         }
 
+        /// <safety>
+        /// The reference must remain created and undisposed for the duration of the access.
+        /// </safety>
         public readonly unsafe T Value
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => *(T*)_data;
+            get
+            {
+                // SAFETY: Callers must keep this manually allocated reference alive and created.
+                unsafe
+                {
+                    return *(T*)_data;
+                }
+            }
 
             [WriteAccessRequired]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => *(T*)_data = value;
+            set
+            {
+                // SAFETY: Callers must keep this manually allocated reference alive and created.
+                unsafe
+                {
+                    *(T*)_data = value;
+                }
+            }
         }
 
+        /// <safety>
+        /// The returned reference is valid only while this allocation remains created and undisposed.
+        /// </safety>
         public readonly unsafe ref T ValueAsRef
         {
             [WriteAccessRequired]
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref UnsafeUtility.AsRef<T>(_data);
+            get
+            {
+                // SAFETY: Callers must keep this manually allocated reference alive and created.
+                unsafe
+                {
+                    return ref UnsafeUtility.AsRef<T>(_data);
+                }
+            }
         }
 
+        /// <safety>The index must be zero and the reference must remain created for the duration
+        /// of the access.</safety>
         public readonly unsafe T this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 ThrowIfIndexOutOfRange(index);
-                return *(T*)_data;
+                // SAFETY: The index is validated and callers must keep this allocation alive.
+                unsafe
+                {
+                    return *(T*)_data;
+                }
             }
 
             [WriteAccessRequired]
@@ -93,7 +147,11 @@ namespace EncosyTower.Collections.Unsafe
             set
             {
                 ThrowIfIndexOutOfRange(index);
-                *(T*)_data = value;
+                // SAFETY: The index is validated and callers must keep this allocation alive.
+                unsafe
+                {
+                    *(T*)_data = value;
+                }
             }
         }
 
@@ -106,48 +164,83 @@ namespace EncosyTower.Collections.Unsafe
             => !left.Equals(right);
 
         [WriteAccessRequired]
-        public unsafe void Dispose()
+        public void Dispose()
         {
-            ThrowIfAlreadyDisposed(IsCreated);
-            ThrowIfInvalidAllocator(_allocatorLabel != Allocator.Invalid);
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
+                IsCreated,
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
+            ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
+                _allocator.IsValid,
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
 
-            if (_allocatorLabel > Allocator.None)
+            if (ShouldDeallocate(_allocator))
             {
-                UnsafeUtility.FreeTracked(_data, _allocatorLabel);
-                _allocatorLabel = Allocator.Invalid;
+                // SAFETY: The allocation strategy owns this pointer and IsCreated was validated above.
+                unsafe
+                {
+                    _allocator.Free(_data);
+                }
             }
 
-            _data = null;
+            // SAFETY: The owned allocation has been released, so clearing the pointer is a local state update.
+            unsafe
+            {
+                _data = null;
+            }
+            _allocator = default;
         }
 
-        public unsafe JobHandle Dispose(JobHandle inputDeps)
+        public JobHandle Dispose(JobHandle inputDeps)
         {
-            ThrowIfInvalidAllocator(_allocatorLabel != Allocator.Invalid);
-            ThrowIfAlreadyDisposed(IsCreated);
+            ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
+                _allocator.IsValid,
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
+                IsCreated,
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
 
-            if (_allocatorLabel > Allocator.None)
+            if (ShouldDeallocate(_allocator))
             {
-                var jobHandle = new UnsafeReferenceDisposeJob
+                // SAFETY: The scheduled job receives the live allocation and takes ownership of its release.
+                unsafe
                 {
-                    Data = new UnsafeReferenceDispose
-                    {
-                        Data = _data,
-                        AllocatorLabel = _allocatorLabel,
-                    },
-                }.Schedule(inputDeps);
+                    var jobHandle = new EncosyMemoryAPI.DisposeJob {
+                        ptr = _data,
+                        allocator = _allocator,
+                    }.Schedule(inputDeps);
 
-                _data = null;
-                _allocatorLabel = Allocator.Invalid;
-                return jobHandle;
+                    _data = null;
+                    _allocator = default;
+                    return jobHandle;
+                }
             }
 
-            _data = null;
+            // SAFETY: No allocation remains to release, so clearing the pointer is a local state update.
+            unsafe
+            {
+                _data = null;
+            }
+            _allocator = default;
             return inputDeps;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>
+        /// The returned pointer is valid only while this reference remains created and undisposed;
+        /// callers must uphold its lifetime.
+        /// </safety>
         public readonly unsafe void* GetUnsafePtr()
-            => _data;
+        {
+            // SAFETY: This method intentionally exposes the owned allocation without extending its lifetime.
+            unsafe
+            {
+                return _data;
+            }
+        }
 
         /// <summary>
         /// Creates a non-owning view over existing memory (e.g. an element of a pinned
@@ -156,8 +249,12 @@ namespace EncosyTower.Collections.Unsafe
         internal static unsafe ReferenceUnsafe<T> ConvertExistingData(void* data)
         {
             var reference = default(ReferenceUnsafe<T>);
-            reference._data = data;
-            reference._allocatorLabel = Allocator.None;
+            // SAFETY: The caller supplies a valid non-owning buffer for the view.
+            unsafe
+            {
+                reference._data = data;
+            }
+            reference._allocator = new AllocatorStrategy(Allocator.None);
             return reference;
         }
 
@@ -244,7 +341,13 @@ namespace EncosyTower.Collections.Unsafe
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool Equals(ReferenceUnsafe<T> other)
-            => Value.Equals(other.Value);
+        {
+            // SAFETY: Equality reads both manually allocated values; callers must keep both references created.
+            unsafe
+            {
+                return Value.Equals(other.Value);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly override bool Equals(object obj)
@@ -252,20 +355,32 @@ namespace EncosyTower.Collections.Unsafe
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly override int GetHashCode()
-            => Value.GetHashCode();
+        {
+            // SAFETY: Hashing reads this manually allocated value; callers must keep the reference created.
+            unsafe
+            {
+                return Value.GetHashCode();
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void Copy(ReferenceUnsafe<T> dst, ReferenceUnsafe<T> src)
+        public static void Copy(ReferenceUnsafe<T> dst, ReferenceUnsafe<T> src)
         {
             ThrowIfSourceNotCreated(src.IsCreated);
             ThrowIfDestinationNotCreated(dst.IsCreated);
 
-            UnsafeUtility.MemCpy(dst._data, src._data, UnsafeUtility.SizeOf<T>());
+            // SAFETY: Both source and destination creation states are validated before copying exactly one T.
+            unsafe
+            {
+                UnsafeUtility.MemCpy(dst._data, src._data, UnsafeUtility.SizeOf<T>());
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Span<T> AsSpan()
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 return new Span<T>(_data, 1);
@@ -275,6 +390,8 @@ namespace EncosyTower.Collections.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<T> AsReadOnlySpan()
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 return new ReadOnlySpan<T>(_data, 1);
@@ -282,105 +399,74 @@ namespace EncosyTower.Collections.Unsafe
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>
+        /// The alias does not own storage; it must not outlive the underlying reference allocation.
+        /// </safety>
         public readonly unsafe ReadOnly AsReadOnly()
-            => new(_data);
+        {
+            // SAFETY: The alias borrows this reference's allocation without transferring ownership.
+            unsafe
+            {
+                return new(_data);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ReadOnly(ReferenceUnsafe<T> reference)
-            => reference.AsReadOnly();
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void CheckAllocateArguments(Allocator allocator)
         {
-            ThrowIfAllocatorNotSupported(allocator > Allocator.None);
-            ThrowIfCustomAllocator(allocator < Allocator.FirstUserIndex);
+            // SAFETY: The returned alias borrows reference's allocation and inherits its lifetime contract.
+            unsafe
+            {
+                return reference.AsReadOnly();
+            }
         }
 
-        private static unsafe void Allocate(Allocator allocator, out ReferenceUnsafe<T> reference)
+        [Conditional("__ENCOSY_VALIDATION__")]
+        private static void CheckAllocateArguments(AllocatorStrategy allocator)
+        {
+            ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
+                allocator.IsValid,
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
+        }
+
+        private static void Allocate(AllocatorStrategy allocator, out ReferenceUnsafe<T> reference)
         {
             CheckAllocateArguments(allocator);
             reference = default;
             IsUnmanagedAndThrow();
-            reference._allocatorLabel = allocator;
-            reference._data = UnsafeUtility.MallocTracked(
-                  UnsafeUtility.SizeOf<T>()
-                , UnsafeUtility.AlignOf<T>()
-                , allocator
-                , 0
-            );
+            reference._allocator = allocator;
+            // SAFETY: The validated allocator returns storage sized and aligned for unmanaged T.
+            unsafe
+            {
+                reference._data = allocator.Allocate<T>();
+            }
         }
 
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        [BurstDiscard]
+        [Conditional("__ENCOSY_VALIDATION__")]
+#if UNITY_BURST
+        [Unity.Burst.BurstDiscard]
+#endif
         private static void IsUnmanagedAndThrow()
-            => ThrowIfNotUnmanaged(UnsafeUtility.IsUnmanaged<T>());
+            => ThrowHelper.ThrowIfUnsafeCollectionTypeIsManaged<T>(
+                UnsafeUtility.IsUnmanaged<T>(),
+                ThrowHelper.CollectionType.ReferenceUnsafe
+            );
 
-        [HideInCallstack, StackTraceHidden]
-        private static void ThrowIfAlreadyDisposed([DoesNotReturnIf(false)] bool isCreated)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ShouldDeallocate(AllocatorStrategy allocator)
         {
-            if (isCreated == false)
+#if UNITY_COLLECTIONS
+            if (allocator.TryGetAllocatorHandle(out _))
             {
-                throw CreateException();
+                return true;
             }
+#endif
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ObjectDisposedException CreateException()
-                => new("The UnsafeReference is already disposed.");
+            return allocator.ToAllocator() > Allocator.None;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        private static void ThrowIfInvalidAllocator([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The UnsafeReference can not be Disposed because it was not allocated with a valid allocator.");
-        }
-
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void ThrowIfAllocatorNotSupported([DoesNotReturnIf(false)] bool isSupported)
-        {
-            if (isSupported == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("Allocator must be Temp, TempJob or Persistent", "allocator");
-        }
-
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void ThrowIfCustomAllocator([DoesNotReturnIf(false)] bool isBuiltIn)
-        {
-            if (isBuiltIn == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("Custom allocator is not supported by UnsafeReference", "allocator");
-        }
-
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void ThrowIfNotUnmanaged([DoesNotReturnIf(false)] bool isUnmanaged)
-        {
-            if (isUnmanaged == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new($"{typeof(T)} used in UnsafeReference<{typeof(T)}> must be unmanaged (contain no managed types).");
-        }
-
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfSourceNotCreated([DoesNotReturnIf(false)] bool isCreated)
         {
             if (isCreated == false)
@@ -393,7 +479,7 @@ namespace EncosyTower.Collections.Unsafe
                 => new("The source UnsafeReference is not created.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfDestinationNotCreated([DoesNotReturnIf(false)] bool isCreated)
         {
             if (isCreated == false)
@@ -406,7 +492,7 @@ namespace EncosyTower.Collections.Unsafe
                 => new("The destination UnsafeReference is not created.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfIndexOutOfRange(int index)
         {
             if (index != 0)
@@ -419,7 +505,10 @@ namespace EncosyTower.Collections.Unsafe
                 => new($"Index {index} is out of range of the UnsafeReference which only contains 1 element.");
         }
 
-        /// <summary> A read-only alias for the value of an UnsafeReference. Does not have its own allocated storage. </summary>
+        /// <summary>
+        /// A read-only alias for the value of an UnsafeReference. Does not have its own allocated
+        /// storage.
+        /// </summary>
         public readonly struct ReadOnly : IIsCreated
         {
             [NativeDisableUnsafePtrRestriction]
@@ -428,39 +517,40 @@ namespace EncosyTower.Collections.Unsafe
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe ReadOnly(void* data)
             {
-                _data = data;
+                // SAFETY: The constructor receives a borrowed pointer from its owning reference.
+                unsafe
+                {
+                    _data = data;
+                }
             }
 
-            public unsafe bool IsCreated
+            public bool IsCreated
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => (IntPtr)_data != IntPtr.Zero;
+                get
+                {
+                    // SAFETY: Reading the pointer field only observes the alias state.
+                    unsafe
+                    {
+                        return (IntPtr)_data != IntPtr.Zero;
+                    }
+                }
             }
 
+            /// <safety>
+            /// The alias must remain backed by a live allocation owned by the originating reference.
+            /// </safety>
             public unsafe T Value
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => *(T*)_data;
+                get
+                {
+                    // SAFETY: The originating reference owns the allocation for the alias lifetime.
+                    unsafe
+                    {
+                        return *(T*)_data;
+                    }
+                }
             }
         }
-
-#pragma warning disable IDE1006 // Naming Styles
-        private struct UnsafeReferenceDisposeJob : IJob
-        {
-            internal UnsafeReferenceDispose Data;
-
-            public readonly void Execute() => Data.Dispose();
-        }
-
-        private struct UnsafeReferenceDispose
-        {
-            [NativeDisableUnsafePtrRestriction]
-            internal unsafe void* Data;
-
-            internal Allocator AllocatorLabel;
-
-            public readonly unsafe void Dispose() => UnsafeUtility.FreeTracked(Data, AllocatorLabel);
-        }
-#pragma warning restore IDE1006 // Naming Styles
     }
 }

@@ -1,4 +1,4 @@
-#if UNITY_COLLECTIONS
+#if UNITY_BURST
 
 using System;
 using EncosyTower.Collections;

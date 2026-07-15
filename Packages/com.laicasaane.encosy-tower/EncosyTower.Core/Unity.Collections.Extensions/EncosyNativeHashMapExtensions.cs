@@ -1,26 +1,35 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_COLLECTIONS
 
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
     public static class EncosyNativeHashMapExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityBy<TKey, TValue>(this NativeHashMap<TKey, TValue> map, int amount)
+        public static int IncreaseCapacityBy<TKey, TValue>(this NativeHashMap<TKey, TValue> map, int amount)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(map, map.Capacity + amount);
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
+            return IncreaseCapacityTo(map, map.Capacity + amount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityTo<TKey, TValue>(this NativeHashMap<TKey, TValue> map, int newCapacity)
+        public static int IncreaseCapacityTo<TKey, TValue>(this NativeHashMap<TKey, TValue> map, int newCapacity)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
@@ -28,39 +37,24 @@ namespace EncosyTower.Collections
             {
                 map.Capacity = newCapacity;
             }
+
+            return map.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityBy<TKey, TValue>(this NativeParallelHashMap<TKey, TValue> map, int amount)
+        public static int IncreaseCapacityBy<TKey, TValue>(this NativeParallelHashMap<TKey, TValue> map, int amount)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(map, map.Capacity + amount);
+            ThrowIfAmountIsPositive(amount > 0);
+            return IncreaseCapacityTo(map, map.Capacity + amount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityTo<TKey, TValue>(this NativeParallelHashMap<TKey, TValue> map, int newCapacity)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-        {
-            if (newCapacity > map.Capacity)
-            {
-                map.Capacity = newCapacity;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityBy<TKey, TValue>(this NativeParallelMultiHashMap<TKey, TValue> map, int amount)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-        {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(map, map.Capacity + amount);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityTo<TKey, TValue>(this NativeParallelMultiHashMap<TKey, TValue> map, int newCapacity)
+        public static int IncreaseCapacityTo<TKey, TValue>(
+              this NativeParallelHashMap<TKey, TValue> map
+            , int newCapacity
+        )
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
@@ -68,6 +62,36 @@ namespace EncosyTower.Collections
             {
                 map.Capacity = newCapacity;
             }
+
+            return map.Capacity;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IncreaseCapacityBy<TKey, TValue>(
+              this NativeParallelMultiHashMap<TKey, TValue> map
+            , int amount
+        )
+            where TKey : unmanaged, IEquatable<TKey>
+            where TValue : unmanaged
+        {
+            ThrowIfAmountIsPositive(amount > 0);
+            return IncreaseCapacityTo(map, map.Capacity + amount);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IncreaseCapacityTo<TKey, TValue>(
+              this NativeParallelMultiHashMap<TKey, TValue> map
+            , int newCapacity
+        )
+            where TKey : unmanaged, IEquatable<TKey>
+            where TValue : unmanaged
+        {
+            if (newCapacity > map.Capacity)
+            {
+                map.Capacity = newCapacity;
+            }
+
+            return map.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -260,6 +284,18 @@ namespace EncosyTower.Collections
         {
             key = kv.Key;
             value = kv.Value;
+        }
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfAmountIsPositive([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Amount must be greater than 0.");
         }
     }
 }

@@ -1,5 +1,3 @@
-#if UNITY_COLLECTIONS
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
@@ -12,7 +10,7 @@ namespace EncosyTower.Collections.Extensions
         public static Span<TValue> GetValues<TKey, TValue>(this in ArrayMapNative<TKey, TValue> self)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-            => self._values.AsSpan()[..self._freeValueCellIndex.Value];
+                => self.AsValuesSpan();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue GetOrAdd<TKey, TValue>(
@@ -25,15 +23,15 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            self._values[index] = builder();
+            self.GetValueRefAt(index) = builder();
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,27 +46,27 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            self._values[index] = builder(ref parameter);
+            self.GetValueRefAt(index) = builder(ref parameter);
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared: when the new slot still holds data
+        /// from before the clear, that data can be recycled instead of building a new value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when the slot is not recycled.</param>
+        /// <param name="recycler">Resets the leftover data before it is reused.</param>
+        /// <param name="shouldBeRecycled">Decides whether the leftover data can be recycled.</param>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue RecycleOrAdd<TKey, TValue>(
               this ref ArrayMapNative<TKey, TValue> self
@@ -82,32 +80,37 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            if (shouldBeRecycled(ref self._values[index]))
-                recycler(ref self._values[index]);
+            if (shouldBeRecycled(ref self.GetValueRefAt(index)))
+            {
+                recycler(ref self.GetValueRefAt(index));
+            }
             else
-                self._values[index] = builder();
+            {
+                self.GetValueRefAt(index) = builder();
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared: when the new slot still holds data
+        /// from before the clear, that data can be recycled instead of building a new value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <param name="parameter"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <typeparam name="TParam"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when the slot is not recycled.</param>
+        /// <param name="recycler">Resets the leftover data before it is reused.</param>
+        /// <param name="shouldBeRecycled">Decides whether the leftover data can be recycled.</param>
+        /// <param name="parameter">State passed by reference to <paramref name="builder"/>
+        /// and <paramref name="recycler"/>.</param>
+        /// <typeparam name="TParam">The type of <paramref name="parameter"/>.</typeparam>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue RecycleOrAdd<TKey, TValue, TParam>(
               this ref ArrayMapNative<TKey, TValue> self
@@ -122,18 +125,22 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            if (shouldBeRecycled(ref self._values[index]))
-                recycler(ref self._values[index], ref parameter);
+            if (shouldBeRecycled(ref self.GetValueRefAt(index)))
+            {
+                recycler(ref self.GetValueRefAt(index), ref parameter);
+            }
             else
-                self._values[index] = builder(ref parameter);
+            {
+                self.GetValueRefAt(index) = builder(ref parameter);
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,15 +155,15 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            self._values[index] = builder.Invoke();
+            self.GetValueRefAt(index) = builder.Invoke();
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,27 +179,27 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            self._values[index] = builder.Invoke(ref parameter);
+            self.GetValueRefAt(index) = builder.Invoke(ref parameter);
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared: when the new slot still holds data
+        /// from before the clear, that data can be recycled instead of building a new value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when the slot is not recycled.</param>
+        /// <param name="recycler">Resets the leftover data before it is reused.</param>
+        /// <param name="shouldBeRecycled">Decides whether the leftover data can be recycled.</param>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue RecycleOrAdd<TKey, TValue, TBuilder, TRecyler, TShouldBeRecycled>(
               this ref ArrayMapNative<TKey, TValue> self
@@ -209,32 +216,37 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            if (shouldBeRecycled.Invoke(ref self._values[index]))
-                recycler.Invoke(ref self._values[index]);
+            if (shouldBeRecycled.Invoke(ref self.GetValueRefAt(index)))
+            {
+                recycler.Invoke(ref self.GetValueRefAt(index));
+            }
             else
-                self._values[index] = builder.Invoke();
+            {
+                self.GetValueRefAt(index) = builder.Invoke();
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
 
         /// <summary>
-        /// RecycledOrCreate makes sense to use on maps that are fast cleared and use objects
-        /// as value. Once the map is fast cleared, it will try to reuse object values that are
-        /// recycled during the fast clearing.
+        /// Gets the value for <paramref name="key"/>, or adds an entry when the key is not present.
+        /// Intended for maps that are fast-cleared: when the new slot still holds data
+        /// from before the clear, that data can be recycled instead of building a new value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="builder"></param>
-        /// <param name="recycler"></param>
-        /// <param name="parameter"></param>
-        /// <typeparam name="TValueProxy"></typeparam>
-        /// <typeparam name="TParam"></typeparam>
-        /// <returns></returns>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="builder">Creates a new value when the slot is not recycled.</param>
+        /// <param name="recycler">Resets the leftover data before it is reused.</param>
+        /// <param name="shouldBeRecycled">Decides whether the leftover data can be recycled.</param>
+        /// <param name="parameter">State passed by reference to <paramref name="builder"/>
+        /// and <paramref name="recycler"/>.</param>
+        /// <typeparam name="TParam">The type of <paramref name="parameter"/>.</typeparam>
+        /// <returns>A reference to the value for <paramref name="key"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue RecycleOrAdd<TKey, TValue, TParam, TBuilder, TRecyler, TShouldBeRecycled>(
               this ref ArrayMapNative<TKey, TValue> self
@@ -252,29 +264,22 @@ namespace EncosyTower.Collections.Extensions
         {
             if (self.TryFindIndex(key, out var index))
             {
-                self._version.Value++;
-                return ref self._values[index];
+                self.BumpVersion();
+                return ref self.GetValueRefAt(index);
             }
 
             self.AddValue(key, out index);
 
-            if (shouldBeRecycled.Invoke(ref self._values[index]))
-                recycler.Invoke(ref self._values[index], ref parameter);
+            if (shouldBeRecycled.Invoke(ref self.GetValueRefAt(index)))
+            {
+                recycler.Invoke(ref self.GetValueRefAt(index), ref parameter);
+            }
             else
-                self._values[index] = builder.Invoke(ref parameter);
+            {
+                self.GetValueRefAt(index) = builder.Invoke(ref parameter);
+            }
 
-            return ref self._values[index];
+            return ref self.GetValueRefAt(index);
         }
     }
-
-    public static class ArrayMapNativeReadOnlyExtensions
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<TValue> GetValues<TKey, TValue>(this in ArrayMapNative<TKey, TValue>.ReadOnly self)
-            where TKey : unmanaged, IEquatable<TKey>
-            where TValue : unmanaged
-            => self._values.AsReadOnlySpan()[..self._freeValueCellIndex.Value];
-    }
 }
-
-#endif

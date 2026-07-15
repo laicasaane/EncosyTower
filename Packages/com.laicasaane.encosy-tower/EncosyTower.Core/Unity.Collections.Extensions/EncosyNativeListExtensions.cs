@@ -1,32 +1,43 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_COLLECTIONS
 
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
     public static class EncosyNativeListExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityBy<T>(this NativeList<T> list, int amount)
+        public static int IncreaseCapacityBy<T>(this NativeList<T> list, int amount)
             where T : unmanaged
         {
-            Checks.IsTrue(amount > 0, "amount must be greater than 0");
-            IncreaseCapacityTo(list, list.Capacity + amount);
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
+            return IncreaseCapacityTo(list, list.Capacity + amount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IncreaseCapacityTo<T>(this NativeList<T> list, int newCapacity)
+        public static int IncreaseCapacityTo<T>(this NativeList<T> list, int newCapacity)
             where T : unmanaged
         {
             if (newCapacity > list.Capacity)
             {
                 list.SetCapacity(newCapacity);
             }
+
+            return list.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,6 +104,8 @@ namespace EncosyTower.Collections
         public static void AddRange<T>(this NativeList<T> list, ReadOnlySpan<T> items)
             where T : unmanaged
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 fixed (T* ptr = items)
@@ -128,7 +141,7 @@ namespace EncosyTower.Collections
 
             if (count > 0)
             {
-                return list.AsSpan().Slice(begin, end);
+                return list.AsSpan().Slice(begin, count);
             }
 
             return default;
@@ -138,6 +151,8 @@ namespace EncosyTower.Collections
         public static Span<T> AsSpan<T>(this NativeList<T> list)
             where T : unmanaged
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 return new Span<T>(list.GetUnsafePtr(), list.Length);
@@ -148,10 +163,25 @@ namespace EncosyTower.Collections
         public static ReadOnlySpan<T> AsReadOnlySpan<T>(this NativeList<T> list)
             where T : unmanaged
         {
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
             unsafe
             {
                 return new ReadOnlySpan<T>(list.GetUnsafeReadOnlyPtr(), list.Length);
             }
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfAmountIsPositive([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Amount must be greater than 0.");
         }
     }
 }

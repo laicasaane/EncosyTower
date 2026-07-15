@@ -1,14 +1,19 @@
 // https://github.com/stella3d/SharedArray
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EncosyTower.Collections.Unsafe;
+using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -32,7 +37,8 @@ namespace EncosyTower.Collections
     /// An array of length 1, usable as both a native and managed array
     /// </summary>
     /// <typeparam name="T">The element type in the managed representation.</typeparam>
-    /// <typeparam name="TNative">The element type in the NativeArray representation. Must be the same size as <typeparamref name="T"/>.</typeparam>
+    /// <typeparam name="TNative">The element type in the NativeArray representation. Must be
+    /// the same size as <typeparamref name="T"/>.</typeparam>
     public class SharedReference<T, TNative> : IDisposable
         , IAsSpan<T>, IAsReadOnlySpan<T>, IAsMemory<T>, IAsReadOnlyMemory<T>
         , IAsNativeArray<TNative>, IAsNativeSlice<TNative>
@@ -42,7 +48,7 @@ namespace EncosyTower.Collections
 #pragma warning disable IDE1006 // Naming Styles
         internal GCHandle _gcHandle;
 
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
         private AtomicSafetyHandle m_Safety;
 #endif
 
@@ -53,13 +59,13 @@ namespace EncosyTower.Collections
 
         protected SharedReference()
         {
-            ThrowIfTypesNotEqualSize(AreTypesEqualSize());
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
             Initialize(default);
         }
 
         public SharedReference(T value)
         {
-            ThrowIfTypesNotEqualSize(AreTypesEqualSize());
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
             Initialize(value);
         }
 
@@ -79,7 +85,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
@@ -93,7 +99,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
 
@@ -164,7 +170,7 @@ namespace EncosyTower.Collections
 
             _version++;
 
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
             AtomicSafetyHandle.Release(m_Safety);
 #endif
@@ -180,7 +186,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] AsManagedArray()
         {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
@@ -190,7 +196,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan()
         {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
@@ -200,7 +206,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<T> AsReadOnlySpan()
         {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
 
@@ -210,7 +216,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Memory<T> AsMemory()
         {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
 #endif
 
@@ -220,7 +226,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlyMemory<T> AsReadOnlyMemory()
         {
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
 #endif
 
@@ -251,26 +257,32 @@ namespace EncosyTower.Collections
             return _native.Slice();
         }
 
+        /// <summary>
+        /// Raw pointer into the pinned managed buffer, for the shared native view family.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal unsafe TNative* GetUnsafeBufferPointer()
+        {
+            // SAFETY: The shared reference pins its managed storage for the lifetime of the native alias.
+            unsafe
+            {
+                return (TNative*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(_native);
+            }
+        }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        /// <summary>
+        /// The single representative safety handle, reused by the shared native view family.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal AtomicSafetyHandle GetSafetyHandle()
+            => m_Safety;
+#endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static bool AreTypesEqualSize()
         {
             return UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<TNative>();
-        }
-
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
-        protected static void ThrowIfTypesNotEqualSize([DoesNotReturnIf(false)] bool areEqual)
-        {
-            if (areEqual == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new InvalidOperationException(
-                    $"size of native alias type '{typeof(TNative).FullName}' ({UnsafeUtility.SizeOf<TNative>()} bytes) " +
-                    $"must be equal to size of source type '{typeof(T).FullName}' ({UnsafeUtility.SizeOf<T>()} bytes)"
-                );
         }
 
         private void Initialize(T value)
@@ -284,17 +296,21 @@ namespace EncosyTower.Collections
             _gcHandle = GCHandle.Alloc(_managed, GCHandleType.Pinned);
             CreateNativeAlias();
 
-            unsafe void CreateNativeAlias()
+            void CreateNativeAlias()
             {
                 // this is the trick to making a NativeArray view of a managed array (or any pointer)
-                fixed (void* ptr = _managed)
+                // SAFETY: _managed is pinned by _gcHandle for the complete duration of this fixed scope.
+                unsafe
                 {
-                    _native = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<TNative>(
-                        ptr, _managed.Length, Allocator.None
-                    );
+                    fixed (void* ptr = _managed)
+                    {
+                        _native = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<TNative>(
+                            ptr, _managed.Length, Allocator.None
+                        );
+                    }
                 }
 
-#if UNITY_EDITOR && !DISABLE_SHAREDARRAY_SAFETY
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
                 m_Safety = AtomicSafetyHandle.Create();
                 NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref _native, m_Safety);
 #endif

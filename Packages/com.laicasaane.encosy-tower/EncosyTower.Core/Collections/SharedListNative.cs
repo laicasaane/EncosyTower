@@ -1,29 +1,46 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedListNative<TNative> AsNative()
-            => new(
-                  _buffer.AsNativeArray()
-                , _count.AsNativeArray()
-                , _version.AsNativeArray()
-            );
+        /// <safety>The returned native view borrows the shared list allocation and must not outlive the list.</safety>
+        public unsafe SharedListNative<TNative> AsNative()
+        {
+            // SAFETY: The returned native view borrows the shared list's live header and safety handle.
+            unsafe
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                return new(_nativeData, _buffer.GetSafetyHandle());
+#else
+                return new(_nativeData);
+#endif
+            }
+        }
     }
 
     /// <remarks>
     /// <para>SharedListNative is not thread safe.</para>
     /// <para>The capacity of SharedListNative is immutable, cannot change.</para>
     /// </remarks>
+    [StructLayout(LayoutKind.Sequential)]
+    [NativeContainer]
     public readonly partial struct SharedListNative<T> : IReadOnlyList<T>, IIndexer<T>
         , IIsCreated, IToArray<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IAsNativeSlice<T>
@@ -33,49 +50,77 @@ namespace EncosyTower.Collections
         , IClearable
         where T : unmanaged
     {
-        internal readonly NativeArray<T> _buffer;
-        internal readonly NativeArray<int> _count;
-        internal readonly NativeArray<int> _version;
+#pragma warning disable IDE1006 // Naming Styles
+        [NativeDisableUnsafePtrRestriction]
+        internal readonly unsafe SharedListUnsafe<T>* m_Data;
 
-        internal SharedListNative(
-              NativeArray<T> buffer
-            , NativeArray<int> count
-            , NativeArray<int> version
-        )
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        internal readonly AtomicSafetyHandle m_Safety;
+#endif
+#pragma warning restore IDE1006 // Naming Styles
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        internal unsafe SharedListNative(SharedListUnsafe<T>* data, AtomicSafetyHandle safety)
         {
-            _buffer = buffer;
-            _count = count;
-            _version = version;
+            // SAFETY: The constructor receives a borrowed live header from the owning shared list.
+            unsafe
+            {
+                m_Data = data;
+            }
+            m_Safety = safety;
         }
+#else
+        internal unsafe SharedListNative(SharedListUnsafe<T>* data)
+        {
+            // SAFETY: The constructor receives a borrowed live header from the owning shared list.
+            unsafe
+            {
+                m_Data = data;
+            }
+        }
+#endif
 
         public readonly bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer.IsCreated && _count.IsCreated && _version.IsCreated;
+            get
+            {
+                // SAFETY: Reading the pointer field only observes whether the borrowed header exists.
+                unsafe
+                {
+                    return m_Data != null;
+                }
+            }
         }
 
         public readonly int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer.Length;
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live shared list header.
+                unsafe
+                {
+                    return m_Data->Capacity;
+                }
+            }
         }
 
         public readonly int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _count.AsReadOnlySpan()[0];
-        }
+            get
+            {
+                CheckRead();
 
-        internal readonly ref int CountRW
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _count.AsSpan()[0];
-        }
-
-        internal readonly ref int VersionRW
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _version.AsSpan()[0];
+                // SAFETY: The read check validates the live shared list header.
+                unsafe
+                {
+                    return m_Data->Count;
+                }
+            }
         }
 
         public T this[int index]
@@ -83,80 +128,86 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             readonly get
             {
-                Checks.IsTrue((uint)index < (uint)Count, "index is outside the range of valid indexes for the SharedListNative<T>");
-                return _buffer.AsReadOnlySpan()[index];
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before the indexed access.
+                unsafe
+                {
+                    return (*m_Data)[index];
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                Checks.IsTrue((uint)index < (uint)Count, "index is outside the range of valid indexes for the SharedListNative<T>");
-                VersionRW++;
-                _buffer.AsSpan()[index] = value;
+                CheckWrite();
+
+                // SAFETY: The write check validates the live header before the indexed mutation.
+                unsafe
+                {
+                    (*m_Data)[index] = value;
+                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
-            VersionRW++;
+            CheckWrite();
 
-            ref var count = ref CountRW;
-
-            Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            _buffer.AsSpan()[count++] = item;
+            // SAFETY: The write check validates the live header before appending.
+            unsafe
+            {
+                m_Data->Add(item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
-            VersionRW++;
+            CheckWrite();
 
-            ref var count = ref CountRW;
-
-            Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            _buffer.AsSpan()[count++] = item;
+            // SAFETY: The write check validates the live header before appending the referenced value.
+            unsafe
+            {
+                m_Data->Add(in item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            VersionRW++;
+            CheckWrite();
 
-            ref var count = ref CountRW;
-
-            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
-            Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            _buffer.MemoryCopyUnsafe(index, index + 1, count - index);
-            ++count;
-
-            _buffer.AsSpan()[index] = item;
+            // SAFETY: The write check validates the live header before insertion.
+            unsafe
+            {
+                m_Data->Insert(index, item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            VersionRW++;
+            CheckWrite();
 
-            ref var count = ref CountRW;
-
-            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indexes for the SharedListNative<T>");
-            Checks.IsTrue(count < _buffer.Length, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            _buffer.MemoryCopyUnsafe(index, index + 1, count - index);
-            ++count;
-
-            _buffer.AsSpan()[index] = item;
+            // SAFETY: The write check validates the live header before inserting the referenced value.
+            unsafe
+            {
+                m_Data->Insert(index, in item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T ElementAt(int index)
         {
-            Checks.IsTrue((uint)index < (uint)Count, "index is outside the range of valid indexes for the SharedListNative<T>");
-            return ref _buffer.AsSpan()[index];
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header for the returned mutable reference.
+            unsafe
+            {
+                return ref m_Data->ElementAt(index);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,14 +216,13 @@ namespace EncosyTower.Collections
 
         public void AddRange(ReadOnlySpan<T> items, int count)
         {
-            VersionRW++;
+            CheckWrite();
 
-            if (count == 0) return;
-
-            Checks.IsTrue(_buffer.Length - Count >= count, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            items[..count].CopyTo(_buffer.AsSpan().Slice(Count, count));
-            CountRW += count;
+            // SAFETY: The write check validates the live header before copying source values into it.
+            unsafe
+            {
+                m_Data->AddRange(items, count);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -181,14 +231,13 @@ namespace EncosyTower.Collections
 
         public void AddRange(NativeArray<T> items, int count)
         {
-            VersionRW++;
+            CheckWrite();
 
-            if (count == 0) return;
-
-            Checks.IsTrue(_buffer.Length - Count >= count, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            items.AsSpan()[..count].CopyTo(_buffer.AsSpan().Slice(Count, count));
-            CountRW += count;
+            // SAFETY: The write check validates the destination header; AsSpan validates the source array.
+            unsafe
+            {
+                m_Data->AddRange(items.AsSpan(), count);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,17 +246,13 @@ namespace EncosyTower.Collections
 
         public void AddRange(in NativeSlice<T> items, int count)
         {
-            VersionRW++;
+            CheckWrite();
 
-            if (count == 0) return;
-
-            Checks.IsTrue(_buffer.Length - Count >= count, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            var span = _buffer.AsSpan().Slice(Count, count);
-            var buffer = NativeArrayUnsafe.ConvertFrom(span, Allocator.None);
-            items.Slice(0, count).CopyTo(buffer);
-
-            CountRW += count;
+            // SAFETY: The write check validates the destination header; NativeSlice validates its source storage.
+            unsafe
+            {
+                m_Data->AddRange(in items, count);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -224,7 +269,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
-            => new CopyFromSpan<T>(AsSpan()).CopyFrom(destinationStartIndex, source, length);
+        {
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before copying into its buffer.
+            unsafe
+            {
+                m_Data->CopyFrom(destinationStartIndex, source, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyFrom(ReadOnlySpan<T> source)
@@ -240,7 +293,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
-            => new CopyFromSpan<T>(AsSpan()).TryCopyFrom(destinationStartIndex, source, length);
+        {
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before attempting the copy.
+            unsafe
+            {
+                return m_Data->TryCopyFrom(destinationStartIndex, source, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(T[] array, int arrayIndex)
@@ -260,7 +321,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int sourceStartIndex, Span<T> destination, int length)
-            => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+        {
+            CheckRead();
+
+            // SAFETY: The read check validates the live header before copying from its buffer.
+            unsafe
+            {
+                m_Data->CopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(Span<T> destination)
@@ -276,7 +345,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-            => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+        {
+            CheckRead();
+
+            // SAFETY: The read check validates the live header before attempting the copy.
+            unsafe
+            {
+                return m_Data->TryCopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(NativeArray<T> array)
@@ -288,7 +365,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int index, NativeArray<T> array, int length)
-            => AsReadOnlySpan().Slice(index, length).CopyTo(array.AsSpan()[..length]);
+        {
+            CheckRead();
+
+            // SAFETY: The read check validates the source header; AsSpan validates the destination array.
+            unsafe
+            {
+                m_Data->AsReadOnlySpan().Slice(index, length).CopyTo(array.AsSpan()[..length]);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int index, in NativeSlice<T> array)
@@ -296,13 +381,27 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int index, in NativeSlice<T> array, int length)
-            => array.Slice(0, length).CopyFrom(AsNativeSlice().Slice(index, length));
+        {
+            CheckRead();
+
+            // SAFETY: The read check validates the source header before constructing its temporary view.
+            unsafe
+            {
+                var source = CreateNativeArray(m_Data->_buffer, m_Data->Count);
+                array.Slice(0, length).CopyFrom(source.Slice(index, length));
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            VersionRW++;
-            CountRW = 0;
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before clearing it.
+            unsafe
+            {
+                m_Data->Clear();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -311,176 +410,229 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref readonly T Peek()
-            => ref _buffer.AsReadOnlySpan()[Count - 1];
+        {
+            CheckRead();
+
+            // SAFETY: The read check validates the live header for the returned reference.
+            unsafe
+            {
+                return ref m_Data->Peek();
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref readonly T Pop()
         {
-            VersionRW++;
-            --CountRW;
-            return ref _buffer.AsReadOnlySpan()[Count];
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before removing its final value.
+            unsafe
+            {
+                return ref m_Data->Pop();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Push(T item)
         {
-            Insert(Count, item);
-            return Count - 1;
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before appending through the stack API.
+            unsafe
+            {
+                return m_Data->Push(item);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Push(in T item)
         {
-            Insert(Count, item);
-            return Count - 1;
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before appending the referenced value.
+            unsafe
+            {
+                return m_Data->Push(in item);
+            }
         }
 
         public void RemoveAt(int index)
         {
-            VersionRW++;
+            CheckWrite();
 
-            Checks.IsTrue((uint)index < (uint)Count, "out of bound index");
-
-            if (index < --CountRW)
+            // SAFETY: The write check validates the live header before indexed removal.
+            unsafe
             {
-                _buffer.MemoryCopyUnsafe(index + 1, index, Count - index);
+                m_Data->RemoveAt(index);
             }
         }
 
         public void RemoveRange(int startIndex, int length)
         {
-            VersionRW++;
+            CheckWrite();
 
-            var count = Count;
-
-            Checks.IsTrue((uint)startIndex < (uint)count, "out of bound start index");
-
-            var end = startIndex + length;
-
-            Checks.IsTrue((uint)end <= (uint)count, "out of bound length");
-
-            if (length < 1)
+            // SAFETY: The write check validates the live header before range removal.
+            unsafe
             {
-                return;
+                m_Data->RemoveRange(startIndex, length);
             }
-
-            count = CountRW -= length;
-            _buffer.MemoryCopyUnsafe(end, startIndex, count);
         }
 
         public void RemoveAtSwapBack(int index)
         {
-            VersionRW++;
+            CheckWrite();
 
-            Checks.IsTrue((uint)index < (uint)Count, "out of bound index");
-
-            if (index < --CountRW)
+            // SAFETY: The write check validates the live header before swap-back removal.
+            unsafe
             {
-                var buffer = _buffer.AsSpan();
-                buffer[index] = buffer[Count];
+                m_Data->RemoveAtSwapBack(index);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ToArray()
         {
-            return AsReadOnlySpan().ToArray();
+            CheckRead();
+
+            // SAFETY: The read check validates the live header before copying its contents.
+            unsafe
+            {
+                return m_Data->ToArray();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan()
         {
-            VersionRW++;
-            return _buffer.AsSpan()[..Count];
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header for the returned mutable span.
+            unsafe
+            {
+                return m_Data->AsSpan();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<T> AsReadOnlySpan()
         {
-            return _buffer.AsReadOnlySpan()[..Count];
+            CheckRead();
+
+            // SAFETY: The read check validates the live header for the returned read-only span.
+            unsafe
+            {
+                return m_Data->AsReadOnlySpan();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NativeSlice<T> AsNativeSlice()
         {
-            return _buffer.Slice(0, Count);
+            CheckWrite();
+
+            // SAFETY: The write check validates the header and its pointer before attaching the safety handle.
+            unsafe
+            {
+                return CreateNativeArray(m_Data->_buffer, m_Data->Count).Slice();
+            }
         }
 
         public Span<T> AddReplicate(int amount)
         {
-            VersionRW++;
+            CheckWrite();
 
-            var oldCount = Count;
-            var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
-
-            Checks.IsTrue(offset < 1, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
-            buffer.Fill(default);
-            CountRW = newCount;
-
-            return buffer;
+            // SAFETY: The write check validates the live header before reserving initialized slots.
+            unsafe
+            {
+                return m_Data->AddReplicate(amount);
+            }
         }
 
         public Span<T> AddReplicate(T value, int amount)
         {
-            VersionRW++;
+            CheckWrite();
 
-            var oldCount = Count;
-            var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
-
-            Checks.IsTrue(offset < 1, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
-            buffer.Fill(value);
-            CountRW = newCount;
-
-            return buffer;
+            // SAFETY: The write check validates the live header before reserving filled slots.
+            unsafe
+            {
+                return m_Data->AddReplicate(value, amount);
+            }
         }
 
         public Span<T> AddReplicateNoInit(int amount)
         {
-            VersionRW++;
+            CheckWrite();
 
-            var oldCount = Count;
-            var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
-
-            Checks.IsTrue(offset < 1, "the capacity of SharedListNative<T> is immutable and cannot change");
-
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
-            CountRW = newCount;
-
-            return buffer;
+            // SAFETY: The write check validates the live header before reserving uninitialized slots.
+            unsafe
+            {
+                return m_Data->AddReplicateNoInit(amount);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SharedListNative<U> Reinterpret<U>()
             where U : unmanaged
         {
-            return new SharedListNative<U>(
-                  _buffer.Reinterpret<U>()
-                , _count
-                , _version
-            );
+            CheckRead();
+            ThrowHelper.ThrowIfTypesHaveDifferentSize(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
+
+            // SAFETY: Equal-size validation preserves the shared header layout and the result borrows this view.
+            unsafe
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                return new SharedListNative<U>((SharedListUnsafe<U>*)m_Data, m_Safety);
+#else
+                return new SharedListNative<U>((SharedListUnsafe<U>*)m_Data);
+#endif
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SharedListNative<T> Prefill(int amount)
+        private unsafe NativeArray<U> CreateNativeArray<U>(U* pointer, int length)
+            where U : unmanaged
         {
-            SharedListNative<T> list = new SharedList<T, T>(amount);
-            list.AddReplicate(amount);
-            return list;
+            // SAFETY: The caller has checked the shared safety handle and supplies live bounded storage.
+            unsafe
+            {
+                var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<U>(
+                      pointer
+                    , length
+                    , Allocator.None
+                );
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, m_Safety);
+#endif
+
+                return array;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SharedListNative<T> Prefill(T value, int amount)
+        internal void MarkChanged()
         {
-            SharedListNative<T> list = new SharedList<T, T>(amount);
-            list.AddReplicate(value, amount);
-            return list;
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before updating its version.
+            unsafe
+            {
+                m_Data->IncrementVersion();
+            }
+        }
+
+        private readonly void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+        }
+
+        private readonly void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

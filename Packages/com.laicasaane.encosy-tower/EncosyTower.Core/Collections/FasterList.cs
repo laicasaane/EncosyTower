@@ -22,14 +22,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Debugging;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -130,21 +138,22 @@ namespace EncosyTower.Collections
             get => _buffer.Length;
         }
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly
+            => false;
 
         public T this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.FasterList);
                 return _buffer[index];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.FasterList);
                 _version++;
                 _buffer[index] = value;
             }
@@ -168,7 +177,9 @@ namespace EncosyTower.Collections
                 ref readonly var item = ref items[i];
 
                 if (match(item))
+                {
                     return item;
+                }
             }
 
             return Option.None;
@@ -184,7 +195,9 @@ namespace EncosyTower.Collections
                 ref readonly var item = ref items[i];
 
                 if (match(in item))
+                {
                     return item;
+                }
             }
 
             return Option.None;
@@ -318,9 +331,9 @@ namespace EncosyTower.Collections
 
         public int FindIndex(int startIndex, int count, [NotNull] Predicate<T> match)
         {
-            Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the FasterList<T>");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the FasterList<T>");
+            ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.FasterList);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex <= _count - count, ThrowHelper.CollectionType.FasterList);
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex + count;
@@ -330,7 +343,9 @@ namespace EncosyTower.Collections
                 ref readonly var item = ref items[i];
 
                 if (match(item))
+                {
                     return i;
+                }
             }
 
             return -1;
@@ -346,9 +361,9 @@ namespace EncosyTower.Collections
 
         public int FindIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
         {
-            Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the FasterList<T>");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex <= _count - count, "startIndex and count do not specify a valid section in the FasterList<T>");
+            ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.FasterList);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex <= _count - count, ThrowHelper.CollectionType.FasterList);
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex + count;
@@ -358,7 +373,9 @@ namespace EncosyTower.Collections
                 ref readonly var item = ref items[i];
 
                 if (match(in item))
+                {
                     return i;
+                }
             }
 
             return -1;
@@ -376,15 +393,15 @@ namespace EncosyTower.Collections
         {
             if (_count == 0)
             {
-                Checks.IsTrue(startIndex == -1, "startIndex is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfFindStartIndexIsOutOfRange(startIndex == -1, ThrowHelper.CollectionType.FasterList);
             }
             else
             {
-                Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.FasterList);
             }
 
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex - count + 1 >= 0, "startIndex and count do not specify a valid section in the FasterList<T>");
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex - count + 1 >= 0, ThrowHelper.CollectionType.FasterList);
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex - count;
@@ -413,15 +430,15 @@ namespace EncosyTower.Collections
         {
             if (_count == 0)
             {
-                Checks.IsTrue(startIndex == -1, "startIndex is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfFindStartIndexIsOutOfRange(startIndex == -1, ThrowHelper.CollectionType.FasterList);
             }
             else
             {
-                Checks.IsTrue((uint)startIndex < (uint)_count, "startIndex is outside the range of valid indexes for the FasterList<T>");
+                ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.FasterList);
             }
 
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(startIndex - count + 1 >= 0, "startIndex and count do not specify a valid section in the FasterList<T>");
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex - count + 1 >= 0, ThrowHelper.CollectionType.FasterList);
 
             var items = AsReadOnlySpan();
             var endIndex = startIndex - count;
@@ -438,20 +455,111 @@ namespace EncosyTower.Collections
             return -1;
         }
 
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indexes for the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfFindIndexStartIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("startIndex is outside the range of valid indexes for the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("count is less than 0");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfFindIndexSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("startIndex and count do not specify a valid section in the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfFindLastEmptyStartIsOutOfRange([DoesNotReturnIf(false)] bool isEmptyStart)
+        {
+            if (isEmptyStart == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("startIndex is outside the range of valid indexes for the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfFindLastStartIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("startIndex is outside the range of valid indexes for the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfFindLastSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("startIndex and count do not specify a valid section in the FasterList<T>");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
             => IndexOf(item, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index)
-            => IndexOf(item, index, _count);
+            => IndexOf(item, index, _count - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index, int count)
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count, "index and count do not specify a valid section in the FasterList<T>");
+            ThrowIfIndexIsNegative(index >= 0);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count, ThrowHelper.CollectionType.FasterList);
             return Array.IndexOf(_buffer, item, index, count);
         }
 
@@ -461,14 +569,14 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index)
-            => IndexOf(in item, index, _count);
+            => IndexOf(in item, index, _count - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index, int count)
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count, "index and count do not specify a valid section in the FasterList<T>");
+            ThrowIfIndexIsNegative(index >= 0);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count, ThrowHelper.CollectionType.FasterList);
             return Array.IndexOf(_buffer, item, index, count);
         }
 
@@ -478,7 +586,9 @@ namespace EncosyTower.Collections
             _version++;
 
             if (_count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             _buffer[_count++] = item;
         }
@@ -489,7 +599,9 @@ namespace EncosyTower.Collections
             _version++;
 
             if (_count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             _buffer[_count++] = item;
         }
@@ -497,12 +609,14 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the FasterList<T>");
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)_count, ThrowHelper.CollectionType.FasterList);
 
             _version++;
 
             if (_count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             Array.Copy(_buffer, index, _buffer, index + 1, _count - index);
             ++_count;
@@ -513,12 +627,14 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            Checks.IsTrue((uint)index <= (uint)_count, "index is outside the range of valid indexes for the FasterList<T>");
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)_count, ThrowHelper.CollectionType.FasterList);
 
             _version++;
 
             if (_count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             Array.Copy(_buffer, index, _buffer, index + 1, _count - index);
             ++_count;
@@ -529,7 +645,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T ElementAt(int index)
         {
-            Checks.IsTrue((uint)index < (uint)_count, "index is outside the range of valid indexes for the FasterList<T>");
+            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.FasterList);
             return ref _buffer[index];
         }
 
@@ -541,10 +657,15 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Length - _count < count)
+            {
                 AllocateMore(checked(_count + count));
+            }
 
             Array.Copy(items, 0, _buffer, _count, count);
             _count += count;
@@ -558,10 +679,15 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Length - _count < count)
+            {
                 AllocateMore(checked(_count + count));
+            }
 
             items[..count].CopyTo(_buffer.AsSpan(_count, count));
             _count += count;
@@ -625,7 +751,7 @@ namespace EncosyTower.Collections
                 action(item);
             }
 
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
+            ThrowIfCollectionWasModified(version == _version);
         }
 
         public void ForEach([NotNull] ActionIn<T> action)
@@ -645,7 +771,7 @@ namespace EncosyTower.Collections
                 action(in item);
             }
 
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
+            ThrowIfCollectionWasModified(version == _version);
         }
 
         public void ForEach([NotNull] ActionRef<T> action)
@@ -664,7 +790,7 @@ namespace EncosyTower.Collections
                 action(ref items[i]);
             }
 
-            Checks.IsTrue(version == _version, "An element in the collection has been modified.");
+            ThrowIfCollectionWasModified(version == _version);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -753,21 +879,27 @@ namespace EncosyTower.Collections
             => new(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
             => IncreaseCapacityTo(_buffer.Length + amount);
 
-        public void IncreaseCapacityTo(int newCapacity)
+        public int IncreaseCapacityTo(int newCapacity)
         {
             _version++;
 
             if (newCapacity <= _buffer.Length)
             {
-                return;
+                return _buffer.Length;
             }
 
             var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
+
+            if (_count > 0)
+            {
+                Array.Copy(_buffer, newList, _count);
+            }
+
             _buffer = newList;
+            return _buffer.Length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -803,7 +935,9 @@ namespace EncosyTower.Collections
             var index = IndexOf(item);
 
             if ((uint)index >= (uint)_count)
+            {
                 return false;
+            }
 
             if (index < --_count)
             {
@@ -825,7 +959,9 @@ namespace EncosyTower.Collections
             var index = IndexOf(in item);
 
             if ((uint)index >= (uint)_count)
+            {
                 return false;
+            }
 
             if (index < --_count)
             {
@@ -842,9 +978,9 @@ namespace EncosyTower.Collections
 
         public void RemoveAt(int index)
         {
-            _version++;
+            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
 
-            Checks.IsTrue((uint)index < (uint)_count, "out of bound index");
+            _version++;
 
             if (index < --_count)
             {
@@ -859,20 +995,20 @@ namespace EncosyTower.Collections
 
         public void RemoveRange(int startIndex, int length)
         {
-            _version++;
-
             var count = _count;
 
-            Checks.IsTrue((uint)startIndex < (uint)count, "out of bound start index");
+            ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
 
             var end = startIndex + length;
 
-            Checks.IsTrue((uint)end <= (uint)count, "out of bound length");
+            ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
 
             if (length < 1)
             {
                 return;
             }
+
+            _version++;
 
             count = _count -= length;
 
@@ -889,9 +1025,9 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            _version++;
+            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
 
-            Checks.IsTrue((uint)index < (uint)_count, "out of bound index");
+            _version++;
 
             if (index < --_count)
             {
@@ -1041,9 +1177,9 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Sort(int index, int count, [NotNull] IComparer<T> comparer)
         {
-            Checks.IsTrue(index >= 0, "'index' must be non-negative number");
-            Checks.IsTrue(count >= 0, "'count' must be non-negative number");
-            Checks.IsTrue(_count - index >= count, "Invalid offset length");
+            ThrowIfSortIndexIsNegative(index >= 0);
+            ThrowIfSortCountIsNegative(count >= 0);
+            ThrowIfSortRangeIsInvalid(_count - index >= count);
 
             if (count > 1)
             {
@@ -1108,19 +1244,168 @@ namespace EncosyTower.Collections
         {
             var newCapacity = CalcNewCapacity(_buffer.Length + 1);
             var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
+            if (_count > 0)
+            {
+                Array.Copy(_buffer, newList, _count);
+            }
             _buffer = newList;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore(int newSize)
         {
-            Checks.IsTrue(newSize > _buffer.Length, "newSize is not greater than the current capacity");
+            ThrowHelper.ThrowIfNewCapacityIsInvalid(newSize > _buffer.Length);
 
             var newCapacity = CalcNewCapacity(newSize);
             var newList = new T[newCapacity];
-            if (_count > 0) Array.Copy(_buffer, newList, _count);
+            if (_count > 0)
+            {
+                Array.Copy(_buffer, newList, _count);
+            }
             _buffer = newList;
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is less than 0");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index and count do not specify a valid section in the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indexes for the FasterList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfCollectionWasModified([DoesNotReturnIf(false)] bool versionMatches)
+        {
+            if (versionMatches == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("An element in the collection has been modified.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound start index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound length");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSortIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("'index' must be non-negative number");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSortCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("'count' must be non-negative number");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSortRangeIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Invalid offset length");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
+        {
+            if (exceedsCapacity == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("newSize is not greater than the current capacity");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

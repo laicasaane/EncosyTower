@@ -3,10 +3,18 @@
 
 #pragma warning disable IDE0180 // Use tuple to swap values
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -29,7 +37,7 @@ namespace EncosyTower.Collections
 
         private static void SwapIfGreater(Span<T> keys, TComparer comparer, int i, int j)
         {
-            Checks.IsTrue(i != j, "i and j must be different");
+            ThrowIfIndexesAreDifferent(i != j);
 
             if (comparer.Compare(keys[i], keys[j]) > 0)
             {
@@ -42,7 +50,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Swap(Span<T> a, int i, int j)
         {
-            Checks.IsTrue(i != j, "i and j must be different");
+            ThrowIfIndexesAreDifferent(i != j);
 
             T t = a[i];
             a[i] = a[j];
@@ -54,7 +62,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void IntroSort(Span<T> keys, int depthLimit, TComparer comparer)
         {
-            Checks.IsTrue(depthLimit >= 0, "depthLimit must be positive");
+            ThrowIfDepthLimitIsNonNegative(depthLimit >= 0);
 
             int partitionSize = keys.Length;
 
@@ -98,10 +106,7 @@ namespace EncosyTower.Collections
 
         private static int PickPivotAndPartition(Span<T> keys, TComparer comparer)
         {
-            Checks.IsTrue(
-                  keys.Length >= INTROSORT_SIZE_THRESHOLD
-                , "keys.Length must be greater than or equal to INTROSORT_SIZE_THRESHOLD"
-            );
+            ThrowIfKeysMeetPartitionThreshold(keys.Length >= INTROSORT_SIZE_THRESHOLD);
 
             int hi = keys.Length - 1;
 
@@ -120,11 +125,19 @@ namespace EncosyTower.Collections
 
             while (left < right)
             {
-                while (comparer.Compare(keys[++left], pivot) < 0) ;
-                while (comparer.Compare(pivot, keys[--right]) < 0) ;
+                while (comparer.Compare(keys[++left], pivot) < 0)
+                {
+                    continue;
+                }
+                while (comparer.Compare(pivot, keys[--right]) < 0)
+                {
+                    continue;
+                }
 
                 if (left >= right)
+                {
                     break;
+                }
 
                 Swap(keys, left, right);
             }
@@ -163,8 +176,10 @@ namespace EncosyTower.Collections
                     child++;
                 }
 
-                if (!(comparer.Compare(d, keys[child - 1]) < 0))
+                if ((comparer.Compare(d, keys[child - 1]) < 0) == false)
+                {
                     break;
+                }
 
                 keys[i - 1] = keys[child - 1];
                 i = child;
@@ -188,6 +203,45 @@ namespace EncosyTower.Collections
 
                 keys[j + 1] = t;
             }
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexesAreDifferent([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Indexes must be different.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfDepthLimitIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Depth limit must be non-negative.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfKeysMeetPartitionThreshold([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Key count must meet the introsort partition threshold.");
         }
     }
 }

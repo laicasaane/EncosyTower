@@ -1,15 +1,23 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
-using EncosyTower.Debugging;
+using UnityEngine;
 
 namespace EncosyTower.Collections.Extensions
 {
     public static class ListProxyExtensions
     {
-        public static bool Contains<TProvider, TBuffer, T, TComparer>(
+        public static bool Contains<TProvider, TBuffer, T>(
               this ref ListProxy<TProvider, TBuffer, T> self
             , T item
         )
@@ -25,13 +33,15 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (item.Equals(item2))
+                {
                     return true;
+                }
             }
 
             return false;
         }
 
-        public static bool Contains<TProvider, TBuffer, T, TComparer>(
+        public static bool Contains<TProvider, TBuffer, T>(
               this ref ListProxy<TProvider, TBuffer, T> self
             , in T item
         )
@@ -47,7 +57,9 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (item.Equals(item2))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -70,7 +82,9 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (comparer.Equals(item, item2))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -93,7 +107,9 @@ namespace EncosyTower.Collections.Extensions
                 ref readonly var item2 = ref items[index];
 
                 if (comparer.Equals(item, item2))
+                {
                     return true;
+                }
             }
 
             return false;
@@ -112,7 +128,9 @@ namespace EncosyTower.Collections.Extensions
             var index = IndexOf(ref self, item);
 
             if ((uint)index >= (uint)self._count)
+            {
                 return false;
+            }
 
             if (index < --self._count)
             {
@@ -143,7 +161,9 @@ namespace EncosyTower.Collections.Extensions
             var index = IndexOf(ref self, in item);
 
             if ((uint)index >= (uint)self._count)
+            {
                 return false;
+            }
 
             if (index < --self._count)
             {
@@ -175,7 +195,9 @@ namespace EncosyTower.Collections.Extensions
             var index = IndexOf(ref self, item, comparer);
 
             if ((uint)index >= (uint)self._count)
+            {
                 return false;
+            }
 
             if (index < --self._count)
             {
@@ -207,7 +229,9 @@ namespace EncosyTower.Collections.Extensions
             var index = IndexOf(ref self, in item, comparer);
 
             if ((uint)index >= (uint)self._count)
+            {
                 return false;
+            }
 
             if (index < --self._count)
             {
@@ -250,14 +274,16 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  self._count - index >= count
-                , "index and count do not denote a valid range in the StatelessList<TProvider, TBuffer, T"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfRangeIsWithinList(self._count - index >= count);
 
-            return MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            var result = MemoryExtensions.BinarySearch(
+                  self.AsReadOnlySpan().Slice(index, count)
+                , item
+                , comparer
+            );
+            return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -285,14 +311,16 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  self._count - index >= count
-                , "index and count do not denote a valid range in the StatelessList<TProvider, TBuffer, T>"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfRangeIsWithinList(self._count - index >= count);
 
-            return MemoryExtensions.BinarySearch(self.AsReadOnlySpan(), item, comparer);
+            var result = MemoryExtensions.BinarySearch(
+                  self.AsReadOnlySpan().Slice(index, count)
+                , item
+                , comparer
+            );
+            return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -317,7 +345,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
-            return IndexOf(ref self, item, index, self._count);
+            return IndexOf(ref self, item, index, self._count - index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -331,12 +359,9 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  index + count <= self._count
-                , "index and count do not specify a valid section in the StatelessList<TProvider, TBuffer, T>"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfSectionIsWithinList(index + count <= self._count);
 
             var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
             return result < 0 ? result : result + index;
@@ -364,7 +389,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
-            return IndexOf(ref self, in item, index, self._count);
+            return IndexOf(ref self, in item, index, self._count - index);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -378,12 +403,9 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(
-                  index + count <= self._count
-                , "index and count do not specify a valid section in the StatelessList<TProvider, TBuffer, T>"
-            );
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfSectionIsWithinList(index + count <= self._count);
 
             var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
             return result < 0 ? result : result + index;
@@ -438,12 +460,77 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
-            Checks.IsTrue(index >= 0, "'index' must be non-negative number");
-            Checks.IsTrue(count >= 0, "'count' must be non-negative number");
-            Checks.IsTrue(self._count - index >= count, "Invalid offset length");
+            ThrowIfIndexIsNonNegative(index >= 0);
+            ThrowIfCountIsNonNegative(count >= 0);
+            ThrowIfOffsetLengthIsValid(self._count - index >= count);
 
             self._version++;
             ArraySortHelper<T, TComparer>.Sort(self.AsSpan().Slice(index, count), comparer);
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index must be non-negative.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfCountIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Count must be non-negative.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRangeIsWithinList([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index and count do not denote a valid range in ListProxy<TProvider, TBuffer, T>.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSectionIsWithinList([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Index and count do not specify a valid section in ListProxy<TProvider, TBuffer, T>.");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfOffsetLengthIsValid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Offset and length do not specify a valid range.");
         }
     }
 }

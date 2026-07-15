@@ -9,17 +9,27 @@ namespace EncosyTower.Collections.Unsafe
     public static class EncosyNativeListExtensionsUnsafe
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>Caller must keep the native list alive and provide an index within its bounds.</safety>
         public static unsafe ref T ElementAsUnsafeRefRW<T>(this NativeList<T> list, int index)
             where T : unmanaged
         {
-            return ref UnsafeUtility.ArrayElementAsRef<T>(list.GetUnsafePtr(), index);
+            // SAFETY: Caller owns the list lifetime and supplies a valid element index.
+            unsafe
+            {
+                return ref UnsafeUtility.ArrayElementAsRef<T>(list.GetUnsafePtr(), index);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>Caller must keep the native list alive and provide an index within its bounds.</safety>
         public static unsafe ref readonly T ElementAsUnsafeRefRO<T>(this NativeList<T> list, int index)
             where T : unmanaged
         {
-            return ref UnsafeUtility.ArrayElementAsRef<T>(list.GetUnsafeReadOnlyPtr(), index);
+            // SAFETY: Caller owns the list lifetime and supplies a valid element index.
+            unsafe
+            {
+                return ref UnsafeUtility.ArrayElementAsRef<T>(list.GetUnsafeReadOnlyPtr(), index);
+            }
         }
     }
 }

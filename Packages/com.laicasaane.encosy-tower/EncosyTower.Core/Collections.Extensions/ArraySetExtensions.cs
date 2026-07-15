@@ -10,11 +10,4 @@ namespace EncosyTower.Collections
         public static Span<T> GetItems<T>([NotNull] this ArraySet<T> self)
             => self._values.AsSpan()[..self._freeValueCellIndex];
     }
-
-    public static class ArraySetReadOnlyExtensions
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<T> GetItems<T>([NotNull] this ArraySet<T>.ReadOnly self)
-            => self._set._values.AsReadOnlySpan()[..self._set._freeValueCellIndex];
-    }
 }

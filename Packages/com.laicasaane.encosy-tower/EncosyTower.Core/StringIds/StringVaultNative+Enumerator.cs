@@ -1,11 +1,8 @@
-#if UNITY_COLLECTIONS && UNITY_MATHEMATICS
-
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
-using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.StringIds
 {
@@ -13,76 +10,112 @@ namespace EncosyTower.StringIds
     {
         public struct Enumerator : IEnumerator<UnmanagedString>
         {
-            private readonly NativeArray<Range>.ReadOnly _ranges;
-            private readonly NativeArray<byte>.ReadOnly _buffer;
+            [NativeDisableUnsafePtrRestriction]
+            private readonly unsafe StringVaultUnsafe* _data;
 
-            private Range _current;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            private readonly AtomicSafetyHandle _safety;
+#endif
+
+            private System.Range _current;
             private int _index;
 
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal Enumerator(
-                  NativeArray<Range>.ReadOnly ranges
-                , NativeArray<byte>.ReadOnly buffer
-            )
+            internal unsafe Enumerator(StringVaultUnsafe* data, AtomicSafetyHandle safety)
             {
-                _ranges = ranges;
-                _buffer = buffer;
+                // SAFETY: The enumerator borrows a live vault header from its owning container.
+                unsafe
+                {
+                    _data = data;
+                }
+                _safety = safety;
                 _current = default;
                 _index = 0;
             }
+#else
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal unsafe Enumerator(StringVaultUnsafe* data)
+            {
+                // SAFETY: The enumerator borrows a live vault header from its owning container.
+                unsafe
+                {
+                    _data = data;
+                }
+                _current = default;
+                _index = 0;
+            }
+#endif
 
             public bool MoveNext()
             {
-                var ranges = _ranges;
+                CheckRead();
 
-                if (((uint)_index < (uint)ranges.Length))
+                // SAFETY: CheckRead validates the owner and the enumerator bounds its index before reading the vault.
+                unsafe
                 {
-                    _current = ranges[_index];
-                    _index++;
-                    return true;
+                    if ((uint)_index < (uint)_data->_count)
+                    {
+                        _current = _data->_stringRanges[_index++];
+                        return true;
+                    }
+
+                    _index = _data->_count + 1;
+                    _current = default;
+                    return false;
                 }
-
-                return MoveNextRare();
-            }
-
-            private bool MoveNextRare()
-            {
-                _index = _ranges.Length + 1;
-                _current = default;
-                return false;
             }
 
             public readonly UnmanagedString Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => UnmanagedString.FromBufferAt(_current, _buffer).GetValueOrThrow();
+                get
+                {
+                    CheckRead();
+                    // SAFETY: CheckRead validates the owner and the current range was produced by MoveNext.
+                    unsafe
+                    {
+                        return UnmanagedString.FromBufferAt(
+                              _current
+                            , _data->_stringBuffer.AsReadOnlySpan()[.._data->_stringBufferLength]
+                        ).GetValueOrThrow();
+                    }
+                }
             }
 
             public void Reset()
             {
+                CheckRead();
                 _index = 0;
                 _current = default;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly void Dispose()
-            {
-            }
+            public readonly void Dispose() { }
 
             readonly object IEnumerator.Current
             {
                 get
                 {
-                    if (_index == 0 || _index == _ranges.Length + 1)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException_EnumOpCantHappen();
-                    }
+                    CheckRead();
 
-                    return Current;
+                    // SAFETY: CheckRead validates the owner before reading the enumerator's live vault header.
+                    unsafe
+                    {
+                        ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _data->_count + 1);
+
+                        return Current;
+                    }
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private readonly void CheckRead()
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                AtomicSafetyHandle.CheckReadAndThrow(_safety);
+#endif
             }
         }
     }
 }
-
-#endif

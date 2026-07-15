@@ -1,6 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -43,10 +49,7 @@ namespace EncosyTower.Collections
 
         private bool MoveNextRare()
         {
-            if (_version != _list._version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-            }
+            ThrowHelper.ThrowIfCollectionWasModified(_version == _list._version);
 
             _index = _list._count + 1;
             _current = default;
@@ -61,10 +64,7 @@ namespace EncosyTower.Collections
 
         public void Reset()
         {
-            if (_version != _list._version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-            }
+            ThrowHelper.ThrowIfCollectionWasModified(_version == _list._version);
 
             _index = 0;
             _current = default;
@@ -74,10 +74,7 @@ namespace EncosyTower.Collections
         {
             get
             {
-                if (_index == 0 || _index == _list._count + 1)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumOpCantHappen();
-                }
+                ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _list._count + 1);
 
                 return Current;
             }

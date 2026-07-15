@@ -5,34 +5,34 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Collections.Unsafe
 {
-    public static class NativeArrayUnsafe
-    {
-        /// <summary>
-        /// Convert an existing <see cref="Span{T}"/> to a NativeArray.
-        /// </summary>
-        public static NativeArray<T> ConvertFrom<T>(Span<T> source, Allocator allocator)
-            where T : unmanaged
-        {
-            return NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray(source, allocator);
-        }
-    }
-
     public static class EncosyNativeArrayExtensionsUnsafe
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>Caller must keep the native array alive and provide an index within its bounds.</safety>
         public static unsafe ref T ElementAsUnsafeRefRW<T>(this NativeArray<T> array, int index)
             where T : struct
         {
-            return ref UnsafeUtility.ArrayElementAsRef<T>(array.GetUnsafePtr(), index);
+            // SAFETY: Caller owns the array lifetime and supplies a valid element index.
+            unsafe
+            {
+                return ref UnsafeUtility.ArrayElementAsRef<T>(array.GetUnsafePtr(), index);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>Caller must keep the native array alive and provide an index within its bounds.</safety>
         public static unsafe ref readonly T ElementAsUnsafeRefRO<T>(this NativeArray<T> array, int index)
             where T : struct
         {
-            return ref UnsafeUtility.ArrayElementAsRef<T>(array.GetUnsafeReadOnlyPtr(), index);
+            // SAFETY: Caller owns the array lifetime and supplies a valid element index.
+            unsafe
+            {
+                return ref UnsafeUtility.ArrayElementAsRef<T>(array.GetUnsafeReadOnlyPtr(), index);
+            }
         }
 
+        /// <safety>sourceIndex, destinationIndex, and length must describe valid ranges within
+        /// the live native array.</safety>
         public static unsafe void MemoryCopyUnsafe<T>(
               this NativeArray<T> array
             , int sourceIndex
@@ -41,53 +41,71 @@ namespace EncosyTower.Collections.Unsafe
         )
             where T : struct
         {
-            var sizeOf = UnsafeUtility.SizeOf<T>();
-            var ptr = (IntPtr)array.GetUnsafePtr();
+            // SAFETY: Caller supplies valid source/destination ranges within the live native array.
+            unsafe
+            {
+                var sizeOf = UnsafeUtility.SizeOf<T>();
+                var ptr = (IntPtr)array.GetUnsafePtr();
 
-            Buffer.MemoryCopy(
-                  (void*)(ptr + sourceIndex * sizeOf)
-                , (void*)(ptr + destinationIndex * sizeOf)
-                , (long)(array.Length - destinationIndex) * sizeOf
-                , (long)length * sizeOf
-            );
+                Buffer.MemoryCopy(
+                      (void*)(ptr + sourceIndex * sizeOf)
+                    , (void*)(ptr + destinationIndex * sizeOf)
+                    , (long)(array.Length - destinationIndex) * sizeOf
+                    , (long)length * sizeOf
+                );
+            }
         }
 
+        /// <safety>Both arrays must be live and the source/destination ranges must be valid for
+        /// length elements.</safety>
         public static unsafe void MemoryCopyUnsafe<T>(
               this NativeArray<T> source
             , int sourceIndex
             , NativeArray<T> destination
             , int destinationIndex
             , int length
-        ) where T : struct
+        )
+            where T : struct
         {
-            var sizeOfT = UnsafeUtility.SizeOf<T>();
-            var dstPtr = (IntPtr)destination.GetUnsafePtr();
-            var srcPtr = (IntPtr)source.GetUnsafePtr();
+            // SAFETY: Caller supplies valid source/destination ranges within the live native arrays.
+            unsafe
+            {
+                var sizeOfT = UnsafeUtility.SizeOf<T>();
+                var dstPtr = (IntPtr)destination.GetUnsafePtr();
+                var srcPtr = (IntPtr)source.GetUnsafePtr();
 
-            UnsafeUtility.MemCpy(
-                  destination: (void*)(dstPtr + destinationIndex * sizeOfT)
-                , source: (void*)(srcPtr + sourceIndex * sizeOfT)
-                , size: length * sizeOfT
-            );
+                UnsafeUtility.MemCpy(
+                      destination: (void*)(dstPtr + destinationIndex * sizeOfT)
+                    , source: (void*)(srcPtr + sourceIndex * sizeOfT)
+                    , size: length * sizeOfT
+                );
+            }
         }
 
+        /// <safety>Both arrays must be live and the source/destination ranges must be valid;
+        /// this overload skips Unity checks.</safety>
         public static unsafe void MemoryCopyUnsafeWithoutChecks<T>(
               this NativeArray<T> source
             , int sourceIndex
             , NativeArray<T> destination
             , int destinationIndex
             , int length
-        ) where T : struct
+        )
+            where T : struct
         {
-            var sizeOfT = UnsafeUtility.SizeOf<T>();
-            var srcPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(source);
-            var dstPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(destination);
+            // SAFETY: This intentionally skips Unity checks; caller must provide valid ranges and live arrays.
+            unsafe
+            {
+                var sizeOfT = UnsafeUtility.SizeOf<T>();
+                var srcPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(source);
+                var dstPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(destination);
 
-            UnsafeUtility.MemCpy(
-                  destination: (void*)(dstPtr + destinationIndex * sizeOfT)
-                , source: (void*)(srcPtr + sourceIndex * sizeOfT)
-                , size: length * sizeOfT
-            );
+                UnsafeUtility.MemCpy(
+                      destination: (void*)(dstPtr + destinationIndex * sizeOfT)
+                    , source: (void*)(srcPtr + sourceIndex * sizeOfT)
+                    , size: length * sizeOfT
+                );
+            }
         }
     }
 }

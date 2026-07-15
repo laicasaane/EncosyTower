@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -19,7 +25,7 @@ namespace EncosyTower.Collections
             {
                 _list = list;
                 _index = 0;
-                _version = list._version[0];
+                _version = list.Version;
                 _current = default;
             }
 
@@ -29,7 +35,7 @@ namespace EncosyTower.Collections
 
                 if (_version == localList.Version && ((uint)_index < (uint)localList.Count))
                 {
-                    _current = localList._buffer[_index];
+                    _current = localList[_index];
                     _index++;
                     return true;
                 }
@@ -39,10 +45,7 @@ namespace EncosyTower.Collections
 
             private bool MoveNextRare()
             {
-                if (_version != _list.Version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-                }
+                ThrowHelper.ThrowIfCollectionWasModified(_version == _list.Version);
 
                 _index = _list.Count + 1;
                 _current = default;
@@ -57,10 +60,7 @@ namespace EncosyTower.Collections
 
             public void Reset()
             {
-                if (_version != _list.Version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumFailedVersion();
-                }
+                ThrowHelper.ThrowIfCollectionWasModified(_version == _list.Version);
 
                 _index = 0;
                 _current = default;
@@ -75,10 +75,7 @@ namespace EncosyTower.Collections
             {
                 get
                 {
-                    if (_index == 0 || _index == _list.Count + 1)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException_EnumOpCantHappen();
-                    }
+                    ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _list.Count + 1);
 
                     return Current;
                 }

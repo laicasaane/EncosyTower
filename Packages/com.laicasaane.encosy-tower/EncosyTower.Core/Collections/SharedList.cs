@@ -1,10 +1,19 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Collections.Unsafe;
 using EncosyTower.Debugging;
 using Unity.Collections;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -66,11 +75,17 @@ namespace EncosyTower.Collections
         internal SharedReference<int> _count;
         internal SharedReference<int> _version;
 
+        // Native views share this live header but copy the buffer's safety handle.
+        // Resize releases that handle, invalidating older checked views; views created
+        // afterward use the refreshed pointer/capacity and the new owner handle.
+        internal unsafe SharedListUnsafe<TNative>* _nativeData;
+
         public SharedList()
         {
             _buffer = new(0);
             _count = new(0);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList(int capacity)
@@ -78,6 +93,7 @@ namespace EncosyTower.Collections
             _buffer = new(capacity);
             _count = new(0);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList([NotNull] params T[] source)
@@ -85,6 +101,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Length);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList(in ArraySegment<T> source)
@@ -92,6 +109,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Count);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList(in ReadOnlySpan<T> source)
@@ -99,6 +117,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Length);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList([NotNull] ICollection<T> source)
@@ -106,6 +125,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Count);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList([NotNull] ICollection<T> source, int extraSize)
@@ -113,6 +133,7 @@ namespace EncosyTower.Collections
             _buffer = new(source, extraSize);
             _count = new(source.Count);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList(in NativeArray<TNative> source)
@@ -120,6 +141,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Length);
             _version = new(0);
+            InitializeNativeData();
         }
 
         public SharedList(in NativeSlice<TNative> source)
@@ -127,6 +149,7 @@ namespace EncosyTower.Collections
             _buffer = new(source);
             _count = new(source.Length);
             _version = new(0);
+            InitializeNativeData();
         }
 
         ~SharedList()
@@ -146,21 +169,22 @@ namespace EncosyTower.Collections
             get => _buffer.Length;
         }
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly
+            => false;
 
         public T this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Checks.IsTrue((uint)index < (uint)_count.ValueRO, "index is outside the range of valid indices for the SharedList<T>");
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
                 return _buffer.AsReadOnlySpan()[index];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                Checks.IsTrue((uint)index < (uint)_count.ValueRO, "index is outside the range of valid indices for the SharedList<T>");
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
                 _version.ValueRW++;
                 _buffer.AsSpan()[index] = value;
             }
@@ -175,6 +199,14 @@ namespace EncosyTower.Collections
             if (_buffer == null)
             {
                 return;
+            }
+
+            // SAFETY: The established ownership and safety checks keep the native storage live
+            // for this pointer dereference.
+            unsafe
+            {
+                SharedListUnsafe<TNative>.Free(_nativeData, Allocator.Persistent);
+                _nativeData = null;
             }
 
             _buffer.Dispose();
@@ -192,14 +224,14 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index)
-            => IndexOf(item, index, _count.ValueRO);
+            => IndexOf(item, index, _count.ValueRO - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index, int count)
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count.ValueRO, "index and count do not specify a valid section in the SharedList<T>");
+            ThrowIfIndexIsNegative(index >= 0);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
             return Array.IndexOf(_buffer, item, index, count);
         }
 
@@ -209,14 +241,14 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index)
-            => IndexOf(in item, index, _count.ValueRO);
+            => IndexOf(in item, index, _count.ValueRO - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index, int count)
         {
-            Checks.IsTrue(index >= 0, "index is less than 0");
-            Checks.IsTrue(count >= 0, "count is less than 0");
-            Checks.IsTrue(index + count <= _count.ValueRO, "index and count do not specify a valid section in the SharedList<T>");
+            ThrowIfIndexIsNegative(index >= 0);
+            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
             return Array.IndexOf(_buffer, item, index, count);
         }
 
@@ -228,7 +260,9 @@ namespace EncosyTower.Collections
             ref var count = ref _count.ValueRW;
 
             if (count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             _buffer.AsSpan()[count++] = item;
         }
@@ -241,7 +275,9 @@ namespace EncosyTower.Collections
             ref var count = ref _count.ValueRW;
 
             if (count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             _buffer.AsSpan()[count++] = item;
         }
@@ -253,10 +289,12 @@ namespace EncosyTower.Collections
 
             ref var count = ref _count.ValueRW;
 
-            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indices for the SharedList<T>");
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)count, ThrowHelper.CollectionType.SharedListWithNative);
 
             if (count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             var buffer = _buffer.AsManagedArray();
             Array.Copy(buffer, index, buffer, index + 1, count - index);
@@ -272,10 +310,12 @@ namespace EncosyTower.Collections
 
             ref var count = ref _count.ValueRW;
 
-            Checks.IsTrue((uint)index <= (uint)count, "index is outside the range of valid indices for the SharedList<T>");
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)count, ThrowHelper.CollectionType.SharedListWithNative);
 
             if (count == _buffer.Length)
+            {
                 AllocateMore();
+            }
 
             var buffer = _buffer.AsManagedArray();
             Array.Copy(buffer, index, buffer, index + 1, count - index);
@@ -287,7 +327,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref T ElementAt(int index)
         {
-            Checks.IsTrue((uint)index < (uint)_count.ValueRO, "index is outside the range of valid indices for the SharedList<T>");
+            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
             return ref _buffer.AsSpan()[index];
         }
 
@@ -299,12 +339,17 @@ namespace EncosyTower.Collections
         {
             _version.ValueRW++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Length - _count.ValueRO < count)
+            {
                 AllocateMore(checked(_count.ValueRO + count));
+            }
 
-            items.AsSpan().CopyTo(_buffer.AsSpan().Slice(_count.ValueRO, count));
+            items.AsSpan()[..count].CopyTo(_buffer.AsSpan().Slice(_count.ValueRO, count));
             _count.ValueRW += count;
         }
 
@@ -316,10 +361,15 @@ namespace EncosyTower.Collections
         {
             _version.ValueRW++;
 
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
 
             if (_buffer.Length - _count.ValueRO < count)
+            {
                 AllocateMore(checked(_count.ValueRO + count));
+            }
 
             items[..count].CopyTo(_buffer.AsSpan().Slice(_count.ValueRO, count));
             _count.ValueRW += count;
@@ -441,19 +491,20 @@ namespace EncosyTower.Collections
             => new(AsReadOnly());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
             => IncreaseCapacityTo(_buffer.Length + amount);
 
-        public void IncreaseCapacityTo(int newCapacity)
+        public int IncreaseCapacityTo(int newCapacity)
         {
             _version.ValueRW++;
 
             if (newCapacity <= _buffer.Length)
             {
-                return;
+                return _buffer.Length;
             }
 
-            _buffer.Resize(newCapacity);
+            ResizeBuffer(newCapacity);
+            return _buffer.Length;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -489,7 +540,9 @@ namespace EncosyTower.Collections
             var index = IndexOf(item);
 
             if ((uint)index >= (uint)_count.ValueRO)
+            {
                 return false;
+            }
 
             if (index < --_count.ValueRW)
             {
@@ -511,7 +564,9 @@ namespace EncosyTower.Collections
             var index = IndexOf(item);
 
             if ((uint)index >= (uint)_count.ValueRO)
+            {
                 return false;
+            }
 
             if (index < --_count.ValueRW)
             {
@@ -528,9 +583,9 @@ namespace EncosyTower.Collections
 
         public void RemoveAt(int index)
         {
-            _version.ValueRW++;
+            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count.ValueRO);
 
-            Checks.IsTrue((uint)index < (uint)_count.ValueRO, "out of bound index");
+            _version.ValueRW++;
 
             if (index < --_count.ValueRW)
             {
@@ -541,15 +596,15 @@ namespace EncosyTower.Collections
 
         public void RemoveRange(int startIndex, int length)
         {
-            _version.ValueRW++;
-
             var count = _count.ValueRO;
 
-            Checks.IsTrue((uint)startIndex < (uint)count, "out of bound start index");
+            ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
 
             var end = startIndex + length;
 
-            Checks.IsTrue((uint)end <= (uint)count, "out of bound length");
+            ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
+
+            _version.ValueRW++;
 
             if (length < 1)
             {
@@ -565,9 +620,9 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            _version.ValueRW++;
+            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count.ValueRO);
 
-            Checks.IsTrue((uint)index < (uint)_count.ValueRO, "out of bound index");
+            _version.ValueRW++;
 
             if (index < --_count.ValueRW)
             {
@@ -602,7 +657,7 @@ namespace EncosyTower.Collections
 
             if (_count.ValueRO < _buffer.Length)
             {
-                _buffer.Resize(_count.ValueRO);
+                ResizeBuffer(_count.ValueRO);
             }
         }
 
@@ -685,23 +740,176 @@ namespace EncosyTower.Collections
         internal static int CalcNewCapacity(int newSize)
         {
             newSize = Math.Max(4, newSize);
-            return ((int)Math.Ceiling(newSize * 1.5f) / 4) * 4;
+            return checked(((int)Math.Ceiling(newSize * 1.5f) / 4) * 4);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore()
         {
             var newCapacity = CalcNewCapacity(_buffer.Length + 1);
-            _buffer.Resize(newCapacity);
+            ResizeBuffer(newCapacity);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore(int newSize)
         {
-            Checks.IsTrue(newSize > _buffer.Length, "newSize is not greater than the current capacity");
+            ThrowHelper.ThrowIfNewCapacityIsInvalid(newSize > _buffer.Length);
 
             var newCapacity = CalcNewCapacity(newSize);
+            ResizeBuffer(newCapacity);
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indices for the SharedList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is less than 0");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
+        {
+            if (isNonNegative == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("count is less than 0");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index and count do not specify a valid section in the SharedList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("index is outside the range of valid indices for the SharedList<T>");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound start index");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+        {
+            if (isWithinRange == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("out of bound length");
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
+        {
+            if (exceedsCapacity == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("newSize is not greater than the current capacity");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InitializeNativeData()
+        {
+            // SAFETY: The managed buffer and shared counters remain pinned for the native view lifetime.
+            unsafe
+            {
+                _nativeData = SharedListUnsafe<TNative>.Alloc(
+                      _buffer.GetUnsafeBufferPointer()
+                    , _buffer.Length
+                    , _count.GetUnsafeBufferPointer()
+                    , _version.GetUnsafeBufferPointer()
+                    , Allocator.Persistent
+                );
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RefreshNativeData()
+        {
+            // SAFETY: The shared native header is live and all pointers are refreshed from still-owned storage.
+            unsafe
+            {
+                _nativeData->_buffer = _buffer.GetUnsafeBufferPointer();
+                _nativeData->_capacity = _buffer.Length;
+                _nativeData->_count = _count.GetUnsafeBufferPointer();
+                _nativeData->_version = _version.GetUnsafeBufferPointer();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ResizeBuffer(int newCapacity)
+        {
             _buffer.Resize(newCapacity);
+            RefreshNativeData();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

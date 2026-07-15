@@ -102,7 +102,7 @@ namespace EncosyTower.Collections
                 return false;
             }
 
-            return source[..length].TryCopyTo(dest);
+            return source[..length].TryCopyTo(dest._span);
         }
     }
 }

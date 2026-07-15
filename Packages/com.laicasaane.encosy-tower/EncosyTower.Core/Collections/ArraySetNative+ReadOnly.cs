@@ -1,4 +1,3 @@
-#if UNITY_COLLECTIONS
 #if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
 #else
@@ -9,11 +8,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using EncosyTower.Buffers;
-using EncosyTower.Collections.Extensions;
+using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Collections
 {
@@ -25,53 +24,135 @@ namespace EncosyTower.Collections
 
         public readonly struct ReadOnly : IIsCreated, IHasCount, IHasCapacity
         {
-            internal readonly NativeBuffer<ArrayMapNode<T>>.ReadOnly _valuesInfo;
-            internal readonly NativeBuffer<T>.ReadOnly _values;
-            internal readonly NativeBuffer<int>.ReadOnly _buckets;
+#pragma warning disable IDE1006 // Naming Styles
+            [NativeDisableUnsafePtrRestriction]
+            internal readonly unsafe ArraySetUnsafe<T>* m_Data;
 
-            internal readonly NativeReference<ulong>.ReadOnly _fastModBucketsMultiplier;
-            internal readonly NativeReference<uint>.ReadOnly _collisions;
-            internal readonly NativeReference<int>.ReadOnly _freeValueCellIndex;
-            internal readonly NativeReference<int>.ReadOnly _version;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            internal readonly AtomicSafetyHandle m_Safety;
 
-            public ReadOnly(ArraySetNative<T> set)
+#if UNITY_BURST
+            private static readonly Unity.Burst.SharedStatic<int> s_SafetyId
+                = Unity.Burst.SharedStatic<int>.GetOrCreate<ReadOnly>();
+#else
+            private static int s_SafetyId;
+#endif
+#endif
+#pragma warning restore IDE1006 // Naming Styles
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal ReadOnly(ArraySetNative<T> set)
             {
-                _valuesInfo = set._valuesInfo.AsReadOnly();
-                _values = set._values.AsReadOnly();
-                _buckets = set._buckets.AsReadOnly();
-                _freeValueCellIndex = set._freeValueCellIndex.AsReadOnly();
-                _version = set._version.AsReadOnly();
-                _collisions = set._collisions.AsReadOnly();
-                _fastModBucketsMultiplier = set._fastModBucketsMultiplier.AsReadOnly();
+                // SAFETY: The read-only wrapper copies the validated source set's owned native header pointer.
+                unsafe
+                {
+                    m_Data = set.m_Data;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                m_Safety = set.m_Safety;
+
+                EncosyCollectionSafetyAPI.SetStaticSafetyId<ReadOnly>(
+                      ref m_Safety
+#if UNITY_BURST
+                    , ref s_SafetyId.Data
+#else
+                    , ref s_SafetyId
+#endif
+                );
+#endif
             }
 
             public readonly bool IsCreated
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _valuesInfo.IsCreated && _values.IsCreated && _buckets.IsCreated;
+                get
+                {
+                    // SAFETY: The native view carries the owner's safety handle and only reads its live header.
+                    unsafe
+                    {
+                        return m_Data != null && m_Data->IsCreated;
+                    }
+                }
             }
 
             public readonly int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _values.Capacity;
+                get
+                {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                    AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                    // SAFETY: CheckRead validated the owner before reading the native header.
+                    unsafe
+                    {
+                        return m_Data->Capacity;
+                    }
+                }
             }
 
             public readonly int Count
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _freeValueCellIndex.Value;
+                get
+                {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                    AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                    // SAFETY: CheckRead validated the owner before reading the native header.
+                    unsafe
+                    {
+                        return m_Data->Count;
+                    }
+                }
             }
 
             public readonly NativeSliceReadOnly<T> Items
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _values.AsNativeSliceReadOnly().Slice(0, _freeValueCellIndex.Value);
+                get
+                {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                    AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                    // SAFETY: CheckRead validated the owner and the native values buffer is live for this view.
+                    unsafe
+                    {
+                        return new NativeSlice<T>(ItemsNativeArray(), 0, m_Data->Count);
+                    }
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private readonly NativeArray<T> ItemsNativeArray()
+            {
+                // SAFETY: CheckRead is performed by every public caller; the view is bounded by
+                // the native set capacity.
+                unsafe
+                {
+                    var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(
+                          m_Data->_values.GetUnsafePtr()
+                        , m_Data->Capacity
+                        , Allocator.None
+                    );
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                    NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, m_Safety);
+#endif
+
+                    return array;
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly ArraySetNativeReadOnlyEnumerator<T> GetEnumerator()
-                => new(this);
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                return new(this);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(Span<T> destination)
@@ -107,44 +188,64 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool Contains(T value)
-                => TryFindIndex(value, out _);
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                // SAFETY: CheckRead validated the owner before forwarding to the native set.
+                unsafe
+                {
+                    return m_Data->Contains(value);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public readonly bool Contains(in T value)
-                => TryFindIndex(value, out _);
-
-            //I store all the index with an offset + 1, so that in the bucket list 0 means actually not existing.
-            //When read the offset must be offset by -1 again to be the real one. In this way
-            //I avoid to initialize the array to -1
-
-            //WARNING this method must stay stateless (not relying on states that can change, it's ok to read
-            //constant states) because it will be used in multithreaded parallel code
-            private readonly bool TryFindIndex(in T value, out int index)
             {
-                Checks.IsTrue(_buckets.Capacity > 0, "Map arrays are not correctly initialized (0 size)");
-
-                var hash = value.GetHashCode();
-                var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Capacity, _fastModBucketsMultiplier.Value);
-                var valueIndex = _buckets[bucketIndex] - 1;
-
-                //even if we found an existing value we need to be sure it's the one we requested
-                while (valueIndex != -1)
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                // SAFETY: CheckRead validated the owner before forwarding to the native set.
+                unsafe
                 {
-                    //Comparer<T>.default needs to create a new comparer, so it is much slower
-                    //than assuming that Equals is implemented through IEquatable
-                    ref readonly var node = ref _valuesInfo[valueIndex];
-                    if (node._hashcode == hash && node.key.Equals(value))
-                    {
-                        //this is the one
-                        index = valueIndex;
-                        return true;
-                    }
-
-                    valueIndex = node._previous;
+                    return m_Data->Contains(in value);
                 }
+            }
 
-                index = 0;
-                return false;
+            internal readonly int UncheckedVersion
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get
+                {
+                    // SAFETY: Internal callers use the native view while its owner is alive.
+                    unsafe
+                    {
+                        return m_Data->_version;
+                    }
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal readonly T ValueAt(int index)
+            {
+                // SAFETY: Enumerator validation keeps the index within the live set values buffer.
+                unsafe
+                {
+                    return m_Data->_values[index];
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal readonly ReadOnlySpan<T> AsValuesReadOnlySpan()
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+                AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+                // SAFETY: CheckRead validated the owner and the slice is bounded by the set count.
+                unsafe
+                {
+                    return m_Data->_values.AsReadOnlySpan()[..m_Data->Count];
+                }
             }
         }
     }
@@ -153,10 +254,7 @@ namespace EncosyTower.Collections
         where T : unmanaged, IEquatable<T>
     {
         private readonly ArraySetNative<T>.ReadOnly _set;
-
-#if __ENCOSY_VALIDATION__
         private readonly int _version;
-#endif
 
         private int _index;
 
@@ -164,10 +262,7 @@ namespace EncosyTower.Collections
         {
             _set = set;
             _index = -1;
-
-#if __ENCOSY_VALIDATION__
-            _version = set._version.Value;
-#endif
+            _version = set.UncheckedVersion;
         }
 
         public readonly bool IsValid
@@ -179,17 +274,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-#if __ENCOSY_VALIDATION__
-            if (IsValid == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-            }
-
-            if (_version != _set._version.Value)
-            {
-                ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Set();
-            }
-#endif
+            ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+            ThrowHelper.ThrowIfSetIsBeingIterated(_version == _set.UncheckedVersion);
 
             if (_index < _set.Count - 1)
             {
@@ -203,7 +289,7 @@ namespace EncosyTower.Collections
         public readonly T Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _set._valuesInfo[_index].key;
+            get => _set.ValueAt(_index);
         }
 
         readonly object IEnumerator.Current
@@ -219,8 +305,8 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Dispose() { }
+        public readonly void Dispose()
+        {
+        }
     }
 }
-
-#endif

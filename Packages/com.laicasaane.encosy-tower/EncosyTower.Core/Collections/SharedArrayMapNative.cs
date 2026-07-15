@@ -10,90 +10,173 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Debugging;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Collections
 {
     partial class SharedArrayMap<TKey, TValue, TValueNative>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedArrayMapNative<TKey, TValueNative> AsNative()
-            => new(
-                  _valuesInfo.AsNativeArray()
-                , _values.AsNativeArray()
-                , _buckets.AsNativeArray()
-                , _fastModBucketsMultiplier.AsNativeArray()
-                , _collisions.AsNativeArray()
-                , _freeValueCellIndex.AsNativeArray()
-                , _version.AsNativeArray()
-            );
+        /// <safety>The returned native view borrows the shared map allocation and must not outlive the map.</safety>
+        public unsafe SharedArrayMapNative<TKey, TValueNative> AsNative()
+        {
+            // SAFETY: The returned native view borrows the shared map's live header and safety handle.
+            unsafe
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                return new(_nativeData, _values.GetSafetyHandle());
+#else
+                return new(_nativeData);
+#endif
+            }
+        }
     }
 
     /// <summary>
-    /// This map has been created for just one reason: I needed a map that would have let me iterate
-    /// over the values as an array, directly, without generating one or using an iterator.
-    /// For this goal is N times faster than the standard Dictionary. This map is also faster than
-    /// the standard Dictionary for most of the operations, but the difference is negligible. The only slower operation
-    /// is resizing the memory on add, as this implementation needs to use two separate arrays compared to the standard
-    /// one.
+    /// A dictionary that stores its values in a contiguous array, so the values
+    /// can be iterated directly as an array, without an enumerator.
+    /// Most operations perform on par with <see cref="Dictionary{TKey, TValue}"/>.
+    /// <br/>
+    /// This is the native view over the storage of a
+    /// <see cref="SharedArrayMap{TKey, TValue, TValueNative}"/>, usable in Burst and jobs.
     /// </summary>
     /// <remarks>
-    /// <para>SharedArrayMapNative is not thread safe. A thread safe version should take care of possible setting of
-    /// value with shared hash hence bucket list index.</para>
-    /// <para>The capacity of SharedArrayMapNative is immutable, cannot change.</para>
+    /// <para>Not thread-safe.</para>
+    /// <para>The capacity is fixed; only the owning
+    /// <see cref="SharedArrayMap{TKey, TValue, TValueNative}"/> can grow the storage.</para>
     /// </remarks>
+    [StructLayout(LayoutKind.Sequential)]
+    [NativeContainer]
     public readonly partial struct SharedArrayMapNative<TKey, TValue> : IClearable, IHasCapacity
         , IHasCount, ITryGetValue<TKey, TValue>, IIsCreated
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {
-        internal readonly NativeArray<ArrayMapNode<TKey>> _valuesInfo;
-        internal readonly NativeArray<TValue> _values;
-        internal readonly NativeArray<int> _buckets;
+#pragma warning disable IDE1006 // Naming Styles
+        [NativeDisableUnsafePtrRestriction]
+        internal readonly unsafe SharedArrayMapUnsafe<TKey, TValue>* m_Data;
 
-        internal readonly NativeArray<ulong> _fastModBucketsMultiplier;
-        internal readonly NativeArray<uint> _collisions;
-        internal readonly NativeArray<int> _freeValueCellIndex;
-        internal readonly NativeArray<int> _version;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        internal readonly AtomicSafetyHandle m_Safety;
+#endif
+#pragma warning restore IDE1006 // Naming Styles
 
-        internal SharedArrayMapNative(
-              NativeArray<ArrayMapNode<TKey>> valuesInfo
-            , NativeArray<TValue> values
-            , NativeArray<int> buckets
-            , NativeArray<ulong> fastModBucketsMultiplier
-            , NativeArray<uint> collisions
-            , NativeArray<int> freeValueCellIndex
-            , NativeArray<int> version
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        internal unsafe SharedArrayMapNative(
+              SharedArrayMapUnsafe<TKey, TValue>* data
+            , AtomicSafetyHandle safety
         )
         {
-            _valuesInfo = valuesInfo;
-            _values = values;
-            _buckets = buckets;
-            _fastModBucketsMultiplier = fastModBucketsMultiplier;
-            _collisions = collisions;
-            _freeValueCellIndex = freeValueCellIndex;
-            _version = version;
+            // SAFETY: The constructor receives a borrowed live header from the owning shared map.
+            unsafe
+            {
+                m_Data = data;
+            }
+            m_Safety = safety;
         }
+#else
+        internal unsafe SharedArrayMapNative(SharedArrayMapUnsafe<TKey, TValue>* data)
+        {
+            // SAFETY: The constructor receives a borrowed live header from the owning shared map.
+            unsafe
+            {
+                m_Data = data;
+            }
+        }
+#endif
+
+#pragma warning disable IDE1006 // Naming Styles
+        internal NativeArray<ArrayMapNode<TKey>> _valuesInfo
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckExists();
+                // SAFETY: CheckExists validates the shared map header and its live values-info storage.
+                unsafe
+                {
+                    return CreateNativeArray(m_Data->_valuesInfo, m_Data->_valuesInfoCapacity);
+                }
+            }
+        }
+
+        internal NativeArray<TValue> _values
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckExists();
+                // SAFETY: CheckExists validates the shared map header and its live values storage.
+                unsafe
+                {
+                    return CreateNativeArray(m_Data->_values, m_Data->_valuesCapacity);
+                }
+            }
+        }
+
+#pragma warning restore IDE1006 // Naming Styles
 
         public bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buckets.IsCreated;
+            get
+            {
+                // SAFETY: Reading the pointer field only observes whether the borrowed header exists.
+                unsafe
+                {
+                    return m_Data != null;
+                }
+            }
         }
 
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _values.Length;
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live map header.
+                unsafe
+                {
+                    return m_Data->Capacity;
+                }
+            }
+        }
+
+        internal int BucketCapacity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live map header.
+                unsafe
+                {
+                    return m_Data->BucketCapacity;
+                }
+            }
         }
 
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _freeValueCellIndex[0];
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live map header.
+                unsafe
+                {
+                    return m_Data->Count;
+                }
+            }
         }
 
         public KeyEnumerable Keys
@@ -105,19 +188,76 @@ namespace EncosyTower.Collections
         public NativeSliceReadOnly<TValue> Values
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _values.Slice(0, _freeValueCellIndex[0]);
-        }
+            get
+            {
+                CheckRead();
 
-        internal ref int VersionRW
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _version.ElementAsUnsafeRefRW(0);
+                // SAFETY: The read check validates the header before attaching its safety handle to the view.
+                unsafe
+                {
+                    return new NativeSliceReadOnly<TValue>(
+                        CreateNativeArray(m_Data->_values, m_Data->Count).Slice()
+                    );
+                }
+            }
         }
 
         internal int Version
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _version[0];
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before reading its version.
+                unsafe
+                {
+                    return m_Data->Version;
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe NativeArray<U> CreateNativeArray<U>(U* pointer, int length)
+            where U : unmanaged
+        {
+            // SAFETY: The caller has checked the shared safety handle and supplies live bounded storage.
+            unsafe
+            {
+                var array = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<U>(
+                      pointer
+                    , length
+                    , Allocator.None
+                );
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref array, m_Safety);
+#endif
+
+                return array;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckExists()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckExistsAndThrow(m_Safety);
+#endif
+        }
+
+        private readonly void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+#endif
+        }
+
+        private readonly void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
+#endif
         }
 
         public TValue this[TKey key]
@@ -125,20 +265,30 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return _values.AsReadOnlySpan()[GetIndex(key)];
+                CheckRead();
+
+                // SAFETY: The read check validates the live header before keyed access.
+                unsafe
+                {
+                    return (*m_Data)[key];
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                AddValue(key, out var index);
+                CheckWrite();
 
-                _values.AsSpan()[index] = value;
+                // SAFETY: The write check validates the live header before keyed mutation.
+                unsafe
+                {
+                    (*m_Data)[key] = value;
+                }
             }
         }
 
         /// <remarks>
-        /// This returns readonly because the enumerator cannot be, but at the same time, it cannot be modified
+        /// The map must not be modified while it is being enumerated.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SharedArrayMapNativeKeyValueEnumerator<TKey, TValue> GetEnumerator()
@@ -147,485 +297,224 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(TKey key, in TValue value)
         {
-            var itemAdded = AddValue(key, out var index);
+            CheckWrite();
 
-#if __ENCOSY_VALIDATION__
-            if (itemAdded == false)
+            // SAFETY: The write check validates the live header before insertion.
+            unsafe
             {
-                ThrowHelper.ThrowInvalidOperationException_KeyPresent();
-            }
-            else
-#else
-            if (itemAdded)
-#endif
-            {
-                _values.AsSpan()[index] = value;
+                m_Data->Add(key, in value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryAdd(TKey key, in TValue value)
         {
-            var itemAdded = AddValue(key, out var index);
+            CheckWrite();
 
-            if (itemAdded)
-                _values.AsSpan()[index] = value;
-
-            return itemAdded;
+            // SAFETY: The write check validates the live header before attempting insertion.
+            unsafe
+            {
+                return m_Data->TryAdd(key, in value);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryAdd(TKey key, in TValue value, out int index)
         {
-            var itemAdded = AddValue(key, out index);
+            CheckWrite();
 
-            if (itemAdded)
-                _values.AsSpan()[index] = value;
-
-            return itemAdded;
+            // SAFETY: The write check validates the live header before attempting indexed insertion.
+            unsafe
+            {
+                return m_Data->TryAdd(key, in value, out index);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            ref var freeValueCellIndex = ref _freeValueCellIndex.AsSpan()[0];
+            CheckWrite();
 
-            if (freeValueCellIndex == 0)
-                return;
+            // SAFETY: The write check validates the live header before clearing it.
+            unsafe
+            {
+                m_Data->Clear();
+            }
+        }
 
-            VersionRW++;
-            freeValueCellIndex = 0;
+        internal void CopyTo(
+              Span<ArrayMapNode<TKey>> valuesInfo
+            , Span<TValue> values
+            , Span<int> buckets
+            , out int count
+            , out uint collisions
+            , out ulong fastModBucketsMultiplier
+        )
+        {
+            CheckRead();
 
-            // Buckets cannot be FastCleared because it's important that the values are reset to 0
-            _buckets.AsSpan().Fill(default);
+            // SAFETY: The read check validates the live header before copying its complete storage state.
+            unsafe
+            {
+                m_Data->CopyTo(
+                      valuesInfo
+                    , values
+                    , buckets
+                    , out count
+                    , out collisions
+                    , out fastModBucketsMultiplier
+                );
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(TKey key)
         {
-            return TryFindIndex(key, out _);
+            CheckRead();
+
+            // SAFETY: The read check validates the live header before lookup.
+            unsafe
+            {
+                return m_Data->ContainsKey(key);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(TKey key, out TValue result)
         {
-            if (TryFindIndex(key, out var findIndex))
-            {
-                result = _values.AsReadOnlySpan()[findIndex];
-                return true;
-            }
+            CheckRead();
 
-            result = default;
-            return false;
+            // SAFETY: The read check validates the live header before value lookup.
+            unsafe
+            {
+                return m_Data->TryGetValue(key, out result);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref TValue GetOrAdd(TKey key)
         {
-            var values = _values.AsSpan();
+            CheckWrite();
 
-            if (TryFindIndex(key, out var findIndex))
+            // SAFETY: The write check validates the live header for the returned mutable reference.
+            unsafe
             {
-                VersionRW++;
-                return ref values[findIndex];
+                return ref m_Data->GetOrAdd(key);
             }
-
-            AddValue(key, out findIndex);
-
-            values[findIndex] = default;
-
-            return ref values[findIndex];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref TValue GetOrAdd(TKey key, out int index)
         {
-            var values = _values.AsSpan();
+            CheckWrite();
 
-            if (TryFindIndex(key, out index))
+            // SAFETY: The write check validates the header for the returned indexed reference.
+            unsafe
             {
-                VersionRW++;
-                return ref values[index];
+                return ref m_Data->GetOrAdd(key, out index);
             }
-
-            AddValue(key, out index);
-
-            return ref values[index];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref TValue GetValueByRef(TKey key)
         {
-            var found = TryFindIndex(key, out var findIndex);
+            CheckWrite();
 
-            // Burst is not able to vectorise code if throw is found, regardless if it's actually ever thrown
-#if __ENCOSY_VALIDATION__
-            if (found == false)
+            // SAFETY: The write check validates the header for the returned mutable reference.
+            unsafe
             {
-                ThrowHelper.ThrowKeyNotFoundException_KeyNotFound();
+                return ref m_Data->GetValueByRef(key);
             }
-#endif
-
-            VersionRW++;
-            return ref _values.AsSpan()[findIndex];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(TKey key)
         {
-            return Remove(key, out _, out _);
+            CheckWrite();
+
+            // SAFETY: The write check validates the live header before removal.
+            unsafe
+            {
+                return m_Data->Remove(key);
+            }
         }
 
         public bool Remove(TKey key, out int index, out TValue value)
         {
-            var buckets = _buckets.AsSpan();
-            var valuesInfo = _valuesInfo.AsSpan();
-            var values = _values.AsSpan();
-            var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsReadOnlySpan()[0];
-            ref var freeValueCellIndex = ref _freeValueCellIndex.AsSpan()[0];
+            CheckWrite();
 
-            var hash = key.GetHashCode();
-            var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, fastModBucketsMultiplier);
-
-            //find the bucket
-            var indexToValueToRemove = buckets[bucketIndex] - 1;
-            var itemAfterCurrentOne = -1;
-
-            //Part one: look for the actual key in the bucket list if found I update the bucket list so that it doesn't
-            //point anymore to the cell to remove
-            while (indexToValueToRemove != -1)
+            // SAFETY: The write check validates the live header before indexed removal.
+            unsafe
             {
-                ref var node = ref valuesInfo[indexToValueToRemove];
-
-                if (node._hashcode == hash && key.Equals(node.key))
-                {
-                    //if the key is found and the bucket points directly to the node to remove
-                    if (buckets[bucketIndex] - 1 == indexToValueToRemove)
-                    {
-                        //the bucket will point to the previous cell. if a previous cell exists
-                        //its next pointer must be updated!
-                        //<--- iteration order
-                        //                      Bucket points always to the last one
-                        //   ------- ------- -------
-                        //   |  1  | |  2  | |  3  | //bucket cannot have next, only previous
-                        //   ------- ------- -------
-                        //--> insert order
-                        buckets[bucketIndex] = node._previous + 1;
-                    }
-                    else //we need to update the previous pointer if it's not the last element that is removed
-                    {
-                        Checks.IsTrue(itemAfterCurrentOne != -1, "This should never happen");
-                        //update the previous pointer of the item after the one to remove with the previous pointer of the item to remove
-                        valuesInfo[itemAfterCurrentOne]._previous = node._previous;
-                    }
-
-                    break; //don't miss this, at this point it must break and not update indexToValueToRemove
-                }
-
-                //a bucket always points to the last element of the list, so if the item is not found we need to iterate backward
-                itemAfterCurrentOne = indexToValueToRemove;
-                indexToValueToRemove = node._previous;
+                return m_Data->Remove(key, out index, out value);
             }
-
-            if (indexToValueToRemove == -1)
-            {
-                index = default;
-                value = default;
-                return false; //not found!
-            }
-
-            VersionRW++;
-            index = indexToValueToRemove; //index is a out variable, for internal use we want to know the index of the element to remove
-
-            freeValueCellIndex--; //one less value to iterate
-            value = values[indexToValueToRemove]; //value is a out variable, we want to know the value of the element to remove
-
-            //Part two:
-            //At this point nodes pointers and buckets are updated, but the _values array
-            //still has got the value to delete. Remember the goal of this map is to be able
-            //to iterate over the values like an array, so the values array must always be up to date
-
-            //if the cell to remove is the last one in the list, we can perform less operations (no swapping needed)
-            //otherwise we want to move the last value cell over the value to remove
-
-            var lastValueCellIndex = freeValueCellIndex;
-
-            if (indexToValueToRemove != lastValueCellIndex)
-            {
-                //we can transfer the last value of both arrays to the index of the value to remove.
-                //in order to do so, we need to be sure that the bucket pointer is updated.
-                //first we find the index in the bucket list of the pointer that points to the cell
-                //to move
-                ref var modeToMove = ref valuesInfo[lastValueCellIndex];
-
-                var movingBucketIndex = (int)Reduce(
-                      (uint)modeToMove._hashcode
-                    , (uint)buckets.Length
-                    , fastModBucketsMultiplier
-                );
-
-                var linkedListIterationIndex = buckets[movingBucketIndex] - 1;
-
-                //if the key is found and the bucket points directly to the node to remove
-                //it must now point to the cell where it's going to be moved (update bucket list first linked list node to iterate from)
-                if (linkedListIterationIndex == lastValueCellIndex)
-                    buckets[movingBucketIndex] = indexToValueToRemove + 1;
-
-                //find the prev element of the last element in the valuesInfo array
-                while (valuesInfo[linkedListIterationIndex]._previous != -1 && valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
-                    linkedListIterationIndex = valuesInfo[linkedListIterationIndex]._previous;
-
-                //if we find any value that has the last value cell as previous, we need to update it to point to the new value index that is going to be replaced
-                if (valuesInfo[linkedListIterationIndex]._previous != -1)
-                    valuesInfo[linkedListIterationIndex]._previous = indexToValueToRemove;
-
-                //finally, actually move the values
-                valuesInfo[indexToValueToRemove] = modeToMove;
-                values[indexToValueToRemove] = values[lastValueCellIndex];
-            }
-
-            return true;
         }
 
-        //I store all the index with an offset + 1, so that in the bucket list 0 means actually not existing.
+        // Indices are stored with an offset of 1 so that 0 represents a missing entry in the bucket list.
         //When read the offset must be offset by -1 again to be the real one. In this way
-        //I avoid to initialize the array to -1
+        // This avoids initializing the array to -1.
 
         //WARNING this method must stay stateless (not relying on states that can change, it's ok to read
         //constant states) because it will be used in multithreaded parallel code
         public bool TryFindIndex(TKey key, out int findIndex)
         {
-            var buckets = _buckets.AsReadOnlySpan();
-            var valuesInfo = _valuesInfo.AsReadOnlySpan();
-            var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsReadOnlySpan()[0];
+            CheckRead();
 
-            Checks.IsTrue(buckets.Length > 0, "Map arrays are not correctly initialized (0 size)");
-
-            var hash = key.GetHashCode();
-            var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, fastModBucketsMultiplier);
-            var valueIndex = buckets[bucketIndex] - 1;
-
-            //even if we found an existing value we need to be sure it's the one we requested
-            while (valueIndex != -1)
+            // SAFETY: The read check validates the live header before lookup.
+            unsafe
             {
-                ref readonly var node = ref valuesInfo[valueIndex];
-
-                if (node._hashcode == hash && key.Equals(node.key))
-                {
-                    //this is the one
-                    findIndex = valueIndex;
-                    return true;
-                }
-
-                valueIndex = node._previous;
+                return m_Data->TryFindIndex(key, out findIndex);
             }
-
-            findIndex = 0;
-            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetIndex(TKey key)
         {
-            var found = TryFindIndex(key, out var findIndex);
+            CheckRead();
 
-            //Burst is not able to vectorise code if throw is found, regardless if it's actually ever thrown
-#if __ENCOSY_VALIDATION__
-            if (found == false)
+            // SAFETY: The read check validates the live header before index lookup.
+            unsafe
             {
-                ThrowHelper.ThrowKeyNotFoundException_KeyNotFound();
+                return m_Data->GetIndex(key);
             }
-#endif
-
-            return findIndex;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Intersect<UValue>(in SharedArrayMapNative<TKey, UValue> otherMapKeys)
             where UValue : unmanaged
         {
-            var keys = _valuesInfo.AsSpan();
+            CheckWrite();
+            otherMapKeys.CheckRead();
 
-            for (var i = Count - 1; i >= 0; i--)
+            // SAFETY: Both safety checks validate the borrowed headers for the cross-map operation.
+            unsafe
             {
-                var tKey = keys[i].key;
-
-                if (otherMapKeys.ContainsKey(tKey) == false)
-                {
-                    Remove(tKey);
-                }
+                m_Data->Intersect(otherMapKeys.m_Data);
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Exclude<UValue, UValueNative>(in SharedArrayMapNative<TKey, UValue> otherMapKeys)
+        public void Exclude<UValue>(in SharedArrayMapNative<TKey, UValue> otherMapKeys)
             where UValue : unmanaged
         {
-            var keys = _valuesInfo.AsSpan();
+            CheckWrite();
+            otherMapKeys.CheckRead();
 
-            for (var i = Count - 1; i >= 0; i--)
+            // SAFETY: Both safety checks validate the borrowed headers for the cross-map operation.
+            unsafe
             {
-                var tKey = keys[i].key;
-
-                if (otherMapKeys.ContainsKey(tKey))
-                {
-                    Remove(tKey);
-                }
+                m_Data->Exclude(otherMapKeys.m_Data);
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Union(in SharedArrayMapNative<TKey, TValue> otherMapKeys)
         {
-            foreach (var other in otherMapKeys)
+            CheckWrite();
+            otherMapKeys.CheckRead();
+
+            // SAFETY: Both safety checks validate the borrowed headers before unioning their contents.
+            unsafe
             {
-                this[other.Key] = other.Value;
+                m_Data->Union(otherMapKeys.m_Data);
             }
-        }
-
-        private bool AddValue(TKey key, out int indexSet)
-        {
-            var valuesInfo = _valuesInfo.AsSpan();
-            var buckets = _buckets.AsSpan();
-            var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsReadOnlySpan()[0];
-            ref var freeValueCellIndex = ref _freeValueCellIndex.AsSpan()[0];
-            ref var collisions = ref _collisions.AsSpan()[0];
-
-            var hash = key.GetHashCode(); //IEquatable doesn't enforce the override of GetHashCode
-            var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, fastModBucketsMultiplier);
-
-            //buckets value -1 means it's empty
-            var valueIndex = buckets[bucketIndex] - 1;
-
-            if (valueIndex == -1)
-            {
-                ResizeIfNeeded();
-                //create the info node at the last position and fill it with the relevant information
-                valuesInfo[freeValueCellIndex] = new ArrayMapNode<TKey>(key, hash);
-            }
-            else //collision or already exists
-            {
-                var currentValueIndex = valueIndex;
-
-                do
-                {
-                    //must check if the key already exists in the map
-                    ref var node = ref valuesInfo[currentValueIndex];
-
-                    if (node._hashcode == hash && key.Equals(node.key))
-                    {
-                        //the key already exists, simply replace the value!
-                        indexSet = currentValueIndex;
-                        return false;
-                    }
-
-                    currentValueIndex = node._previous;
-                } while (currentValueIndex != -1); //-1 means no more values with key with the same hash
-
-                ResizeIfNeeded();
-
-                //oops collision!
-                collisions++;
-
-                //create a new node which previous index points to node currently pointed in the bucket (valueIndex)
-                //_freeValueCellIndex = valueIndex + 1
-                valuesInfo[freeValueCellIndex] = new ArrayMapNode<TKey>(key, hash, valueIndex);
-                //Important: the new node is always the one that will be pointed by the bucket cell
-                //so I can assume that the one pointed by the bucket is always the last value added
-            }
-
-            VersionRW++;
-
-            //item with this bucketIndex will point to the last value created
-            //ToDo: if instead I assume that the original one is the one in the bucket
-            //I wouldn't need to update the bucket here. Small optimization but important
-            buckets[bucketIndex] = freeValueCellIndex + 1;
-
-            indexSet = freeValueCellIndex;
-            freeValueCellIndex++;
-
-            //too many collisions
-            if (collisions > buckets.Length)
-            {
-                if (buckets.Length < 100)
-                    RecomputeBuckets((int)collisions << 1);
-                else
-                    RecomputeBuckets(HashHelpers.ExpandPrime((int)collisions));
-            }
-
-            return true;
-        }
-
-        private void RecomputeBuckets(int newSize)
-        {
-            ResizeBuckets(newSize);
-
-            var valuesInfo = _valuesInfo.AsSpan();
-            var buckets = _buckets.AsSpan();
-
-            ref var collisions = ref _collisions.AsSpan()[0];
-            var bucketsCapacity = (uint)buckets.Length;
-            var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsSpan()[0] = HashHelpers.GetFastModMultiplier(bucketsCapacity);
-
-            //we need to get all the hash code of all the values stored so far and spread them over the new bucket
-            //length
-            var freeValueCellIndex = _freeValueCellIndex.AsSpan()[0];
-
-            for (var newValueIndex = 0; newValueIndex < freeValueCellIndex; ++newValueIndex)
-            {
-                //get the original hash code and find the new bucketIndex due to the new length
-                ref var valueInfoNode = ref valuesInfo[newValueIndex];
-                var bucketIndex = (int)Reduce((uint)valueInfoNode._hashcode, bucketsCapacity, fastModBucketsMultiplier);
-
-                //bucketsIndex can be -1 or a next value. If it's -1 means no collisions. If there is collision,
-                //we create a new node which prev points to the old one. Old one next points to the new one.
-                //the bucket will now points to the new one
-                //In this way we can rebuild the linkedlist.
-                //get the current valueIndex, it's -1 if no collision happens
-                var existingValueIndex = buckets[bucketIndex] - 1;
-
-                //update the bucket index to the index of the current item that share the bucketIndex
-                //(last found is always the one in the bucket)
-                buckets[bucketIndex] = newValueIndex + 1;
-
-                if (existingValueIndex == -1)
-                {
-                    //ok nothing was indexed, the bucket was empty. We need to update the previous
-                    //values of next and previous
-                    valueInfoNode._previous = -1;
-                }
-                else
-                {
-                    //oops a value was already being pointed by this cell in the new bucket list,
-                    //it means there is a collision, problem
-                    collisions++;
-                    //the bucket will point to this value, so
-                    //the previous index will be used as previous for the new value.
-                    valueInfoNode._previous = existingValueIndex;
-                }
-            }
-        }
-
-        private void ResizeBuckets(int newSize)
-        {
-            Checks.IsTrue(newSize == _buckets.Length, "the capacity of SharedArrayMapNative<TKey, TValue> is immutable and cannot change");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ResizeIfNeeded()
-        {
-            Checks.IsTrue(Count != _values.Length, "the capacity of SharedArrayMapNative<TKey, TValue> is immutable and cannot change");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint Reduce(uint hashcode, uint N, ulong fastModBucketsMultiplier)
-        {
-            if (hashcode >= N) //is the condition return actually an optimization?
-                return Environment.Is64BitProcess
-                    ? HashHelpers.FastMod(hashcode, N, fastModBucketsMultiplier)
-                    : hashcode % N;
-
-            return hashcode;
         }
 
         public readonly struct KeyEnumerable
@@ -646,10 +535,7 @@ namespace EncosyTower.Collections
         public struct KeyEnumerator : IIsValid
         {
             private readonly SharedArrayMapNative< TKey, TValue > _map;
-
-#if __ENCOSY_VALIDATION__
             private readonly int _version;
-#endif
 
             private int _index;
 
@@ -658,10 +544,7 @@ namespace EncosyTower.Collections
             {
                 _map = map;
                 _index = -1;
-
-#if __ENCOSY_VALIDATION__
                 _version = map.Version;
-#endif
             }
 
             public readonly bool IsValid
@@ -673,17 +556,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
-#if __ENCOSY_VALIDATION__
-                if (IsValid == false)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-                }
-
-                if (_version != _map.Version)
-                {
-                    ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-                }
-#endif
+                ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+                ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.Version);
 
                 if (_index < _map.Count - 1)
                 {
@@ -708,10 +582,7 @@ namespace EncosyTower.Collections
         where TValue : unmanaged
     {
         private readonly SharedArrayMapNative<TKey, TValue> _map;
-
-#if __ENCOSY_VALIDATION__
         private readonly int _version;
-#endif
 
         private int _index;
 
@@ -719,10 +590,7 @@ namespace EncosyTower.Collections
         {
             _map = map;
             _index = -1;
-
-#if __ENCOSY_VALIDATION__
             _version = map.Version;
-#endif
         }
 
         public readonly bool IsValid
@@ -734,17 +602,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-#if __ENCOSY_VALIDATION__
-            if (IsValid == false)
-            {
-                ThrowHelper.ThrowInvalidOperationException_EnumeratorNotValid();
-            }
-
-            if (_version != _map.Version)
-            {
-                ThrowHelper.ThrowInvalidOperationException_ModifyWhileBeingIterated_Map();
-            }
-#endif
+            ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
+            ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.Version);
 
             if (_index >= _map.Count - 1)
             {
@@ -774,7 +633,9 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Dispose() { }
+        public readonly void Dispose()
+        {
+        }
     }
 
     public readonly struct SharedArrayMapNativeKeyValuePair<TKey, TValue>

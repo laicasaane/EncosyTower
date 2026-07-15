@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -5,6 +11,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
+using EncosyTower.Debugging;
 
 namespace EncosyTower.Collections
 {
@@ -95,12 +102,7 @@ namespace EncosyTower.Collections
             {
                 var found = TryFindIndex(key, out var index);
 
-#if __ENCOSY_VALIDATION__
-                if (found == false)
-                {
-                    ThrowHelper.ThrowKeyNotFoundException_KeyNotFound();
-                }
-#endif
+                ThrowHelper.ThrowIfKeyIsNotFound(found);
 
                 return ref _map._values[index];
             }
@@ -114,7 +116,8 @@ namespace EncosyTower.Collections
                 => _map.FindIndex(key);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator<ArrayMapKeyValuePair<TKey, TValue>> IEnumerable<ArrayMapKeyValuePair<TKey, TValue>>.GetEnumerator()
+            IEnumerator<ArrayMapKeyValuePair<TKey, TValue>>
+                IEnumerable<ArrayMapKeyValuePair<TKey, TValue>>.GetEnumerator()
                 => _map.GetEnumerator();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,10 +1,20 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 
 namespace EncosyTower.Collections
 {
@@ -22,6 +32,11 @@ namespace EncosyTower.Collections
             internal readonly NativeArray<T>.ReadOnly _buffer;
             internal readonly NativeArray<int>.ReadOnly _count;
             internal readonly NativeArray<int>.ReadOnly _version;
+            internal readonly unsafe SharedListUnsafe<TNative>* _nativeData;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            internal readonly AtomicSafetyHandle _nativeSafety;
+#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnly(SharedList<T, TNative> list)
@@ -29,17 +44,39 @@ namespace EncosyTower.Collections
                 _buffer = list._buffer.AsNativeArray().Reinterpret<T>().AsReadOnly();
                 _count = list._count.AsNativeArray().AsReadOnly();
                 _version = list._version.AsNativeArray().AsReadOnly();
+                // SAFETY: The read-only view borrows the live list header without taking ownership.
+                unsafe
+                {
+                    _nativeData = list._nativeData;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                _nativeSafety = list._buffer.GetSafetyHandle();
+#endif
             }
 
-            private ReadOnly(
+            private unsafe ReadOnly(
                   NativeArray<T>.ReadOnly buffer
                 , NativeArray<int>.ReadOnly count
                 , NativeArray<int>.ReadOnly version
+                , SharedListUnsafe<TNative>* nativeData
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                , AtomicSafetyHandle nativeSafety
+#endif
             )
             {
                 _buffer = buffer;
                 _count = count;
                 _version = version;
+                // SAFETY: The constructor receives the live header pointer from its owning list view.
+                unsafe
+                {
+                    _nativeData = nativeData;
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                _nativeSafety = nativeSafety;
+#endif
             }
 
             public static ReadOnly Empty
@@ -66,7 +103,8 @@ namespace EncosyTower.Collections
                 get => _buffer.Length;
             }
 
-            public bool IsReadOnly => true;
+            public bool IsReadOnly
+                => true;
 
             internal int Version
             {
@@ -83,7 +121,7 @@ namespace EncosyTower.Collections
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    Checks.IsTrue((uint)index < (uint)Count, "index is outside the range of valid indices for the SharedList<T>.ReadOnly");
+                    ThrowIfIndexIsOutOfRange((uint)index < (uint)Count);
                     return _buffer.AsReadOnlySpan()[index];
                 }
             }
@@ -144,11 +182,34 @@ namespace EncosyTower.Collections
             public SharedList<U, TNative>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
             {
-                return new SharedList<U, TNative>.ReadOnly(
-                      _buffer.Reinterpret<U>()
-                    , _count
-                    , _version
-                );
+                // SAFETY: The reinterpreted arrays preserve the original allocation and safety-handle lifetime.
+                unsafe
+                {
+                    return new SharedList<U, TNative>.ReadOnly(
+                          _buffer.Reinterpret<U>()
+                        , _count
+                        , _version
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                        , _nativeData
+                        , _nativeSafety
+#else
+                        , _nativeData
+#endif
+                    );
+                }
+            }
+
+            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+            {
+                if (isWithinRange == false)
+                {
+                    throw CreateException();
+                }
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static InvalidOperationException CreateException()
+                    => new("index is outside the range of valid indices for the SharedList<T>.ReadOnly");
             }
 
             IEnumerator<T> IEnumerable<T>.GetEnumerator()
