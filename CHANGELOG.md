@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.7-preview.1
+
+### General
+
+- Added `CODING-CONVENTIONS.md` to document the project coding conventions
+
+### Core
+
+- Added `BufferManaged`, `BufferNative`, and `BufferUnsafe` along with `AllocatorStrategy`
+- Added native and unsafe variants of list, queue, stack, and reference collections (`ListNative`, `QueueNative`, `StackNative`, `ReferenceNative`, and their unsafe counterparts)
+- Added shared collection types: `SharedQueue`, `SharedStack`, `SharedQueueNative`, and `SharedStackNative`
+- Added read-only and unsafe extension methods for the new and existing collection types
+- Added indexer contracts for collection types: `IIndexer<T>`, `IReadOnlyIndexer<T>`, `IRefIndexer<T>`, and `IRefReadOnlyIndexer<T>`
+- Added `ArrayUnsafe`, `ReferenceUnsafe`, and `EncosyMemoryExtensions`
+- Added extension methods for `ArraySetNative` types
+- Added `StringVaultUnsafe` and the `IStringVault` and `IReadOnlyStringVault` interfaces covering both managed and native string vaults
+- Added the `ENCOSY_CLEAR_GLOBAL_STRING_VAULT_ON_ENTER_PLAY_MODE` compilation symbol to clear `GlobalStringVault` on entering Play Mode
+- Added an internal constructor for `NativeSliceReadOnly`
+- Renamed `NativeStringVault` to `StringVaultNative` and its `TryGetString` API to `TryGetUnmanagedString`
+- Renamed `StatelessList` to `ListProxy`, reimplemented it with missing functions, and replaced `ProxiedList` and `IListProxy` with it
+- Unified buffer implementations: merged the strategy types into the buffers, then renamed `ManagedBuffer` and `NativeBuffer` to `BufferManaged` and `BufferNative`
+- Updated validation checks across runtime code to use shared settings via `ThrowHelper`
+- Marked overlapping fields and pointer operations with safe and unsafe guidance for future updates
+- Moved built-in `JsonArrayMap` support to the persistence sample
+- Fixed incorrect extension methods for `SharedList` types
+- Fixed the implementation of unsafe exposed types in the Bcl.Extensions plugins
+- Removed `FixedArray` and `FixedHashMap`
+- Removed the buffer strategy types: `IBufferStrategy`, `ManagedStrategy`, `NativeStrategy`, and `BufferBase`
+
+### SourceGen
+
+- Updated generated code to conform to the "Unsafe Evolution" direction of future C#
+- Rebuilt all source generators for `0.1.7-preview.1`
+- Fixed compilation symbol defines at the top of generated files
+- Fixed a wrong type reference: `HashSetAPI` should be `EncosyHashSetExtenions`
+
+### Entities.Stats
+
+- Updated validation checks to use shared settings and generated overlapping-field guidance for `StatVariant`
+
+### Tests
+
+- Added EditorMode coverage for buffers, collections, extensions, and validation helpers
+- Allowed the test assembly to inspect `EncosyTower.Core` internals
+
+### Samples
+
+- Updated samples
+- Moved `JsonArrayMap` support to the persistence sample
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.7-preview.1`
+- `EncosyTower.SourceGen.*` to `0.1.7-preview.1`
+- `Samples.Data` to `0.1.7-preview.1`
+
 ## 0.1.6-preview.10
 
 ### Core
@@ -86,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `EncosyTower.Formatters` to `0.1.6-preview.8`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.8`
 - `Samples.Data` to `0.1.6-preview.8`
- 
+
 ## 0.1.6-preview.7
 
 ### Core
