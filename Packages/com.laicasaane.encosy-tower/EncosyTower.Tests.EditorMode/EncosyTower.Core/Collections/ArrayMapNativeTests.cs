@@ -636,6 +636,108 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         }
 
         [Test]
+        public void ReadOnly_AllPublicMembersReflectOwner()
+        {
+            using var map = new ArrayMapNative<int, int>(4, Allocator.Temp);
+            map.Add(1, 10);
+            map.Add(2, 20);
+
+            var readOnly = map.AsReadOnly();
+
+            Assert.IsTrue(readOnly.IsCreated);
+            Assert.AreEqual(map.Capacity, readOnly.Capacity);
+            Assert.AreEqual(2, readOnly.Count);
+            Assert.IsTrue(readOnly.Keys.IsValid);
+            Assert.AreEqual(2, readOnly.Values.Length);
+            Assert.AreEqual(10, readOnly.Values[0]);
+            Assert.AreEqual(10, readOnly[1]);
+            Assert.IsTrue(readOnly.ContainsKey(2));
+            Assert.IsFalse(readOnly.ContainsKey(3));
+            Assert.IsTrue(readOnly.TryGetValue(2, out var value));
+            Assert.AreEqual(20, value);
+            Assert.IsFalse(readOnly.TryGetValue(3, out _));
+            Assert.AreEqual(10, readOnly.GetValueByRef(1));
+            Assert.IsTrue(readOnly.TryFindIndex(2, out var index));
+            Assert.AreEqual(1, index);
+            Assert.IsFalse(readOnly.TryFindIndex(3, out _));
+            Assert.AreEqual(0, readOnly.FindIndex(1));
+            Assert.AreEqual(-1, readOnly.FindIndex(3));
+        }
+
+        [Test]
+        public void Enumerators_DirectConstructionMovementResetCurrentAndDispose()
+        {
+            using var map = new ArrayMapNative<int, int>(4, Allocator.Temp);
+            map.Add(7, 70);
+            var readOnly = map.AsReadOnly();
+
+            var keys = new ArrayMapNative<int, int>.KeyEnumerable(in readOnly);
+            Assert.IsTrue(keys.IsValid);
+
+            var keyEnumerator = new ArrayMapNative<int, int>.KeyEnumerator(in readOnly);
+            Assert.IsTrue(keyEnumerator.IsValid);
+            Assert.IsTrue(keyEnumerator.MoveNext());
+            Assert.AreEqual(7, keyEnumerator.Current);
+            Assert.IsFalse(keyEnumerator.MoveNext());
+            keyEnumerator.Reset();
+            Assert.IsTrue(keyEnumerator.MoveNext());
+            keyEnumerator.Dispose();
+
+            var enumerableEnumerator = keys.GetEnumerator();
+            Assert.IsTrue(enumerableEnumerator.MoveNext());
+            Assert.AreEqual(7, enumerableEnumerator.Current);
+            enumerableEnumerator.Dispose();
+
+            var ownerEnumerator = new ArrayMapNativeKeyValueEnumerator<int, int>(in map);
+            Assert.IsTrue(ownerEnumerator.IsValid);
+            Assert.IsTrue(ownerEnumerator.MoveNext());
+            AssertPair(ownerEnumerator.Current, 7, 70);
+            Assert.IsFalse(ownerEnumerator.MoveNext());
+            ownerEnumerator.Reset();
+            Assert.IsTrue(ownerEnumerator.MoveNext());
+            ownerEnumerator.Dispose();
+
+            var mapEnumerator = map.GetEnumerator();
+            Assert.IsTrue(mapEnumerator.MoveNext());
+            mapEnumerator.Dispose();
+
+            var readOnlyEnumerator = new ArrayMapNativeReadOnlyKeyValueEnumerator<int, int>(in readOnly);
+            Assert.IsTrue(readOnlyEnumerator.IsValid);
+            Assert.IsTrue(readOnlyEnumerator.MoveNext());
+            AssertPair(readOnlyEnumerator.Current, 7, 70);
+            Assert.IsFalse(readOnlyEnumerator.MoveNext());
+            readOnlyEnumerator.Reset();
+            Assert.IsTrue(readOnlyEnumerator.MoveNext());
+            readOnlyEnumerator.Dispose();
+
+            var viewEnumerator = readOnly.GetEnumerator();
+            Assert.IsTrue(viewEnumerator.MoveNext());
+            viewEnumerator.Dispose();
+
+            Assert.IsFalse(default(ArrayMapNative<int, int>.KeyEnumerable).IsValid);
+            Assert.IsFalse(default(ArrayMapNative<int, int>.KeyEnumerator).IsValid);
+            Assert.IsFalse(default(ArrayMapNativeKeyValueEnumerator<int, int>).IsValid);
+            Assert.IsFalse(default(ArrayMapNativeReadOnlyKeyValueEnumerator<int, int>).IsValid);
+            Assert.IsFalse(default(ArrayMapNativeKeyValuePair<int, int>).IsValid);
+            Assert.IsFalse(default(ArrayMapNativeReadOnlyKeyValuePair<int, int>).IsValid);
+        }
+
+        [Test]
+        public void IncreaseCapacityToAndTryFindIndex_GrowAndReportBothPaths()
+        {
+            using var map = new ArrayMapNative<int, int>(2, Allocator.Temp);
+            map.Add(1, 10);
+            var requestedCapacity = map.Capacity + 5;
+
+            map.IncreaseCapacityTo(requestedCapacity);
+
+            Assert.GreaterOrEqual(map.Capacity, requestedCapacity);
+            Assert.IsTrue(map.TryFindIndex(1, out var index));
+            Assert.AreEqual(0, index);
+            Assert.IsFalse(map.TryFindIndex(2, out _));
+        }
+
+        [Test]
         public void Dispose_MarksNotCreated()
         {
             var map = new ArrayMapNative<int, int>(4, Allocator.Temp);
@@ -644,6 +746,18 @@ namespace EncosyTower.Tests.EncosyTower.Collections
             map.Dispose();
 
             Assert.IsFalse(map.IsCreated);
+        }
+
+        [Test]
+        public void DisposeJob_CompletesAndMarksNotCreated()
+        {
+            var map = new ArrayMapNative<int, int>(4, Allocator.TempJob);
+            map.Add(1, 10);
+
+            var handle = map.Dispose(default);
+
+            Assert.IsFalse(map.IsCreated);
+            Assert.DoesNotThrow(() => handle.Complete());
         }
 
         [Test]
@@ -662,6 +776,30 @@ namespace EncosyTower.Tests.EncosyTower.Collections
                 Assert.IsTrue(map.TryGetValue(i, out var value), $"missing key {i}");
                 Assert.AreEqual(i, value);
             }
+        }
+
+        private static void AssertPair(ArrayMapNativeKeyValuePair<int, int> pair, int key, int value)
+        {
+            Assert.IsTrue(pair.IsValid);
+            Assert.AreEqual(key, pair.Key);
+            Assert.AreEqual(value, pair.Value);
+
+            pair.Deconstruct(out var actualKey, out var actualValue);
+
+            Assert.AreEqual(key, actualKey);
+            Assert.AreEqual(value, actualValue);
+        }
+
+        private static void AssertPair(ArrayMapNativeReadOnlyKeyValuePair<int, int> pair, int key, int value)
+        {
+            Assert.IsTrue(pair.IsValid);
+            Assert.AreEqual(key, pair.Key);
+            Assert.AreEqual(value, pair.Value);
+
+            pair.Deconstruct(out var actualKey, out var actualValue);
+
+            Assert.AreEqual(key, actualKey);
+            Assert.AreEqual(value, actualValue);
         }
     }
 }
