@@ -115,10 +115,12 @@ namespace EncosyTower.SourceGen.Generators.EnumExtensions
             p = p.DecreasedIndent();
             p.OpenScope();
             {
+                p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                 p.PrintLine("[SRIS.FieldOffset(0)]");
                 p.PrintBeginLine("private readonly ").Print(FullyQualifiedName).PrintEndLine(" _value;");
                 p.PrintEndLine();
 
+                p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                 p.PrintLine("[SRIS.FieldOffset(0)]");
                 p.PrintBeginLine("private readonly ").Print(UnderlyingTypeName).PrintEndLine(" _underlyingValue;");
                 p.PrintEndLine();

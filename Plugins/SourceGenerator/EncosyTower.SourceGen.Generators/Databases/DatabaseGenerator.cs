@@ -57,16 +57,18 @@ namespace EncosyTower.SourceGen.Generators.Databases
                 var assemblyName = compilation.assemblyName;
                 var hintName = model.hintName;
                 var sourceFilePath = SourceGenHelpers.BuildSourceFilePath(assemblyName, hintName, projectPath);
-                var printer = Printer.DefaultLarge;
+                var printer = Printer.Default;
 
                 {
-                    printer.PrintEndLine();
-                    printer.Print("#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS").PrintEndLine();
-                    printer.Print("#define __ENCOSY_NO_VALIDATION__").PrintEndLine();
-                    printer.Print("#else").PrintEndLine();
-                    printer.Print("#define __ENCOSY_VALIDATION__").PrintEndLine();
-                    printer.Print("#endif").PrintEndLine();
-                    printer.PrintEndLine();
+                    var p = printer;
+                    p.Print("#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS ||")
+                        .Print(" UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS")
+                        .PrintEndLine();
+                    p.Print("#define __ENCOSY_NO_VALIDATION__").PrintEndLine();
+                    p.Print("#else").PrintEndLine();
+                    p.Print("#define __ENCOSY_VALIDATION__").PrintEndLine();
+                    p.Print("#endif").PrintEndLine();
+
                 }
 
                 context.OutputSource(

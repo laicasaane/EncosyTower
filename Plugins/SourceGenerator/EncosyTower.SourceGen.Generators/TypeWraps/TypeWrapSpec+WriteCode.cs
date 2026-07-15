@@ -296,6 +296,11 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
             var getterSetterCanBeReadOnly = property.getterSetterCanBeReadOnly;
             var getterCanBeReadOnly = property.getterCanBeReadOnly;
 
+            if (property.isUnsafe && property.isPublic)
+            {
+                p.PrintLine("/// <safety>Caller must be in an unsafe context and satisfy the wrapped property's pointer contract.</safety>");
+            }
+
             p.PrintBeginLineIf(property.isPublic, "public ", "");
             p.PrintIf(property.isUnsafe, "unsafe ");
             p.PrintIf(isStatic, "static ");
@@ -399,12 +404,34 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                         p.Print("readonly ");
                     }
 
-                    p.Print("get => ");
-                    p.PrintIf(isRef, "ref ");
-                    p.Print(accessor).Print("[");
-                    p.Print(property.arguments);
-                    p.Print("];");
-                    p.PrintEndLine();
+                    if (property.isUnsafe)
+                    {
+                        p.Print("get").PrintEndLine();
+                        p.OpenScope();
+                        {
+                            p.PrintLine("// SAFETY: The wrapped property has a pointer-bearing signature; the forwarding access preserves its contract.");
+                            p.PrintLine("unsafe");
+                            p.OpenScope();
+                            {
+                                p.PrintBeginLine("return ");
+                                p.PrintIf(isRef, "ref ");
+                                p.Print(accessor).Print("[");
+                                p.Print(property.arguments);
+                                p.PrintEndLine("];");
+                            }
+                            p.CloseScope();
+                        }
+                        p.CloseScope();
+                    }
+                    else
+                    {
+                        p.Print("get => ");
+                        p.PrintIf(isRef, "ref ");
+                        p.Print(accessor).Print("[");
+                        p.Print(property.arguments);
+                        p.Print("];");
+                        p.PrintEndLine();
+                    }
                     p.PrintEndLine();
                 }
 
@@ -416,7 +443,25 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintBeginLine();
                 p.PrintIf(getterSetterCanBeReadOnly && property.isSetterRO, "readonly ");
-                p.Print("set => ").Print(accessor).Print("[").Print(property.arguments).PrintEndLine("] = value;");
+                if (property.isUnsafe)
+                {
+                    p.Print("set").PrintEndLine();
+                    p.OpenScope();
+                    {
+                        p.PrintLine("// SAFETY: The wrapped property has a pointer-bearing signature; the forwarding access preserves its contract.");
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            p.PrintBeginLine(accessor).Print("[").Print(property.arguments).PrintEndLine("] = value;");
+                        }
+                        p.CloseScope();
+                    }
+                    p.CloseScope();
+                }
+                else
+                {
+                    p.Print("set => ").Print(accessor).Print("[").Print(property.arguments).PrintEndLine("] = value;");
+                }
             }
 
             static void WritePropertyBody(
@@ -450,11 +495,31 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                         p.Print("readonly ");
                     }
 
-                    p.Print("get => ");
-                    p.PrintIf(isRef, "ref ");
+                    if (property.isUnsafe)
+                    {
+                        p.Print("get").PrintEndLine();
+                        p.OpenScope();
+                        {
+                            p.PrintLine("// SAFETY: The wrapped property has a pointer-bearing signature; the forwarding access preserves its contract.");
+                            p.PrintLine("unsafe");
+                            p.OpenScope();
+                            {
+                                p.PrintBeginLine("return ");
+                                p.PrintIf(isRef, "ref ");
+                                p.PrintEndLine($"{accessor}.{propName};");
+                            }
+                            p.CloseScope();
+                        }
+                        p.CloseScope();
+                    }
+                    else
+                    {
+                        p.Print("get => ");
+                        p.PrintIf(isRef, "ref ");
 
-                    p.Print($"{accessor}.{propName}");
-                    p.Print(";").PrintEndLine().PrintEndLine();
+                        p.Print($"{accessor}.{propName}");
+                        p.Print(";").PrintEndLine().PrintEndLine();
+                    }
                 }
 
                 if (withoutSetter)
@@ -465,7 +530,25 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintBeginLine();
                 p.PrintIf(getterSetterCanBeReadOnly && property.isSetterRO, "readonly ");
-                p.PrintEndLine($"set => {accessor}.{propName} = value;");
+                if (property.isUnsafe)
+                {
+                    p.Print("set").PrintEndLine();
+                    p.OpenScope();
+                    {
+                        p.PrintLine("// SAFETY: The wrapped property has a pointer-bearing signature; the forwarding access preserves its contract.");
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            p.PrintLine($"{accessor}.{propName} = value;");
+                        }
+                        p.CloseScope();
+                    }
+                    p.CloseScope();
+                }
+                else
+                {
+                    p.PrintEndLine($"set => {accessor}.{propName} = value;");
+                }
             }
         }
 
@@ -544,6 +627,11 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
             var returnTypeName = method.returnTypeName;
             var hasParams = string.IsNullOrEmpty(method.parameters) == false;
 
+            if (method.isUnsafe && method.isPublic)
+            {
+                p.PrintLine("/// <safety>Caller must be in an unsafe context and satisfy the wrapped method's pointer contract.</safety>");
+            }
+
             p.PrintLine(AGGRESSIVE_INLINING);
             p.PrintBeginLineIf(method.isPublic, "public ", "");
             p.PrintIf(method.isUnsafe, "unsafe ");
@@ -582,28 +670,63 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
             p.PrintLineIf(hasTypeConstraints, method.typeParameterConstraints);
             p = p.IncreasedIndent();
             {
-                p.PrintBeginLine("=> ");
-
-                p.PrintIf(method.refKind == RefKind.Ref, "ref ");
-                p.PrintIf(method.refKind == RefKind.RefReadOnly, "ref readonly ");
-
-                if (method.isStatic)
+                if (method.isUnsafe)
                 {
-                    p.Print(fieldTypeName);
+                    p.OpenScope();
+                    {
+                        p.PrintLine("// SAFETY: The wrapped method has a pointer-bearing signature; the forwarding call preserves its contract.");
+                        p.PrintLine("unsafe");
+                        p.OpenScope();
+                        {
+                            p.PrintBeginLineIf(method.returnsVoid == false, "return ", "");
+                            p.PrintIf(method.refKind is RefKind.Ref or RefKind.RefReadOnly, "ref ");
+
+                            if (method.isStatic)
+                            {
+                                p.Print(fieldTypeName);
+                            }
+                            else
+                            {
+                                p.Print($"this.{fieldName}");
+                            }
+
+                            p.Print(".").Print(method.name).Print(method.typeParameters).Print("(");
+
+                            if (hasParams)
+                            {
+                                p.Print(method.arguments);
+                            }
+
+                            p.PrintEndLine(");");
+                        }
+                        p.CloseScope();
+                    }
+                    p.CloseScope();
                 }
                 else
                 {
-                    p.Print($"this.{fieldName}");
+                    p.PrintBeginLine("=> ");
+
+                    p.PrintIf(method.refKind is RefKind.Ref or RefKind.RefReadOnly, "ref ");
+
+                    if (method.isStatic)
+                    {
+                        p.Print(fieldTypeName);
+                    }
+                    else
+                    {
+                        p.Print($"this.{fieldName}");
+                    }
+
+                    p.Print(".").Print(method.name).Print(method.typeParameters).Print("(");
+
+                    if (hasParams)
+                    {
+                        p.Print(method.arguments);
+                    }
+
+                    p.PrintEndLine(");");
                 }
-
-                p.Print(".").Print(method.name).Print(method.typeParameters).Print("(");
-
-                if (hasParams)
-                {
-                    p.Print(method.arguments);
-                }
-
-                p.PrintEndLine(");");
             }
             p = p.DecreasedIndent();
             p.PrintEndLine();

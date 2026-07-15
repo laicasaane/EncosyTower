@@ -50,8 +50,6 @@
         public const string LIST_EXTENSIONS = "global::EncosyTower.Collections.Extensions.EncosyListExtensions";
         public const string DICTIONARY_EXTENSIONS = "global::EncosyTower.Collections.Extensions.EncosyDictionaryExtensions";
         public const string LIST_FAST_EXTENSIONS_UNSAFE = "global::EncosyTower.Collections.Extensions.Unsafe.ListFastExtensionsUnsafe";
-        public const string HASH_SET_API = "global::EncosyTower.Collections.Extensions.HashSetAPI";
-        public const string REFERENCE_EXTENSIONS = "global::EncosyTower.SystemExtensions.EncosyReferenceExtensions";
 
         public const string PR_DONT_CREATE_PROPERTY = "UP.DontCreatePropertyAttribute";
 
@@ -62,7 +60,7 @@
         public const string PR_MEMORY_EXTENSIONS = "S.MemoryExtensions";
         public const string PR_ARRAY_EXTENSIONS = "ETCE.EncosyArrayExtensions";
         public const string PR_LIST_EXTENSIONS = "ETCE.EncosyListExtensions";
-        public const string PR_HASH_SET_API = "ETCE.HashSetAPI";
+        public const string PR_HASH_SET_EXTENSIONS = "ETCE.EncosyHashSetExtenions";
         public const string PR_DICTIONARY_EXTENSIONS = "ETCE.EncosyDictionaryExtensions";
 
         public const string PR_GENERATED_PROPERTY_FROM_FIELD = $"[ETDSG.GeneratedPropertyFromField(nameof({{0}}), typeof({{1}}))]";

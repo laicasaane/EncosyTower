@@ -342,6 +342,19 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                 var assemblyName = compilation.assemblyName;
                 var hintName = vaultInfo.hintName;
                 var sourceFilePath = SourceGenHelpers.BuildSourceFilePath(assemblyName, hintName, projectPath);
+                var printer = Printer.Default;
+
+                {
+                    var p = printer;
+                    p.Print("#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS ||")
+                        .Print(" UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS")
+                        .PrintEndLine();
+                    p.Print("#define __ENCOSY_NO_VALIDATION__").PrintEndLine();
+                    p.Print("#else").PrintEndLine();
+                    p.Print("#define __ENCOSY_VALIDATION__").PrintEndLine();
+                    p.Print("#endif").PrintEndLine();
+
+                }
 
                 context.OutputSource(
                       outputSourceGenFiles
@@ -351,6 +364,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     , vaultInfo.hintName
                     , sourceFilePath
                     , projectPath
+                    , printer
                 );
             }
             catch (Exception e)

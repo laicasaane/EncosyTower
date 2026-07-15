@@ -108,6 +108,20 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                 withoutSetter = true;
             }
 
+            var isUnsafe = property.Type is IPointerTypeSymbol;
+
+            if (isUnsafe == false)
+            {
+                foreach (var param in property.Parameters)
+                {
+                    if (param.Type is IPointerTypeSymbol)
+                    {
+                        isUnsafe = true;
+                        break;
+                    }
+                }
+            }
+
             return new PropertySpec {
                 name = name,
                 typeName = property.Type.ToFullName(),
@@ -128,7 +142,7 @@ namespace EncosyTower.SourceGen.Generators.TypeWraps
                 isGetterRO = isGetterRO,
                 hasSetter = hasSetter,
                 isSetterRO = isSetterRO,
-                isUnsafe = property.Type is IPointerTypeSymbol,
+                isUnsafe = isUnsafe,
                 withoutSetter = withoutSetter,
             };
         }

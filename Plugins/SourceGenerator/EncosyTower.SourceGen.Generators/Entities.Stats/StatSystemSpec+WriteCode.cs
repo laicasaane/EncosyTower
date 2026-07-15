@@ -21,8 +21,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string FIELD_OFFSET_0 = "[SRIS.FieldOffset(0)]";
         private const string FIELD_OFFSET_X = "[SRIS.FieldOffset({0})]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\"), " +
-            "SD.Conditional(\"ENCOSY_STATS_RUNTIME_CHECKS\")]";
+            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
 
         private const string IEQUATABLE = "S.IEquatable";
         private const string HASH_VALUE = "ET.HashValue";
@@ -501,10 +500,12 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         p.CloseScope();
                         p.PrintEndLine();
 
+                        p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                         p.PrintBeginLine(FIELD_OFFSET_0).PrintEndLine(GENERATED_CODE);
                         p.PrintLine("private ValuePair _valuePair;");
                         p.PrintEndLine();
 
+                        p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                         p.PrintBeginLine(FIELD_OFFSET_0).PrintEndLine(GENERATED_CODE);
                         p.PrintLine("private ExposedValuePair _exposed;");
                         p.PrintEndLine();
@@ -3524,6 +3525,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     var fieldType = isByteBool ? storageType : type;
                     var customNs = string.IsNullOrEmpty(fieldNs) == false;
 
+                    p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                     p.PrintBeginLine(SERIALIZED_FIELD).PrintEndLine(FIELD_OFFSET_0);
                     p.PrintBeginLine("private ")
                         .PrintIf(customNs, fieldNs)
@@ -4170,18 +4172,21 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                         .Print(" : ").Print(IEQUATABLE).Print("<Pair").Print(typeName).PrintEndLine(">");
                     p.OpenScope();
                     {
-                        p.PrintLine(FIELD_OFFSET_0);
+                    p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
+                    p.PrintLine(FIELD_OFFSET_0);
                         p.PrintLine("public StatDataStore data;");
                         p.PrintEndLine();
 
-                        p.PrintLine(FIELD_OFFSET_0);
+                    p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
+                    p.PrintLine(FIELD_OFFSET_0);
                         p.PrintBeginLine("public ")
                             .PrintIf(customNs, fieldNs)
                             .PrintIf(customNs, ".")
                             .Print(fieldType).PrintEndLine(" baseValue;");
                         p.PrintEndLine();
 
-                        p.PrintLine(string.Format(FIELD_OFFSET_X, size));
+                    p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
+                    p.PrintLine(string.Format(FIELD_OFFSET_X, size));
                         p.PrintBeginLine("public ")
                             .PrintIf(customNs, fieldNs)
                             .PrintIf(customNs, ".")

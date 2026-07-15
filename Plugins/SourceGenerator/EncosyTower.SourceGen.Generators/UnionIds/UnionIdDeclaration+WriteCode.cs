@@ -8,6 +8,7 @@
         private const string STRUCT_LAYOUT_SIZE = "[SRIS.StructLayout(SRIS.LayoutKind.Explicit, Size = {0})]";
         private const string STRUCT_LAYOUT = "[SRIS.StructLayout(SRIS.LayoutKind.Explicit)]";
         private const string FIELD_OFFSET = "[SRIS.FieldOffset({0})]";
+        private const string UNSAFE_EVOLUTION_FIELD_MARKER = "// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.";
         private const string UNION = "[SRCS.Union]";
         private const string ODIN_PROPERTY_ORDER = "[global::Sirenix.OdinInspector.PropertyOrder({0})]";
         private const string ODIN_SHOW_IN_INSPECTOR = "[global::Sirenix.OdinInspector.ShowInInspector]";
@@ -19,7 +20,7 @@
         private const string NON_SERIALIZED = "[field: S.NonSerialized]";
         private const string SERIALIZE_FIELD = "[UE.SerializeField]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\")]";
+            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
 
         private readonly static string[] s_operators = new[] { "==", "!=", "<", "<=", ">", ">=" };
         private readonly static string[] s_comparerOps = new[] { "<", "<=", ">", ">=" };
@@ -159,14 +160,14 @@
             p.PrintBeginLine("public const char SEPARATOR = '").Print(Separator).PrintEndLine("';");
             p.PrintEndLine();
 
-            p.PrintLine(FIELD_OFFSET, 0);
+            p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
             p.PrintBeginLine("private readonly ").Print(RawTypeName).PrintEndLine(" _raw;");
             p.PrintEndLine();
 
             {
                 var order = 1;
 
-                p.PrintLine(FIELD_OFFSET, 0);
+                p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
 
                 if (KindRefs.Count < 1)
                 {
@@ -177,7 +178,7 @@
                 p.PrintBeginLine("public readonly ").Print(IdRawUnsignedTypeName).Print(" IdUnsigned").PrintEndLine(";");
                 p.PrintEndLine();
 
-                p.PrintLine(FIELD_OFFSET, 0);
+                p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
 
                 if (KindRefs.Count < 1)
                 {
@@ -198,7 +199,7 @@
                         var kindName = kind.name;
                         var kindFullName = kind.fullName;
 
-                        p.PrintLine(FIELD_OFFSET, 0);
+                        p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
                         p.PrintLineIf(hasLabel, DESCRIPTION, (object)label);
                         p.PrintLineIf(hasLabel && this.References.odin, ODIN_LABEL, (object)label);
                         p.PrintLineIf(References.odin, ODIN_SHOW_IN_INSPECTOR);
@@ -217,7 +218,7 @@
                 var hasLabel = string.IsNullOrEmpty(label) == false;
                 var canShowKind = KindEnumIsEmpty == false && References.odin;
 
-                p.PrintLine(FIELD_OFFSET, KindFieldOffset);
+                p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, KindFieldOffset);
                 p.PrintLineIf(hasLabel, DESCRIPTION, (object)label);
                 p.PrintLineIf(hasLabel && canShowKind, ODIN_LABEL, (object)label);
                 p.PrintLineIf(canShowKind, ODIN_SHOW_IN_INSPECTOR);
@@ -2848,15 +2849,15 @@
                 p.PrintLine("private struct Union");
                 p.OpenScope();
                 {
-                    p.PrintLine(FIELD_OFFSET, 0);
+                    p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
                     p.PrintBeginLine("public ").Print(RawTypeName).PrintEndLine(" raw;");
                     p.PrintEndLine();
 
-                    p.PrintLine(FIELD_OFFSET, 0);
+                    p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, 0);
                     p.PrintBeginLine("public ").Print(IdRawUnsignedTypeName).Print(" id").PrintEndLine(";");
                     p.PrintEndLine();
 
-                    p.PrintLine(FIELD_OFFSET, KindFieldOffset);
+                    p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(FIELD_OFFSET, KindFieldOffset);
                     p.PrintLine("public IdKind kind;");
                     p.PrintEndLine();
                 }

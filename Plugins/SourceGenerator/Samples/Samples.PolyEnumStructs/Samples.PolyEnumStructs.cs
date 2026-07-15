@@ -447,6 +447,7 @@ namespace Samples.PolyEnumStructs.SizeChecks
 
     public struct PointerPayload
     {
+        /// <safety>head must point to a live int allocation for the caller's declared count.</safety>
         public unsafe int* head;
         public int count;
     }

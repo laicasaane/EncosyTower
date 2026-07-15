@@ -162,7 +162,7 @@ namespace Samples.TypeWraps
     public readonly partial record struct EnumWrapper(AttributeTargets _);
 
     [WrapRecord]
-    public unsafe readonly partial record struct WrappedNativeList<T>(NativeList<T> _)
+    public readonly partial record struct WrappedNativeList<T>(NativeList<T> _)
         where T : unmanaged
     { }
 }

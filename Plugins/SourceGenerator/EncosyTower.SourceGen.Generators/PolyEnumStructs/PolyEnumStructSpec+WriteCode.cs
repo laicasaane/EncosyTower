@@ -15,7 +15,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
         private const string EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         private const string GENERATED_CODE = $"[SCDC.GeneratedCode(GENERATOR, \"{SourceGenVersion.VALUE}\")]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\")]";
+            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
         private const string UNDEFINED_NAME = "Undefined";
         private const string ENUM_CASE_NAME = "EnumCase";
         private const string FIELD_OFFSET = "SRIS.FieldOffset";
@@ -591,6 +591,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
 
             static void WriteFieldOffset(ref Printer p, int offset)
             {
+                p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                 p.PrintBeginLine("[").Print(FIELD_OFFSET).Print("(").Print(offset).Print(")]");
             }
         }

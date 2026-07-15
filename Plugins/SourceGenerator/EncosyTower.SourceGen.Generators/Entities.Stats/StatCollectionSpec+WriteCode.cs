@@ -13,7 +13,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string PR_EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         private const string PR_GENERATED_CODE = $"[SCDC.GeneratedCode(GENERATOR, \"{SourceGenVersion.VALUE}\")]";
         private const string PR_VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"UNITY_EDITOR\"), SD.Conditional(\"DEVELOPMENT_BUILD\")]";
+            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
 
         public readonly string WriteCode()
         {
@@ -1092,6 +1092,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("public readonly S.Span<Index> AsSpan()");
                     p.OpenScope();
                     {
+                        p.PrintLine("// SAFETY: The fixed span is built from the contiguous generated stat storage.");
                         p.PrintLine("unsafe");
                         p.OpenScope();
                         {
@@ -1346,6 +1347,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("public readonly S.Span<ETES.StatIndex> AsSpan()");
                     p.OpenScope();
                     {
+                        p.PrintLine("// SAFETY: The fixed span is built from the contiguous generated stat storage.");
                         p.PrintLine("unsafe");
                         p.OpenScope();
                         {
@@ -1603,6 +1605,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     p.PrintLine("public readonly S.Span<ETES.StatHandle> AsSpan()");
                     p.OpenScope();
                     {
+                        p.PrintLine("// SAFETY: The fixed span is built from the contiguous generated stat storage.");
                         p.PrintLine("unsafe");
                         p.OpenScope();
                         {

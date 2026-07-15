@@ -671,7 +671,7 @@ namespace EncosyTower.SourceGen.Generators.Data
                 if (collection.kind is CollectionKind.HashSet or CollectionKind.Dictionary)
                 {
                     p.PrintBeginLine(and).Print(" ")
-                        .PrintIf(collection.kind is CollectionKind.HashSet, PR_HASH_SET_API, PR_DICTIONARY_EXTENSIONS)
+                        .PrintIf(collection.kind is CollectionKind.HashSet, PR_HASH_SET_EXTENSIONS, PR_DICTIONARY_EXTENSIONS)
                         .Print(".Overlaps(")
                         .Print("this.").Print(fieldName)
                         .Print(", other.").Print(fieldName).PrintEndLine(")");

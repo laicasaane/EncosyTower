@@ -6,6 +6,7 @@
         public const string EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         public const string LOG_REGISTRIES = "ENCOSY_LOG_VARIANTS_REGISTRIES";
         public const string STRUCT_LAYOUT = "[SRIS.StructLayout(SRIS.InteropServices.LayoutKind.Explicit)]";
+        public const string UNSAFE_EVOLUTION_FIELD_MARKER = "// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.";
         public const string META_OFFSET = "[SRIS.FieldOffset(ETV.VariantBase.META_OFFSET)]";
         public const string DATA_OFFSET = "[SRIS.FieldOffset(ETV.VariantBase.DATA_OFFSET)]";
         public const string VARIANT_TYPE = "ETV.Variant";
@@ -134,11 +135,11 @@
 
         private void WriteFieldsForValueType(ref Printer p, string typeName, string variantName)
         {
-            p.PrintLine(META_OFFSET).PrintLine(PRESERVE);
+            p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(META_OFFSET).PrintLine(PRESERVE);
             p.PrintLine($"public readonly {variantName} Variant;");
             p.PrintEndLine();
 
-            p.PrintLine(DATA_OFFSET).PrintLine(PRESERVE);
+            p.PrintLine(UNSAFE_EVOLUTION_FIELD_MARKER).PrintLine(DATA_OFFSET).PrintLine(PRESERVE);
             p.PrintLine($"public readonly {typeName} Value;");
             p.PrintEndLine();
         }
