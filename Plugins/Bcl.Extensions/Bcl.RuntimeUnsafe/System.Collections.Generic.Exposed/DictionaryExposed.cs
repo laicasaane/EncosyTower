@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.CompilerServices.Exposed;
-using System.Runtime.InteropServices;
 
 namespace System.Collections.Generic.Exposed;
 
@@ -20,8 +19,8 @@ internal readonly struct DictionaryExposed<TKey, TValue>([NotNull] Dictionary<TK
     {
         get
         {
-            var span = new ReadOnlySpan<Dictionary<TKey, TValue>.Entry>(Dictionary._entries, 0, Dictionary._count);
-            return MemoryMarshal.Cast<Dictionary<TKey, TValue>.Entry, Entry>(span);
+            var entries = Unsafe.As<Dictionary<TKey, TValue>.Entry[], Entry[]>(ref Dictionary._entries);
+            return new ReadOnlySpan<Entry>(entries, 0, Dictionary._count);
         }
     }
 

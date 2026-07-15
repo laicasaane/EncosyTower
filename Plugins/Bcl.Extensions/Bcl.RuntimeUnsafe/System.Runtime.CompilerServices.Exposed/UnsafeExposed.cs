@@ -7,7 +7,11 @@ internal static class UnsafeExposed
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static void* AsPointer<T>(ref T value)
     {
-        return Unsafe.AsPointer(ref value);
+        // SAFETY: The exposed API intentionally returns the caller's managed reference as a raw pointer.
+        unsafe
+        {
+            return Unsafe.AsPointer(ref value);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,7 +47,11 @@ internal static class UnsafeExposed
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static void* Add<T>(void* source, int elementOffset)
     {
-        return Unsafe.Add<T>(source, elementOffset);
+        // SAFETY: The caller owns the source pointer and supplies an element offset within its allocation.
+        unsafe
+        {
+            return Unsafe.Add<T>(source, elementOffset);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,13 +93,21 @@ internal static class UnsafeExposed
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static T Read<T>(void* source)
     {
-        return Unsafe.Read<T>(source);
+        // SAFETY: The caller supplies a live, correctly aligned pointer to a T.
+        unsafe
+        {
+            return Unsafe.Read<T>(source);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static ref T AsRef<T>(void* source)
     {
-        return ref Unsafe.AsRef<T>(source);
+        // SAFETY: The caller keeps the source allocation alive for the returned reference.
+        unsafe
+        {
+            return ref Unsafe.AsRef<T>(source);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,13 +119,21 @@ internal static class UnsafeExposed
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static ref T NullRef<T>()
     {
-        return ref ILSupport.NullRef<T>();
+        // SAFETY: This intentionally exposes the null-reference sentinel used by the low-level API.
+        unsafe
+        {
+            return ref ILSupport.NullRef<T>();
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe static bool IsNullRef<T>(in T source)
     {
-        return ILSupport.IsNullRef(source);
+        // SAFETY: The low-level API intentionally compares the reference against its null sentinel.
+        unsafe
+        {
+            return ILSupport.IsNullRef(source);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

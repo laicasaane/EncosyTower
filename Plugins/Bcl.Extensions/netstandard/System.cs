@@ -86,6 +86,7 @@ public readonly ref struct Span<T>
     {
     }
 
+    /// <safety>pointer must reference length readable T elements that remain alive for the span's lifetime.</safety>
     public unsafe Span(void* pointer, int length)
     {
     }
@@ -105,6 +106,7 @@ public readonly ref struct ReadOnlySpan<T>
     {
     }
 
+    /// <safety>pointer must reference length readable T elements that remain alive for the span's lifetime.</safety>
     public unsafe ReadOnlySpan(void* pointer, int length)
     {
     }

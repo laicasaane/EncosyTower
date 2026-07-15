@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices.Exposed;
 namespace System.Runtime.InteropServices;
 
 /// <summary>
-/// An unsafe class that provides a set of methods to access the underlying data representations of collections.
+/// Provides low-level methods to access the underlying data representations of collections.
 /// </summary>
 public static class CollectionsMarshal
 {

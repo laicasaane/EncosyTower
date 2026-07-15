@@ -5,4 +5,5 @@
   <Project Path="Bcl.Runtime/Bcl.Runtime.csproj" />
   <Project Path="Bcl.RuntimeUnsafe/Bcl.RuntimeUnsafe.csproj" />
   <Project Path="netstandard/netstandard.csproj" />
+  <Project Path="System.Runtime.CompilerServices/System.Runtime.CompilerServices.Unsafe.csproj" />
 </Solution>

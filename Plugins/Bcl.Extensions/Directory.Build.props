@@ -6,7 +6,8 @@
     </PropertyGroup>
 
     <Target Name="CopyBuildArtifacts" AfterTargets="Build"
-            Condition="'$(Configuration)'=='Release' AND '$(MSBuildProjectName)'!='netstandard'">
+            Condition="'$(Configuration)'=='Release' AND '$(MSBuildProjectName)'!='netstandard'
+                AND '$(MSBuildProjectName)'!='System.Runtime.CompilerServices.Unsafe'">
         <ItemGroup>
             <DataFiles Include="$(OutDir)*.dll" Exclude="EncosyTower.LowLevel.Unsafe.dll" />
         </ItemGroup>

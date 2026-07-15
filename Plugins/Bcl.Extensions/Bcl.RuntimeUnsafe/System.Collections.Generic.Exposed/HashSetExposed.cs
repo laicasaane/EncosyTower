@@ -16,12 +16,13 @@ internal readonly struct HashSetExposed<T>([NotNull] HashSet<T> set)
         get => new(Set._buckets);
     }
 
-    public ReadOnlySpan<Entry> Entries
+    public ReadOnlySpan<Slot> Slots
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            var span = new ReadOnlySpan<HashSet<T>.Slot>(Set._slots, 0, Set._count);
-            return MemoryMarshal.Cast<HashSet<T>.Slot, Entry>(span);
+            var slots = Unsafe.As<HashSet<T>.Slot[], Slot[]>(ref Set._slots);
+            return new ReadOnlySpan<Slot>(slots, 0, Set._count);
         }
     }
 
@@ -55,7 +56,7 @@ internal readonly struct HashSetExposed<T>([NotNull] HashSet<T> set)
         get => Set._comparer;
     }
 
-    public struct Entry
+    public struct Slot
     {
         public int hashCode;
         public int next;
