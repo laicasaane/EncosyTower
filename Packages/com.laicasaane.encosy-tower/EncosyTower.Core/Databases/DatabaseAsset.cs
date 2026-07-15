@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -265,13 +271,13 @@ namespace EncosyTower.Databases
             return StringVault.GetOrMakeId(name);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorAssetIsInvalid(int index, DatabaseAsset context)
         {
             StaticDevLogger.LogError(context, $"Table asset at index {index} is invalid.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogWarningAmbiguousTypeAtInitialization(
               int index
             , Type type
@@ -288,7 +294,7 @@ namespace EncosyTower.Databases
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowsDatabaseIsNotInitialized(bool initialized)
         {
             if (initialized)
@@ -302,7 +308,7 @@ namespace EncosyTower.Databases
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorCannotFindAsset(StringId id, DatabaseAsset context)
         {
             var name = context.GetName(id);
@@ -313,19 +319,19 @@ namespace EncosyTower.Databases
             StaticDevLogger.LogError(context, $"Cannot find any table asset by {info}.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorCannotFindAsset(Type type, DatabaseAsset context)
         {
             StaticDevLogger.LogError(context, $"Cannot find any table asset by the type '{type}'.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorFoundAssetIsNotValidType<T>(DataTableAssetBase context)
         {
             StaticDevLogger.LogError(context, $"The table asset is not an instance of type '{typeof(T)}'");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogWarningAmbiguousTypeAtGetDataTableAsset(
               Type type
             , Dictionary<Type, List<StringId>> typeToIds

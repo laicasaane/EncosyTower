@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -165,7 +171,7 @@ namespace EncosyTower.Common
         internal static bool DefaultEquals(in Success<TFailure> a, in Success<TFailure> b)
             => a.IsFailure == b.IsFailure && EqualityComparer<TFailure>.Default.Equals(a._failure, b._failure);
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfHasNoValue([DoesNotReturnIf(false)] bool hasValue)
         {
             if (hasValue == false)

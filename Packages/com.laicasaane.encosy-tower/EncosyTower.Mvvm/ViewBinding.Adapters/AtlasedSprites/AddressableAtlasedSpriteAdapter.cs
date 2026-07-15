@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_ADDRESSABLES
 
 using System;
@@ -69,7 +75,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters.AtlasedSprites
             return false;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ErrorFoundNoAtlas(string atlas)
         {
             StaticDevLogger.LogErrorFormat("Cannot find SpriteAtlas {0} in Addressables."
@@ -77,7 +83,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters.AtlasedSprites
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ErrorFoundNoSprite(string atlas, string sprite, UnityEngine.Object context)
         {
             StaticDevLogger.LogErrorFormat(context

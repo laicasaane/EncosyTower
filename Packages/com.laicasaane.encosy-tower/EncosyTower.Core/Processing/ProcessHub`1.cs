@@ -1,9 +1,10 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_PROCESSING_NO_VALIDATION__
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
 #else
-#define __ENCOSY_PROCESSING_VALIDATION__
+#define __ENCOSY_VALIDATION__
 #endif
+
+#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
 using System.Collections.Generic;
@@ -86,12 +87,12 @@ namespace EncosyTower.Processing
             return Register(new Internals.Sync.ProcessHandler<TRequest, TResult>(process));
         }
 
-#if __ENCOSY_PROCESSING_NO_VALIDATION__
+#if __ENCOSY_NO_VALIDATION__
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         internal ProcessRegistry Register(IProcessHandler handler)
         {
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             if (Validate() == false)
             {
                 return default;
@@ -125,12 +126,12 @@ namespace EncosyTower.Processing
             return Unregister((TypeId)Type<Func<TRequest, TResult>>.Id);
         }
 
-#if __ENCOSY_PROCESSING_NO_VALIDATION__
+#if __ENCOSY_NO_VALIDATION__
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public bool Unregister(TypeId id)
         {
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             if (Validate() == false)
             {
                 return false;
@@ -259,12 +260,12 @@ namespace EncosyTower.Processing
             return false;
         }
 
-#if __ENCOSY_PROCESSING_NO_VALIDATION__
+#if __ENCOSY_NO_VALIDATION__
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         private bool TryGet(TypeId typeId, out IProcessHandler handler)
         {
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             if (Validate() == false)
             {
                 handler = null;
@@ -278,7 +279,7 @@ namespace EncosyTower.Processing
         #region    HELPERS - SYNC
         #endregion ==============
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
         private bool Validate()
         {
             if (_map != null)
@@ -332,7 +333,7 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorNotFound<TRequest>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)
@@ -351,7 +352,7 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorNotFound<TRequest, TResult>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)

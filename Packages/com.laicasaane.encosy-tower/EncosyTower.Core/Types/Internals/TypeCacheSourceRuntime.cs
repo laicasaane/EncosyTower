@@ -22,7 +22,7 @@
 //
 // https://github.com/thebeardphantom/Runtime-TypeCache
 
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__

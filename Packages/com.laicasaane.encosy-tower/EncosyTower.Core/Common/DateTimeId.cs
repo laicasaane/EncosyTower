@@ -23,27 +23,35 @@ namespace EncosyTower.Common
         public static readonly DateTimeId MinValue = DateTime.MinValue;
         public static readonly DateTimeId UnixEpoch = DateTime.UnixEpoch;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)]
         private readonly ulong _raw;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)]
         private readonly sbyte _zone;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(1)]
         private readonly byte _second;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(2)]
         private readonly byte _minute;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(3)]
         private readonly byte _hour;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(4)]
         private readonly byte _day;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(5)]
         private readonly byte _month;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(6)]
         private readonly ushort _year;
 

@@ -20,8 +20,11 @@ namespace EncosyTower.Pooling
         public const int OFFSET_TRANSFORM_ID = 0 + 4;
         public const int OFFSET_TRANSFORM_ARRAY_INDEX = 0 + 4 + 4;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(OFFSET_GAMEOBJECT_ID)]         public GameObjectId gameObjectId;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(OFFSET_TRANSFORM_ID)]          public TransformId transformId;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(OFFSET_TRANSFORM_ARRAY_INDEX)] public int transformArrayIndex;
     }
 }

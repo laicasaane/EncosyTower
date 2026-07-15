@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -116,7 +122,7 @@ namespace EncosyTower.Variants.Converters
             return sizeOfT <= VariantData.BYTE_COUNT;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfSizeInvalid<T>([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)

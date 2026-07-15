@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -143,13 +149,13 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
             return _context.TryGetContext(out var context) ? context : null;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         protected static void ErrorFoundNoContext(UnityEngine.Object context)
         {
             StaticDevLogger.LogError(context, $"MonoView has no context that implements IObservableObject");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         protected static void ErrorNotInitialized(UnityEngine.Object context)
         {
             StaticDevLogger.LogError(context, $"MonoView must be initialized");

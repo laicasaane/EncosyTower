@@ -50,6 +50,12 @@ namespace EncosyTower.Editor.Mvvm.Variants.Converters
             p.PrintEndLine();
             p.PrintLine(@"#pragma warning disable
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -138,7 +144,7 @@ using UnityEngine;
                             .PrintEndLine();
 
                         p.PrintBeginLine("[HideInCallstack, StackTraceHidden, ")
-                            .PrintEndLine("Conditional(\"UNITY_EDITOR\"), Conditional(\"DEVELOPMENT_BUILD\")]");
+                            .PrintEndLine("Conditional(\"__ENCOSY_VALIDATION__\")]");
                         p.PrintLine("private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)");
                         p.OpenScope();
                         {

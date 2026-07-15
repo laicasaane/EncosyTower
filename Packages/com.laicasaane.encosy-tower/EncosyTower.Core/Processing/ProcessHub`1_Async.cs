@@ -1,10 +1,10 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_PROCESSING_NO_VALIDATION__
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
 #else
-#define __ENCOSY_PROCESSING_VALIDATION__
+#define __ENCOSY_VALIDATION__
 #endif
+
+#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
 using System.Diagnostics;
@@ -468,7 +468,7 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorNotFoundAsync<TRequest>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)
@@ -492,7 +492,7 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void LogErrorNotFoundAsync<TRequest, TResult>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)

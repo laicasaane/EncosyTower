@@ -14,6 +14,7 @@ namespace EncosyTower.Variants
         public const int OBJECT_OFFSET = META_OFFSET + 8;
         public const int DATA_OFFSET = META_OFFSET + META_SIZE + OBJECT_OFFSET;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(META_OFFSET)] public readonly ulong Meta;
 
         // !!! OBJECT_OFFSET will go here !!!
@@ -22,6 +23,7 @@ namespace EncosyTower.Variants
         /// By default, this field can store up to 16 bytes of data.
         /// To increase its capacity, follow the instruction at <see cref="VariantData"/>.
         /// </summary>
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(DATA_OFFSET)] public readonly VariantData Data;
 
         public VariantBase(ulong meta, in VariantData data)

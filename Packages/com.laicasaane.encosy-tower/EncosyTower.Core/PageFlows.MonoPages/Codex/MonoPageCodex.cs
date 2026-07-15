@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
@@ -477,7 +483,7 @@ namespace EncosyTower.PageFlows.MonoPages
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void WarningIfMissingPreserveAttribute(
               Type type
             , ReadOnlySpan<PropertyInfo> properties

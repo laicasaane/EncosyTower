@@ -383,7 +383,7 @@ namespace EncosyTower.Entities.Stats
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe void UpdateSingleStatCommon<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>(
+        internal static void UpdateSingleStatCommon<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer>(
               StatHandle statHandle
             , StatReader<TValuePair, TStat> statsReader
             , ref TStat statRef
@@ -399,7 +399,10 @@ namespace EncosyTower.Entities.Stats
             where TStatObserver : unmanaged, IStatObserver
             where TValuePairComposer : unmanaged, IStatValuePairComposer<TValuePair>
         {
-            ThrowHelper.ThrowIfStatWorldDataIsNotCreated(worldData.IsCreated);
+            // SAFETY: The validated world owns the native modifier stack for the duration of this update.
+            unsafe
+            {
+                ThrowHelper.ThrowIfStatWorldDataIsNotCreated(worldData.IsCreated);
 
             var initialStat = statRef;
 
@@ -484,6 +487,7 @@ namespace EncosyTower.Entities.Stats
                     // Other-entity observers will be processed later
                     worldData._tmpGlobalUpdatedStats.Add(observerHandle);
                 }
+                }
             }
         }
 
@@ -500,7 +504,7 @@ namespace EncosyTower.Entities.Stats
             observerBuffer.Slice(observerRange.startIndex, count).CopyTo(statObserverSpan);
         }
 
-        internal static unsafe void AddStatAsObserverOfOtherStat<TValuePair, TStat, TStatObserver>(
+        internal static void AddStatAsObserverOfOtherStat<TValuePair, TStat, TStatObserver>(
               StatHandle observerStatHandle
             , StatHandle observedStatHandle
             , ref DynamicBuffer<TStat> statBufferOnObservedStat

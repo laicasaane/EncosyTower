@@ -9,6 +9,12 @@
 
 #pragma warning disable
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG || ENCOSY_STATS_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -20,82 +26,159 @@ namespace EncosyTower.Entities.Stats
     [StructLayout(LayoutKind.Explicit)]
     partial struct StatVariant : IEquatable<StatVariant>
     {
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public None None;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool Bool;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool2 Bool2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool2x2 Bool2x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool2x3 Bool2x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool2x4 Bool2x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool3 Bool3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool3x2 Bool3x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool3x3 Bool3x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool3x4 Bool3x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool4 Bool4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool4x2 Bool4x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool4x3 Bool4x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public bool4x4 Bool4x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public byte Byte;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double Double;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double2 Double2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double2x2 Double2x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double2x3 Double2x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double2x4 Double2x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double3 Double3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double3x2 Double3x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double3x3 Double3x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double3x4 Double3x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double4 Double4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double4x2 Double4x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double4x3 Double4x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public double4x4 Double4x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float Float;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float2 Float2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float2x2 Float2x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float2x3 Float2x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float2x4 Float2x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float3 Float3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float3x2 Float3x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float3x3 Float3x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float3x4 Float3x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float4 Float4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float4x2 Float4x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float4x3 Float4x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public float4x4 Float4x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public half Half;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public half2 Half2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public half3 Half3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public half4 Half4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int Int;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int2 Int2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int2x2 Int2x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int2x3 Int2x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int2x4 Int2x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int3 Int3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int3x2 Int3x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int3x3 Int3x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int3x4 Int3x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int4 Int4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int4x2 Int4x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int4x3 Int4x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public int4x4 Int4x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public long Long;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public sbyte SByte;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public short Short;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint UInt;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint2 UInt2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint2x2 UInt2x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint2x3 UInt2x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint2x4 UInt2x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint3 UInt3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint3x2 UInt3x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint3x3 UInt3x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint3x4 UInt3x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint4 UInt4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint4x2 UInt4x2;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint4x3 UInt4x3;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public uint4x4 UInt4x4;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public ulong ULong;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(0)] public ushort UShort;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(128)] public StatVariantType Type;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

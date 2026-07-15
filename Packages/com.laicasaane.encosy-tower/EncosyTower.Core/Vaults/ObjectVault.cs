@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -144,7 +150,7 @@ namespace EncosyTower.Vaults
         private static bool IsNotNull(object obj)
             => obj is UnityObject unityObj ? unityObj.IsValid() : obj != null;
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfObjectNull([DoesNotReturnIf(false)] bool isNotNull, Type type)
         {
             if (isNotNull == false)
@@ -160,7 +166,7 @@ namespace EncosyTower.Vaults
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ErrorIfTypeMismatch<T>(TId id, object obj, UnityObject context)
         {
             var message = "Id \"{0}\" is mapped to an object of type \"{1}\". " +

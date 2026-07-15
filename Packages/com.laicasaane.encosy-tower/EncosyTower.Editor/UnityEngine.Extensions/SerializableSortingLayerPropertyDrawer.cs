@@ -127,7 +127,7 @@ namespace EncosyTower.Editor.UnityExtensions
             }
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden]
         private static void WarningIfValuePropertyNull()
         {
             StaticDevLogger.LogWarning("Could not find the layer index property, was it renamed or removed?");

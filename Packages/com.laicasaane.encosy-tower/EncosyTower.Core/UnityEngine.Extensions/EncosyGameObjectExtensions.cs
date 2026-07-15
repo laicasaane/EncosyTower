@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -82,7 +88,7 @@ namespace EncosyTower.UnityExtensions
         private static bool IsComponentType(Type type)
             => typeof(Component).IsAssignableFrom(type);
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfGameObjectInvalid([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)
@@ -95,7 +101,7 @@ namespace EncosyTower.UnityExtensions
                 => new("GameObject is null or invalid.", "self");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfComponentTypeInvalid([DoesNotReturnIf(false)] bool isValid, Type type)
         {
             if (isValid == false)
@@ -108,7 +114,7 @@ namespace EncosyTower.UnityExtensions
                 => new($"Type {componentType} is not a 'UnityEngine.Component'.", nameof(componentType));
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfSceneInvalid([DoesNotReturnIf(false)] bool isValid, Scene scene)
         {
             if (isValid == false)

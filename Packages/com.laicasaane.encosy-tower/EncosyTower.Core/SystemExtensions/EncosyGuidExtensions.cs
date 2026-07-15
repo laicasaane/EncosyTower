@@ -108,7 +108,13 @@ namespace EncosyTower.SystemExtensions
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FixedString128Bytes ToFixedString(in this Guid self)
-            => ToFixedString(self, stackalloc char[1] { 'D' });
+        {
+            // SAFETY: The stack-allocated format buffer is local to this call.
+            unsafe
+            {
+                return ToFixedString(self, stackalloc char[1] { 'D' });
+            }
+        }
 
         /// <summary>
         /// Converts a <see cref="Guid"/> to its equivalent <see cref="FixedString128Bytes"/> representation.
@@ -125,6 +131,7 @@ namespace EncosyTower.SystemExtensions
         /// </example>
         public static FixedString128Bytes ToFixedString(in this Guid self, ReadOnlySpan<char> format)
         {
+            // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
                 var fs = new FixedString128Bytes();
@@ -159,8 +166,11 @@ namespace EncosyTower.SystemExtensions
         [StructLayout(LayoutKind.Explicit)]
         private readonly struct Union
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public readonly Guid SystemGuid;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public readonly BurstableGuid BurstableGuid;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public readonly SerializableGuid SerializableGuid;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -285,7 +295,7 @@ namespace EncosyTower.SystemExtensions
                 return result;
             }
 
-            public unsafe bool TryFormat(
+            public bool TryFormat(
                   Span<char> destination
                 , out int charsWritten
                 , ReadOnlySpan<char> format
@@ -336,7 +346,7 @@ namespace EncosyTower.SystemExtensions
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)] // only used from two callers
-            private unsafe bool TryFormatCore(
+            private bool TryFormatCore(
                   Span<char> destination
                 , out int charsWritten
                 , int flags
@@ -352,9 +362,12 @@ namespace EncosyTower.SystemExtensions
                 charsWritten = (byte)flags;
                 flags >>= 8;
 
-                fixed (char* guidChars = &MemoryMarshal.GetReference(destination))
+                // SAFETY: The destination span is validated to contain the complete formatted GUID.
+                unsafe
                 {
-                    char* p = guidChars;
+                    fixed (char* guidChars = &MemoryMarshal.GetReference(destination))
+                    {
+                        char* p = guidChars;
 
                     // The low byte of flags now contains the opening brace char (if any)
                     if ((byte)flags != 0)
@@ -405,13 +418,14 @@ namespace EncosyTower.SystemExtensions
                         *p = (char)(byte)flags;
                     }
 
-                    Checks.IsTrue(p == guidChars + charsWritten - ((byte)flags != 0 ? 1 : 0));
+                        Checks.IsTrue(p == guidChars + charsWritten - ((byte)flags != 0 ? 1 : 0));
+                    }
                 }
 
                 return true;
             }
 
-            private unsafe bool TryFormatX(Span<char> destination, out int charsWritten)
+            private bool TryFormatX(Span<char> destination, out int charsWritten)
             {
                 if (destination.Length < 68)
                 {
@@ -421,9 +435,12 @@ namespace EncosyTower.SystemExtensions
 
                 charsWritten = 68;
 
-                fixed (char* guidChars = &MemoryMarshal.GetReference(destination))
+                // SAFETY: The destination span is validated to contain the complete X-format GUID.
+                unsafe
                 {
-                    char* p = guidChars;
+                    fixed (char* guidChars = &MemoryMarshal.GetReference(destination))
+                    {
+                        char* p = guidChars;
 
                     // {0xdddddddd,0xdddd,0xdddd,{0xdd,0xdd,0xdd,0xdd,0xdd,0xdd,0xdd,0xdd}}
                     *p++ = '{';
@@ -465,7 +482,8 @@ namespace EncosyTower.SystemExtensions
                     *p++ = '}';
                     *p = '}';
 
-                    Checks.IsTrue(p == guidChars + charsWritten - 1);
+                        Checks.IsTrue(p == guidChars + charsWritten - 1);
+                    }
                 }
 
                 return true;
@@ -480,25 +498,33 @@ namespace EncosyTower.SystemExtensions
 
             private unsafe static int HexsToChars(char* guidChars, int a, int b)
             {
-                *guidChars = HexToChar(a >> 4);
-                guidChars[1] = HexToChar(a);
-                guidChars[2] = HexToChar(b >> 4);
-                guidChars[3] = HexToChar(b);
-                return 4;
+                // SAFETY: The caller reserves four writable characters at guidChars.
+                unsafe
+                {
+                    *guidChars = HexToChar(a >> 4);
+                    guidChars[1] = HexToChar(a);
+                    guidChars[2] = HexToChar(b >> 4);
+                    guidChars[3] = HexToChar(b);
+                    return 4;
+                }
             }
 
             private unsafe static int HexsToCharsHexOutput(char* guidChars, int a, int b)
             {
-                *guidChars = '0';
-                guidChars[1] = 'x';
-                guidChars[2] = HexToChar(a >> 4);
-                guidChars[3] = HexToChar(a);
-                guidChars[4] = ',';
-                guidChars[5] = '0';
-                guidChars[6] = 'x';
-                guidChars[7] = HexToChar(b >> 4);
-                guidChars[8] = HexToChar(b);
-                return 9;
+                // SAFETY: The caller reserves nine writable characters at guidChars.
+                unsafe
+                {
+                    *guidChars = '0';
+                    guidChars[1] = 'x';
+                    guidChars[2] = HexToChar(a >> 4);
+                    guidChars[3] = HexToChar(a);
+                    guidChars[4] = ',';
+                    guidChars[5] = '0';
+                    guidChars[6] = 'x';
+                    guidChars[7] = HexToChar(b >> 4);
+                    guidChars[8] = HexToChar(b);
+                    return 9;
+                }
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]

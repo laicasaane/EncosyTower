@@ -32,21 +32,37 @@ namespace EncosyTower.Variants
 
         public static readonly Variant Undefined = default;
 
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.META_OFFSET)] public readonly VariantBase Base;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.META_OFFSET)] public readonly VariantTypeKind TypeKind;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VARIANT_TYPE_ID_OFFSET)]  public readonly TypeId TypeId;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.OBJECT_OFFSET)] public readonly object Object;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly bool Bool;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly byte Byte;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly sbyte SByte;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly char Char;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly double Double;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly float Float;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly int Int;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly uint UInt;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly long Long;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly ulong ULong;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly short Short;
+        // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
         [FieldOffset(VariantBase.DATA_OFFSET)] public readonly ushort UShort;
 
         public Variant(VariantBase @base, VariantTypeKind type, TypeId typeId) : this()

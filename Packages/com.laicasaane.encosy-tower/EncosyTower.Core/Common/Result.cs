@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -242,7 +248,7 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(Error<StringOrException>);
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
         {
             if (isDifferentType == false)
@@ -252,7 +258,8 @@ namespace EncosyTower.Common
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException()
-                => new($"{typeof(Result<TValue>)} is not allowed. Value type must be different from {typeof(Error<StringOrException>)}.");
+                => new($"{typeof(Result<TValue>)} is not allowed. " +
+                $"Value type must be different from {typeof(Error<StringOrException>)}.");
         }
     }
 
@@ -408,7 +415,7 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(TError);
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
         {
             if (isDifferentType == false)
@@ -418,7 +425,8 @@ namespace EncosyTower.Common
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException()
-                => new($"{typeof(Result<TValue, TError>)} is not allowed. Value type must be different from  error type.");
+                => new($"{typeof(Result<TValue, TError>)} is not allowed. " +
+                $"Value type must be different from  error type.");
         }
     }
 

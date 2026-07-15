@@ -18,6 +18,12 @@ namespace EncosyTower.Entities.Stats.Generators
             p.PrintEndLine();
             p.PrintLine(@"#pragma warning disable
 
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG || ENCOSY_STATS_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -42,6 +48,7 @@ using Unity.Mathematics;
                         var type = types[i];
                         var typeName = typeNames[i];
 
+                        p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                         p.PrintBeginLine(GeneratorAPI.FIELD_OFFSET_0)
                             .Print(" public ").Print(type)
                             .Print(" ").Print(typeName).PrintEndLine(";");
@@ -49,6 +56,7 @@ using Unity.Mathematics;
 
                     var typeFieldOffset = string.Format(GeneratorAPI.FIELD_OFFSET_FORMAT, GeneratorAPI.MaxTypeSize);
 
+                    p.PrintLine("// TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.");
                     p.PrintBeginLine(typeFieldOffset)
                         .PrintEndLine(" public StatVariantType Type;");
 

@@ -170,7 +170,9 @@ namespace EncosyTower.Types.Internals
         [StructLayout(LayoutKind.Explicit)]
         private struct TypeCollection
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public UnityEditor.TypeCache.TypeCollection collection;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public Type[] items;
 
             public static ReadOnlyMemory<Type> AsMemory(UnityEditor.TypeCache.TypeCollection value)
@@ -183,7 +185,9 @@ namespace EncosyTower.Types.Internals
         [StructLayout(LayoutKind.Explicit)]
         private struct FieldCollection
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public UnityEditor.TypeCache.FieldInfoCollection collection;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public FieldInfo[] items;
 
             public static ReadOnlyMemory<FieldInfo> AsMemory(UnityEditor.TypeCache.FieldInfoCollection value)
@@ -196,7 +200,9 @@ namespace EncosyTower.Types.Internals
         [StructLayout(LayoutKind.Explicit)]
         private struct MethodCollection
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public UnityEditor.TypeCache.MethodCollection collection;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public MethodInfo[] items;
 
             public static ReadOnlyMemory<MethodInfo> AsMemory(UnityEditor.TypeCache.MethodCollection value)

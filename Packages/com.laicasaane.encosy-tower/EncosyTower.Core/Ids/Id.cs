@@ -151,9 +151,11 @@ namespace EncosyTower.Ids
         [StructLayout(LayoutKind.Explicit)]
         internal struct Union
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)]
             public int intValue;
 
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)]
             public uint uintValue;
 

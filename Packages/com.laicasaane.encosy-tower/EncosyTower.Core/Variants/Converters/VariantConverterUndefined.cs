@@ -24,7 +24,7 @@ namespace EncosyTower.Variants.Converters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetValue(in Variant variant)
         {
-            ThrowIfInvalidCast();
+            ThrowIfInvalidCast(false);
             return default;
         }
 
@@ -47,10 +47,17 @@ namespace EncosyTower.Variants.Converters
             return variant.ToString();
         }
 
-        [HideInCallstack, StackTraceHidden, DoesNotReturn, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
-        private static void ThrowIfInvalidCast()
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
         {
-            throw new InvalidCastException($"Cannot get value of {typeof(T)} from the input variant.");
+            if (isValid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidCastException CreateException()
+                => new($"Cannot get value of {typeof(T)} from the input variant.");
         }
     }
 }

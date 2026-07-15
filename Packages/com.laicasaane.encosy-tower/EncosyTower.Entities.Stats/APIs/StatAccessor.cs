@@ -1767,7 +1767,7 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        internal unsafe bool TryAddStatModifier(
+        internal bool TryAddStatModifier(
               StatHandle affectedStatHandle
             , TStatModifier modifier
             , ref StatOwner affectStatOwnerRef
@@ -2052,7 +2052,7 @@ namespace EncosyTower.Entities.Stats
             return false;
         }
 
-        public unsafe bool TryRemoveStatModifier(
+        public bool TryRemoveStatModifier(
               StatModifierHandle modifierHandle
             , ref StatWorldData<TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver> worldData
         )

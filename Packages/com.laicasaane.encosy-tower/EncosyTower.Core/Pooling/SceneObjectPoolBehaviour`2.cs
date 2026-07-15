@@ -1,3 +1,9 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_MATHEMATICS
 
 using System;
@@ -27,7 +33,6 @@ namespace EncosyTower.Pooling
 #endif
 
 #if UNITY_6000_3_OR_NEWER
-    using EntityId = UnityEngine.EntityId;
 #else
     using EntityId = System.Int32;
 #endif
@@ -326,6 +331,7 @@ namespace EncosyTower.Pooling
 
             var (pool, position, rotation, scale) = record;
 
+            // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
                 Span<GameObjectInfo> result = stackalloc GameObjectInfo[1];
@@ -429,6 +435,7 @@ namespace EncosyTower.Pooling
                 return;
             }
 
+            // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
                 Span<GameObjectId> gameObjectIds = stackalloc GameObjectId[1];
@@ -609,7 +616,7 @@ namespace EncosyTower.Pooling
             Dispose();
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         private static void AssertInitialization(SceneObjectPoolBehaviour<TKey, TKeyComparer> behaviour)
         {
             const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";

@@ -209,7 +209,9 @@ namespace EncosyTower.PageFlows.MonoPages
         [StructLayout(LayoutKind.Explicit)]
         private struct Id2EntityIdUnion
         {
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public EntityId entityId;
+            // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
             [FieldOffset(0)] public Id2 id2;
 
             public Id2EntityIdUnion(EntityId entityId) : this()

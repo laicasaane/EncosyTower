@@ -57,12 +57,26 @@ namespace EncosyTower.Entities
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>The returned span borrows the blob storage; the blob must remain alive and immutable for the span's lifetime.</safety>
         public unsafe static ReadOnlySpan<T> AsReadOnlySpan<T>(this ref BlobArray<T> self) where T : struct
-            => new(self.GetUnsafePtr(), self.Length);
+        {
+            // SAFETY: BlobArray.GetUnsafePtr points at the live contiguous blob storage for Length elements.
+            unsafe
+            {
+                return new ReadOnlySpan<T>(self.GetUnsafePtr(), self.Length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <safety>The returned span borrows the builder's contiguous storage; the builder must remain alive and must not relocate the array.</safety>
         public unsafe static Span<T> AsSpan<T>(this ref BlobBuilderArray<T> self) where T : struct
-            => new(self.GetUnsafePtr(), self.Length);
+        {
+            // SAFETY: BlobBuilderArray.GetUnsafePtr points at the live contiguous builder storage for Length elements.
+            unsafe
+            {
+                return new Span<T>(self.GetUnsafePtr(), self.Length);
+            }
+        }
     }
 }
 

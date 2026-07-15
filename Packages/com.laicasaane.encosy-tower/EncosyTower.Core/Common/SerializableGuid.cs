@@ -10,7 +10,7 @@ namespace EncosyTower.Common
     using UnityEngine;
 
     [Serializable, TypeConverter(typeof(TypeConverter))]
-    public unsafe partial struct SerializableGuid
+    public partial struct SerializableGuid
         : IEquatable<SerializableGuid>, IEquatable<Guid>
         , IComparable<SerializableGuid>, IComparable<Guid>, IComparable
         , ITryParse<SerializableGuid>, ITryParseSpan<SerializableGuid>
@@ -23,7 +23,7 @@ namespace EncosyTower.Common
 
         public static readonly SerializableGuid Empty = new(Guid.Empty);
 
-        [SerializeField] internal fixed byte _bytes[SIZE];
+        [SerializeField] internal unsafe fixed byte _bytes[SIZE];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializableGuid(in Guid guid)
@@ -154,9 +154,13 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<byte> AsReadOnlySpan()
         {
-            fixed (void* ptr = _bytes)
+            // SAFETY: _bytes is an inline fixed buffer owned by this value and the span is exactly SIZE bytes.
+            unsafe
             {
-                return new ReadOnlySpan<byte>(ptr, SIZE);
+                fixed (void* ptr = _bytes)
+                {
+                    return new ReadOnlySpan<byte>(ptr, SIZE);
+                }
             }
         }
 

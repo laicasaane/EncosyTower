@@ -1,7 +1,14 @@
+#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
+#else
+#define __ENCOSY_VALIDATION__
+#endif
+
 #if UNITY_MATHEMATICS
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Debugging;
 using EncosyTower.UnityExtensions;
@@ -27,7 +34,7 @@ namespace EncosyTower.Pooling
     using EntityId = System.Int32;
 #endif
 
-    internal sealed class SceneObjectPoolContext : IDisposable
+    internal sealed class SceneObjectPoolContext : IDisposable, IIncreaseCapacity
     {
         internal NativeHashMap<TransformId, GameObjectInfo> _goInfoMap;
         internal TransformAccessArray _transformArray;
@@ -35,7 +42,13 @@ namespace EncosyTower.Pooling
         internal NativeList<float3> _scales;
         internal NativeList<quaternion> _rotations;
 
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
+        public int Capacity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _transformArray.capacity;
+        }
+
+        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
         public static void AssertInitialization(SceneObjectPoolContext context)
         {
             const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";
@@ -56,21 +69,29 @@ namespace EncosyTower.Pooling
             _rotations = new(capacity, Allocator.Persistent);
         }
 
-        public void IncreaseCapacityBy(int amount)
+        public int IncreaseCapacityBy(int amount)
         {
             var transformArray = _transformArray;
             var capacity = transformArray.length + amount;
+            return IncreaseCapacityTo(capacity);
+        }
 
-            if (capacity <= transformArray.capacity)
+        public int IncreaseCapacityTo(int newCapacity)
+        {
+            var transformArray = _transformArray;
+
+            if (newCapacity <= transformArray.capacity)
             {
-                return;
+                return transformArray.capacity;
             }
 
-            transformArray.capacity = capacity;
-            _goInfoMap.IncreaseCapacityTo(capacity);
-            _positions.IncreaseCapacityTo(capacity);
-            _scales.IncreaseCapacityTo(capacity);
-            _rotations.IncreaseCapacityTo(capacity);
+            transformArray.capacity = newCapacity;
+            _goInfoMap.IncreaseCapacityTo(newCapacity);
+            _positions.IncreaseCapacityTo(newCapacity);
+            _scales.IncreaseCapacityTo(newCapacity);
+            _rotations.IncreaseCapacityTo(newCapacity);
+
+            return transformArray.capacity;
         }
 
         public void Dispose()
