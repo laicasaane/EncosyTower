@@ -23,12 +23,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,12 +30,13 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Internal;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Unsafe
 {
@@ -400,7 +395,9 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        [Conditional("__ENCOSY_VALIDATION__")]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void CheckAllocateArguments(int length, Allocator allocator)
         {
             ThrowIfAllocatorNotSupported(allocator > Allocator.None);
@@ -423,7 +420,9 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        [Conditional("__ENCOSY_VALIDATION__")]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
 #if UNITY_BURST
         [Unity.Burst.BurstDiscard]
 #endif
@@ -433,7 +432,10 @@ namespace EncosyTower.Collections.Unsafe
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfAllocatorNotSupported([DoesNotReturnIf(false)] bool isSupported)
         {
             if (isSupported == false)
@@ -446,7 +448,10 @@ namespace EncosyTower.Collections.Unsafe
                 => new("Allocator must be Temp, TempJob or Persistent", "allocator");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfCustomAllocator([DoesNotReturnIf(false)] bool isBuiltIn)
         {
             if (isBuiltIn == false)
@@ -459,7 +464,10 @@ namespace EncosyTower.Collections.Unsafe
                 => new("Use CollectionHelper.CreateUnsafeArray for custom allocator", "allocator");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfAllocateLengthNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
         {
             if (isZeroOrPositive == false)
@@ -472,7 +480,10 @@ namespace EncosyTower.Collections.Unsafe
                 => new("length", "Length must be >= 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfTypesNotEqualSize<U>([DoesNotReturnIf(false)] bool areEqual)
             where U : unmanaged
         {

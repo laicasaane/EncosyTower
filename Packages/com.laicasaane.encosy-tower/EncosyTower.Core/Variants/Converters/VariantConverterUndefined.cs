@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Types;
 using UnityEngine;
 
+using static EncosyTower.Debugging.ValidationDefines;
+
 namespace EncosyTower.Variants.Converters
 {
     internal sealed class VariantConverterUndefined<T> : IVariantConverter<T>
@@ -47,7 +49,8 @@ namespace EncosyTower.Variants.Converters
             return variant.ToString();
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)

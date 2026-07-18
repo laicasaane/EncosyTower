@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,7 +6,6 @@ using System.Runtime.InteropServices;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 

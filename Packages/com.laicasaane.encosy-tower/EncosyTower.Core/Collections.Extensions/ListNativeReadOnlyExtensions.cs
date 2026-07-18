@@ -1,15 +1,11 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Extensions
 {
@@ -195,7 +191,10 @@ namespace EncosyTower.Collections.Extensions
             where TComparer : unmanaged, IComparer<T>
                 => Array.BinarySearch(self.ToArray(), index, count, item, comparer);
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRangeIsInvalid_Index([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
@@ -208,7 +207,10 @@ namespace EncosyTower.Collections.Extensions
                 => new("index", "Index must be non-negative.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRangeIsInvalid_Count([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
@@ -221,7 +223,10 @@ namespace EncosyTower.Collections.Extensions
                 => new("count", "Count must be non-negative.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRangeIsInvalid_Section([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)

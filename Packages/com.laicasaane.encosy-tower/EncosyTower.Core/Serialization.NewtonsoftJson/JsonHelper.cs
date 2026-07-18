@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITY_NEWTONSOFT_JSON
 
 using System;
@@ -17,6 +11,8 @@ using EncosyTower.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Serialization.NewtonsoftJson
 {
@@ -153,13 +149,15 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             }
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void LogException(Exception ex, Logging.ILogger logger)
         {
             (logger ?? DevLogger.Default).LogException(ex);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void LogErrorSerializeToNull(Logging.ILogger logger)
         {
             (logger ?? DevLogger.Default).LogError(GetSerializedStringIsNullMessage());

@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -11,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Databases
 {
@@ -103,7 +99,8 @@ namespace EncosyTower.Databases
             return !(left == right);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)

@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,8 +7,10 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
+using EncosyTower.Types;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -586,7 +582,10 @@ namespace EncosyTower.Collections
             _buffer.Resize(newCapacity, true);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfProviderIsNull([DoesNotReturnIf(false)] bool isInitialized)
         {
             if (isInitialized == false)
@@ -599,7 +598,10 @@ namespace EncosyTower.Collections
                 => new("ListProxy<TProvider, TBuffer, T> is not initialized");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -612,7 +614,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -625,7 +630,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -638,7 +646,10 @@ namespace EncosyTower.Collections
                 => new("out of bound start index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -651,7 +662,10 @@ namespace EncosyTower.Collections
                 => new("out of bound length");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSwapBackIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -664,7 +678,10 @@ namespace EncosyTower.Collections
                 => new("out of bound index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
         {
             if (exceedsCapacity == false)
@@ -705,7 +722,7 @@ namespace EncosyTower.Collections
 #endif
         internal static void ShouldClear(ref bool result)
         {
-            result = RuntimeHelpers.IsReferenceOrContainsReferences<T>();
+            result = EncosyTypeExtensions.IsUnmanaged<T>() == false;
         }
 
         private void AddRangeFromReadOnlyList(IReadOnlyList<T> items)

@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -12,6 +6,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Types;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Variants.Converters
 {
@@ -55,7 +51,7 @@ namespace EncosyTower.Variants.Converters
                 }
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 return VariantConverterObject<T>.Default;
             }
@@ -122,7 +118,8 @@ namespace EncosyTower.Variants.Converters
             return sizeOfT <= VariantData.BYTE_COUNT;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfSizeInvalid<T>([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)

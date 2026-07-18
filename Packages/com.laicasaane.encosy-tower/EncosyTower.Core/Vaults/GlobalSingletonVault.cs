@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 namespace EncosyTower.Vaults
 {
     public static class GlobalSingletonVault

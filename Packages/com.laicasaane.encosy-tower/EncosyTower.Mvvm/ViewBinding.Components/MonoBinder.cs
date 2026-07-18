@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +6,8 @@ using EncosyTower.Collections;
 using EncosyTower.Logging;
 using EncosyTower.Mvvm.ComponentModel;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Mvvm.ViewBinding.Components
 {
@@ -127,7 +123,8 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
             }
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorIfBindingMissing(UnityEngine.Object context, int index)
         {
             StaticDevLogger.LogError(
@@ -136,7 +133,8 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorIfTypeNotMatch(UnityEngine.Object context, int index, MonoBinding value)
         {
             StaticDevLogger.LogError(
@@ -145,7 +143,8 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorIfContextMissing(UnityEngine.Object context, int index)
         {
             StaticDevLogger.LogError(

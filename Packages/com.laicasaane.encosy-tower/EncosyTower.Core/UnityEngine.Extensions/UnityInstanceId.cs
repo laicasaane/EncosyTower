@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -11,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EncosyTower.Common;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.UnityExtensions
 {
@@ -179,7 +175,8 @@ namespace EncosyTower.UnityExtensions
         public static bool operator !=(UnityInstanceId<T> left, UnityInstanceId<T> right)
             => left._value != right._value;
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)
@@ -192,7 +189,8 @@ namespace EncosyTower.UnityExtensions
                 => new("UnityEngine.Object is null or invalid.", "obj");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfNotCreated([DoesNotReturnIf(false)] bool value)
         {
             if (value == false)

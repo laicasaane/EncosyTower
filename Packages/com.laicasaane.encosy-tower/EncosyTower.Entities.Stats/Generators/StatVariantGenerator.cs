@@ -18,12 +18,6 @@ namespace EncosyTower.Entities.Stats.Generators
             p.PrintEndLine();
             p.PrintLine(@"#pragma warning disable
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG || ENCOSY_STATS_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

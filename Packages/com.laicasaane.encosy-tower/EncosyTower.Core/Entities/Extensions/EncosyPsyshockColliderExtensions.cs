@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITY_ENTITIES && LATIOS_FRAMEWORK
 
 using System.Diagnostics;
@@ -12,6 +6,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.UnityExtensions;
 using Unity.Mathematics;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Entities
 {
@@ -81,7 +77,8 @@ namespace EncosyTower.Entities
             };
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfInvalidCollider([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)

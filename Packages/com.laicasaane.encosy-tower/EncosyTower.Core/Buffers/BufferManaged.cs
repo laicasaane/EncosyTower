@@ -22,16 +22,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
-using EncosyTower.Debugging;
+using EncosyTower.Types;
 
 namespace EncosyTower.Buffers
 {
@@ -96,11 +90,11 @@ namespace EncosyTower.Buffers
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resize(int newSize)
-            => Resize(newSize, true, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+            => Resize(newSize, true, EncosyTypeExtensions.IsUnmanaged<T>() == false);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resize(int newSize, bool copyContent)
-            => Resize(newSize, copyContent, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+            => Resize(newSize, copyContent, EncosyTypeExtensions.IsUnmanaged<T>() == false);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resize(int newSize, bool copyContent, bool memClear)
@@ -123,8 +117,10 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void FastClear()
         {
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
+            {
                 Clear();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

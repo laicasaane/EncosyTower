@@ -1,14 +1,10 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG || ENCOSY_STATS_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Entities.Stats
 {
@@ -29,7 +25,9 @@ namespace EncosyTower.Entities.Stats
 
     internal static class ThrowHelper
     {
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfMismatchedOperatorTypes(StatVariantType lhs, StatVariantType rhs, string op)
         {
             if (lhs != rhs)
@@ -45,7 +43,9 @@ namespace EncosyTower.Entities.Stats
                 );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfMismatchedFunctionTypes(StatVariantType a, StatVariantType b, string func)
         {
             if (a != b)
@@ -61,7 +61,9 @@ namespace EncosyTower.Entities.Stats
                 );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfMismatchedClampTypes(
             StatVariantType value, StatVariantType lowerBound, StatVariantType upperBound
         )
@@ -84,7 +86,9 @@ namespace EncosyTower.Entities.Stats
             }
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfExplicitlyConvertToWrongType(StatVariantType type, StatVariantType requiredType)
         {
             if (type != requiredType)
@@ -100,7 +104,9 @@ namespace EncosyTower.Entities.Stats
                 );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfDestinationTypeMismatch(StatVariantType type, StatVariantType destinationType)
         {
             if (type != destinationType)
@@ -115,7 +121,9 @@ namespace EncosyTower.Entities.Stats
                 );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowIfUnsupportedType(StatVariantType type)
         {
             if (type.IsDefined() == false)
@@ -128,7 +136,9 @@ namespace EncosyTower.Entities.Stats
                 => new($"Value type '{type.ToStringFast()}' is not supported.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         public static void ThrowUnsupportedType(StatVariantType type)
             => throw new StatVariantTypeException($"Value type '{type.ToStringFast()}' is not supported.");
 
@@ -152,7 +162,9 @@ namespace EncosyTower.Entities.Stats
         public static StatVariantOperatorException UnaryOperatorException(string op, StatVariantType type)
             => new($"Cannot apply unary operator '{op}' to stat value of type '{type.ToStringFast()}'.");
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         internal static void ThrowIfStatWorldDataIsNotCreated([DoesNotReturnIf(false)] bool isCreated)
         {
             if (isCreated == false)
@@ -165,7 +177,9 @@ namespace EncosyTower.Entities.Stats
                 => new("Stat World data is not created", "worldData");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(STATS_CHECKS)]
         internal static void ThrowIfPairsMismatch<TStatData>(StatVariantType valuePairType, TStatData statData)
             where TStatData : IStatData
         {

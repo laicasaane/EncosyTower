@@ -1,15 +1,11 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Common
 {
@@ -248,7 +244,8 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(Error<StringOrException>);
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
         {
             if (isDifferentType == false)
@@ -415,7 +412,8 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(TError);
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
         {
             if (isDifferentType == false)

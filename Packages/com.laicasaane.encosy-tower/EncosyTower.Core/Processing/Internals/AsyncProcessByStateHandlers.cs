@@ -1,9 +1,9 @@
 #if UNITASK || UNITY_6000_0_OR_NEWER
 
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_PROCESSING_NO_VALIDATION__
+#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#define __ENCOSY_NO_VALIDATION__
 #else
-#define __ENCOSY_PROCESSING_VALIDATION__
+#define __ENCOSY_VALIDATION__
 #endif
 
 using System;
@@ -52,7 +52,7 @@ namespace EncosyTower.Processing.Internals.Async
                 return _process(state, request);
             }
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             StateValidation.ErrorIfStateIsDestroyed<TState>();
 #endif
 
@@ -114,7 +114,7 @@ namespace EncosyTower.Processing.Internals.Async
                 return _process(state, request);
             }
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             StateValidation.ErrorIfStateIsDestroyed<TState>();
 #endif
 
@@ -154,7 +154,7 @@ namespace EncosyTower.Processing.Internals.Async
                 return _process(state, request, token);
             }
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             StateValidation.ErrorIfStateIsDestroyed<TState>();
 #endif
 
@@ -216,7 +216,7 @@ namespace EncosyTower.Processing.Internals.Async
                 return _process(state, request, token);
             }
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
             StateValidation.ErrorIfStateIsDestroyed<TState>();
 #endif
 
@@ -224,7 +224,7 @@ namespace EncosyTower.Processing.Internals.Async
         }
     }
 
-#if __ENCOSY_PROCESSING_VALIDATION__
+#if __ENCOSY_VALIDATION__
     internal static class StateValidation
     {
         public static void ErrorIfStateIsDestroyed<TState>()

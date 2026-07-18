@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
@@ -22,6 +16,8 @@ using EncosyTower.Tasks;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 using UnityEngine.Scripting;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.PageFlows.MonoPages
 {
@@ -483,7 +479,8 @@ namespace EncosyTower.PageFlows.MonoPages
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void WarningIfMissingPreserveAttribute(
               Type type
             , ReadOnlySpan<PropertyInfo> properties

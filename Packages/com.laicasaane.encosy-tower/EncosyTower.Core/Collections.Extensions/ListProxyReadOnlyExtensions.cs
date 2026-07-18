@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -12,6 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Extensions
 {
@@ -282,7 +278,10 @@ namespace EncosyTower.Collections.Extensions
         {
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
         }
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsNonNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
@@ -295,7 +294,10 @@ namespace EncosyTower.Collections.Extensions
                 => new("Index is less than 0.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfCountIsNonNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
@@ -308,7 +310,10 @@ namespace EncosyTower.Collections.Extensions
                 => new("Count is less than 0.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRangeIsWithinList([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
@@ -321,7 +326,10 @@ namespace EncosyTower.Collections.Extensions
                 => new("Index and count do not denote a valid range in the ListProxy<TProvider, TBuffer, T>.ReadOnly.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSectionIsWithinList([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)

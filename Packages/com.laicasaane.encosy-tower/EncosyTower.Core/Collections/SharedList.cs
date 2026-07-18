@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,9 +5,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
-using EncosyTower.Debugging;
+using EncosyTower.Types;
 using Unity.Collections;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -549,7 +545,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, index + 1, _buffer, index, _count.ValueRO - index);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer.AsSpan()[_count.ValueRO] = default;
             }
@@ -573,7 +569,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, index + 1, _buffer, index, _count.ValueRO - index);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer.AsSpan()[_count.ValueRO] = default;
             }
@@ -759,7 +755,10 @@ namespace EncosyTower.Collections
             ResizeBuffer(newCapacity);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -772,7 +771,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indices for the SharedList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -785,7 +787,10 @@ namespace EncosyTower.Collections
                 => new("index is less than 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -798,7 +803,10 @@ namespace EncosyTower.Collections
                 => new("count is less than 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -811,7 +819,10 @@ namespace EncosyTower.Collections
                 => new("index and count do not specify a valid section in the SharedList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -824,7 +835,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indices for the SharedList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -837,7 +851,10 @@ namespace EncosyTower.Collections
                 => new("out of bound index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -850,7 +867,10 @@ namespace EncosyTower.Collections
                 => new("out of bound start index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -863,7 +883,10 @@ namespace EncosyTower.Collections
                 => new("out of bound length");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
         {
             if (exceedsCapacity == false)

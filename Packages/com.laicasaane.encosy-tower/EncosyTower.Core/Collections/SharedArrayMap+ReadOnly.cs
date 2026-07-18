@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,10 +7,11 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -28,7 +23,8 @@ namespace EncosyTower.Collections
 
         public readonly partial struct ReadOnly : IHasCapacity, IHasCount, ITryGetValue<TKey, TValue>, IIsCreated
         {
-            private static readonly ReadOnly s_empty = new(new());
+            private static readonly SharedArrayMap<TKey, TValue, TValueNative> s_emptyOwner = new();
+            private static readonly ReadOnly s_empty = new(s_emptyOwner);
 
             internal readonly NativeArray<ArrayMapNode<TKey>>.ReadOnly _valuesInfo;
             internal readonly NativeArray<TValue>.ReadOnly _values;
@@ -185,7 +181,10 @@ namespace EncosyTower.Collections
                 return false;
             }
 
-            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            [HideInCallstack, StackTraceHidden]
+            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+            [Conditional(UNITY_COLLECTIONS_CHECKS)]
             private static void ThrowIfBucketsAreNotInitialized([DoesNotReturnIf(false)] bool areInitialized)
             {
                 if (areInitialized == false)

@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -10,6 +10,8 @@ using System.Diagnostics;
 using EncosyTower.Logging;
 using EncosyTower.Types;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Vaults
 {
@@ -118,11 +120,12 @@ namespace EncosyTower.Vaults
         private static Exception CreateArgumentNullException_Instance()
             => new ArgumentNullException("instance");
 
-        [Conditional("__ENCOSY_VALIDATION__")]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void LogError_InstanceAlreadyExists<T>()
             => StaticDevLogger.LogError($"An instance of {typeof(T)} has already been existing");
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowCannotCastEvenRegistered<T>(TBase obj)
         {
             throw new InvalidCastException(
@@ -131,7 +134,8 @@ namespace EncosyTower.Vaults
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowCannotCast<T>(TBase obj)
         {
             throw new InvalidCastException(

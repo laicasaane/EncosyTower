@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,6 +11,8 @@ using Unity.Collections;
 using Unity.Collections.Internals;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -525,7 +521,10 @@ namespace EncosyTower.Collections
             => offset + UnsafeUtility.SizeOf<U>() <= UnsafeUtility.SizeOf<T>();
 #endif
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfArrayLengthMismatch(
               [DoesNotReturnIf(false)] bool valid
             , int arrayLength
@@ -542,7 +541,10 @@ namespace EncosyTower.Collections
                 => new($"array.Length ({arrayLength}) does not match the Length of this instance ({length}).", "array");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceWithStrideOffsetAndSizeExceeded(
             [DoesNotReturnIf(false)] bool valid
         )
@@ -557,7 +559,10 @@ namespace EncosyTower.Collections
                 => new("SliceWithStride sizeof(U) + offset must be <= sizeof(T)", "offset");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceWithStrideOffsetIsOutOfRange(
             [DoesNotReturnIf(false)] bool valid
         )
@@ -572,7 +577,10 @@ namespace EncosyTower.Collections
                 => new("offset", "SliceWithStride offset must be >= 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceConvertSizeMismatch(
             [DoesNotReturnIf(false)] bool valid
         )
@@ -587,7 +595,10 @@ namespace EncosyTower.Collections
                 => new("SliceConvert requires that Length * sizeof(T) is a multiple of sizeof(U).");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceConvertOnRestrictedRange(
             [DoesNotReturnIf(false)] bool valid
         )
@@ -602,7 +613,10 @@ namespace EncosyTower.Collections
                 => new("SliceConvert may not be used on a restricted range array");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceConvertStrideMismatch(
             [DoesNotReturnIf(false)] bool valid
         )
@@ -617,7 +631,10 @@ namespace EncosyTower.Collections
                 => new("SliceConvert requires that stride matches the size of the source type");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceOnRestrictedRange(
               [DoesNotReturnIf(false)] bool valid
             , string paramName
@@ -633,7 +650,10 @@ namespace EncosyTower.Collections
                 => new($"Slice may not be used on a restricted range {paramName}", paramName);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceRangeExceedsLength(
               [DoesNotReturnIf(false)] bool valid
             , int sourceLength
@@ -660,7 +680,10 @@ namespace EncosyTower.Collections
                 );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceLengthIsNegative(
               [DoesNotReturnIf(false)] bool valid
             , int length
@@ -676,7 +699,10 @@ namespace EncosyTower.Collections
                 => new("length", $"Slice length {length} < 0.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceStartIsNegative(
               [DoesNotReturnIf(false)] bool valid
             , int start
@@ -692,7 +718,10 @@ namespace EncosyTower.Collections
                 => new("start", $"Slice start {start} < 0.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSliceIntegerOverflow(
             [DoesNotReturnIf(false)] bool valid
         )

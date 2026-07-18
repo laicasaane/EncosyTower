@@ -22,12 +22,6 @@
 //
 // https://github.com/thebeardphantom/Runtime-TypeCache
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -36,6 +30,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Extensions.Unsafe;
 using EncosyTower.Common;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Types.Internals
 {
@@ -208,7 +204,8 @@ namespace EncosyTower.Types.Internals
             assemblyName = string.IsNullOrWhiteSpace(assemblyName) ? string.Empty : assemblyName;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ThrowIfNull([DoesNotReturnIf(false)] bool isNotNull)
         {
             if (isNotNull == false)

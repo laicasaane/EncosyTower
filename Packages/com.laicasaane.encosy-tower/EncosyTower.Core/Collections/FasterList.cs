@@ -22,22 +22,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Debugging;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
+using EncosyTower.Types;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -455,7 +451,10 @@ namespace EncosyTower.Collections
             return -1;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -468,7 +467,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indexes for the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFindIndexStartIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -481,7 +483,10 @@ namespace EncosyTower.Collections
                 => new("startIndex is outside the range of valid indexes for the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -494,7 +499,10 @@ namespace EncosyTower.Collections
                 => new("count is less than 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFindIndexSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -507,7 +515,10 @@ namespace EncosyTower.Collections
                 => new("startIndex and count do not specify a valid section in the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFindLastEmptyStartIsOutOfRange([DoesNotReturnIf(false)] bool isEmptyStart)
         {
             if (isEmptyStart == false)
@@ -520,7 +531,10 @@ namespace EncosyTower.Collections
                 => new("startIndex is outside the range of valid indexes for the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFindLastStartIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -533,7 +547,10 @@ namespace EncosyTower.Collections
                 => new("startIndex is outside the range of valid indexes for the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFindLastSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -798,7 +815,7 @@ namespace EncosyTower.Collections
         {
             _version++;
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 Array.Clear(_buffer, 0, _buffer.Length);
             }
@@ -944,7 +961,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer[_count] = default;
             }
@@ -968,7 +985,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer[_count] = default;
             }
@@ -987,7 +1004,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, index + 1, _buffer, index, _count - index);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer[_count] = default;
             }
@@ -1017,7 +1034,7 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, startIndex + length, _buffer, startIndex, count - startIndex);
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 Array.Clear(_buffer, count, length);
             }
@@ -1034,7 +1051,7 @@ namespace EncosyTower.Collections
                 _buffer[index] = _buffer[_count];
             }
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
                 _buffer[_count] = default;
             }
@@ -1265,7 +1282,10 @@ namespace EncosyTower.Collections
             _buffer = newList;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -1278,7 +1298,10 @@ namespace EncosyTower.Collections
                 => new("index is less than 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1291,7 +1314,10 @@ namespace EncosyTower.Collections
                 => new("index and count do not specify a valid section in the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1304,7 +1330,10 @@ namespace EncosyTower.Collections
                 => new("index is outside the range of valid indexes for the FasterList<T>");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfCollectionWasModified([DoesNotReturnIf(false)] bool versionMatches)
         {
             if (versionMatches == false)
@@ -1317,7 +1346,10 @@ namespace EncosyTower.Collections
                 => new("An element in the collection has been modified.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1330,7 +1362,10 @@ namespace EncosyTower.Collections
                 => new("out of bound index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1343,7 +1378,10 @@ namespace EncosyTower.Collections
                 => new("out of bound start index");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1356,7 +1394,10 @@ namespace EncosyTower.Collections
                 => new("out of bound length");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSortIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -1369,7 +1410,10 @@ namespace EncosyTower.Collections
                 => new("'index' must be non-negative number");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSortCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
         {
             if (isNonNegative == false)
@@ -1382,7 +1426,10 @@ namespace EncosyTower.Collections
                 => new("'count' must be non-negative number");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfSortRangeIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -1395,7 +1442,10 @@ namespace EncosyTower.Collections
                 => new("Invalid offset length");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
         {
             if (exceedsCapacity == false)

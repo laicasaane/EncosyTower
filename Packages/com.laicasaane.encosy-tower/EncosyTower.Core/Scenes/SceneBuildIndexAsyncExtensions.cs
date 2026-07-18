@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITY_ADDRESSABLES
 #if UNITASK || UNITY_6000_0_OR_NEWER
 
@@ -15,6 +9,8 @@ using EncosyTower.Logging;
 using EncosyTower.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Scenes
 {
@@ -92,7 +88,8 @@ namespace EncosyTower.Scenes
                 : SceneManager.GetSceneByBuildIndex(index.Index);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void LogErrorIfInvalidInEditor(SceneBuildIndex index)
         {
             StaticDevLogger.LogError(

@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +10,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
+using static EncosyTower.Debugging.ValidationDefines;
+
 namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
@@ -27,7 +23,8 @@ namespace EncosyTower.Collections
         public readonly partial struct ReadOnly : IReadOnlyList<T>, IToArray<T>, IReadOnlyIndexer<T>
             , IAsReadOnlySpan<T>, ICopyToSpan<T>, ITryCopyToSpan<T>, IHasCapacity, IHasCount, IIsCreated
         {
-            private static readonly ReadOnly s_empty = new(new());
+            private static readonly SharedList<T, TNative> s_emptyOwner = new();
+            private static readonly ReadOnly s_empty = new(s_emptyOwner);
 
             internal readonly NativeArray<T>.ReadOnly _buffer;
             internal readonly NativeArray<int>.ReadOnly _count;
@@ -199,7 +196,10 @@ namespace EncosyTower.Collections
                 }
             }
 
-            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            [HideInCallstack, StackTraceHidden]
+            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+            [Conditional(UNITY_COLLECTIONS_CHECKS)]
             private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
             {
                 if (isWithinRange == false)

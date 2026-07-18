@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if !UNITY_COLLECTIONS
 
 using System;
@@ -13,6 +7,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace Unity.Collections.LowLevel.Unsafe
 {
@@ -141,7 +137,9 @@ namespace Unity.Collections.LowLevel.Unsafe
             }
         }
 
-        [Conditional("__ENCOSY_VALIDATION__")]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         static unsafe void CheckMemSwapOverlap(byte* dst, byte* src, long size)
         {
             // SAFETY: The pointers are used only for range comparison; no memory is dereferenced.
@@ -151,13 +149,18 @@ namespace Unity.Collections.LowLevel.Unsafe
             }
         }
 
-        [Conditional("__ENCOSY_VALIDATION__")]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         static void CheckIndexRange(int index, int capacity)
         {
             ThrowIfIndexIsOutOfRange(index > capacity - 1 || index < 0, index, capacity);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfMemSwapBlocksOverlap([DoesNotReturnIf(true)] bool overlap)
         {
             if (overlap)
@@ -170,7 +173,10 @@ namespace Unity.Collections.LowLevel.Unsafe
                 => new("MemSwap memory blocks overlap.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsOutOfRange(
             [DoesNotReturnIf(true)] bool outOfRange
           , int index

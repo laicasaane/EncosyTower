@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +8,8 @@ using EncosyTower.Collections;
 using EncosyTower.Common;
 using EncosyTower.Ids;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.StringIds
 {
@@ -533,7 +529,10 @@ namespace EncosyTower.StringIds
             return new(startIndex, startIndex + amount);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFailedRegistering(
               [DoesNotReturnIf(false)] bool check
             , in UnmanagedString str
@@ -550,7 +549,10 @@ namespace EncosyTower.StringIds
                 => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFailedRegistering(
               [DoesNotReturnIf(false)] bool check
             , string str
@@ -567,7 +569,10 @@ namespace EncosyTower.StringIds
                 => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfAmountIsNotValid([DoesNotReturnIf(false)] bool isValid, int amount)
         {
             if (isValid == false)

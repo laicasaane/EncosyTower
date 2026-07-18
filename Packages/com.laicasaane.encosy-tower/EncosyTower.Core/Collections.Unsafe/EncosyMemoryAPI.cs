@@ -7,12 +7,6 @@
 // is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -23,6 +17,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Unsafe
 {
@@ -318,7 +314,10 @@ namespace EncosyTower.Collections.Unsafe
             ThrowIfByteCountExceedsMaximum(size > MAXIMUM_RAM_SIZE_IN_BYTES, size);
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfFailedToAllocate([DoesNotReturnIf(false)] bool success)
         {
             if (success == false)
@@ -331,7 +330,10 @@ namespace EncosyTower.Collections.Unsafe
                 => new("Failed to allocate.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfByteCountIsNegative(
             [DoesNotReturnIf(true)] bool isNegative
           , long size
@@ -349,7 +351,10 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfByteCountExceedsMaximum(
             [DoesNotReturnIf(true)] bool exceedsMaximum
           , long size

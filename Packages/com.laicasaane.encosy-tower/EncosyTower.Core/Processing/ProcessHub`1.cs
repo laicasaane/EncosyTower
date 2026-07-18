@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -16,6 +16,8 @@ using EncosyTower.Logging;
 using EncosyTower.Processing.Internals;
 using EncosyTower.Types;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Processing
 {
@@ -333,7 +335,9 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
         private static void LogErrorNotFound<TRequest>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)
@@ -352,7 +356,9 @@ namespace EncosyTower.Processing
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
         private static void LogErrorNotFound<TRequest, TResult>(TScope scope, bool hasCandidate)
         {
             if (hasCandidate)

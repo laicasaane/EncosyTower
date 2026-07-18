@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
-using EncosyTower.Debugging;
+
+using ThrowHelper = EncosyTower.Collections.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {

@@ -1,14 +1,10 @@
-#if !(UNITY_EDITOR || DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 namespace EncosyTower.Debugging
 {
     using System;
     using System.Diagnostics;
     using JetBrains.Annotations;
+
+    using static ValidationDefines;
 
     using Debug = UnityEngine.Debug;
 
@@ -17,9 +13,7 @@ namespace EncosyTower.Debugging
     {
         [AssertionMethod]
         [ContractAnnotation("condition:false=>halt")]
-#if __ENCOSY_NO_VALIDATION__
-        [System.Diagnostics.Conditional("__NEVER_DEFINED__")]
-#endif
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         public static void IsTrue(bool condition)
         {
             Debug.Assert(condition);
@@ -27,18 +21,14 @@ namespace EncosyTower.Debugging
 
         [AssertionMethod]
         [ContractAnnotation("condition:false=>halt")]
-#if __ENCOSY_NO_VALIDATION__
-        [System.Diagnostics.Conditional("__NEVER_DEFINED__")]
-#endif
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         public static void IsTrue(bool condition, string message)
         {
             Debug.Assert(condition, message);
         }
 
         [AssertionMethod]
-#if __ENCOSY_NO_VALIDATION__
-        [System.Diagnostics.Conditional("__NEVER_DEFINED__")]
-#endif
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         public static void IndexInRange(int index, int length)
         {
             if ((uint)index >= (uint)length)
@@ -48,9 +38,7 @@ namespace EncosyTower.Debugging
         }
 
         [AssertionMethod]
-#if __ENCOSY_NO_VALIDATION__
-        [System.Diagnostics.Conditional("__NEVER_DEFINED__")]
-#endif
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         public static void OneIndexInRange(int index, int length)
         {
             if (index < 1 || (uint)index >= (uint)length)

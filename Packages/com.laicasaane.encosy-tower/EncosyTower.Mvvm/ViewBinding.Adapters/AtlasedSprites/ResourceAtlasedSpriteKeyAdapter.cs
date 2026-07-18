@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
 using EncosyTower.Annotations;
@@ -15,6 +9,8 @@ using EncosyTower.Variants.Converters;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 using UnityEngine.U2D;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters.AtlasedSprites
 {
@@ -73,7 +69,8 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters.AtlasedSprites
             return false;
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorFoundNoAtlas(string atlas)
         {
             StaticDevLogger.LogErrorFormat("Cannot find SpriteAtlas {0} in Resources."
@@ -81,7 +78,8 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters.AtlasedSprites
             );
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorFoundNoSprite(string atlas, string sprite, UnityEngine.Object context)
         {
             StaticDevLogger.LogErrorFormat(context

@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITY_MATHEMATICS
 
 using System;
@@ -21,6 +15,8 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.SceneManagement;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Pooling
 {
@@ -616,7 +612,8 @@ namespace EncosyTower.Pooling
             Dispose();
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void AssertInitialization(SceneObjectPoolBehaviour<TKey, TKeyComparer> behaviour)
         {
             const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";

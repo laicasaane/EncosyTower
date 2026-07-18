@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 #if UNITY_LOCALIZATION
 
 using System;
@@ -21,6 +15,8 @@ using EncosyTower.Vaults;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Localization
 {
@@ -169,19 +165,22 @@ namespace EncosyTower.Localization
         private static Option<Locale> FindLocale(string localeCode)
             => Option.SomeIf(s_codeToLocaleMap.TryGetValue(localeCode, out var locale) && locale.IsValid(), locale);
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorNotReady()
         {
             StaticDevLogger.LogError("Must call \"L10n.Initialize()\" first.");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void ErrorCannotFindLanguage(string value)
         {
             StaticDevLogger.LogError($"Cannot find any language by locale code {value}");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void InfoChangeLanguage(string value)
         {
             StaticDevLogger.LogInfo($"Change language to {value}");

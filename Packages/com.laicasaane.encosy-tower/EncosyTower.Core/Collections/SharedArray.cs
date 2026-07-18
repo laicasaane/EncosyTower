@@ -20,12 +20,6 @@
 // TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 // OR OTHER DEALINGS IN THE SOFTWARE.
 
-#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -35,10 +29,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.CompilerServices.Exposed;
 using System.Runtime.InteropServices;
 using EncosyTower.Common;
-using EncosyTower.Debugging;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -432,7 +427,10 @@ namespace EncosyTower.Collections
             return UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<TNative>();
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         protected static void ThrowIfSizeNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
         {
             if (isZeroOrPositive == false)
@@ -445,7 +443,10 @@ namespace EncosyTower.Collections
                 => new("size must be equal or greater than 0");
         }
 
-        [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
         {
             if (isWithinRange == false)
@@ -577,7 +578,10 @@ namespace EncosyTower.Collections
             {
             }
 
-            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            [HideInCallstack, StackTraceHidden]
+            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+            [Conditional(UNITY_COLLECTIONS_CHECKS)]
             private static void ThrowIfEnumFailedVersion([DoesNotReturnIf(false)] bool validVersion)
             {
                 if (validVersion == false)
@@ -590,7 +594,10 @@ namespace EncosyTower.Collections
                     => new("SharedArray was modified during enumeration.");
             }
 
-            [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+            [HideInCallstack, StackTraceHidden]
+            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+            [Conditional(UNITY_COLLECTIONS_CHECKS)]
             private static void ThrowIfEnumOpCantHappen([DoesNotReturnIf(false)] bool validIndex)
             {
                 if (validIndex == false)

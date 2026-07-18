@@ -344,23 +344,51 @@
 
 ### Define blocks
 
-- Files that use validation checks start with this block at the very top:
+- Do not add a file-local define block merely because a file calls or declares validation guards.
+  Conditional guards reference the constants in `EncosyTower.Debugging.ValidationDefines` directly.
+- A file that contains inline validation branches keeps a file-local block. The condition must match
+  the applicable `ValidationDefines` set; common validation uses:
 
   ```csharp
-  #if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS || UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS
+  #if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
   #define __ENCOSY_NO_VALIDATION__
   #else
   #define __ENCOSY_VALIDATION__
   #endif
   ```
 
-- A file that needs a feature is wrapped whole in that feature's define, placed above the validation block:
+- Areas with their own symbol append it to the condition. Collections and Buffers append both
+  `ENCOSY_COLLECTIONS_RUNTIME_CHECKS` and `ENABLE_UNITY_COLLECTIONS_CHECKS`, so either symbol
+  enables Encosy Collections validation. A feature wrapper remains outermost, with any kept
+  validation block inside it:
+
+  ```csharp
+  #if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_COLLECTIONS_RUNTIME_CHECKS || ENABLE_UNITY_COLLECTIONS_CHECKS) || DISABLE_ENCOSY_CHECKS
+  #define __ENCOSY_NO_VALIDATION__
+  #else
+  #define __ENCOSY_VALIDATION__
+  #endif
+  ```
 
   ```csharp
   #if UNITASK || UNITY_6000_0_OR_NEWER
   ...whole file...
   #endif
   ```
+
+| Symbol | Scope |
+|---|---|
+| `ENCOSY_RUNTIME_CHECKS` | Enables every Encosy validation guard in release builds |
+| `ENCOSY_COLLECTIONS_RUNTIME_CHECKS` | Collections, Buffers, collection extensions, and StringIds enumerators |
+| `ENABLE_UNITY_COLLECTIONS_CHECKS` | Enables Unity native-container safety and Encosy Collections validation |
+| `ENCOSY_PUBSUB_RUNTIME_CHECKS` | PubSub inline validation |
+| `ENCOSY_PROCESSING_RUNTIME_CHECKS` | Processing guards and inline validation |
+| `ENCOSY_STATS_RUNTIME_CHECKS` | Entities.Stats guards and generated stats code |
+| `DISABLE_ENCOSY_CHECKS` | Strips all conditional Encosy guards and disables all kept inline branches |
+
+`ENCOSY_COLLECTIONS_RUNTIME_CHECKS` is the lighter Encosy-only option. Do not replace direct
+`#if ENABLE_UNITY_COLLECTIONS_CHECKS` safety blocks with Encosy symbols. `DISABLE_ENCOSY_CHECKS`
+strips Encosy validation but does not disable Unity's own native-container safety implementation.
 
 - Editor-only files: wrapped whole in `#if UNITY_EDITOR`, live in an `Editor*` folder, use an `EncosyTower.Editor.*` namespace, and mark public APIs with `[ApiForEditor]`.
 
@@ -665,27 +693,39 @@ The goal: keep the happy path fast and clean, keep throwing and logging out of i
 
 - Never throw a raw exception at the call site. Use a dedicated helper.
 - One helper checks one rule. Name it after what it checks.
-- A rule used by one type stays a `private static` helper in that type. A rule shared across types may become a named `internal static` guard in `ThrowHelper`.
+- A rule used by one type stays a `private static` helper in that type. Shared rules belong to the
+  area's ThrowHelper. `EncosyTower.Collections.ThrowHelper` serves Collections and Buffers;
+  `EncosyTower.Debugging.ThrowHelper` contains only generic, non-conditional exception factories.
 - Never call generic `ThrowHelper.ThrowIfFalse(...)` from collection call sites.
 - Never write a catch-all `Validate(...)` that mixes unrelated checks.
 - Every throw helper carries `[HideInCallstack, StackTraceHidden]` so it stays out of Unity console stack traces.
-- Type-specific shared messages take `ThrowHelper.CollectionType`, not a type-name string. Resolve `CollectionType` only in the cold exception path. Unknown values fall back to `"collection"`.
+- Collection-specific shared messages take `EncosyTower.Collections.ThrowHelper.CollectionType`,
+  not a type-name string. Resolve `CollectionType` only in the cold exception path. Unknown values
+  fall back to `"collection"`.
 
 ### Conditional guards (`ThrowIfXxx`)
 
 - The guard takes the already-evaluated condition as a `bool`, marked `[DoesNotReturnIf(false)]` (or `[DoesNotReturnIf(true)]` when true means throw).
-- Add `Conditional("__ENCOSY_VALIDATION__")` when the check should disappear in release builds.
+- Import `EncosyTower.Debugging.ValidationDefines` statically and add the applicable `Conditional`
+  set when the check should disappear in release builds. Common guards use `UNITY_EDITOR`, `DEBUG`,
+  and `RUNTIME_CHECKS`; an area with its own opt-in symbol adds its area constant. Collections guards
+  additionally use `UNITY_COLLECTIONS_CHECKS`, which maps to `ENABLE_UNITY_COLLECTIONS_CHECKS`.
 - The guard itself must **not** be `NoInlining` — the fast path stays inlineable. Exception construction goes into a local static function named `CreateException`, marked `[MethodImpl(NoInlining)]`.
 
   The two snippets below are unrelated checks; they only show the wrong and right shape of the pattern.
 
   ```csharp
+  using static EncosyTower.Debugging.ValidationDefines;
+
   // ❌ SHOULDN'T
   ThrowHelper.ThrowIfFalse((uint)startIndex < (uint)_count, "out of bound start index");
   ThrowHelper.ThrowIfFalse((uint)length <= (uint)(_count - startIndex), "out of bound length");
 
   // ✅ SHOULD
-  [HideInCallstack, StackTraceHidden, Conditional("__ENCOSY_VALIDATION__")]
+  [HideInCallstack, StackTraceHidden]
+  [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+  [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+  [Conditional(UNITY_COLLECTIONS_CHECKS)]
   private static void ThrowIfInvalidAllocatorStrategy([DoesNotReturnIf(false)] bool validStrategy)
   {
       if (validStrategy == false)
@@ -756,7 +796,8 @@ The goal: keep the happy path fast and clean, keep throwing and logging out of i
       => throw new ArgumentNullException(paramName);
   ```
 
-- Add `Conditional("__ENCOSY_VALIDATION__")` when the throw is dev-only (see `Vaults/SingletonVault.cs`).
+- Add the applicable `ValidationDefines` attribute set when the throw is dev-only (see
+  `Vaults/SingletonVault.cs`).
 
 ### Recoverable failures
 
@@ -777,6 +818,12 @@ The goal: keep the happy path fast and clean, keep throwing and logging out of i
 - A method that throws in dev builds but must keep working in release builds uses both paths:
 
   ```csharp
+  #if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+  #define __ENCOSY_NO_VALIDATION__
+  #else
+  #define __ENCOSY_VALIDATION__
+  #endif
+
   if (instance == null)
   {
   #if __ENCOSY_VALIDATION__
@@ -1008,7 +1055,7 @@ Types & APIs:
 
 Errors, performance & the rest:
 
-- [ ] Validation via dedicated `ThrowIfXxx` / `ThrowXxx` helpers with `[HideInCallstack, StackTraceHidden]`, `[DoesNotReturnIf]`/`[DoesNotReturn]`, `Conditional("__ENCOSY_VALIDATION__")` for dev-only, and a `NoInlining` local `CreateException`. No inline `ThrowHelper.ThrowIfFalse`, no generic `Validate` helpers.
+- [ ] Validation via dedicated `ThrowIfXxx` / `ThrowXxx` helpers with `[HideInCallstack, StackTraceHidden]`, `[DoesNotReturnIf]`/`[DoesNotReturn]`, the applicable `ValidationDefines` `Conditional` set for dev-only, and a `NoInlining` local `CreateException`. No inline `ThrowHelper.ThrowIfFalse`, no generic `Validate` helpers.
 - [ ] `Try*` methods log via `LogError_Xxx` helpers and return `false`.
 - [ ] `[MethodImpl(AggressiveInlining)]` per Section 11; cold paths (`ThrowXxx`, `CreateException`, logging) get `NoInlining`.
 - [ ] Async methods end with `Async`; `CancellationToken token = default` last; never swallow `OperationCanceledException`.
