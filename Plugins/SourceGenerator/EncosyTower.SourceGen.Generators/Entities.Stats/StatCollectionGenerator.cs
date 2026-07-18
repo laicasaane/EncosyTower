@@ -132,6 +132,7 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                 p.PrintLine("using ET = global::EncosyTower.Common;");
                 p.PrintLine("using ETCol = global::EncosyTower.Collections;");
                 p.PrintLine("using ETCon = global::EncosyTower.Conversion;");
+                p.PrintLine("using ETDVD = global::EncosyTower.Debugging.ValidationDefines;");
                 p.PrintLine("using ETES = global::EncosyTower.Entities.Stats;");
                 p.PrintLine("using ETL = global::EncosyTower.Logging;");
                 p.PrintLine("using UC = global::Unity.Collections;");
@@ -275,18 +276,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                 var assemblyName = compilation.assemblyName;
                 var hintName = candidate.hintName;
                 var sourceFilePath = SourceGenHelpers.BuildSourceFilePath(assemblyName, hintName, projectPath);
-                var printer = Printer.Default;
-
-                {
-                    var p = printer;
-                    p.Print("#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS ||")
-                        .Print(" UNITY_DOTS_DEBUG || ENCOSY_STATS_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS")
-                        .PrintEndLine();
-                    p.Print("#define __ENCOSY_NO_VALIDATION__").PrintEndLine();
-                    p.Print("#else").PrintEndLine();
-                    p.Print("#define __ENCOSY_VALIDATION__").PrintEndLine();
-                    p.Print("#endif").PrintEndLine();
-                }
 
                 context.OutputSource(
                       outputSourceGenFiles
@@ -296,7 +285,6 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
                     , candidate.hintName
                     , sourceFilePath
                     , projectPath
-                    , printer
                 );
             }
             catch (Exception e)

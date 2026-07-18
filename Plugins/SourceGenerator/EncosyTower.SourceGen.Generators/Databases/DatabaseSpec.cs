@@ -204,6 +204,7 @@ namespace EncosyTower.SourceGen.Generators.Databases
             p.PrintLine("using ET = global::EncosyTower.Common;");
             p.PrintLine("using ETDB = EncosyTower.Databases;");
             p.PrintLine("using ETDBSG = global::EncosyTower.Databases.SourceGen;");
+            p.PrintLine("using ETDVD = global::EncosyTower.Debugging.ValidationDefines;");
             p.PrintLine("using ETI = global::EncosyTower.Initialization;");
             p.PrintLine("using ETSI = global::EncosyTower.StringIds;");
             p.PrintLine("using ETUE = global::EncosyTower.UnityExtensions;");

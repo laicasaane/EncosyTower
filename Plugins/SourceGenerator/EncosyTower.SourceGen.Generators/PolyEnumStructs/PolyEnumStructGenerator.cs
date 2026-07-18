@@ -158,18 +158,6 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
                 var assemblyName = compilation.assemblyName;
                 var hintName = candidate.hintName;
                 var sourceFilePath = SourceGenHelpers.BuildSourceFilePath(assemblyName, hintName, projectPath);
-                var printer = Printer.Default;
-
-                {
-                    var p = printer;
-                    p.Print("#if !(UNITY_EDITOR || DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS ||")
-                        .Print(" UNITY_DOTS_DEBUG) || DISABLE_ENCOSY_CHECKS")
-                        .PrintEndLine();
-                    p.Print("#define __ENCOSY_NO_VALIDATION__").PrintEndLine();
-                    p.Print("#else").PrintEndLine();
-                    p.Print("#define __ENCOSY_VALIDATION__").PrintEndLine();
-                    p.Print("#endif").PrintEndLine();
-                }
 
                 context.OutputSource(
                       outputSourceGenFiles
@@ -179,7 +167,6 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
                     , candidate.hintName
                     , sourceFilePath
                     , projectPath
-                    , printer
                 );
             }
             catch (Exception e)
@@ -224,6 +211,7 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
             p.PrintLine("using ET = global::EncosyTower.Common;");
             p.PrintLine("using ETCol = global::EncosyTower.Collections;");
             p.PrintLine("using ETCon = global::EncosyTower.Conversion;");
+            p.PrintLine("using ETDVD = global::EncosyTower.Debugging.ValidationDefines;");
             p.PrintLine("using ETEE = global::EncosyTower.EnumExtensions;");
             p.PrintLine("using ETEESG = global::EncosyTower.EnumExtensions.SourceGen;");
             p.PrintLine("using UE = global::UnityEngine;");

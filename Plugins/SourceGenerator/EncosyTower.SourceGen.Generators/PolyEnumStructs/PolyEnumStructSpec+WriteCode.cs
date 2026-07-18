@@ -15,7 +15,9 @@ namespace EncosyTower.SourceGen.Generators.PolyEnumStructs
         private const string EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         private const string GENERATED_CODE = $"[SCDC.GeneratedCode(GENERATOR, \"{SourceGenVersion.VALUE}\")]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
+            "SD.Conditional(ETDVD.UNITY_EDITOR), " +
+            "SD.Conditional(ETDVD.DEBUG), SD.Conditional(ETDVD.RUNTIME_CHECKS)]";
+
         private const string UNDEFINED_NAME = "Undefined";
         private const string ENUM_CASE_NAME = "EnumCase";
         private const string FIELD_OFFSET = "SRIS.FieldOffset";

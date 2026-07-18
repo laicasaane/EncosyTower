@@ -13,7 +13,8 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string PR_EXCLUDE_COVERAGE = "[SDCA.ExcludeFromCodeCoverage]";
         private const string PR_GENERATED_CODE = $"[SCDC.GeneratedCode(GENERATOR, \"{SourceGenVersion.VALUE}\")]";
         private const string PR_VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
+            "SD.Conditional(ETDVD.UNITY_EDITOR), SD.Conditional(ETDVD.DEBUG), " +
+            "SD.Conditional(ETDVD.RUNTIME_CHECKS), SD.Conditional(ETDVD.STATS_CHECKS)]";
 
         public readonly string WriteCode()
         {

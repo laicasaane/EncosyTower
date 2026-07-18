@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -431,7 +431,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintBeginLine().Print(i).Print(" => ").Print(defs[i].DataTypeName).PrintEndLine(",");
                     }
 
-                    p.PrintLine("_ => throw ETDBG.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
+                    p.PrintLine("_ => throw ETC.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
                 }
                 p.CloseScope("};");
                 p.PrintEndLine();
@@ -496,7 +496,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (count < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -504,7 +504,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (destination.Length < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_DestinationTooShort();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_DestinationTooShort();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -583,7 +583,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintLine("if (source.IsCreated == false)");
                         p.OpenScope();
                         {
-                            p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
+                            p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
                         }
                         p.CloseScope();
                         p.PrintEndLine();
@@ -719,7 +719,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintBeginLine().Print(i).Print(" => ").Print(defs[i].FieldName).PrintEndLine(",");
                     }
 
-                    p.PrintLine("_ => throw ETDBG.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
+                    p.PrintLine("_ => throw ETC.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
                 }
                 p.CloseScope("};");
                 p.PrintEndLine();
@@ -825,7 +825,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (count < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -833,7 +833,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (destination.Length < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_DestinationTooShort();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_DestinationTooShort();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1015,7 +1015,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintBeginLine().Print(i).Print(" => ").Print(defs[i].FieldName).PrintEndLine(",");
                     }
 
-                    p.PrintLine("_ => throw ETDBG.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
+                    p.PrintLine("_ => throw ETC.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
                 }
                 p.CloseScope("};");
                 p.PrintEndLine();
@@ -1125,7 +1125,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (source.IsCreated == false)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1652,7 +1652,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (source.IsCreated == false)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1720,7 +1720,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintBeginLine().Print(i).Print(" => ").Print(defs[i].DataFieldName).PrintEndLine(",");
                     }
 
-                    p.PrintLine("_ => throw ETDBG.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
+                    p.PrintLine("_ => throw ETC.ThrowHelper.CreateIndexOutOfRangeException_Collection()");
 
                 }
                 p.CloseScope("};");
@@ -1828,7 +1828,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (IsCreated == false)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateInvalidOperationException_CollectionNotCreated();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateInvalidOperationException_CollectionNotCreated();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1906,7 +1906,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (count < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_SourceStartIndex_Length();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1914,7 +1914,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                     p.PrintLine("if (destination.Length < length)");
                     p.OpenScope();
                     {
-                        p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_DestinationTooShort();");
+                        p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_DestinationTooShort();");
                     }
                     p.CloseScope();
                     p.PrintEndLine();
@@ -1993,7 +1993,7 @@ namespace EncosyTower.SourceGen.Generators.Persistences
                         p.PrintLine("if (source.IsCreated == false)");
                         p.OpenScope();
                         {
-                            p.PrintLine("throw ETDBG.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
+                            p.PrintLine("throw ETC.ThrowHelper.CreateArgumentException_CollectionNotCreated(\"source\");");
                         }
                         p.CloseScope();
                         p.PrintEndLine();

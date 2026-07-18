@@ -21,7 +21,8 @@ namespace EncosyTower.SourceGen.Generators.Entities.Stats
         private const string FIELD_OFFSET_0 = "[SRIS.FieldOffset(0)]";
         private const string FIELD_OFFSET_X = "[SRIS.FieldOffset({0})]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
+            "SD.Conditional(ETDVD.UNITY_EDITOR), SD.Conditional(ETDVD.DEBUG), " +
+            "SD.Conditional(ETDVD.RUNTIME_CHECKS), SD.Conditional(ETDVD.STATS_CHECKS)]";
 
         private const string IEQUATABLE = "S.IEquatable";
         private const string HASH_VALUE = "ET.HashValue";

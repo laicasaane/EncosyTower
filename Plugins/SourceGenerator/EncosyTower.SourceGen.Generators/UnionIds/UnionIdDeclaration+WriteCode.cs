@@ -20,7 +20,8 @@
         private const string NON_SERIALIZED = "[field: S.NonSerialized]";
         private const string SERIALIZE_FIELD = "[UE.SerializeField]";
         private const string VALIDATION_ATTRIBUTES = "[UE.HideInCallstack, SD.StackTraceHidden, " +
-            "SD.Conditional(\"__ENCOSY_VALIDATION__\")]";
+            "SD.Conditional(ETDVD.UNITY_EDITOR), " +
+            "SD.Conditional(ETDVD.DEBUG), SD.Conditional(ETDVD.RUNTIME_CHECKS)]";
 
         private readonly static string[] s_operators = new[] { "==", "!=", "<", "<=", ">", ">=" };
         private readonly static string[] s_comparerOps = new[] { "<", "<=", ">", ">=" };
