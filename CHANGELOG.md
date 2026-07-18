@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.7-preview.2
+
+### General
+
+- Updated coding conventions for centralized validation symbols and collection exception helpers
+
+### Core
+
+- Added centralized validation symbols for global, collections, PubSub, processing, and stats runtime checks
+- Added `EncosyTower.Collections.ThrowHelper` for collection and buffer validation
+- Replaced file-local validation guard attributes with centralized global and namespace-specific symbols
+- Moved collection and buffer exception helpers from `EncosyTower.Debugging` to `EncosyTower.Collections`
+- Updated managed collection cleanup checks to use Encosy unmanaged type detection
+- Limited `EncosyTower.Debugging.ThrowHelper` to generic exception factories
+- Removed redundant file-local validation define blocks from conditional guard call sites
+- Removed redundant unmanaged type validation from `BufferNative<T>`
+
+### SourceGen
+
+- Updated database, stats, persistence, poly-enum, and union ID output to use centralized validation symbols
+- Rebuilt all source generators for `0.1.7-preview.2`
+- Fixed generated persistence code to reference collection exception helpers from `EncosyTower.Collections`
+- Removed generated file-local validation define blocks
+
+### Entities.Stats
+
+- Updated runtime and generated validation to use global and stats-specific symbols
+
+### Mvvm
+
+- Updated view binding validation to use centralized runtime symbols
+
+### Tests
+
+- Updated validation tests for centralized symbols and collection exception helpers
+
+### Samples
+
+- Updated the data preset and persistence sample for `0.1.7-preview.2`
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.7-preview.2`
+- `EncosyTower.SourceGen.*` to `0.1.7-preview.2`
+- Package and sample references to `0.1.7-preview.2`
+
 ## 0.1.7-preview.1
 
 ### General
@@ -58,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.7-preview.1`
 - `EncosyTower.SourceGen.*` to `0.1.7-preview.1`
-- `Samples.Data` to `0.1.7-preview.1`
+- Package and sample references to `0.1.7-preview.1`
 
 ## 0.1.6-preview.10
 
@@ -100,7 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.10`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.10`
-- `Samples.Data` to `0.1.6-preview.10`
+- Package and sample references to `0.1.6-preview.10`
 
 ## 0.1.6-preview.9
 
@@ -121,7 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.9`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.9`
-- `Samples.Data` to `0.1.6-preview.9`
+- Package and sample references to `0.1.6-preview.9`
 
 ## 0.1.6-preview.8
 
@@ -141,7 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.8`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.8`
-- `Samples.Data` to `0.1.6-preview.8`
+- Package and sample references to `0.1.6-preview.8`
 
 ## 0.1.6-preview.7
 
@@ -162,7 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.7`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.7`
-- `Samples.Data` to `0.1.6-preview.7`
+- Package and sample references to `0.1.6-preview.7`
 
 ## 0.1.6-preview.6
 
@@ -183,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.6`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.6`
-- `Samples.Data` to `0.1.6-preview.6`
+- Package and sample references to `0.1.6-preview.6`
 
 ## 0.1.6-preview.5
 
@@ -203,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.5`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.5`
-- `Samples.Data` to `0.1.6-preview.5`
+- Package and sample references to `0.1.6-preview.5`
 
 ## 0.1.6-preview.4
 
@@ -219,7 +265,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.4`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.4`
-- `Samples.Data` to `0.1.6-preview.4`
+- Package and sample references to `0.1.6-preview.4`
 
 ## 0.1.6-preview.3
 
@@ -233,7 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.3`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.3`
-- `Samples.Data` to `0.1.6-preview.3`
+- Package and sample references to `0.1.6-preview.3`
 
 ## 0.1.6-preview.2
 
@@ -245,7 +291,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.2`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.2`
-- `Samples.Data` to `0.1.6-preview.2`
+- Package and sample references to `0.1.6-preview.2`
 
 ## 0.1.6-preview.1
 
@@ -263,4 +309,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `EncosyTower.Formatters` to `0.1.6-preview.1`
 - `EncosyTower.SourceGen.*` to `0.1.6-preview.1`
-- `Samples.Data` to `0.1.6-preview.1`
+- Package and sample references to `0.1.6-preview.1`
