@@ -121,6 +121,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           body_path: ${{ runner.temp }}/release-notes.md
+          prerelease: ${{ contains(env.PACKAGE_VERSION, '-') }}
           files: |
             /tmp/signed-upm-dist/*.tgz
             /tmp/signed-upm-dist/*.tar.gz
