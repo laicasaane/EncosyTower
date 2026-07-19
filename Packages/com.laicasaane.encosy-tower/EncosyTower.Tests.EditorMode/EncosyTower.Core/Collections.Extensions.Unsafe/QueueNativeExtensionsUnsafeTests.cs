@@ -1,11 +1,12 @@
 // Adapted from Unity.Collections.Tests/UnsafeRingQueueTests.cs.
 
 using EncosyTower.Collections;
-using QueueNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.QueueNativeExtensionsUnsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using QueueNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.QueueNativeExtensionsUnsafe;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class QueueNativeExtensionsUnsafeTests
     {

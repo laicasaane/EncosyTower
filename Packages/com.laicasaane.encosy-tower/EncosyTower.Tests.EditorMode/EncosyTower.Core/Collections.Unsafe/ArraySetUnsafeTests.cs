@@ -5,7 +5,7 @@ using EncosyTower.Collections.Unsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
+namespace EncosyTower.Tests.Core.Collections.Unsafe
 {
     // Adapted from Unity.Collections.Tests/NativeHashSetTests.cs against the raw Unsafe header.
     public partial class ArraySetUnsafeTests

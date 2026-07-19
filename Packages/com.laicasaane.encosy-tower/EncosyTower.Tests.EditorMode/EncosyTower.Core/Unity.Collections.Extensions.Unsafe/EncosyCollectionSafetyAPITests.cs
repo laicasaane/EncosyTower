@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
+namespace EncosyTower.Tests.Core.Collections.Unsafe
 {
     public class EncosyCollectionSafetyAPITests
     {

@@ -2,7 +2,7 @@ using System;
 using EncosyTower.Collections;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Debugging
+namespace EncosyTower.Tests.Core.Debugging
 {
     public sealed class ThrowHelperTests
     {

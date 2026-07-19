@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using EncosyTower.Collections;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     // Adapted from System.Collections.Generic.Stack<T> semantics.
     public partial class SharedStackTests

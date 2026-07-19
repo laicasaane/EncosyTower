@@ -1,13 +1,11 @@
-#if UNITY_COLLECTIONS
-
 using System;
 using EncosyTower.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
-    public class ListNativeTests
+    public partial class ListNativeTests
     {
         [Test]
         public void Constructor_CreatesEmptyListAndSupportsZeroCapacity()
@@ -484,5 +482,3 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         }
     }
 }
-
-#endif

@@ -1,10 +1,8 @@
-#if UNITY_COLLECTIONS
-
 using EncosyTower.Collections.Unsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
+namespace EncosyTower.Tests.Core.Collections.Unsafe
 {
     public class NativeArrayExtensionsUnsafeTests
     {
@@ -91,5 +89,3 @@ namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
         }
     }
 }
-
-#endif

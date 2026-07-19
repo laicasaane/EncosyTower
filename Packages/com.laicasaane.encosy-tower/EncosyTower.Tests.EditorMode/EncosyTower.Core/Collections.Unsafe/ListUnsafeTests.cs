@@ -4,7 +4,7 @@ using EncosyTower.Collections.Unsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
+namespace EncosyTower.Tests.Core.Collections.Unsafe
 {
     public partial class ListUnsafeTests
     {

@@ -1,9 +1,10 @@
 using EncosyTower.Collections.Unsafe;
-using QueueUnsafeAPI = EncosyTower.Collections.Extensions.QueueUnsafeExtensions;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using QueueUnsafeAPI = EncosyTower.Collections.Extensions.QueueUnsafeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class QueueUnsafeExtensionsTests
     {

@@ -1,10 +1,11 @@
 using System;
 using EncosyTower.Collections.Unsafe;
-using ListUnsafeAPI = EncosyTower.Collections.Extensions.ListUnsafeExtensions;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using ListUnsafeAPI = EncosyTower.Collections.Extensions.ListUnsafeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ListUnsafeExtensionsTests
     {

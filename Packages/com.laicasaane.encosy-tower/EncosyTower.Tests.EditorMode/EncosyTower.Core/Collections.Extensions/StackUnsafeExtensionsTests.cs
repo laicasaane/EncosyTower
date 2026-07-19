@@ -1,9 +1,10 @@
 using EncosyTower.Collections.Unsafe;
-using StackUnsafeAPI = EncosyTower.Collections.Extensions.StackUnsafeExtensions;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using StackUnsafeAPI = EncosyTower.Collections.Extensions.StackUnsafeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class StackUnsafeExtensionsTests
     {

@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections;
+using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ArrayUnsafeTests
     {
@@ -39,6 +40,46 @@ namespace EncosyTower.Tests.EncosyTower.Collections
             array[2] = 30;
 
             CollectionAssert.AreEqual(new[] { 10, 20, 30 }, array.ToArray());
+        }
+
+        [Test]
+        public void Constructor_AllocatorHandleCreatesWritableArray()
+        {
+            using var array = new ArrayUnsafe<int>(2, AllocatorManager.Persistent);
+
+            array[0] = 10;
+            array[1] = 20;
+
+            CollectionAssert.AreEqual(new[] { 10, 20 }, array.ToArray());
+        }
+
+        [Test]
+        public void Constructor_ZeroLengthCreatesDisposableArray()
+        {
+            var array = new ArrayUnsafe<int>(0, Allocator.Temp);
+
+            Assert.IsTrue(array.IsCreated);
+            Assert.AreEqual(0, array.Length);
+            Assert.AreEqual(0, array.AsSpan().Length);
+
+            array.Dispose();
+
+            Assert.IsFalse(array.IsCreated);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void Constructor_NonOwningAllocatorStrategiesThrow()
+        {
+            Assert.Throws<ArgumentException>(
+                () => _ = new ArrayUnsafe<int>(1, default(AllocatorStrategy))
+            );
+            Assert.Throws<ArgumentException>(
+                () => _ = new ArrayUnsafe<int>(1, Allocator.None)
+            );
+            Assert.Throws<ArgumentException>(
+                () => _ = new ArrayUnsafe<int>(1, Allocator.Invalid)
+            );
         }
 
         [Test]
@@ -200,7 +241,7 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         [Test]
         public void DisposeJob_CompletesAndMarksNotCreated()
         {
-            var array = new ArrayUnsafe<int>(3, Allocator.Persistent);
+            var array = new ArrayUnsafe<int>(3, AllocatorManager.Persistent);
 
             array.Dispose(default(JobHandle)).Complete();
 

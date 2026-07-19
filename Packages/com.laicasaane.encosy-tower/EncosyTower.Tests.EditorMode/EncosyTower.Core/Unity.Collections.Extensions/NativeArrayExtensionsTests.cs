@@ -7,7 +7,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using NativeArrayFactory = EncosyTower.Collections.NativeArray;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public class NativeArrayExtensionsTests
     {

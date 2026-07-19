@@ -1,10 +1,10 @@
 using EncosyTower.Buffers;
 using EncosyTower.Collections;
-using EncosyTower.Tests.EncosyTower.Collections;
+using EncosyTower.Tests.Core.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Buffers
+namespace EncosyTower.Tests.Core.Buffers
 {
     public partial class BufferContractTests
     {

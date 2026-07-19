@@ -2,7 +2,7 @@ using System;
 using EncosyTower.Collections;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     // Adapted from Unity.Collections.Tests/NativeQueueTests.cs against SharedQueueNative<T>.
     public partial class SharedQueueNativeTests

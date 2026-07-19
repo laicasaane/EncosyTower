@@ -5,7 +5,7 @@ using EncosyTower.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedReferenceTests
     {

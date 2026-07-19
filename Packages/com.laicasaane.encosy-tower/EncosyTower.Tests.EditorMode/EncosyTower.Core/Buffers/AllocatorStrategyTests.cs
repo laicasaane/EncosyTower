@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace EncosyTower.Tests.EncosyTower.Buffers
+namespace EncosyTower.Tests.Core.Buffers
 {
     public partial class AllocatorStrategyTests
     {

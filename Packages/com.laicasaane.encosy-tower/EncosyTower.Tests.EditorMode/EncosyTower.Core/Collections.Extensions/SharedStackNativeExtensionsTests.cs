@@ -2,10 +2,11 @@
 
 using System;
 using EncosyTower.Collections;
-using SharedStackNativeAPI = EncosyTower.Collections.Extensions.SharedStackNativeExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedStackNativeAPI = EncosyTower.Collections.Extensions.SharedStackNativeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedStackNativeExtensionsTests
     {

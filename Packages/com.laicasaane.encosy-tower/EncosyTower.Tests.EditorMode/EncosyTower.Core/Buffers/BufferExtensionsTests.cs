@@ -3,7 +3,7 @@ using EncosyTower.Buffers;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Buffers
+namespace EncosyTower.Tests.Core.Buffers
 {
     public partial class BufferExtensionsTests
     {

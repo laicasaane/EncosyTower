@@ -1,10 +1,11 @@
 // Adapted from Unity.Collections.Tests/ListExtensionsTests.cs.
 
 using EncosyTower.Collections;
-using SharedListNativeAPI = EncosyTower.Collections.Extensions.SharedListNativeExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedListNativeAPI = EncosyTower.Collections.Extensions.SharedListNativeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedListNativeExtensionsTests
     {

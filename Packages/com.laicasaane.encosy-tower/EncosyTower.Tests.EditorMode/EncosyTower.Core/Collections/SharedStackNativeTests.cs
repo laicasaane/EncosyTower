@@ -2,7 +2,7 @@ using System;
 using EncosyTower.Collections;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     // Adapted from System.Collections.Generic.Stack<T> semantics against SharedStackNative<T>.
     public partial class SharedStackNativeTests

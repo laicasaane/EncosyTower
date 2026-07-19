@@ -1,10 +1,10 @@
 using EncosyTower.StringIds;
-using EncosyTower.Tests.EncosyTower.Collections;
+using EncosyTower.Tests.Core.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace EncosyTower.Tests.EncosyTower.StringIds
+namespace EncosyTower.Tests.Core.StringIds
 {
     // Adapted from Unity.Collections.Tests/NativeHashMapTests.cs (id/lookup patterns)
     // against the StringVaultNative forwarder.

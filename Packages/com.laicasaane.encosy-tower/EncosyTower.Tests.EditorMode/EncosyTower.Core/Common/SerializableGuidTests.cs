@@ -2,7 +2,7 @@ using System;
 using EncosyTower.Common;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Common
+namespace EncosyTower.Tests.Core.Common
 {
     public class SerializableGuidTests
     {

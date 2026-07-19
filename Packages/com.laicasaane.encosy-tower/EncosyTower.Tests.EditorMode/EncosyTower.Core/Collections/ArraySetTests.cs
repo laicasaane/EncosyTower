@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using EncosyTower.Collections;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ArraySetTests
     {

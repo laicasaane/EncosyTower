@@ -1,11 +1,12 @@
 // Adapted from Unity.Collections.Tests/ListExtensionsTests.cs.
 
 using EncosyTower.Collections;
-using ListNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.ListNativeExtensionsUnsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using ListNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.ListNativeExtensionsUnsafe;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ListNativeExtensionsUnsafeTests
     {

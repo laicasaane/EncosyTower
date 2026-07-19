@@ -1,10 +1,11 @@
 // Adapted from Unity.Collections.Tests/ListExtensionsTests.cs.
 
 using EncosyTower.Collections;
-using SharedListReadOnlyAPI = EncosyTower.Collections.Extensions.SharedListReadOnlyExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedListReadOnlyAPI = EncosyTower.Collections.Extensions.SharedListReadOnlyExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedListReadOnlyExtensionsTests
     {

@@ -1,5 +1,3 @@
-#if UNITY_COLLECTIONS
-
 using System;
 using System.Collections.Generic;
 using EncosyTower.Collections;
@@ -8,7 +6,7 @@ using EncosyTower.TypeWraps;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ArrayMapNativeTests
     {
@@ -803,5 +801,3 @@ namespace EncosyTower.Tests.EncosyTower.Collections
         }
     }
 }
-
-#endif

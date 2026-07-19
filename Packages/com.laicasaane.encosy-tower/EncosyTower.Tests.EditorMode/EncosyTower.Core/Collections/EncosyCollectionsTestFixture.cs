@@ -2,7 +2,7 @@ using System;
 using NUnit.Framework;
 using Unity.Jobs.LowLevel.Unsafe;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     // Adapted from Unity.Collections.Tests/CollectionsTestFixture.cs.
     // The rewindable-allocator base (CollectionsTestCommonBase) is intentionally skipped:

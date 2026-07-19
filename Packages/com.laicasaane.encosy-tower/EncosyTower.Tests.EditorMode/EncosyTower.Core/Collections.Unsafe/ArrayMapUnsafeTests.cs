@@ -6,7 +6,7 @@ using EncosyTower.TypeWraps;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections.Unsafe
+namespace EncosyTower.Tests.Core.Collections.Unsafe
 {
     // Adapted from Unity.Collections.Tests/UnsafeHashMapTests.cs + NativeHashMapTests.cs,
     // mirroring the ArrayMapNativeTests compatibility gate against the raw Unsafe header.

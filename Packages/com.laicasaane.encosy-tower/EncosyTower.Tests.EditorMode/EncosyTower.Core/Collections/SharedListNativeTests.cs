@@ -3,7 +3,7 @@ using EncosyTower.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     // Adapted from Unity.Collections.Tests/NativeListTests.cs against the SharedListNative view.
     // The view is a fixed-capacity window onto the owner's shared buffer/count/version.

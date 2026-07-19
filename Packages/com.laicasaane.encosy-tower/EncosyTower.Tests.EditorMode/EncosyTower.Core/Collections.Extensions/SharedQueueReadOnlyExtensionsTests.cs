@@ -2,10 +2,11 @@
 
 using System;
 using EncosyTower.Collections;
-using SharedQueueReadOnlyAPI = EncosyTower.Collections.Extensions.SharedQueueReadOnlyExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedQueueReadOnlyAPI = EncosyTower.Collections.Extensions.SharedQueueReadOnlyExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedQueueReadOnlyExtensionsTests
     {

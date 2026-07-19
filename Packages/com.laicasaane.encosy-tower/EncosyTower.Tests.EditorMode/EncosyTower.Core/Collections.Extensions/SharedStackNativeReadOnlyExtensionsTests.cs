@@ -2,11 +2,11 @@
 
 using System;
 using EncosyTower.Collections;
-using SharedStackNativeReadOnlyAPI =
-    EncosyTower.Collections.Extensions.SharedStackNativeReadOnlyExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedStackNativeReadOnlyAPI = EncosyTower.Collections.Extensions.SharedStackNativeReadOnlyExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedStackNativeReadOnlyExtensionsTests
     {

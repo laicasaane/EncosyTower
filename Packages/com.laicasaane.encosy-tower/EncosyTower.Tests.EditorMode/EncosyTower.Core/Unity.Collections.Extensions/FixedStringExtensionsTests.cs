@@ -7,7 +7,7 @@ using EncosyTower.Common;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public class FixedStringExtensionsTests
     {

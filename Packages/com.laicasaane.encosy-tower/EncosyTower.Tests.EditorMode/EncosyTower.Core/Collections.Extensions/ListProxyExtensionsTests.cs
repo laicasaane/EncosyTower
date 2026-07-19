@@ -2,11 +2,12 @@
 
 using EncosyTower.Buffers;
 using EncosyTower.Collections;
-using ListProxyAPI = EncosyTower.Collections.Extensions.ListProxyExtensions;
-using ListProxyReadOnlyAPI = EncosyTower.Collections.Extensions.ListProxyReadOnlyExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using ListProxyAPI = EncosyTower.Collections.Extensions.ListProxyExtensions;
+using ListProxyReadOnlyAPI = EncosyTower.Collections.Extensions.ListProxyReadOnlyExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ListProxyExtensionsTests
     {

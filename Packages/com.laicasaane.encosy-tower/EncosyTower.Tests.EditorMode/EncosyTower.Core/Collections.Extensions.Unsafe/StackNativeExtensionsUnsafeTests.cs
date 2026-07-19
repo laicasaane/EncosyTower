@@ -1,11 +1,12 @@
 // Adapted from System.Collections.Generic.Stack<T> storage semantics.
 
 using EncosyTower.Collections;
-using StackNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.StackNativeExtensionsUnsafe;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using StackNativeUnsafeAPI = EncosyTower.Collections.Extensions.Unsafe.StackNativeExtensionsUnsafe;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class StackNativeExtensionsUnsafeTests
     {

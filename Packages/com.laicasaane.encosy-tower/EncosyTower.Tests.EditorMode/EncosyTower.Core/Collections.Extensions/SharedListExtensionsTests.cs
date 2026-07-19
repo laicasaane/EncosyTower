@@ -2,10 +2,11 @@
 
 using System.Collections.Generic;
 using EncosyTower.Collections;
-using SharedListAPI = EncosyTower.Collections.Extensions.SharedListExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedListAPI = EncosyTower.Collections.Extensions.SharedListExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedListExtensionsTests
     {

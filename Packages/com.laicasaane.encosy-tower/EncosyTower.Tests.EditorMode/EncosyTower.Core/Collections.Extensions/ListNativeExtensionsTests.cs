@@ -1,11 +1,12 @@
 // Adapted from Unity.Collections.Tests/ListExtensionsTests.cs.
 
 using EncosyTower.Collections;
-using ListNativeAPI = EncosyTower.Collections.Extensions.ListNativeExtensions;
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using ListNativeAPI = EncosyTower.Collections.Extensions.ListNativeExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class ListNativeExtensionsTests
     {

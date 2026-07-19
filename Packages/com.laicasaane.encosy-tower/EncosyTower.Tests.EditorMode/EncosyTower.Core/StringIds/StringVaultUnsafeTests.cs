@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace EncosyTower.Tests.EncosyTower.StringIds
+namespace EncosyTower.Tests.Core.StringIds
 {
     // Adapted from Unity.Collections.Tests/NativeHashMapTests.cs (id/lookup patterns)
     // against the raw StringVaultUnsafe header.

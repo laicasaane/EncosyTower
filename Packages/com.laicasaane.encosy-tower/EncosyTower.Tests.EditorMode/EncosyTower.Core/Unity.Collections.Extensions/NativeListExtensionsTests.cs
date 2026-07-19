@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+namespace EncosyTower.Tests.Core.Collections
 {
     public class NativeListExtensionsTests
     {

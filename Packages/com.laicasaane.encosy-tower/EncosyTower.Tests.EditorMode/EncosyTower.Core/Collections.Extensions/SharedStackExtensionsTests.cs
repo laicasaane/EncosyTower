@@ -2,10 +2,11 @@
 
 using System;
 using EncosyTower.Collections;
-using SharedStackAPI = EncosyTower.Collections.Extensions.SharedStackExtensions;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.EncosyTower.Collections
+using SharedStackAPI = EncosyTower.Collections.Extensions.SharedStackExtensions;
+
+namespace EncosyTower.Tests.Core.Collections
 {
     public partial class SharedStackExtensionsTests
     {
