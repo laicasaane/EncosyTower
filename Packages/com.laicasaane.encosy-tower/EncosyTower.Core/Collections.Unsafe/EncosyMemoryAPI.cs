@@ -75,7 +75,7 @@ namespace EncosyTower.Collections.Unsafe
                     }
 
 #if UNITY_COLLECTIONS
-                    if (allocator.TryGetAllocatorHandle(out var handle) && Array.IsCustom(handle))
+                    if (allocator.TryGetCustomAllocatorHandle(out var handle))
                     {
                         AllocatorManager.Free(handle, pointer);
                         return;
@@ -117,11 +117,6 @@ namespace EncosyTower.Collections.Unsafe
             public struct Array
             {
 #if UNITY_COLLECTIONS
-                internal static bool IsCustom(AllocatorManager.AllocatorHandle allocator)
-                {
-                    return (int)allocator.Index >= AllocatorManager.FirstUserIndex;
-                }
-
                 private static unsafe void* CustomResize(
                       void* oldPointer
                     , long oldCount
@@ -135,19 +130,40 @@ namespace EncosyTower.Collections.Unsafe
                     // its managed allocation pointer.
                     unsafe
                     {
-                        AllocatorManager.Block block = default;
-                        block.Range.Allocator = allocator;
-                        block.Range.Items = (int)newCount;
-                        block.Range.Pointer = (IntPtr)oldPointer;
-                        block.BytesPerItem = (int)size;
-                        block.Alignment = align;
-                        block.AllocatedItems = (int)oldCount;
+                        void* newPointer = null;
 
-                        var error = AllocatorManager.Try(ref block);
+                        if (newCount > 0)
+                        {
+                            newPointer = AllocatorManager.Allocate(
+                                  allocator
+                                , (int)size
+                                , align
+                                , (int)newCount
+                            );
 
-                        ThrowIfFailedToAllocate(error == 0);
+                            ThrowIfFailedToAllocate(newPointer != null);
 
-                        return (void*)block.Range.Pointer;
+                            if (oldCount > 0)
+                            {
+                                long count = System.Math.Min(oldCount, newCount);
+                                long bytesToCopy = count * size;
+                                CheckByteCountIsReasonable(bytesToCopy);
+                                UnsafeUtility.MemCpy(newPointer, oldPointer, bytesToCopy);
+                            }
+                        }
+
+                        if (oldCount > 0)
+                        {
+                            AllocatorManager.Free(
+                                  allocator
+                                , oldPointer
+                                , (int)size
+                                , align
+                                , (int)oldCount
+                            );
+                        }
+
+                        return newPointer;
                     }
                 }
 #endif
@@ -169,39 +185,39 @@ namespace EncosyTower.Collections.Unsafe
                         var alignment = System.Math.Max(JobsUtility.CacheLineSize, align);
 
 #if UNITY_COLLECTIONS
-                    if (allocator.TryGetAllocatorHandle(out var handle) && IsCustom(handle))
-                    {
-                        return CustomResize(oldPointer, oldCount, newCount, handle, size, alignment);
-                    }
+                        if (allocator.TryGetCustomAllocatorHandle(out var handle))
+                        {
+                            return CustomResize(oldPointer, oldCount, newCount, handle, size, alignment);
+                        }
 #endif
 
-                    void* newPointer = default;
+                        void* newPointer = default;
 
-                    if (newCount > 0)
-                    {
-                        long bytesToAllocate = newCount * size;
-                        CheckByteCountIsReasonable(bytesToAllocate);
-                        newPointer = UnsafeUtility.MallocTracked(
-                              bytesToAllocate
-                            , alignment
-                            , allocator.ToAllocator()
-                            , 0
-                        );
+                        if (newCount > 0)
+                        {
+                            long bytesToAllocate = newCount * size;
+                            CheckByteCountIsReasonable(bytesToAllocate);
+                            newPointer = UnsafeUtility.MallocTracked(
+                                  bytesToAllocate
+                                , alignment
+                                , allocator.ToAllocator()
+                                , 0
+                            );
+
+                            if (oldCount > 0)
+                            {
+                                long count = System.Math.Min(oldCount, newCount);
+
+                                long bytesToCopy = count * size;
+                                CheckByteCountIsReasonable(bytesToCopy);
+                                UnsafeUtility.MemCpy(newPointer, oldPointer, bytesToCopy);
+                            }
+                        }
 
                         if (oldCount > 0)
                         {
-                            long count = System.Math.Min(oldCount, newCount);
-
-                            long bytesToCopy = count * size;
-                            CheckByteCountIsReasonable(bytesToCopy);
-                            UnsafeUtility.MemCpy(newPointer, oldPointer, bytesToCopy);
+                            UnsafeUtility.FreeTracked(oldPointer, allocator.ToAllocator());
                         }
-                    }
-
-                    if (oldCount > 0)
-                    {
-                        UnsafeUtility.FreeTracked(oldPointer, allocator.ToAllocator());
-                    }
 
                         return newPointer;
                     }

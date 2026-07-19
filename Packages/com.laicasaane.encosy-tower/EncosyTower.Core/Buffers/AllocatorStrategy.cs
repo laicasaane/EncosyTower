@@ -31,7 +31,7 @@ namespace EncosyTower.Buffers
         public bool IsValid
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _type is (AllocatorStrategyType.Allocator or AllocatorStrategyType.AllocatorHandle);
+            get => _type is AllocatorStrategyType.Allocator or AllocatorStrategyType.AllocatorHandle;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -163,6 +163,21 @@ namespace EncosyTower.Buffers
 
             result = default;
             return false;
+        }
+
+        internal bool TryGetCustomAllocatorHandle(out AllocatorManager.AllocatorHandle result)
+        {
+            if (_type == AllocatorStrategyType.AllocatorHandle)
+            {
+                result = _handle;
+                return result.IsCustomAllocator;
+            }
+
+            var handle = AllocatorManager.ConvertToAllocatorHandle(_allocator);
+            var isCustom = _type == AllocatorStrategyType.Allocator && handle.IsCustomAllocator;
+
+            result = isCustom ? handle : default;
+            return isCustom;
         }
 #endif
     }

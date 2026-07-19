@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Buffers;
 using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -55,12 +56,12 @@ namespace EncosyTower.Collections.Unsafe
         [NativeDisableUnsafePtrRestriction]
         private unsafe void* _buffer;
 
-        private Allocator _allocatorLabel;
+        private AllocatorStrategy _allocator;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ArrayUnsafe(
               int length
-            , Allocator allocator
+            , AllocatorStrategy allocator
             , NativeArrayOptions options = NativeArrayOptions.ClearMemory
         )
         {
@@ -88,7 +89,7 @@ namespace EncosyTower.Collections.Unsafe
                 // SAFETY: Reading the pointer field only observes the allocation state.
                 unsafe
                 {
-                    return (IntPtr)_buffer != IntPtr.Zero;
+                    return _allocator.IsValid && (Length == 0 || (IntPtr)_buffer != IntPtr.Zero);
                 }
             }
         }
@@ -144,18 +145,17 @@ namespace EncosyTower.Collections.Unsafe
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
             ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
-                _allocatorLabel != Allocator.Invalid,
+                _allocator.IsValid,
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
 
-            if (_allocatorLabel > Allocator.None)
+            if (ShouldDeallocate(_allocator))
             {
                 // SAFETY: The allocator and creation checks establish ownership of this buffer.
                 unsafe
                 {
-                    UnsafeUtility.FreeTracked(_buffer, _allocatorLabel);
+                    _allocator.Free(_buffer);
                 }
-                _allocatorLabel = Allocator.Invalid;
             }
 
             // SAFETY: The owned allocation has been released, so clearing the pointer is a local state update.
@@ -163,12 +163,13 @@ namespace EncosyTower.Collections.Unsafe
             {
                 _buffer = null;
             }
+            _allocator = default;
         }
 
         public JobHandle Dispose(JobHandle inputDeps)
         {
             ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
-                _allocatorLabel != Allocator.Invalid,
+                _allocator.IsValid,
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
             ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
@@ -176,32 +177,26 @@ namespace EncosyTower.Collections.Unsafe
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
 
-            if (_allocatorLabel > Allocator.None)
-            {
-                // SAFETY: The scheduled job receives the live buffer and takes ownership of its release.
-                unsafe
-                {
-                    var jobHandle = new UnsafeArrayDisposeJob
-                    {
-                        Data = new UnsafeArrayDispose
-                        {
-                            Buffer = _buffer,
-                            AllocatorLabel = _allocatorLabel,
-                        },
-                    }.Schedule(inputDeps);
-
-                    _buffer = null;
-                    _allocatorLabel = Allocator.Invalid;
-                    return jobHandle;
-                }
-            }
-
-            // SAFETY: No allocation remains to release, so clearing the pointer is a local state update.
+            // SAFETY: Reading the pointer field only captures the current allocation for transfer.
             unsafe
             {
+                var buffer = _buffer;
+                var allocator = _allocator;
+
                 _buffer = null;
+                _allocator = default;
+
+                if (buffer == null || ShouldDeallocate(allocator) == false)
+                {
+                    return inputDeps;
+                }
+
+                // SAFETY: The scheduled job receives the live buffer and takes ownership of its release.
+                return new EncosyMemoryAPI.DisposeJob {
+                    ptr = buffer,
+                    allocator = allocator,
+                }.Schedule(inputDeps);
             }
-            return inputDeps;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -231,7 +226,7 @@ namespace EncosyTower.Collections.Unsafe
                 array._buffer = buffer;
             }
             array.Length = length;
-            array._allocatorLabel = Allocator.None;
+            array._allocator = new AllocatorStrategy(Allocator.None);
             return array;
         }
 
@@ -398,26 +393,44 @@ namespace EncosyTower.Collections.Unsafe
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void CheckAllocateArguments(int length, Allocator allocator)
+        private static void CheckAllocateArguments(int length, AllocatorStrategy allocator)
         {
-            ThrowIfAllocatorNotSupported(allocator > Allocator.None);
-            ThrowIfCustomAllocator(allocator < Allocator.FirstUserIndex);
+            ThrowIfAllocatorNotSupported(ShouldDeallocate(allocator));
             ThrowIfAllocateLengthNegative(length >= 0);
         }
 
-        private static void Allocate(int length, Allocator allocator, out ArrayUnsafe<T> array)
+        private static void Allocate(int length, AllocatorStrategy allocator, out ArrayUnsafe<T> array)
         {
             // SAFETY: The validated allocator and unmanaged constraint establish the allocation size and alignment.
             unsafe
             {
-                var size = UnsafeUtility.SizeOf<T>() * (long)length;
                 CheckAllocateArguments(length, allocator);
                 array = default;
                 IsUnmanagedAndThrow();
-                array._buffer = UnsafeUtility.MallocTracked(size, UnsafeUtility.AlignOf<T>(), allocator, 0);
+                array._buffer = length > 0
+                    ? allocator.Allocate(UnsafeUtility.SizeOf<T>(), UnsafeUtility.AlignOf<T>(), length)
+                    : null;
                 array.Length = length;
-                array._allocatorLabel = allocator;
+                array._allocator = allocator;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool ShouldDeallocate(AllocatorStrategy allocator)
+        {
+            if (allocator.IsValid == false)
+            {
+                return false;
+            }
+
+#if UNITY_COLLECTIONS
+            if (allocator.TryGetCustomAllocatorHandle(out _))
+            {
+                return true;
+            }
+#endif
+
+            return allocator.ToAllocator() > Allocator.None;
         }
 
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
@@ -445,23 +458,10 @@ namespace EncosyTower.Collections.Unsafe
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static ArgumentException CreateException()
-                => new("Allocator must be Temp, TempJob or Persistent", "allocator");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfCustomAllocator([DoesNotReturnIf(false)] bool isBuiltIn)
-        {
-            if (isBuiltIn == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("Use CollectionHelper.CreateUnsafeArray for custom allocator", "allocator");
+                => new(
+                    "Allocator strategy must resolve to Temp, TempJob, Persistent or a valid custom allocator",
+                    "allocator"
+                );
         }
 
         [HideInCallstack, StackTraceHidden]
@@ -532,32 +532,6 @@ namespace EncosyTower.Collections.Unsafe
                 => _index = -1;
         }
 
-#pragma warning disable IDE1006 // Naming Styles
-        private struct UnsafeArrayDisposeJob : IJob
-        {
-            internal UnsafeArrayDispose Data;
-
-            public void Execute()
-                => Data.Dispose();
-        }
-
-        private struct UnsafeArrayDispose
-        {
-            [NativeDisableUnsafePtrRestriction]
-            internal unsafe void* Buffer;
-
-            internal Allocator AllocatorLabel;
-
-            public readonly void Dispose()
-            {
-                // SAFETY: The job owns Buffer and receives the matching allocator label from Dispose(JobHandle).
-                unsafe
-                {
-                    UnsafeUtility.FreeTracked(Buffer, AllocatorLabel);
-                }
-            }
-        }
-
         private sealed class UnsafeArrayDebugView
         {
             private ArrayUnsafe<T> array;
@@ -570,6 +544,5 @@ namespace EncosyTower.Collections.Unsafe
             public T[] Items
                 => array.ToArray();
         }
-#pragma warning restore IDE1006 // Naming Styles
     }
 }
