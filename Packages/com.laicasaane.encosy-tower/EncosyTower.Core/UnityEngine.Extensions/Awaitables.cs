@@ -1,5 +1,3 @@
-#if UNITY_6000_0_OR_NEWER
-
 #if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
 #else
@@ -1065,5 +1063,3 @@ namespace EncosyTower.UnityExtensions
         }
     }
 }
-
-#endif

@@ -4,12 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace UnityEngine.UIElements.Internal
 {
-#if UNITY_6000_3_OR_NEWER
-    using AbstractGenericMenu = UnityEngine.UIElements.AbstractGenericMenu;
-#else
-    using AbstractGenericMenu = UnityEngine.UIElements.IGenericMenu;
-#endif
-
     internal static class BasePopupFieldInternalAccessor
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

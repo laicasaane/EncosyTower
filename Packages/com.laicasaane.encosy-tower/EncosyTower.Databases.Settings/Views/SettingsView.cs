@@ -124,12 +124,7 @@ namespace EncosyTower.Databases.Settings.Views
             Add(element.WithAlignFieldClass());
             Add(infoContainer);
 
-#if UNITY_6000_0_OR_NEWER
             element.Button.text = "Browse";
-#else
-            element.Button.SetToTextElement("Browse");
-#endif
-
             element.TextField.tooltip = Resources.RelativePath;
             element.Clicked += onClicked;
 

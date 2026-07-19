@@ -13,20 +13,9 @@ using UnityEngine.SceneManagement;
 namespace EncosyTower.Pooling
 {
     using UnityObject = UnityEngine.Object;
-
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
     using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     public sealed class SceneObjectPool : IDisposable
     {
@@ -116,11 +105,7 @@ namespace EncosyTower.Pooling
             }
 
             GameObject.InstantiateGameObjects(
-#if UNITY_6000_2_OR_NEWER
                   _source.GetEntityId()
-#else
-                  _source.GetInstanceID()
-#endif
                 , amount
                 , gameObjectIds.Reinterpret<EntityId>()
                 , transformIds.Reinterpret<EntityId>()
@@ -167,11 +152,7 @@ namespace EncosyTower.Pooling
             var transformIdArray = NativeArray.CreateFast<TransformId>(amount, Allocator.Temp);
 
             GameObject.InstantiateGameObjects(
-#if UNITY_6000_2_OR_NEWER
                   _source.GetEntityId()
-#else
-                  _source.GetInstanceID()
-#endif
                 , amount
                 , gameObjectIdArray.Reinterpret<EntityId>()
                 , transformIdArray.Reinterpret<EntityId>()
@@ -767,13 +748,8 @@ namespace EncosyTower.Pooling
             gameObject = gameObject.AssumeValid();
             var transform = gameObject.transform.AssumeValid();
 
-#if UNITY_6000_2_OR_NEWER
             _unusedGameObjectIds.Add(gameObject.GetEntityId());
             _unusedTransformIds.Add(transform.GetEntityId());
-#else
-            _unusedGameObjectIds.Add(gameObject.GetInstanceID());
-            _unusedTransformIds.Add(transform.GetInstanceID());
-#endif
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
@@ -791,13 +767,8 @@ namespace EncosyTower.Pooling
             transform = transform.AssumeValid();
             var gameObject = transform.gameObject.AssumeValid();
 
-#if UNITY_6000_2_OR_NEWER
             _unusedGameObjectIds.Add(gameObject.GetEntityId());
             _unusedTransformIds.Add(transform.GetEntityId());
-#else
-            _unusedGameObjectIds.Add(gameObject.GetInstanceID());
-            _unusedTransformIds.Add(transform.GetInstanceID());
-#endif
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
@@ -857,13 +828,8 @@ namespace EncosyTower.Pooling
                 var gameObject = gameObjects[i].AssumeValid();
                 var transform = transforms[i].AssumeValid();
 
-#if UNITY_6000_2_OR_NEWER
                 var gameObjectId = gameObject.GetEntityId();
                 var transformId = transform.GetEntityId();
-#else
-                var gameObjectId = gameObject.GetInstanceID();
-                var transformId = transform.GetInstanceID();
-#endif
 
                 unusedGameObjectIds.Add(gameObjectIdBuffer[gameObjectIdCount++] = gameObjectId);
                 unusedTransformIds.Add(transformId);
@@ -901,13 +867,8 @@ namespace EncosyTower.Pooling
                 var gameObject = gameObjects[i].AssumeValid();
                 var transform = gameObject.transform.AssumeValid();
 
-#if UNITY_6000_2_OR_NEWER
                 var gameObjectId = gameObject.GetEntityId();
                 var transformId = transform.GetEntityId();
-#else
-                var gameObjectId = gameObject.GetInstanceID();
-                var transformId = transform.GetInstanceID();
-#endif
 
                 unusedGameObjectIds.Add(gameObjectIdBuffer[gameObjectIdCount++] = gameObjectId);
                 unusedTransformIds.Add(transformId);
@@ -944,14 +905,8 @@ namespace EncosyTower.Pooling
             {
                 var transform = transforms[i].AssumeValid();
                 var gameObject = transform.gameObject.AssumeValid();
-
-#if UNITY_6000_2_OR_NEWER
                 var gameObjectId = gameObject.GetEntityId();
                 var transformId = transform.GetEntityId();
-#else
-                var gameObjectId = gameObject.GetInstanceID();
-                var transformId = transform.GetInstanceID();
-#endif
 
                 unusedGameObjectIds.Add(gameObjectIdBuffer[gameObjectIdCount++] = gameObjectId);
                 unusedTransformIds.Add(transformId);
@@ -1024,12 +979,7 @@ namespace EncosyTower.Pooling
                 var gameObject = (objects[i] as GameObject).AssumeValid();
 
                 unusedGameObjectIds.Add(gameObjectIdBuffer[gameObjectIdCount++] = reGameObjectIds[i]);
-
-#if UNITY_6000_2_OR_NEWER
                 unusedTransformIds.Add(gameObject.transform.GetEntityId());
-#else
-                unusedTransformIds.Add(gameObject.transform.GetInstanceID());
-#endif
             }
 
             _objectList.Clear();
@@ -1069,12 +1019,7 @@ namespace EncosyTower.Pooling
             {
                 var transform = (objects[i] as Transform).AssumeValid();
                 var gameObject = (transform.gameObject).AssumeValid();
-
-#if UNITY_6000_2_OR_NEWER
                 var gameObjectId = gameObject.GetEntityId();
-#else
-                var gameObjectId = gameObject.GetInstanceID();
-#endif
 
                 unusedGameObjectIds.Add(gameObjectIdBuffer[gameObjectIdCount++] = gameObjectId);
                 unusedTransformIds.Add(reTransformIds[i]);

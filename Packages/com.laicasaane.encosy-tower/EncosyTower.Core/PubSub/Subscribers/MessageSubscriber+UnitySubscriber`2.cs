@@ -52,11 +52,7 @@ namespace EncosyTower.PubSub
             where TScope : UnityEngine.Object
             where TState : class
         {
-#if UNITY_6000_2_OR_NEWER
             internal readonly Subscriber<UnityEntityId<TScope>> _subscriber;
-#else
-            internal readonly Subscriber<UnityInstanceId<TScope>> _subscriber;
-#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal UnitySubscriber(in UnitySubscriber<TScope> subscriber, [NotNull] TState state)
@@ -67,11 +63,7 @@ namespace EncosyTower.PubSub
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal UnitySubscriber(
-#if UNITY_6000_2_OR_NEWER
                   in Subscriber<UnityEntityId<TScope>> subscriber
-#else
-                  in Subscriber<UnityInstanceId<TScope>> subscriber
-#endif
                 , [NotNull] TState state
             )
             {
@@ -81,11 +73,7 @@ namespace EncosyTower.PubSub
 
             public bool IsCreated => _subscriber.IsCreated;
 
-#if UNITY_6000_2_OR_NEWER
             public UnityEntityId<TScope> Scope => _subscriber.Scope;
-#else
-            public UnityInstanceId<TScope> Scope => _subscriber.Scope;
-#endif
 
             public TState State { get; }
 

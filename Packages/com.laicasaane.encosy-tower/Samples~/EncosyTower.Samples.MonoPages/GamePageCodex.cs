@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using EncosyTower.PageFlows;
 using EncosyTower.PageFlows.MonoPages;
 using EncosyTower.Tasks;
@@ -43,5 +41,3 @@ namespace EncosyTower.Samples.MonoPages
         }
     }
 }
-
-#endif

@@ -79,17 +79,11 @@ namespace EncosyTower.Databases.Settings.Views
 
             Add(_convertButton = new(ConvertButton_OnClicked) {
                 text = "Convert",
-#if UNITY_6000_0_OR_NEWER
                 enabledSelf = false,
-#endif
             });
 
             _convertButton.AddToClassList("convert-button");
             _convertButton.AddToClassList("function-button");
-
-#if !UNITY_6000_0_OR_NEWER
-            _convertButton.SetEnabled(false);
-#endif
 
             Add(new VisualSeparator());
 
@@ -153,11 +147,7 @@ namespace EncosyTower.Databases.Settings.Views
 
         protected sealed override void OnEnabled(bool value)
         {
-#if UNITY_6000_0_OR_NEWER
             _convertButton.enabledSelf = value;
-#else
-            _convertButton.SetEnabled(value);
-#endif
         }
 
         private void RegisterValueChangedCallbacks()
@@ -233,11 +223,7 @@ namespace EncosyTower.Databases.Settings.Views
                 && _inputFolderValid
                 && _outputFolderValid;
 
-#if UNITY_6000_0_OR_NEWER
             _convertButton.enabledSelf = value;
-#else
-            _convertButton.SetEnabled(value);
-#endif
         }
 
         private void ConvertButton_OnClicked()

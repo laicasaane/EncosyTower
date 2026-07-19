@@ -38,11 +38,7 @@ namespace EncosyTower.PubSub
         public readonly partial struct UnitySubscriber<TScope> : IIsCreated
             where TScope : UnityEngine.Object
         {
-#if UNITY_6000_2_OR_NEWER
             internal readonly Subscriber<UnityEntityId<TScope>> _subscriber;
-#else
-            internal readonly Subscriber<UnityInstanceId<TScope>> _subscriber;
-#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal UnitySubscriber([NotNull] MessageSubscriber subscriber, [NotNull] TScope scope)
@@ -52,11 +48,7 @@ namespace EncosyTower.PubSub
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal UnitySubscriber(
-#if UNITY_6000_2_OR_NEWER
                 in Subscriber<UnityEntityId<TScope>> subscriber
-#else
-                in Subscriber<UnityInstanceId<TScope>> subscriber
-#endif
             )
             {
                 _subscriber = subscriber;
@@ -64,11 +56,7 @@ namespace EncosyTower.PubSub
 
             public bool IsCreated => _subscriber.IsCreated;
 
-#if UNITY_6000_2_OR_NEWER
             public UnityEntityId<TScope> Scope => _subscriber.Scope;
-#else
-            public UnityInstanceId<TScope> Scope => _subscriber.Scope;
-#endif
 
             public ICollection<ISubscription> Subscriptions => _subscriber.Subscriptions;
 

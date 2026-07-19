@@ -259,11 +259,7 @@ namespace EncosyTower.Editor
 
                 _search = EditorGUILayout.TextField(_search, EditorStyles.toolbarSearchField);
 
-#if UNITY_6000_0_OR_NEWER
                 var icon = EditorAPI.GetIcon("d_winbtn_mac_close_a", "winbtn_mac_close_a");
-#else
-                var icon = EditorAPI.GetIcon("d_winbtn_mac_close_h", "winbtn_mac_close_h");
-#endif
 
                 if (GUILayout.Button(icon, EditorStyles.toolbarButton, GUILayout.Width(22)))
                 {

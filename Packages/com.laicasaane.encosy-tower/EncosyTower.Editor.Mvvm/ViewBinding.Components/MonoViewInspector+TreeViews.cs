@@ -5,23 +5,13 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-#if UNITY_6000_2_OR_NEWER
 using EntityId = UnityEngine.EntityId;
-#else
-using EntityId = System.Int32;
-#endif
 
 namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 {
-#if UNITY_6000_2_OR_NEWER
     using TreeView = UnityEditor.IMGUI.Controls.TreeView<EntityId>;
     using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<EntityId>;
     using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<EntityId>;
-#else
-    using TreeView = UnityEditor.IMGUI.Controls.TreeView;
-    using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem;
-    using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState;
-#endif
 
     partial class MonoViewInspector
     {
@@ -48,11 +38,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                 var treeRoot = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
                 var allItems = new List<TreeViewItem>(childCount + 1) {
                     new() {
-#if UNITY_6000_2_OR_NEWER
                         id = rootGo.GetEntityId(),
-#else
-                        id = rootGo.GetInstanceID(),
-#endif
                         depth = 0,
                         displayName = rootGo.name,
                         icon = icon
@@ -83,12 +69,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                 for (var i = 0; i < rootChildCount; i++)
                 {
                     var child = rootTransform.GetChild(i);
-
-#if UNITY_6000_2_OR_NEWER
                     var id = child.gameObject.GetEntityId();
-#else
-                    var id = child.gameObject.GetInstanceID();
-#endif
 
                     list.Add(new TreeViewItem {
                         id = id,
@@ -160,11 +141,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                             : string.Format(nameFormat, rootGo.name, k);
 
                         allItems.Add(new TreeViewItem {
-#if UNITY_6000_2_OR_NEWER
                             id = component.GetEntityId(),
-#else
-                            id = component.GetInstanceID(),
-#endif
                             depth = 0,
                             displayName = name,
                             icon = icon,
@@ -214,13 +191,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                         {
                             var component = components[k];
                             var type = component.GetType();
-
-#if UNITY_6000_2_OR_NEWER
                             var id = component.GetEntityId();
-#else
-                            var id = component.GetInstanceID();
-#endif
-
                             var content = EditorGUIUtility.ObjectContent(component, type);
                             var icon = content.image as Texture2D;
                             var name = type != componentType

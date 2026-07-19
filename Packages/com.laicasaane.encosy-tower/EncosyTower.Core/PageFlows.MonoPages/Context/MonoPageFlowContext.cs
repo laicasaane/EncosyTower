@@ -64,17 +64,10 @@ namespace EncosyTower.PageFlows.MonoPages
 
         public PageFlowScope FlowScope
         {
-#if UNITY_6000_2_OR_NEWER
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => messageScope == MonoMessageScope.Component
                 ? GetScope((Id<MonoPageFlow>)Type<MonoPageFlow>.Id, Owner.GetEntityId())
                 : GetScope((Id<GameObject>)Type<GameObject>.Id, Owner.gameObject.GetEntityId());
-#else
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => messageScope == MonoMessageScope.Component
-                ? GetScope((Id<MonoPageFlow>)Type<MonoPageFlow>.Id, Owner.GetInstanceID())
-                : GetScope((Id<GameObject>)Type<GameObject>.Id, Owner.gameObject.GetInstanceID());
-#endif
         }
 
         public Option<IPageFlowScopeCollectionApplier> FlowScopeCollectionApplier { get; set; }
@@ -194,12 +187,6 @@ namespace EncosyTower.PageFlows.MonoPages
         }
 #endif
 
-#if !UNITY_6000_2_OR_NEWER
-        private static PageFlowScope GetScope(Id id, InstanceID instanceID)
-        {
-            return new(new(id, (int)instanceID, default));
-        }
-#else
         private static PageFlowScope GetScope(Id id, EntityId entityId)
         {
             var id2 = new Id2EntityIdUnion(entityId).id2;
@@ -219,7 +206,6 @@ namespace EncosyTower.PageFlows.MonoPages
                 this.entityId = entityId;
             }
         }
-#endif
     }
 }
 

@@ -100,13 +100,7 @@ namespace EncosyTower.PubSub
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public
-#if UNITY_6000_2_OR_NEWER
-                CachedPublisher<UnityEntityId<TScope>, TMessage>
-#else
-                CachedPublisher<UnityInstanceId<TScope>, TMessage>
-#endif
-        UnityCache<TScope, TMessage>(
+        public CachedPublisher<UnityEntityId<TScope>, TMessage> UnityCache<TScope, TMessage>(
               [NotNull] Func<TMessage> createFunc
             , [NotNull] TScope scope
             , ILogger logger = null

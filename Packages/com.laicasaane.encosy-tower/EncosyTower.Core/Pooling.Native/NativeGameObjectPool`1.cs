@@ -14,20 +14,9 @@ using UnityEngine.SceneManagement;
 namespace EncosyTower.Pooling.Native
 {
     using BurstHint = Unity.Burst.CompilerServices.Hint;
-
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
     using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     public struct NativeGameObjectPool<TKey> : IDisposable, IIsCreated
         where TKey : unmanaged, IEquatable<TKey>

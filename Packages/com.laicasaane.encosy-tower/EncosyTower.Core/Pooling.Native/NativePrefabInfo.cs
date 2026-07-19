@@ -5,11 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace EncosyTower.Pooling.Native
 {
-#if UNITY_6000_2_OR_NEWER
     using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     public struct NativePrefabInfo
     {

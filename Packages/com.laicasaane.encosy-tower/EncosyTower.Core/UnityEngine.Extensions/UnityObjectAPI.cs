@@ -11,20 +11,9 @@ using UnityEngine;
 namespace EncosyTower.UnityExtensions
 {
     using UnityObject = UnityEngine.Object;
-
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
     using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     public static class UnityObjectAPI
     {
@@ -181,11 +170,7 @@ namespace EncosyTower.UnityExtensions
             objectList.Clear();
             objectList.AsListFast().IncreaseCapacityTo(entityIds.Length);
 
-#if UNITY_6000_3_OR_NEWER
             Resources.EntityIdsToObjectList(entityIds, objectList);
-#else
-            Resources.InstanceIDToObjectList(entityIds, objectList);
-#endif
         }
     }
 }

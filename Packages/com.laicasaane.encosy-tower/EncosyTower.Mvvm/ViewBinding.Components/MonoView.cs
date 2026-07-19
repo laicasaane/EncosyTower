@@ -14,13 +14,8 @@ using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Mvvm.ViewBinding.Components
 {
-#if UNITASK
     using UnityTask = Cysharp.Threading.Tasks.UniTask;
     using UnityTaskObservable = Cysharp.Threading.Tasks.UniTask<IObservableObject>;
-#elif UNITY_6000_0_OR_NEWER
-    using UnityTask = UnityEngine.Awaitable;
-    using UnityTaskObservable = UnityEngine.Awaitable<IObservableObject>;
-#endif
 
     /// <summary>
     /// Represents a collection of <see cref="MonoBinder"/>.

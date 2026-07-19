@@ -90,11 +90,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
             _view = view;
 
-#if UNITY_6000_2_OR_NEWER
             var instanceId = _view.GetEntityId();
-#else
-            var instanceId = _view.GetInstanceID();
-#endif
 
             _settingsProp = serializedObject.FindProperty("_settings");
             _contextProp = serializedObject.FindProperty("_context");

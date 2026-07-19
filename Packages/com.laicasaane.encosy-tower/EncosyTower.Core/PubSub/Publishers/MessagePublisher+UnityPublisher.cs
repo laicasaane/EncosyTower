@@ -20,19 +20,11 @@ namespace EncosyTower.PubSub
         public readonly partial struct UnityPublisher<TScope> : IIsCreated
             where TScope : UnityEngine.Object
         {
-#if UNITY_6000_2_OR_NEWER
             internal readonly Publisher<UnityEntityId<TScope>> _publisher;
-#else
-            internal readonly Publisher<UnityInstanceId<TScope>> _publisher;
-#endif
 
             public bool IsCreated => _publisher.IsCreated;
 
-#if UNITY_6000_2_OR_NEWER
             public UnityEntityId<TScope> Scope => _publisher.Scope;
-#else
-            public UnityInstanceId<TScope> Scope => _publisher.Scope;
-#endif
 
             internal UnityPublisher([NotNull] MessagePublisher publisher, [NotNull] TScope scope)
             {
@@ -42,13 +34,10 @@ namespace EncosyTower.PubSub
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public
-#if UNITY_6000_2_OR_NEWER
-                CachedPublisher<UnityEntityId<TScope>, TMessage>
-#else
-                CachedPublisher<UnityInstanceId<TScope>, TMessage>
-#endif
-            Cache<TMessage>([NotNull] Func<TMessage> createFunc, ILogger logger = null)
+            public CachedPublisher<UnityEntityId<TScope>, TMessage> Cache<TMessage>(
+                  [NotNull] Func<TMessage> createFunc
+                , ILogger logger = null
+            )
 #if !ENCOSY_PUBSUB_RELAX_MODE
                 where TMessage : IMessage
 #endif

@@ -16,11 +16,7 @@ using UnityEngine;
 
 namespace EncosyTower.PageFlows.MonoPages
 {
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-#endif
 
     internal class MonoPagePool : IDisposable, IIsInitialized
     {

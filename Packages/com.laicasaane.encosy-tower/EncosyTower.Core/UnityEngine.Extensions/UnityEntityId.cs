@@ -1,5 +1,3 @@
-#if UNITY_6000_2_OR_NEWER
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -133,18 +131,6 @@ namespace EncosyTower.UnityExtensions
         [Obsolete("32-bit integer Instance ID is deprecated. Use EntityId instead.")]
         public static implicit operator UnityEntityId<T>(int instanceId)
             => new((EntityId)instanceId);
-
-#if !UNITY_6000_2_OR_NEWER
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("InstanceID is deprecated. Use EntityId instead.")]
-        public static implicit operator UnityEntityId<T>(InstanceID instanceId)
-            => new(instanceId);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("UnityInstanceId<T> is deprecated. Use UnityEntityId<T> instead.")]
-        public static implicit operator UnityEntityId<T>(UnityInstanceId<T> instanceId)
-            => new(instanceId.Value);
-#endif
 #endif
 
         [HideInCallstack, StackTraceHidden]
@@ -176,5 +162,3 @@ namespace EncosyTower.UnityExtensions
         }
     }
 }
-
-#endif

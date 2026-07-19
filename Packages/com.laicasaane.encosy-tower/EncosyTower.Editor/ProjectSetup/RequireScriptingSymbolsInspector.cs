@@ -46,10 +46,8 @@ namespace EncosyTower.Editor.ProjectSetup
                 selectionType = SelectionType.Single,
                 makeItem = MakeItem,
                 bindItem = (root, index) => BindItem(root, index, _symbolsProp),
-#if UNITY_6000_0_OR_NEWER
                 allowAdd = true,
                 allowRemove = true,
-#endif
             };
 
             list.WithBindProperty(_symbolsProp);

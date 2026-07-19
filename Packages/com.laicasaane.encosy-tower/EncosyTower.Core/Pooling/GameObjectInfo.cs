@@ -5,13 +5,8 @@ using UnityEngine;
 
 namespace EncosyTower.Pooling
 {
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
 
     [Serializable, StructLayout(LayoutKind.Explicit, Size = 4 + 4 + 4)]
     public struct GameObjectInfo

@@ -11,19 +11,9 @@ using UnityEngine.SceneManagement;
 
 namespace EncosyTower.Pooling
 {
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
     using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     public sealed partial class GameObjectPrefab
     {
@@ -191,11 +181,7 @@ namespace EncosyTower.Pooling
                 case Location.PoolScene:
                 {
                     GameObject.InstantiateGameObjects(
-#if UNITY_6000_2_OR_NEWER
                           source.GetEntityId()
-#else
-                          source.GetInstanceID()
-#endif
                         , count
                         , gameObjectIds.Reinterpret<EntityId>()
                         , transformIds.Reinterpret<EntityId>()
@@ -208,11 +194,7 @@ namespace EncosyTower.Pooling
                 case Location.Scene:
                 {
                     GameObject.InstantiateGameObjects(
-#if UNITY_6000_2_OR_NEWER
                           source.GetEntityId()
-#else
-                          source.GetInstanceID()
-#endif
                         , count
                         , gameObjectIds.Reinterpret<EntityId>()
                         , transformIds.Reinterpret<EntityId>()
@@ -225,11 +207,7 @@ namespace EncosyTower.Pooling
                 default:
                 {
                     GameObject.InstantiateGameObjects(
-#if UNITY_6000_2_OR_NEWER
                           source.GetEntityId()
-#else
-                          source.GetInstanceID()
-#endif
                         , count
                         , gameObjectIds.Reinterpret<EntityId>()
                         , transformIds.Reinterpret<EntityId>()
@@ -241,11 +219,7 @@ namespace EncosyTower.Pooling
                     {
                         var list = new List<UnityEngine.Object>(transformIds.Length);
 
-#if UNITY_6000_3_OR_NEWER
                         Resources.EntityIdsToObjectList(transformIds.Reinterpret<EntityId>(), list);
-#else
-                        Resources.InstanceIDToObjectList(transformIds.Reinterpret<EntityId>(), list);
-#endif
 
                         var span = list.AsReadOnlySpan();
                         var spanLength = span.Length;

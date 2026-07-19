@@ -20,18 +20,8 @@ using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Pooling
 {
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
-#else
-    using EntityId = System.Int32;
-#endif
 
     public partial class SceneObjectPoolBehaviour<TKey, TKeyComparer> : MonoBehaviour, IDisposable
 #if !(UNITASK || UNITY_6000_0_OR_NEWER)
@@ -437,13 +427,8 @@ namespace EncosyTower.Pooling
                 Span<GameObjectId> gameObjectIds = stackalloc GameObjectId[1];
                 Span<TransformId> transformIds = stackalloc TransformId[1];
 
-#if UNITY_6000_2_OR_NEWER
                 gameObjectIds[0] = gameObject.GetEntityId();
                 transformIds[0] = gameObject.transform.GetEntityId();
-#else
-                gameObjectIds[0] = gameObject.GetInstanceID();
-                transformIds[0] = gameObject.transform.GetInstanceID();
-#endif
 
                 record.Pool.Return(gameObjectIds, transformIds, strategy);
             }

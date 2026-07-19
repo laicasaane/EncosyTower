@@ -36,9 +36,7 @@ namespace EncosyTower.Databases.Settings.Views
 
             {
                 var button = _copyButton = new(CopyPreset) {
-#if UNITY_6000_0_OR_NEWER
                     enabledSelf = false,
-#endif
                     text = "Copy",
                 };
 
@@ -48,15 +46,9 @@ namespace EncosyTower.Databases.Settings.Views
             {
                 var icon = EditorAPI.GetIcon("d_pick", "pick");
                 var iconImage = Background.FromTexture2D(icon.image as Texture2D);
-
-#if UNITY_6000_0_OR_NEWER
                 var button = _locateButton = new(iconImage, LocateSelectedPreset) {
                     enabledSelf = false,
                 };
-#else
-                var button = _locateButton = ButtonAPI.CreateButton(iconImage, LocateSelectedPreset);
-                button.AddToClassList(ButtonAPI.IconOnlyUssClassName);
-#endif
 
                 button.tooltip = "Locate Selected Preset";
                 button.AddToClassList(Constants.ICON_BUTTON);
@@ -66,22 +58,12 @@ namespace EncosyTower.Databases.Settings.Views
             {
                 var icon = EditorAPI.GetIcon("d_refresh", "refresh");
                 var iconImage = Background.FromTexture2D(icon.image as Texture2D);
-
-#if UNITY_6000_0_OR_NEWER
                 var button = new Button(iconImage, RefreshPresets);
-#else
-                var button = ButtonAPI.CreateButton(iconImage, RefreshPresets);
-#endif
 
                 button.tooltip = "Refresh Preset List";
                 button.AddToClassList(Constants.ICON_BUTTON);
                 hierarchy.Add(button);
             }
-
-#if !UNITY_6000_0_OR_NEWER
-            _copyButton.SetEnabled(false);
-            _locateButton.SetEnabled(false);
-#endif
 
             RefreshPresets();
         }
@@ -149,28 +131,16 @@ namespace EncosyTower.Databases.Settings.Views
             {
                 _presetDropdown.value = Constants.UNDEFINED;
                 _presetDropdown.userData = null;
-
-#if UNITY_6000_0_OR_NEWER
                 _copyButton.enabledSelf = false;
                 _locateButton.enabledSelf = false;
-#else
-                _copyButton.SetEnabled(false);
-                _locateButton.SetEnabled(false);
-#endif
 
                 return;
             }
 
             _presetDropdown.value = $"{preset.name} [{preset._database.name}]";
             _presetDropdown.userData = preset;
-
-#if UNITY_6000_0_OR_NEWER
             _copyButton.enabledSelf = true;
             _locateButton.enabledSelf = true;
-#else
-            _copyButton.SetEnabled(true);
-            _locateButton.SetEnabled(true);
-#endif
         }
 
         private void LocateSelectedPreset()

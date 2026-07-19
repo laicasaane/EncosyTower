@@ -16,19 +16,8 @@ using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Pooling
 {
-#if UNITY_6000_2_OR_NEWER
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
-#else
-    using GameObjectId = UnityInstanceId<GameObject>;
-    using TransformId = UnityInstanceId<Transform>;
-#endif
-
-#if UNITY_6000_3_OR_NEWER
-    using EntityId = UnityEngine.EntityId;
-#else
-    using EntityId = System.Int32;
-#endif
 
     internal sealed class SceneObjectPoolContext : IDisposable, IIncreaseCapacity
     {
@@ -133,13 +122,8 @@ namespace EncosyTower.Pooling
         {
             var defaultGo = new GameObject($"<default-gameobject-{behaviourType.Name.ToLower()}>");
 
-#if UNITY_6000_2_OR_NEWER
             GameObjectId gameObjectId = defaultGo;
             TransformId transformId = defaultGo.transform;
-#else
-            GameObjectId gameObjectId = defaultGo;
-            TransformId transformId = defaultGo.transform;
-#endif
 
             defaultGo.SetActive(false);
             defaultGo.hideFlags = HideFlags.DontSave;
