@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.7-preview.3
+
+### Core
+
+- Added custom allocator support to `ArrayUnsafe<T>`
+- Changed custom allocation handling to use allocator strategies for allocation and disposal
+- Fixed custom allocator resizing to preserve existing data
+- Fixed zero-length `ArrayUnsafe<T>` creation and disposal
+
+### Tests
+
+- Added EditorMode coverage for Entities world-update allocators across buffers and native and unsafe collections
+- Added `ArrayUnsafe<T>` coverage for custom allocator handles, zero-length arrays, and invalid allocator strategies
+- Changed Core EditorMode test namespaces to follow the test directory layout
+
+### SourceGen
+
+- Rebuilt all source generators for `0.1.7-preview.3`
+
+### Samples
+
+- Updated data sample paths for `0.1.7-preview.3`
+
+### Versioning
+
+- `EncosyTower.Formatters` to `0.1.7-preview.3`
+- `EncosyTower.SourceGen.*` to `0.1.7-preview.3`
+- Package and sample references to `0.1.7-preview.3`
+
 ## 0.1.7-preview.2
 
 ### General
