@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.PolyEnumStructs
 {
     /// <summary>
@@ -74,7 +76,41 @@ namespace EncosyTower.PolyEnumStructs
         /// <summary>
         /// Determines whether enum extensions should be generated for the nested <c>EnumCase</c> type.
         /// </summary>
+        /// <remarks>
+        /// A directly generic enum-struct must also provide a valid explicit non-generic
+        /// <see cref="Container"/>. The extensions target the container-owned <c>EnumCase</c>.
+        /// A locally non-generic enum-struct inside a generic containing type may use its generated
+        /// non-generic support container.
+        /// </remarks>
         public bool WithEnumExtensions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the non-generic container that owns generated support types and external case structs.
+        /// </summary>
+        /// <remarks>
+        /// The container and all its containing types must be non-generic and declared in the same assembly.
+        /// It must be a partial class, struct, record, or interface. Generic case parameters map to target
+        /// parameters by unique name, while accessibility remains enforced by the C# compiler.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// [PolyEnumStruct(
+        ///       Container = typeof(ResultCases)
+        ///     , WithEnumExtensions = true
+        /// )]
+        /// public partial struct Result&lt;TValue, TError&gt; { }
+        ///
+        /// public static partial class ResultCases
+        /// {
+        ///     public readonly partial record struct None;
+        ///     public readonly partial record struct Success&lt;TValue&gt;(TValue Value);
+        ///     public readonly partial record struct Failure&lt;TError&gt;(TError Error);
+        /// }
+        ///
+        /// string name = ResultCases.EnumCase.Success.ToStringFast();
+        /// </code>
+        /// </example>
+        public Type Container { get; set; }
     }
 
     /// <summary>
@@ -138,6 +174,7 @@ namespace EncosyTower.PolyEnumStructs
         /// <inheritdoc cref="EnumCaseValueAttribute" />
         public EnumCaseValueAttribute([NotNull] object value)
         {
+            DebuggingThrowHelper.ThrowIfNull(value);
             Value = value;
         }
 
@@ -190,6 +227,33 @@ namespace EncosyTower.PolyEnumStructs
     ///
     ///     public static TaskFactory Working(float duration)
     ///         => new TaskFactory(new Task.Working(duration));
+    /// }
+    ///
+    /// [PolyEnumStruct]
+    /// public partial struct Error&lt;TValue, TContext&gt;
+    ///     where TValue : unmanaged
+    ///     where TContext : class
+    /// {
+    ///     public partial record struct Invalid(TValue Value, TContext Context);
+    /// }
+    ///
+    /// // Fully open targets bind factory type parameters by position, not by name.
+    /// [PolyEnumFactoryFor(typeof(Error&lt;,&gt;))]
+    /// public readonly partial struct DataError&lt;UValue, UContext&gt;
+    ///     where UValue : unmanaged
+    ///     where UContext : class
+    /// {
+    /// }
+    ///
+    /// [PolyEnumFactoryFor(typeof(NestedDataError&lt;,&gt;.NestedError))]
+    /// public readonly partial struct NestedDataError&lt;TValue, TCode&gt;
+    /// {
+    ///     // A locally non-generic nested target may enable enum extensions.
+    ///     [PolyEnumStruct(WithEnumExtensions = true)]
+    ///     private partial struct NestedError
+    ///     {
+    ///         public partial record struct Invalid(TValue Value, TCode Code);
+    ///     }
     /// }
     /// </code>
     /// </example>
