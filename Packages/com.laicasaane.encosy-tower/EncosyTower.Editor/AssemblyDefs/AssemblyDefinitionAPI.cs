@@ -9,6 +9,8 @@ using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEditorInternal;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Editor.AssemblyDefs
 {
 #if UNITY_6000_5_OR_NEWER
@@ -23,6 +25,8 @@ namespace EncosyTower.Editor.AssemblyDefs
 
         public static Result<AssemblyDefinitionInfo> TryGetInfo([NotNull] AssemblyDefinitionImporter importer)
         {
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(importer);
+
             var assetPath = importer.assetPath;
             string json;
 
@@ -71,6 +75,9 @@ namespace EncosyTower.Editor.AssemblyDefs
             , [NotNull] AssemblyDefinitionInfo assemblyDef
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(assetPath);
+            DebuggingThrowHelper.ThrowIfNull(assemblyDef);
+
             var assemblyAsset = AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(assetPath);
 
             return assemblyAsset.IsInvalid()
@@ -84,9 +91,11 @@ namespace EncosyTower.Editor.AssemblyDefs
             , [NotNull] AssemblyDefinitionInfo assemblyDef
         )
         {
-            var guidStrings = AssetDatabase
-                .FindAssets($"t:{nameof(AssemblyDefinitionAsset)}")
-                .AsSpan();
+            DebuggingThrowHelper.ThrowIfNull(assetPath);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(assemblyAsset);
+            DebuggingThrowHelper.ThrowIfNull(assemblyDef);
+
+            var guidStrings = AssetDatabase.FindAssets($"t:{nameof(AssemblyDefinitionAsset)}").AsSpan();
 
             var guidStringsLength = guidStrings.Length;
 
@@ -105,9 +114,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             {
                 foreach (var reference in references)
                 {
-                    if (reference.IsNotEmpty()
-                        && GUID.TryParse(reference.Replace("GUID:", ""), out var guid)
-                    )
+                    if (reference.IsNotEmpty() && GUID.TryParse(reference.Replace("GUID:", ""), out var guid))
                     {
                         refGuids.Add(guid);
                     }

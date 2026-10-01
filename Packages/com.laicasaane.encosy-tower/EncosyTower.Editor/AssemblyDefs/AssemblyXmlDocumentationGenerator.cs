@@ -9,8 +9,10 @@ using EncosyTower.CodeGen;
 using EncosyTower.IO;
 using EncosyTower.Logging;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.PackageManager;
 using UnityEditorInternal;
+using UnityEngine;
 
 namespace EncosyTower.Editor.AssemblyDefs
 {
@@ -27,6 +29,12 @@ namespace EncosyTower.Editor.AssemblyDefs
                 Name = name;
                 Root = root;
             }
+        }
+
+        [Serializable]
+        private class AsmdefJson
+        {
+            public string name;
         }
 
         private class PackageDef
@@ -61,7 +69,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             AssemblyReloadEvents.beforeAssemblyReload += CopyXmlDocToScriptAssembliesFolder;
         }
 
-        [MenuItem(MENU_AUTO_GENERATE, priority = 88_00_00_00)]
+        [MenuItem(MENU_AUTO_GENERATE, priority = 88_68_00_00)]
         private static void ToggleAutoGenerate()
         {
             if (TryGetConfigAutoGenerate(out var value) == false)
@@ -81,7 +89,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             AssetDatabase.Refresh();
         }
 
-        [MenuItem(MENU_AUTO_LOG, priority = 88_00_00_01)]
+        [MenuItem(MENU_AUTO_LOG, priority = 88_68_00_01)]
         private static void ToggleAutoLog()
         {
             if (TryGetConfigAutoLog(out var value) == false)
@@ -101,7 +109,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             AssetDatabase.Refresh();
         }
 
-        [MenuItem(MENU_GENERATE, priority = 88_00_00_02)]
+        [MenuItem(MENU_GENERATE, priority = 88_68_00_02)]
         private static void Generate()
         {
             const string TITLE = "Generate XML Documentation";
@@ -172,7 +180,8 @@ namespace EncosyTower.Editor.AssemblyDefs
             EditorUtility.DisplayProgressBar(TITLE, INFO, 100f);
             EditorUtility.ClearProgressBar();
 
-            AssetDatabase.Refresh();
+            // Fix XML generation by clearing compilation cache.
+            CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
 
             Log(xmlDocumentationFolderPath);
 
@@ -188,7 +197,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             }
         }
 
-        [MenuItem(MENU_DELETE, priority = 88_00_00_03)]
+        [MenuItem(MENU_DELETE, priority = 88_68_00_03)]
         private static void Delete()
         {
             const string TITLE = "Delete";
@@ -204,7 +213,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             AssetDatabase.Refresh();
         }
 
-        [MenuItem(MENU_DELETE_ALL, priority = 88_00_00_04)]
+        [MenuItem(MENU_DELETE_ALL, priority = 88_68_00_04)]
         private static void DeleteAll()
         {
             const string TITLE = "Delete All";
@@ -294,9 +303,7 @@ namespace EncosyTower.Editor.AssemblyDefs
 
         private static PackageDef[] GetPackageDefs(bool onlyGenerated)
         {
-            var guidStrings = AssetDatabase
-                .FindAssets($"t:{nameof(AssemblyDefinitionAsset)}")
-                .AsSpan();
+            var guidStrings = AssetDatabase.FindAssets($"t:{nameof(AssemblyDefinitionAsset)}").AsSpan();
 
             var guidStringsLength = guidStrings.Length;
 
@@ -343,7 +350,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                         || (onlyGenerated == false && generatedFileExists == false)
                     )
                     {
-                        packageDef.Asmdefs.Add(new AsmdefXmlDoc(asmdefAsset.name, asmdefRoot));
+                        packageDef.Asmdefs.Add(new AsmdefXmlDoc(GetAssemblyName(asmdefAsset), asmdefRoot));
                     }
                 }
                 catch (Exception ex)
@@ -438,6 +445,15 @@ namespace EncosyTower.Editor.AssemblyDefs
                     $"<a href=\"file:///{scriptAssembliesFolderPath}\">{SCRIPT_ASSEMBLIES_FOLDER}</a>"
                 );
             }
+        }
+
+        private static string GetAssemblyName(AssemblyDefinitionAsset asmdefAsset)
+        {
+            // asmdefAsset.name is the asset file name, not the assembly name declared
+            // in the asmdef's `name` field. The two can differ, e.g.
+            // InternalBridgeDef.asmdef -> Unity.InternalAPIEngineBridge.001.
+            // The XML has to be named after the assembly so it pairs with its dll.
+            return JsonUtility.FromJson<AsmdefJson>(asmdefAsset.text).name;
         }
 
         private static RootPath GetProjectRootPath()
