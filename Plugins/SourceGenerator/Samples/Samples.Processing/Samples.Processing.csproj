@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Samples.Processing</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Processing.dll" Private="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../EncosyTower.Processing.Generators/EncosyTower.Processing.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+</Project>

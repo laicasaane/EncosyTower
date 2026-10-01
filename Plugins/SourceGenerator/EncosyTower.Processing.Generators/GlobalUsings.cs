@@ -1,0 +1,10 @@
+global using System;
+global using System.Collections.Generic;
+global using System.Collections.Immutable;
+global using System.IO;
+global using System.Threading;
+global using EncosyTower.SourceGen;
+global using Microsoft.CodeAnalysis;
+global using Microsoft.CodeAnalysis.CSharp.Syntax;
+global using Microsoft.CodeAnalysis.Diagnostics;
+global using Microsoft.CodeAnalysis.Text;
