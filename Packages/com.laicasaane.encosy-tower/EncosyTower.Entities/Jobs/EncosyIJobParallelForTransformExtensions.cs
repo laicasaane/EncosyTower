@@ -15,11 +15,7 @@ namespace EncosyTower.Jobs
         )
             where T : struct, IJobParallelForTransform
         {
-            return IJobParallelForTransformExtensions.Schedule(
-                  jobData
-                , transforms._array
-                , dependsOn
-            );
+            return IJobParallelForTransformExtensions.Schedule(jobData, (TransformAccessArray)transforms, dependsOn);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +32,7 @@ namespace EncosyTower.Jobs
             {
                 return IJobParallelForTransformExtensions.ScheduleReadOnly(
                       jobData
-                    , transforms._array
+                    , (TransformAccessArray)transforms
                     , batchSize
                     , dependsOn
                 );
@@ -53,10 +49,7 @@ namespace EncosyTower.Jobs
             // SAFETY: Unity owns the transform array and validates the scheduling contract.
             unsafe
             {
-                IJobParallelForTransformExtensions.RunReadOnly(
-                      jobData
-                    , transforms._array
-                );
+                IJobParallelForTransformExtensions.RunReadOnly(jobData, (TransformAccessArray)transforms);
             }
         }
 
@@ -73,7 +66,7 @@ namespace EncosyTower.Jobs
             {
                 return IJobParallelForTransformExtensions.ScheduleByRef(
                       ref jobData
-                    , transforms._array
+                    , (TransformAccessArray)transforms
                     , dependsOn
                 );
             }
@@ -93,7 +86,7 @@ namespace EncosyTower.Jobs
             {
                 return IJobParallelForTransformExtensions.ScheduleReadOnlyByRef(
                       ref jobData
-                    , transforms._array
+                    , (TransformAccessArray)transforms
                     , batchSize
                     , dependsOn
                 );
@@ -107,10 +100,7 @@ namespace EncosyTower.Jobs
             // SAFETY: Unity owns the transform array and validates the scheduling contract.
             unsafe
             {
-                IJobParallelForTransformExtensions.RunReadOnlyByRef(
-                      ref jobData
-                    , transforms._array
-                );
+                IJobParallelForTransformExtensions.RunReadOnlyByRef(ref jobData, (TransformAccessArray)transforms);
             }
         }
     }

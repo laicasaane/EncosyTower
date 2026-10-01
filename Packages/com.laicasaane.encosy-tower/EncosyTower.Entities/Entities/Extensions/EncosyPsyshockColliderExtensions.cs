@@ -1,25 +1,23 @@
 #if UNITY_ENTITIES && LATIOS_FRAMEWORK
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using EncosyTower.UnityExtensions;
 using Unity.Mathematics;
 using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Entities
 {
     using Psyshock = Latios.Psyshock;
     using PsyshockCollider = Latios.Psyshock.Collider;
     using UnityCollider = UnityEngine.Collider;
+    using DebuggingThrowHelper = Debugging.ThrowHelper;
 
     public static class EncosyPsyshockColliderExtensions
     {
         public static PsyshockCollider ToPsyshockCollider([NotNull] this UnityCollider collider)
         {
-            ThrowIfInvalidCollider(collider.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(collider);
+            ThrowHelper.ThrowIfInvalidCollider(collider.IsValid());
 
             return collider switch {
                 SphereCollider sphere => ToPsyshockCollider(sphere),
@@ -31,7 +29,8 @@ namespace EncosyTower.Entities
 
         public static Psyshock.SphereCollider ToPsyshockCollider([NotNull] this SphereCollider collider)
         {
-            ThrowIfInvalidCollider(collider.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(collider);
+            ThrowHelper.ThrowIfInvalidCollider(collider.IsValid());
 
             return new Psyshock.SphereCollider {
                 center = collider.center,
@@ -42,7 +41,8 @@ namespace EncosyTower.Entities
 
         public static Psyshock.CapsuleCollider ToPsyshockCollider([NotNull] this CapsuleCollider collider)
         {
-            ThrowIfInvalidCollider(collider.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(collider);
+            ThrowHelper.ThrowIfInvalidCollider(collider.IsValid());
 
             float3 dir;
 
@@ -69,7 +69,8 @@ namespace EncosyTower.Entities
 
         public static Psyshock.BoxCollider ToPsyshockCollider([NotNull] this BoxCollider collider)
         {
-            ThrowIfInvalidCollider(collider.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(collider);
+            ThrowHelper.ThrowIfInvalidCollider(collider.IsValid());
 
             return new Psyshock.BoxCollider {
                 center = collider.center,
@@ -77,21 +78,6 @@ namespace EncosyTower.Entities
             };
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCollider([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static System.ArgumentException CreateException()
-            {
-                return new System.ArgumentException("Collider is null or invalid.", "collider");
-            }
-        }
     }
 }
 
