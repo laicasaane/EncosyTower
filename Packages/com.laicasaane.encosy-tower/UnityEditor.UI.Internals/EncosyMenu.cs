@@ -37,33 +37,22 @@ namespace EncosyTower.Editor
                 return;
             }
 
-            Menu.AddMenuItem(
-                  name
-                , shortcut ?? string.Empty
-                , @checked
-                , priority
-                , execute
-                , validate
-            );
+            Menu.AddMenuItem(name, shortcut ?? string.Empty, @checked, priority, execute, validate);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddMenuItem([NotNull] EditorMenuItem item)
         {
+            global::UnityEditor.UI.Internals.ThrowHelper.ThrowIfNull(item, nameof(item));
+
             if (item.Separator)
             {
                 AddSeparator(item.Name, item.Priority);
                 return;
             }
 
-            AddMenuItem(
-                  item.Name
-                , item.Shortcut
-                , item.Checked
-                , item.Priority
-                , item.Execute
-                , item.Validate
-            );
+            AddMenuItem(item.Name, item.Shortcut, item.Checked, item.Priority, item.Execute, item.Validate);
         }
+
     }
 }
