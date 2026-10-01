@@ -1,19 +1,11 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
+using System.Threading;
+using EncosyTower.Common;
+using EncosyTower.Tasks;
 
 namespace EncosyTower.Loaders
 {
-    using System.Threading;
-    using EncosyTower.Common;
-
     public interface ITryLoadAsync<T>
     {
-#if UNITASK
-        Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-        UnityEngine.Awaitable<Option<T>>
-#endif
-        TryLoadAsync(CancellationToken token);
+        UnityTask<Option<T>> TryLoadAsync(CancellationToken token);
     }
 }
-
-#endif
