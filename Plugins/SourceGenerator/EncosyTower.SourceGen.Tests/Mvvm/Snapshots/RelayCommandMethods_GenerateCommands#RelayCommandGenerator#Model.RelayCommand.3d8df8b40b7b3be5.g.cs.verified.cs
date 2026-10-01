@@ -26,27 +26,27 @@ namespace TestProject
     partial class Model : g__ETMI.ICommandListener
     {
         /// <summary>The name of <see cref="OnSaveCommand"/></summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         public const string CommandName_OnSaveCommand = nameof(Model.OnSaveCommand);
 
         /// <summary>The name of <see cref="OnProcessCommand"/></summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         public const string CommandName_OnProcessCommand = nameof(Model.OnProcessCommand);
 
 
         /// <summary>The backing field for <see cref="OnSaveCommand"/>.</summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)]
         private g__ETMI.RelayCommand _commandOnSave;
 
         /// <summary>The backing field for <see cref="OnProcessCommand"/>.</summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)]
         private g__ETMI.RelayCommand<int> _commandOnProcess;
 
 
         /// <summary>Gets an <see cref="g__ETMI.IRelayCommand"/> instance wrapping <see cref="OnSave"/>.</summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__ETMISG.GeneratedRelayCommand(CommandName_OnSaveCommand)]
         public g__ETMI.IRelayCommand OnSaveCommand
@@ -61,7 +61,7 @@ namespace TestProject
         }
 
         /// <summary>Gets an <see cref="g__ETMI.IRelayCommand{int}"/> instance wrapping <see cref="OnProcess"/>.</summary>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.RelayCommands.RelayCommandGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__ETMISG.GeneratedRelayCommand(CommandName_OnProcessCommand)]
         public g__ETMI.IRelayCommand<int> OnProcessCommand

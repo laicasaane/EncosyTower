@@ -38,7 +38,7 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETMVB.Binder]
         [g__ETA.Label("Layer", "Game Object")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.8-preview.1")]
         public sealed partial class BindingLayer : g__ETMVBC.MonoBindingProperty<global::UnityEngine.GameObject>
         {
             [g__ETMVB.BindingProperty]
@@ -58,7 +58,7 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETMVB.Binder]
         [g__S.Obsolete("GameObject.active is obsolete. Use GameObject.SetActive(), GameObject.activeSelf or GameObject.activeInHierarchy.")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.8-preview.1")]
         public sealed partial class BindingActive : g__ETMVBC.MonoBindingProperty<global::UnityEngine.GameObject>
         {
             [g__ETMVB.BindingProperty]
@@ -78,7 +78,7 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETMVB.Binder]
         [g__ETA.Label("Is Static", "Game Object")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.8-preview.1")]
         public sealed partial class BindingIsStatic : g__ETMVBC.MonoBindingProperty<global::UnityEngine.GameObject>
         {
             [g__ETMVB.BindingProperty]
@@ -98,7 +98,7 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETMVB.Binder]
         [g__ETA.Label("Tag", "Game Object")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.MonoBinders.MonoBinderGenerator", "0.1.8-preview.1")]
         public sealed partial class BindingTag : g__ETMVBC.MonoBindingProperty<global::UnityEngine.GameObject>
         {
             [g__ETMVB.BindingProperty]

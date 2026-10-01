@@ -27,7 +27,7 @@ namespace TestProject
 #pragma warning disable
 
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.VariantStructGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.VariantStructGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 [g__UES.Preserve]
 partial struct Vector3Variant : g__ETV.IVariant<global::UnityEngine.Vector3>

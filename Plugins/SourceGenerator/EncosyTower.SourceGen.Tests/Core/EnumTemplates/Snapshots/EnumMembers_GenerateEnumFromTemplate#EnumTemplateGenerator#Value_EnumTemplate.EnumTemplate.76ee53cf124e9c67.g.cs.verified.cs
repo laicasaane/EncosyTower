@@ -27,10 +27,10 @@ namespace TestProject
 
 #pragma warning disable
 
-[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
 partial struct Value_EnumTemplate : g__ETEE.IEnumTemplate<Value> { } // Value
 
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
 [g__ETEESG.GeneratedFromEnumTemplate(typeof(global::TestProject.Value_EnumTemplate))]
 public enum Value : byte
 {
@@ -49,7 +49,7 @@ partial struct Value_EnumTemplate { }  // ValueExtensions
 static partial class ValueExtensions { } // IValueExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Value), typeof(IValueExtensions), typeof(ValueExtensions), typeof(ValueExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
 public partial interface IValueExtensions
     : g__ETEE.IEnumExtensions<ValueExtended, global::TestProject.Value, byte>
     , g__ETCon.IToFixedString
@@ -65,7 +65,7 @@ public partial interface IValueExtensions
 static partial class ValueExtensions { } // ValueExtended
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Value), typeof(IValueExtensions), typeof(ValueExtensions), typeof(ValueExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
 public readonly partial struct ValueExtended : IValueExtensions
@@ -246,7 +246,7 @@ public readonly partial struct ValueExtended : IValueExtensions
 #endregion ==========
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Value), typeof(IValueExtensions), typeof(ValueExtensions), typeof(ValueExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 public static partial class ValueExtensions // ValueExtensions
 {
@@ -639,7 +639,7 @@ public static partial class ValueExtensions // ValueExtensions
             _ => -1,
         };
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Values
     {
@@ -659,7 +659,7 @@ public static partial class ValueExtensions // ValueExtensions
             => g__UC.CollectionHelper.CreateNativeArray<global::TestProject.Value>(s_values, allocator);
     }
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class UnderlyingValues
     {
@@ -686,7 +686,7 @@ public static partial class ValueExtensions // ValueExtensions
 
 static partial class ValueExtensions// Names
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Names
     {
@@ -721,7 +721,7 @@ static partial class ValueExtensions// Names
 
 static partial class ValueExtensions// DisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class DisplayNames
     {
@@ -756,7 +756,7 @@ static partial class ValueExtensions// DisplayNames
 
 static partial class ValueExtensions// FixedNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedNames
     {
@@ -797,7 +797,7 @@ static partial class ValueExtensions// FixedNames
 
 static partial class ValueExtensions// FixedDisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedDisplayNames
     {

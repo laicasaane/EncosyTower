@@ -429,7 +429,7 @@ namespace TestProject
 
     }
 
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial struct ObservableDictionaryChange<TKey, TValue> // Internals
     {
         private const g__SRCS.MethodImplOptions INLINING = g__SRCS.MethodImplOptions.AggressiveInlining;

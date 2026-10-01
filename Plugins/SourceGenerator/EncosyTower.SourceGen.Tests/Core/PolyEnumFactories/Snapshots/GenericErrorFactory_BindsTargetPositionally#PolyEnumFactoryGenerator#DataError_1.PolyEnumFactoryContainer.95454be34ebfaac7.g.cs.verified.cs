@@ -16,7 +16,7 @@ namespace TestProject
 
     public static partial class DataError
     {
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         public enum Type : byte
         {
             Undefined = global::TestProject.Error.EnumCase.Undefined,

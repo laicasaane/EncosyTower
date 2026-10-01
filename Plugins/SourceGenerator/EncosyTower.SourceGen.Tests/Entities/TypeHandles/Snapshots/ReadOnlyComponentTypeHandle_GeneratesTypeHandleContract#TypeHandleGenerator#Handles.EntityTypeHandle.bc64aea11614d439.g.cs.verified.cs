@@ -23,7 +23,7 @@ namespace TestProject
 
 #pragma warning disable
 
-    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Entities.Generators.Entities.TypeHandles.TypeHandleGenerator", "0.1.7-preview.3")]
+    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Entities.Generators.Entities.TypeHandles.TypeHandleGenerator", "0.1.8-preview.1")]
     partial struct Handles : g__ETETH.ITypeHandles
     {
          [g__UC.ReadOnly] internal g__UE.ComponentTypeHandle<global::TestProject.Component> _handle_I_TestProject_x002EComponent;

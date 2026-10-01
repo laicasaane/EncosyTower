@@ -24,10 +24,10 @@ namespace TestProject
 
 partial class Rows
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.DataTableAssets.DataTableAssetGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.DataTableAssets.DataTableAssetGenerator", "0.1.8-preview.1")]
     public const string NAME = nameof(Rows);
 
-    [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.DataTableAssets.DataTableAssetGenerator", "0.1.7-preview.3")]
+    [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.DataTableAssets.DataTableAssetGenerator", "0.1.8-preview.1")]
     protected sealed override int GetId(in global::TestProject.Row entry)
     {
         return entry.Id;

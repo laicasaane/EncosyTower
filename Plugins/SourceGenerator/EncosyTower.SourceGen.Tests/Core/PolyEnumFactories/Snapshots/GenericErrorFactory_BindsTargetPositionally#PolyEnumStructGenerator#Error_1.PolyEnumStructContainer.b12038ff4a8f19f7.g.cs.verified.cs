@@ -32,7 +32,7 @@ namespace TestProject
 
         private const string GENERATOR = "EncosyTower.Core.Generators.PolyEnumStructs.PolyEnumStructGenerator";
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public enum EnumCase : byte
         {
             Undefined = 0,
@@ -41,13 +41,13 @@ namespace TestProject
 
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public partial interface IEnumCase
         {
             EnumCase GetEnumCase();
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public partial interface IEnumCase<T> : IEnumCase
         where T : unmanaged
         {
@@ -55,7 +55,7 @@ namespace TestProject
 
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Error_Undefined<T> : IEnumCase, IEnumCase<T>
         where T : unmanaged
         {
@@ -84,7 +84,7 @@ namespace TestProject
             }
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         internal static partial class EnumCaseAPI
         {
         }

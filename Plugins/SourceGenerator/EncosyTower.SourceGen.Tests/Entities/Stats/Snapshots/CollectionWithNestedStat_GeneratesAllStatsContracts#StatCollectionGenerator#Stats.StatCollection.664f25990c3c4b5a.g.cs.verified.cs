@@ -194,7 +194,7 @@ namespace TestProject
 
     partial struct Stats // Type
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public enum Type : byte
         {
             Undefined = 0,
@@ -215,7 +215,7 @@ namespace TestProject
         /// Wraps the <see cref="Type"/> enum and provides methods for encoding and decoding stat user data,
         /// validating types, and converting to array indices.
         /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public readonly partial struct TypeId : g__S.IEquatable<TypeId>
         {
             public const uint OFFSET = 1000;
@@ -330,7 +330,7 @@ namespace TestProject
         /// <remarks>
         /// Each field corresponds to a stat type and stores the index of that stat in the stat buffer.
         /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Indices : g__ETCol.IHasLength, g__ETCol.IAsSpan<Index>, g__ETCol.IAsReadOnlySpan<Index>
         {
             public const int LENGTH = Stats.LENGTH;
@@ -483,7 +483,7 @@ namespace TestProject
         /// <remarks>
         /// Use <see cref="Index{TStatData}"/> when the stat data type is known at compile time.         /// An index is valid when its <c>value</c> is greater than zero.
         /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         [g__S.Serializable]
         public partial struct Index : g__S.IEquatable<Index>, g__ET.IIsValid, g__ETCon.IToFixedString, g__ETCon.IToFixedString<g__UC.FixedString32Bytes>
         {
@@ -565,7 +565,7 @@ namespace TestProject
         /// Implicitly converts to and from <see cref="Index"/> and <see cref="g__ETES.StatIndex{TStatData}"/>.         /// An index is valid when its <c>value</c> is greater than zero.
         /// </remarks>
         /// <typeparam name="TStatData">The stat data type this index refers to.</typeparam>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         [g__S.Serializable]
         public partial struct Index<TStatData> : g__S.IEquatable<Index<TStatData>>, g__ET.IIsValid, g__ETCon.IToFixedString, g__ETCon.IToFixedString<g__UC.FixedString32Bytes>
             where TStatData : unmanaged, g__ETES.IStatData
@@ -656,7 +656,7 @@ namespace TestProject
         /// <summary>
         /// An immutable record that pairs an <see cref="Index"/> with its associated <see cref="Type"/> and validity flag.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public readonly partial struct IndexRecord : g__S.IEquatable<IndexRecord>, g__ET.IIsValid
         {
             public readonly Index Index;
@@ -704,7 +704,7 @@ namespace TestProject
         /// <summary>
         /// An immutable record that pairs an <see cref="g__ETES.StatIndex"/> with its associated <see cref="Type"/> and validity flag.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public readonly partial struct StatIndexRecord : g__S.IEquatable<StatIndexRecord>, g__ET.IIsValid
         {
             public readonly g__ETES.StatIndex Index;
@@ -752,7 +752,7 @@ namespace TestProject
         /// <summary>
         /// An immutable record that pairs an <see cref="g__ETES.StatHandle"/> with its associated <see cref="Type"/> and validity flag.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public readonly partial struct StatHandleRecord : g__S.IEquatable<StatHandleRecord>, g__ET.IIsValid
         {
             public readonly g__ETES.StatHandle Handle;
@@ -803,7 +803,7 @@ namespace TestProject
         /// <remarks>
         /// Mirrors <see cref="Indices"/> but stores raw <see cref="g__ETES.StatIndex"/> values.         /// Obtained via <see cref="Indices.ToStatIndices"/>.
         /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct StatIndices : g__ETCol.IHasLength, g__ETCol.IAsSpan<g__ETES.StatIndex>, g__ETCol.IAsReadOnlySpan<g__ETES.StatIndex>
         {
             public const int LENGTH = Stats.LENGTH;
@@ -956,7 +956,7 @@ namespace TestProject
         /// <remarks>
         /// Each handle encodes both an entity reference and a stat index, allowing direct stat access.
         /// Obtained via <see cref="Indices.ToStatHandles"/>.        /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct StatHandles : g__ETCol.IHasLength, g__ETCol.IAsSpan<g__ETES.StatHandle>, g__ETCol.IAsReadOnlySpan<g__ETES.StatHandle>
         {
             public const int LENGTH = Stats.LENGTH;
@@ -1109,7 +1109,7 @@ namespace TestProject
             public readonly g__StatSystem.ValuePair ToValuePair()
                 => IsValuePair ? new g__StatSystem.ValuePair(BaseValue, CurrentValue) : new g__StatSystem.ValuePair(CurrentValue);
 
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             public static partial class Params
             {
                 [g__SRCS.MethodImpl(INLINING)]
@@ -1141,10 +1141,10 @@ namespace TestProject
         /// Provides <see cref="Options.Data"/> for per-stat stat data options and
         /// <see cref="Options.ProduceChangeEvents"/> for per-stat change-event flags.
         /// </remarks>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Options
         {
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             public partial struct Data
             {
                 public g__ET.Option<Hp> hp;
@@ -1176,7 +1176,7 @@ namespace TestProject
 
             }
 
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             public partial struct ProduceChangeEvents
             {
                 public g__ET.Option<bool> hp;
@@ -1220,7 +1220,7 @@ namespace TestProject
         /// <summary>
         /// Factory class for creating <see cref="Baker{T}"/> instances for <see cref="Stats"/>.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Baker
         {
             [g__SRCS.MethodImpl(INLINING)]
@@ -1252,7 +1252,7 @@ namespace TestProject
         /// Create via <see cref="Baker.Create"/> or <see cref="Baker.Bake"/>.
         /// </remarks>
         /// <typeparam name="T">The component data type to bake into. Must be layout-compatible with the stat collection type.</typeparam>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Baker<T> where T : unmanaged
         {
             public g__StatSystem.Baker baker;
@@ -1393,7 +1393,7 @@ namespace TestProject
         /// <summary>
         /// Factory class for creating <see cref="Accessor{T}"/> instances for <see cref="Stats"/>.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Accessor
         {
             [g__SRCS.MethodImpl(INLINING)]
@@ -1419,7 +1419,7 @@ namespace TestProject
         /// Create via <see cref="Accessor.Create"/>.
         /// </remarks>
         /// <typeparam name="T">The component data type to access. Must be layout-compatible with the stat collection type.</typeparam>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Accessor<T> where T : unmanaged
         {
             public g__StatSystem.Accessor accessor;
@@ -1749,7 +1749,7 @@ namespace TestProject
         /// <summary>
         /// Factory class for creating <see cref="Reader{T}"/> instances for <see cref="Stats"/>.
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Reader
         {
             [g__SRCS.MethodImpl(INLINING)]
@@ -1775,7 +1775,7 @@ namespace TestProject
         /// Create via <see cref="Reader.Create"/>.
         /// </remarks>
         /// <typeparam name="T">The component data type to read from. Must be layout-compatible with the stat collection type.</typeparam>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Reader<T> where T : unmanaged
         {
             public g__UECS.Entity entity;
@@ -2019,7 +2019,7 @@ namespace TestProject
 #region INTERNALS
 #endregion ======
 
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial struct Stats // Internals
     {
         private const g__SRCS.MethodImplOptions INLINING = g__SRCS.MethodImplOptions.AggressiveInlining;
@@ -2079,7 +2079,7 @@ namespace TestProject
 
     }
 
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     static partial class StatsExtensions // Internals
     {
         private const g__SRCS.MethodImplOptions INLINING = g__SRCS.MethodImplOptions.AggressiveInlining;

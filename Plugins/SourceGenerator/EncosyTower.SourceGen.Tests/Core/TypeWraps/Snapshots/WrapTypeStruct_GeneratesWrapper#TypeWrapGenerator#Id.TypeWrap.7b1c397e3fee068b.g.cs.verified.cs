@@ -28,7 +28,7 @@ namespace TestProject
 #pragma warning disable
 
     [g__SCM.TypeConverter(typeof(global::TestProject.Id.IdTypeConverter))]
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial struct Id : g__ETTW.IWrap<int>
         , g__S.IEquatable<global::TestProject.Id>
         , g__S.IEquatable<int>
@@ -284,7 +284,7 @@ namespace TestProject
             return left.value <= right.value;
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private sealed class IdTypeConverter : g__SCM.TypeConverter
         {
             private static readonly g__S.Type s_wrapperType = typeof(global::TestProject.Id);

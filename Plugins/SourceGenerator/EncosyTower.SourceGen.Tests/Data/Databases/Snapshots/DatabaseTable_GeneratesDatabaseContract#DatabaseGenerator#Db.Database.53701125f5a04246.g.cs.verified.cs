@@ -67,14 +67,14 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public bool IsValid
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
             get => g__ETUE.EncosyUnityObjectExtensions.IsValid(_database);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public bool IsInitialized
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
@@ -85,14 +85,14 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public g__ETDB.DatabaseAsset Database
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
             get => _database;
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public void Initialize()
         {
             ThrowIfNotCreated(IsValid);
@@ -103,27 +103,27 @@ namespace TestProject
             _database.Initialize();
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public void Deinitialize()
         {
             ThrowIfNotCreated(IsValid);
             _database.Deinitialize();
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         private global::TestProject.Rows Get_Items()
         {
             ThrowIfNotCreated(IsValid);
             return _database.GetDataTableAsset<global::TestProject.Rows>(Ids.Tables.Items).GetValueOrDefault();
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public static explicit operator Db(g__ETDB.DatabaseAsset database)
         {
             return new Db(database);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS)]
         private static void ThrowIfInvalid(global::UnityEngine.Object asset)
         {
@@ -133,7 +133,7 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS)]
         private static void ThrowIfNotCreated([g__SDCA.DoesNotReturnIf(false)] bool value)
         {
@@ -143,7 +143,7 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public static partial class Names
         {
             [g__ETDBSG.GeneratedAssetNameConstant(typeof(Db), typeof(g__ETDB.DatabaseAsset))]
@@ -157,7 +157,7 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public static partial class Keys
         {
             public static readonly g__ETAK.AssetKey<g__ETDB.DatabaseAsset> Database = new(Names.DATABASE);
@@ -169,7 +169,7 @@ namespace TestProject
             }
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public static partial class Ids
         {
             public static g__ETSI.StringId Database { get; private set; }
@@ -197,7 +197,7 @@ namespace TestProject
 
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         public static partial class Instance
         {
             private static Db s_instance;
@@ -257,7 +257,7 @@ namespace TestProject
 
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         private static partial class Vault
         {
             public static readonly g__ETSI.StringVault Instance = new(2);

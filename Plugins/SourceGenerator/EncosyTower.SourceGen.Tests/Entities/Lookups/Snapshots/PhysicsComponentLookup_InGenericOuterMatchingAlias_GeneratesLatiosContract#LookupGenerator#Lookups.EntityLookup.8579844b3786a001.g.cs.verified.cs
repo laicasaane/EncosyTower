@@ -26,7 +26,7 @@ namespace TestProject
 
 #pragma warning disable
 
-    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Entities.Generators.Entities.Lookups.LookupGenerator", "0.1.7-preview.3")]
+    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Entities.Generators.Entities.Lookups.LookupGenerator", "0.1.8-preview.1")]
     partial struct Lookups : g__ETEL.ILookups
         , g__ETEL.IPhysicsComponentLookupRO<global::TestProject.Component>
     {

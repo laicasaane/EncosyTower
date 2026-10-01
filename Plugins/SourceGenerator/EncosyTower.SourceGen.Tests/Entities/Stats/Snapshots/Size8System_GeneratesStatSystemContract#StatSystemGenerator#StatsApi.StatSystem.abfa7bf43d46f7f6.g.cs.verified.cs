@@ -193,7 +193,7 @@ namespace TestProject
 
     partial class StatsApi // StatObserver
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct StatObserver : g__UECS.IBufferElementData, g__ETES.IStatObserver
         {
             [g__UE.SerializeField]
@@ -217,7 +217,7 @@ namespace TestProject
 
     partial class StatsApi // StatModifier
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct StatModifier : g__UECS.IBufferElementData, g__ETES.IStatModifier<ValuePair, Stat, StatModifier.Stack>
         {
             public uint Id
@@ -268,7 +268,7 @@ namespace TestProject
     {
         partial struct StatModifier // Stack
         {
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             public partial struct Stack : g__ETES.IStatModifierStack<ValuePair, Stat>
             {
                 [g__SRCS.MethodImpl(INLINING)]
@@ -296,7 +296,7 @@ namespace TestProject
 
     partial class StatsApi // ModifierTriggerEvent
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct ModifierTriggerEvent
         {
             public g__ETES.StatModifierHandle handle;
@@ -326,7 +326,7 @@ namespace TestProject
 
     partial class StatsApi // StatModifierRecord
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct StatModifierRecord
         {
             public g__ETES.StatModifierHandle handle;
@@ -519,7 +519,7 @@ namespace TestProject
     partial class StatsApi // DeferredUpdateStatListJob
     {
         [g__UB.BurstCompile]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct DeferredUpdateStatListJob : g__UJ.IJob
         {
             private g__ETES.DeferredUpdateStatListJob<ValuePair, Stat, StatModifier, StatModifier.Stack, StatObserver, ValuePair.Composer> _jobData;
@@ -548,7 +548,7 @@ namespace TestProject
     partial class StatsApi // DeferredUpdateStatQueueJob
     {
         [g__UB.BurstCompile]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct DeferredUpdateStatQueueJob : g__UJ.IJob
         {
             private g__ETES.DeferredUpdateStatQueueJob<ValuePair, Stat, StatModifier, StatModifier.Stack, StatObserver, ValuePair.Composer> _jobData;
@@ -577,7 +577,7 @@ namespace TestProject
     partial class StatsApi // DeferredUpdateStatStreamJob
     {
         [g__UB.BurstCompile]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct DeferredUpdateStatStreamJob : g__UJ.IJob
         {
             private g__ETES.DeferredUpdateStatStreamJob<ValuePair, Stat, StatModifier, StatModifier.Stack, StatObserver, ValuePair.Composer> _jobData;
@@ -606,7 +606,7 @@ namespace TestProject
     partial class StatsApi // DeferredUpdateStatUnsafeBlockListJob
     {
         [g__UB.BurstCompile]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct DeferredUpdateStatUnsafeBlockListJob : g__UJ.IJob
         {
             private g__ETES.DeferredUpdateStatUnsafeBlockListJob<ValuePair, Stat, StatModifier, StatModifier.Stack, StatObserver, ValuePair.Composer> _jobData;
@@ -745,20 +745,20 @@ namespace TestProject
 
     partial class StatsApi // IsCompatible
     {
-        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatible<TStatData>(TStatData value)
             where TStatData : unmanaged, g__ETES.IStatData
             => IsCompatible(value.ValueType, value.IsValuePair);
 
-        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatible(in ValuePair value)
             => IsCompatible(value.Type, value.IsPair);
 
-        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatible(in g__ETES.StatVariant value, bool isPair)
             => IsCompatible(value.Type, isPair);
 
-        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatible(g__ETES.StatVariantType type, bool isPair)
             => isPair ? IsCompatiblePair(type) : IsCompatibleSingle(type);
 
@@ -793,7 +793,7 @@ namespace TestProject
         /// <item><see cref="g__ETES.StatVariantType.UShort"/>  => <see cref="ushort"/></item>
         /// </list>
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatibleSingle(g__ETES.StatVariantType type)
         {
             return type switch
@@ -848,7 +848,7 @@ namespace TestProject
         /// <item><see cref="g__ETES.StatVariantType.UShort"/>  => <see cref="ushort"/></item>
         /// </list>
         /// </summary>
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public static bool IsCompatiblePair(g__ETES.StatVariantType type)
         {
             return type switch
@@ -879,13 +879,13 @@ namespace TestProject
 
     partial class StatsApi // Impl: Stat
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct Stat
         {
             [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
             struct StatValueUnion
             {
-                [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+                [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
                 private struct ExposedValuePair
                 {
                     public StatDataStore data;
@@ -897,14 +897,14 @@ namespace TestProject
                 }
 
                 // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
-                [g__SRIS.FieldOffset(0)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+                [g__SRIS.FieldOffset(0)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
                 private ValuePair _valuePair;
 
                 // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
-                [g__SRIS.FieldOffset(0)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+                [g__SRIS.FieldOffset(0)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
                 private ExposedValuePair _exposed;
 
-                [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+                [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
                 public static ValuePair Convert(StatDataStore data, bool isPair, g__ETES.StatVariantType type)
                 {
                     return new StatValueUnion
@@ -918,7 +918,7 @@ namespace TestProject
                     }._valuePair;
                 }
 
-                [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+                [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
                 public static void Convert(ValuePair valuePair, ref StatDataStore data, ref g__ET.ByteBool isPair, ref g__ETES.StatVariantType type)
                 {
                     var exposed = new StatValueUnion { _valuePair = valuePair }._exposed;
@@ -937,7 +937,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: Stat<TStatData>
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct Stat<TStatData>
         {
             /// <inheritdoc cref="Stat.UserDataSize"/>
@@ -1100,7 +1100,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: API
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial class API
         {
             /// <inheritdoc cref="g__ETES.StatAPI.GetStatComponentTypeSet{TStat, TStatModifier, TStatObserver}()"/>
@@ -1249,7 +1249,7 @@ namespace TestProject
                 => g__ETES.StatAPI.TryGetObserversOfStat<ValuePair, Stat, StatObserver>(statHandle, lookupStats, lookupObservers, observers);
 
             /// <inheritdoc cref="g__ETES.StatAPI.TryGetModifierCount{TValuePair, TStat}(g__ETES.StatHandle, g__UECS.BufferLookup{TStat}, out int)"/>
-            [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SRCS.MethodImpl(INLINING)][g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             public static bool TryGetModifierCount(g__ETES.StatHandle statHandle, g__UECS.BufferLookup<Stat> lookupStats, out int modifierCount)
                 => g__ETES.StatAPI.TryGetModifierCount<ValuePair, Stat>(statHandle, lookupStats, out modifierCount);
 
@@ -1330,7 +1330,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: Reader
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct Reader
         {
             public readonly bool IsCreated
@@ -1390,7 +1390,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: Accessor
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct Accessor
         {
             /// <inheritdoc cref="g__ETES.StatAccessor{TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer}.TryAddStatModifier(g__ETES.StatHandle, TStatModifier, out g__ETES.StatModifierHandle, ref g__ETES.StatWorldData{TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver})"/>
@@ -1651,7 +1651,7 @@ namespace TestProject
     {
         partial struct Accessor // ReadOnly
         {
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             partial struct ReadOnly
             {
                 /// <inheritdoc cref="g__ETES.StatAccessor{TValuePair, TStat, TStatModifier, TStatModifierStack, TStatObserver, TValuePairComposer}.ReadOnly.TryGetAllObservers(g__UECS.Entity, g__UC.NativeList{TStatObserver})"/>
@@ -1761,7 +1761,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: Baker
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct Baker
         {
             public readonly IBaker IBaker
@@ -1862,7 +1862,7 @@ namespace TestProject
 
     partial class StatsApi // Impl: WorldData
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct WorldData
             : global::System.IDisposable
             , global::Unity.Collections.INativeDisposable
@@ -1944,10 +1944,10 @@ namespace TestProject
 
     partial class StatsApi // Impl: ValuePair
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         partial struct ValuePair
         {
-            [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+            [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
             partial struct Composer { }
 
             [g__SRCS.MethodImpl(INLINING)]
@@ -2617,7 +2617,7 @@ namespace TestProject
     {
         [g__S.Serializable]
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         internal partial struct StatDataStore
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4279,7 +4279,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairBool
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairBool : g__S.IEquatable<PairBool>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4328,7 +4328,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairBool2
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairBool2 : g__S.IEquatable<PairBool2>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4377,7 +4377,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairBool2x2
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairBool2x2 : g__S.IEquatable<PairBool2x2>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4426,7 +4426,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairBool3
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairBool3 : g__S.IEquatable<PairBool3>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4475,7 +4475,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairBool4
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairBool4 : g__S.IEquatable<PairBool4>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4524,7 +4524,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairByte
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairByte : g__S.IEquatable<PairByte>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4573,7 +4573,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairFloat
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairFloat : g__S.IEquatable<PairFloat>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4622,7 +4622,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairHalf
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairHalf : g__S.IEquatable<PairHalf>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4671,7 +4671,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairHalf2
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairHalf2 : g__S.IEquatable<PairHalf2>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4720,7 +4720,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairInt
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairInt : g__S.IEquatable<PairInt>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4769,7 +4769,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairSByte
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairSByte : g__S.IEquatable<PairSByte>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4818,7 +4818,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairShort
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairShort : g__S.IEquatable<PairShort>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4867,7 +4867,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairUInt
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairUInt : g__S.IEquatable<PairUInt>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4916,7 +4916,7 @@ namespace TestProject
     partial class StatsApi // Impl: PairUShort
     {
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         struct PairUShort : g__S.IEquatable<PairUShort>
         {
             // TODO(unsafe-evolution): mark this overlapping field safe/unsafe when the new syntax is available.
@@ -4969,7 +4969,7 @@ namespace TestProject
         private const string GENERATOR = "EncosyTower.Entities.Stats.Generators.StatSystemGenerator";
 
         [g__UE.HideInCallstack, g__SD.StackTraceHidden, g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS), g__SD.Conditional(g__ETDVD.STATS_CHECKS)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private static void ThrowIfMismatchedTypes(in g__ETES.StatVariant baseValue, in g__ETES.StatVariant currentValue)
         {
             if (baseValue.Type == currentValue.Type) return;
@@ -4978,7 +4978,7 @@ namespace TestProject
         }
 
         [g__UE.HideInCallstack, g__SD.StackTraceHidden, g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS), g__SD.Conditional(g__ETDVD.STATS_CHECKS)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private static void ThrowIfNotCompatible<TStatData>(TStatData value)
             where TStatData : unmanaged, g__ETES.IStatData
         {
@@ -4988,7 +4988,7 @@ namespace TestProject
         }
 
         [g__UE.HideInCallstack, g__SD.StackTraceHidden, g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS), g__SD.Conditional(g__ETDVD.STATS_CHECKS)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private static void ThrowIfNotCompatible(in ValuePair value)
         {
             if (IsCompatible(value)) return;
@@ -4997,7 +4997,7 @@ namespace TestProject
         }
 
         [g__UE.HideInCallstack, g__SD.StackTraceHidden, g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS), g__SD.Conditional(g__ETDVD.STATS_CHECKS)]
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private static void ThrowIfNotCompatible(in g__ETES.StatVariant value, bool isPair)
         {
             if (IsCompatible(value, isPair)) return;

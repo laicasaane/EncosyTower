@@ -24,7 +24,7 @@ namespace TestProject
 
     public partial class ChoiceFactory // Type
     {
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         public enum Type : byte
         {
             Undefined = global::TestProject.Choice.EnumCase.Undefined,
@@ -38,10 +38,10 @@ namespace TestProject
 
     public partial class ChoiceFactory // Factory API
     {
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         private readonly global::TestProject.Choice _enumStruct_Choice;
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         private ChoiceFactory(global::TestProject.Choice value)
@@ -49,7 +49,7 @@ namespace TestProject
             this._enumStruct_Choice = value;
         }
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         public static ChoiceFactory A()
@@ -57,7 +57,7 @@ namespace TestProject
             return new ChoiceFactory(default(global::TestProject.Choice.A));
         }
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         public static ChoiceFactory Undefined()
@@ -72,7 +72,7 @@ namespace TestProject
 
     public partial class ChoiceFactory // Type API
     {
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         public bool Is(Type type)
         {
             return this._enumStruct_Choice.GetEnumCase() == (global::TestProject.Choice.EnumCase)((byte)type);

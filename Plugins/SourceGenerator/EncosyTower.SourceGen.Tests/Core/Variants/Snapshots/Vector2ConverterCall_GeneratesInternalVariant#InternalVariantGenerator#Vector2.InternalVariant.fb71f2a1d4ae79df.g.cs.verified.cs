@@ -24,7 +24,7 @@ namespace EncosyTower.Variants.__InternalVariants__.I_EncosyTower_x002ESourceGen
 {
     static partial class InternalVariants
     {
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.InternalVariantGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.InternalVariantGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__UES.Preserve]
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]

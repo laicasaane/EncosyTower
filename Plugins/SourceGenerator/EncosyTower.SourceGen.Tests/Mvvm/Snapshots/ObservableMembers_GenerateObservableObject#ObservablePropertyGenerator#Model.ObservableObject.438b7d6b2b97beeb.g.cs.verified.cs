@@ -37,53 +37,53 @@ namespace TestProject
     {
         /// <summary>The name of <see cref="Value"/></summary>
         [g__ETMCMSG.GeneratedPropertyNameConstant]
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public const string PropertyName_Value = nameof(Model.Value);
 
         /// <summary>The name of <see cref="Name"/></summary>
         [g__ETMCMSG.GeneratedPropertyNameConstant]
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public const string PropertyName_Name = nameof(Model.Name);
 
         /// <summary>The name of <see cref="Progress"/></summary>
-        [g__ETMCMSG.GeneratedPropertyNameConstant][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyNameConstant][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public const string PropertyName_Progress = nameof(Model.Progress);
 
 
-        [g__ETMCMSG.GeneratedPropertyChangingEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyChangingEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private event g__ETMCM.PropertyChangingEventHandler _onChangingValue;
 
-        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private event g__ETMCM.PropertyChangedEventHandler _onChangedValue;
 
-        [g__ETMCMSG.GeneratedPropertyChangingEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyChangingEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private event g__ETMCM.PropertyChangingEventHandler _onChangingName;
 
-        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private event g__ETMCM.PropertyChangedEventHandler _onChangedName;
 
-        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedPropertyChangedEventHandler][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private event g__ETMCM.PropertyChangedEventHandler _onChangedProgress;
 
-        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private readonly g__ETVC.CachedVariantConverter<int> _variantConverterInt = g__ETVC.CachedVariantConverter<int>.Default;
 
-        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private readonly g__ETVC.CachedVariantConverter<float> _variantConverterFloat = g__ETVC.CachedVariantConverter<float>.Default;
 
-        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private readonly g__ETVC.CachedVariantConverter<string> _variantConverterString = g__ETVC.CachedVariantConverter<string>.Default;
 
-        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private string _name;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private string Get_Name()
         {
             return this._name;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         private void Set_Name(string value)
         {
             if (g__SCG.EqualityComparer<string>.Default.Equals(this._name, value)) return;
@@ -106,7 +106,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="_value"/>
-        [g__ETMCMSG.GeneratedObservableProperty][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__ETMCMSG.GeneratedObservableProperty][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public int Value
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
@@ -147,38 +147,38 @@ namespace TestProject
         /// <param name="oldValue">The previous property value that is being replaced.</param>
         /// <param name="newValue">The new property value being set.</param>
         /// <remarks>This method is invoked right before the value of <see cref="Value"/> is changed.</remarks>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         partial void OnValueChanging(int oldValue, int newValue);
 
         /// <summary>Executes the logic for when <see cref="Value"/> just changed.</summary>
         /// <param name="oldValue">The previous property value that was replaced.</param>
         /// <param name="newValue">The new property value that was set.</param>
         /// <remarks>This method is invoked right after the value of <see cref="Value"/> is changed.</remarks>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         partial void OnValueChanged(int oldValue, int newValue);
 
         /// <summary>Executes the logic for when <see cref="Name"/> is changing.</summary>
         /// <param name="oldValue">The previous property value that is being replaced.</param>
         /// <param name="newValue">The new property value being set.</param>
         /// <remarks>This method is invoked right before the value of <see cref="Name"/> is changed.</remarks>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         partial void OnNameChanging(string oldValue, string newValue);
 
         /// <summary>Executes the logic for when <see cref="Name"/> just changed.</summary>
         /// <param name="oldValue">The previous property value that was replaced.</param>
         /// <param name="newValue">The new property value that was set.</param>
         /// <remarks>This method is invoked right after the value of <see cref="Name"/> is changed.</remarks>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         partial void OnNameChanged(string oldValue, string newValue);
 
         /// <summary>Executes the logic for when <see cref="Progress"/> just changed.</summary>
         /// <param name="value">The new property value that was set.</param>
         /// <remarks>This method is invoked right after the value of <see cref="Progress"/> is changed.</remarks>
-        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         partial void OnProgressChanged(float oldValue, float newValue);
 
         /// <inheritdoc cref="g__ETMCM.INotifyPropertyChanging.AttachPropertyChangingListener{TInstance}(string, g__ETMCM.PropertyChangeEventListener{TInstance})" />
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public virtual bool AttachPropertyChangingListener<TInstance>(string propertyName, g__ETMCM.PropertyChangeEventListener<TInstance> listener) where TInstance : class
         {
             if (listener == null) throw new g__S.ArgumentNullException(nameof(listener));
@@ -205,7 +205,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="g__ETMCM.INotifyPropertyChanged.AttachPropertyChangedListener{TInstance}(string, g__ETMCM.PropertyChangeEventListener{TInstance})" />
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public virtual bool AttachPropertyChangedListener<TInstance>(string propertyName, g__ETMCM.PropertyChangeEventListener<TInstance> listener) where TInstance : class
         {
             if (listener == null) throw new g__S.ArgumentNullException(nameof(listener));
@@ -239,7 +239,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="g__ETMCM.INotifyPropertyChanged.NotifyPropertyChanged{TInstance}(string, g__ETMCM.PropertyChangeEventListener{TInstance})" />
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public virtual bool NotifyPropertyChanged<TInstance>(string propertyName, g__ETMCM.PropertyChangeEventListener<TInstance> listener) where TInstance : class
         {
             if (listener == null) throw new g__S.ArgumentNullException(nameof(listener));
@@ -279,7 +279,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="g__ETMCM.INotifyPropertyChanged.NotifyPropertyChanged(string)" />
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public virtual bool NotifyPropertyChanged(string propertyName)
         {
 
@@ -318,7 +318,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="g__ETMCM.INotifyPropertyChanged.NotifyPropertyChanged()" />
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public virtual void NotifyPropertyChanged()
         {
 
@@ -346,7 +346,7 @@ namespace TestProject
         }
 
         /// <inheritdoc cref="g__ETMCM.IObservableObject.TryGetMemberObservableObject(g__SCG.Queue{string}, out g__ETMCM.IObservableObject)"/>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.ObservableProperties.ObservablePropertyGenerator", "0.1.8-preview.1")]
         public bool TryGetMemberObservableObject(g__SCG.Queue<string> propertyNames, out g__ETMCM.IObservableObject result)
         {
             result = default;

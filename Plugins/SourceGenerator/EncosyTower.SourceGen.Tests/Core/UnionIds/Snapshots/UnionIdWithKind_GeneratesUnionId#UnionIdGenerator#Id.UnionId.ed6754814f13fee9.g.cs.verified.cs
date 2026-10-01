@@ -40,7 +40,7 @@ namespace TestProject
 
 [g__SRCS.Union]
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit, Size = 4)]
-[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
 [g__SCM.TypeConverter(typeof(TypeConverter))]
 partial struct Id : g__ETUI.IUnionId<uint, Id>, g__SRCS.IUnion, g__ET.IHasValue
     , g__ETCon.IToFixedString
@@ -773,7 +773,7 @@ partial struct Id : g__ETUI.IUnionId<uint, Id>, g__SRCS.IUnion, g__ET.IHasValue
 
 partial struct Id // IdKind
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     public enum IdKind : byte
     {
         /// <see cref="global::TestProject.Kind"/>
@@ -787,7 +787,7 @@ partial struct Id // Serializable
 {
     [g__SRCS.Union]
     [g__S.Serializable]
-    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     public partial struct Serializable : g__SRCS.IUnion, g__ETUI.ISerializableUnionId<uint, Id, Serializable>
     , g__ETCon.IToFixedString
     , g__ETCon.IToDisplayFixedString
@@ -1183,7 +1183,7 @@ partial struct Id // Serializable
         }
 
         [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         private struct Union
         {
@@ -1221,7 +1221,7 @@ partial struct Id // KindExtensions
 #region    EXTENSIONS
 #endregion ==========
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     private static partial class KindExtensions // KindExtensions
     {
@@ -1377,7 +1377,7 @@ partial struct Id // KindExtensions
 
     static partial class KindExtensions// Names
     {
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Names
         {
@@ -1412,7 +1412,7 @@ partial struct Id // KindExtensions
 
     static partial class KindExtensions// DisplayNames
     {
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class DisplayNames
         {
@@ -1447,7 +1447,7 @@ partial struct Id // KindExtensions
 
     static partial class KindExtensions// FixedNames
     {
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class FixedNames
         {
@@ -1488,7 +1488,7 @@ partial struct Id // KindExtensions
 
     static partial class KindExtensions// FixedDisplayNames
     {
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class FixedDisplayNames
         {
@@ -1534,7 +1534,7 @@ partial struct Id { } // IdKindExtensions
 static partial class Id_IdKindExtensions { } // IId_IdKindExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Id.IdKind), typeof(IId_IdKindExtensions), typeof(Id_IdKindExtensions), typeof(Id_IdKindExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
 public partial interface IId_IdKindExtensions
     : g__ETEE.IEnumExtensions<Id_IdKindExtended, global::TestProject.Id.IdKind, byte>
     , g__ETCon.IToFixedString
@@ -1550,7 +1550,7 @@ public partial interface IId_IdKindExtensions
 static partial class Id_IdKindExtensions { } // Id_IdKindExtended
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Id.IdKind), typeof(IId_IdKindExtensions), typeof(Id_IdKindExtensions), typeof(Id_IdKindExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
 public readonly partial struct Id_IdKindExtended : IId_IdKindExtensions
@@ -1731,7 +1731,7 @@ public readonly partial struct Id_IdKindExtended : IId_IdKindExtensions
 #endregion ==========
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Id.IdKind), typeof(IId_IdKindExtensions), typeof(Id_IdKindExtensions), typeof(Id_IdKindExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 public static partial class Id_IdKindExtensions // Id_IdKindExtensions
 {
@@ -2124,7 +2124,7 @@ public static partial class Id_IdKindExtensions // Id_IdKindExtensions
             _ => -1,
         };
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Values
     {
@@ -2144,7 +2144,7 @@ public static partial class Id_IdKindExtensions // Id_IdKindExtensions
             => g__UC.CollectionHelper.CreateNativeArray<global::TestProject.Id.IdKind>(s_values, allocator);
     }
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class UnderlyingValues
     {
@@ -2171,7 +2171,7 @@ public static partial class Id_IdKindExtensions // Id_IdKindExtensions
 
 static partial class Id_IdKindExtensions// Names
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Names
     {
@@ -2206,7 +2206,7 @@ static partial class Id_IdKindExtensions// Names
 
 static partial class Id_IdKindExtensions// DisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class DisplayNames
     {
@@ -2241,7 +2241,7 @@ static partial class Id_IdKindExtensions// DisplayNames
 
 static partial class Id_IdKindExtensions// FixedNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedNames
     {
@@ -2282,7 +2282,7 @@ static partial class Id_IdKindExtensions// FixedNames
 
 static partial class Id_IdKindExtensions// FixedDisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedDisplayNames
     {
@@ -2320,7 +2320,7 @@ static partial class Id_IdKindExtensions// FixedDisplayNames
 
 partial struct Id { } // IdEnumeration
 
-[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.7-preview.3")]
+[g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
 public static partial class IdEnumeration
 {
     /// <summary>

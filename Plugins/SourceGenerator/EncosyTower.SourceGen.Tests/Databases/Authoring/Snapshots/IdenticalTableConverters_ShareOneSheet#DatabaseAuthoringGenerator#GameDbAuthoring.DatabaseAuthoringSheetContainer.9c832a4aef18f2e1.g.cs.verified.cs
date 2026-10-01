@@ -43,7 +43,7 @@ namespace TestProject
 
         [g__S.Serializable]
         [g__ETDBASG.GeneratedSheetContainer]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class SheetContainer : g__ETDBA.DataSheetContainerBase, g__ETDBA.IPostExportDatabase
         {
@@ -84,7 +84,7 @@ namespace TestProject
 
         [g__S.Serializable]
         [g__ETDBASG.GeneratedSheetContainer]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class SheetContainer { }
 
@@ -93,14 +93,14 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETDBASG.TableNaming("TableA", g__ETN.NameCasing.Pascal)]
         [g__ETDBASG.GeneratedSheet(typeof(int), typeof(global::TestProject.Loc), typeof(global::TestProject.LocTableA), "LocTableA")]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class LocTableA_LocSheet_TableA : LocSheet { }
 
         [g__S.Serializable]
         [g__ETDBASG.TableNaming("TableB", g__ETN.NameCasing.Pascal)]
         [g__ETDBASG.GeneratedSheet(typeof(int), typeof(global::TestProject.Loc), typeof(global::TestProject.LocTableB), "LocTableB")]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class LocTableB_LocSheet_TableB : LocSheet { }
 

@@ -25,7 +25,7 @@ namespace TestProject
 
 #pragma warning disable
 
-    [g__SCDC.GeneratedCode("EncosyTower.Entities.Stats.Generators.StatDataGenerator", "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode("EncosyTower.Entities.Stats.Generators.StatDataGenerator", "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial struct Hp : g__ETES.IStatData
     {
         public float baseValue;

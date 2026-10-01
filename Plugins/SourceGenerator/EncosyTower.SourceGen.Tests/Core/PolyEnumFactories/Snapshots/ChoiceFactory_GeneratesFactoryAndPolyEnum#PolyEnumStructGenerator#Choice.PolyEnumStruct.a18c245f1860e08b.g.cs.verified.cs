@@ -36,7 +36,7 @@ namespace TestProject
 
     partial struct Choice // EnumCase
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public enum EnumCase : byte
         {
             /// <inheritdoc cref="Choice.Choice_Undefined"/>
@@ -56,7 +56,7 @@ namespace TestProject
 
     partial struct Choice // IEnumCase
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public partial interface IEnumCase
         {
             EnumCase GetEnumCase();
@@ -71,7 +71,7 @@ namespace TestProject
 
     partial struct Choice // Case Structs
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Choice_Undefined : IEnumCase
         {
             [g__SRCS.MethodImpl(INLINING)]
@@ -268,7 +268,7 @@ namespace TestProject
 
     partial struct Choice // Enum Case API
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         private static partial class EnumCaseAPI
         {
         }
@@ -277,7 +277,7 @@ namespace TestProject
 #region    INTERNALS
 #endregion =========
 
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial struct Choice // Internals
     {
         private const g__SRCS.MethodImplOptions INLINING = g__SRCS.MethodImplOptions.AggressiveInlining;

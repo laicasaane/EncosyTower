@@ -31,7 +31,7 @@ namespace TestProject
         /// Provides information about the types, fields and methods to be cached.
         /// </summary>
         [g__ETTCSG.GeneratedRuntimeTypeCaches]
-        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Types.Caches.RuntimeTypeCachesGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Types.Caches.RuntimeTypeCachesGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SCM.EditorBrowsable(g__SCM.EditorBrowsableState.Never)]
         [g__UES.Preserve]

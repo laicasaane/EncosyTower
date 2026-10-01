@@ -21,7 +21,7 @@ namespace TestProject
 
 #pragma warning disable
 
-    [g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistGenerator", "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    [g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistGenerator", "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
     partial class PlayerData : g__ETUV.IPersist
     {
         public string Id { get; set; }

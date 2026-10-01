@@ -30,7 +30,7 @@ namespace TestProject
 static partial class FruitExtensions { } // IFruitExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Fruit), typeof(IFruitExtensions), typeof(FruitExtensions), typeof(FruitExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
 public partial interface IFruitExtensions
     : g__ETEE.IEnumExtensions<FruitExtended, global::TestProject.Fruit, byte>
     , g__ETCon.IToFixedString
@@ -46,7 +46,7 @@ public partial interface IFruitExtensions
 static partial class FruitExtensions { } // FruitExtended
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Fruit), typeof(IFruitExtensions), typeof(FruitExtensions), typeof(FruitExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
 public readonly partial struct FruitExtended : IFruitExtensions
@@ -227,7 +227,7 @@ public readonly partial struct FruitExtended : IFruitExtensions
 #endregion ==========
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Fruit), typeof(IFruitExtensions), typeof(FruitExtensions), typeof(FruitExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 public static partial class FruitExtensions // FruitExtensions
 {
@@ -620,7 +620,7 @@ public static partial class FruitExtensions // FruitExtensions
             _ => -1,
         };
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Values
     {
@@ -640,7 +640,7 @@ public static partial class FruitExtensions // FruitExtensions
             => g__UC.CollectionHelper.CreateNativeArray<global::TestProject.Fruit>(s_values, allocator);
     }
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class UnderlyingValues
     {
@@ -667,7 +667,7 @@ public static partial class FruitExtensions // FruitExtensions
 
 static partial class FruitExtensions// Names
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Names
     {
@@ -702,7 +702,7 @@ static partial class FruitExtensions// Names
 
 static partial class FruitExtensions// DisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class DisplayNames
     {
@@ -737,7 +737,7 @@ static partial class FruitExtensions// DisplayNames
 
 static partial class FruitExtensions// FixedNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedNames
     {
@@ -778,7 +778,7 @@ static partial class FruitExtensions// FixedNames
 
 static partial class FruitExtensions// FixedDisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedDisplayNames
     {

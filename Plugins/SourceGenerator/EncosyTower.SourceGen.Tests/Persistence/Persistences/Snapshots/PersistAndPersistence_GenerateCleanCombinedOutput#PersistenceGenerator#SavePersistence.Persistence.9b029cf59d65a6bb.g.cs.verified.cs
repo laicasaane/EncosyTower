@@ -40,7 +40,7 @@ namespace TestProject
         /// Manages persist stores, accessors, and string ID mappings.
         /// Provides load, save, and lifecycle operations for all persist data associated with an ID.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         internal partial class Persistence : g__ETP.PersistenceBase
         {
             internal readonly PersistDirectory _directory;
@@ -138,7 +138,7 @@ namespace TestProject
         /// A read-only view of <see cref="Persistence" /> that exposes safe, non-mutating access
         /// to string IDs, accessors, and save operations.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         public readonly partial struct ReadOnlyPersistence : g__ET.IIsCreated
         {
             internal readonly Persistence _persistence;
@@ -205,7 +205,7 @@ namespace TestProject
         /// An immutable collection of <see cref="StringId{T}" /> values identifying
         /// each data type stored in the persistence layer.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         public readonly partial struct StringIdCollection : g__ETP.IPersistStringIdCollection, g__ET.IIsCreated
         {
             public readonly g__ETS.StringId<string> SaveData;
@@ -316,7 +316,7 @@ namespace TestProject
                 return true;
             }
 
-            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
             public struct Enumerator : g__SCG.IEnumerator<g__ETS.StringId<string>>
             {
                 private readonly StringIdCollection _source;
@@ -364,7 +364,7 @@ namespace TestProject
         /// <summary>
         /// Holds all typed persist accessors and manages their initialization and deinitialization lifecycle.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         internal partial class AccessorCollection : g__ETP.IPersistAccessorCollection
         {
             internal AccessorCollection([g__SDCA.NotNull] PersistDirectory directory)
@@ -497,7 +497,7 @@ namespace TestProject
         /// A read-only view of <see cref="AccessorCollection" /> that provides immutable,
         /// enumerable access to all typed persist accessors.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         public readonly partial struct ReadOnlyAccessorCollection : g__ETP.IPersistAccessorReadOnlyCollection, g__ET.IIsCreated
         {
             internal readonly AccessorCollection _accessors;
@@ -589,7 +589,7 @@ namespace TestProject
         /// Provides forward-only iteration over the <see cref="g__ETP.IPersistAccessor" /> elements
         /// held in a <see cref="ReadOnlyAccessorCollection" />.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         public partial struct AccessorEnumerator : g__SCG.IEnumerator<g__ETP.IPersistAccessor>
         {
             private readonly ReadOnlyAccessorCollection _source;
@@ -636,7 +636,7 @@ namespace TestProject
         /// Manages the underlying persist stores for all persist data types, coordinating
         /// load, save, and clone operations across the stores belonging to a single ID.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         internal partial class PersistDirectory : g__ETP.IPersistDirectory, g__S.IDisposable
         {
             private readonly g__ETS.StringVault _stringVault;
@@ -797,7 +797,7 @@ namespace TestProject
         /// A serializable, value-type snapshot of all persist data instances belonging to a single ID.
         /// Supports copying to and from the <see cref="PersistDirectory" />.
         /// </summary>
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
         [g__S.Serializable]
         public partial struct PersistCollection : g__ETP.IPersistCollection, g__ET.IIsCreated
         {
@@ -995,7 +995,7 @@ namespace TestProject
                 return true;
             }
 
-            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.7-preview.3")]
+            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Persistence.Generators.PersistenceGenerator", "0.1.8-preview.1")]
             public struct Enumerator : g__SCG.IEnumerator<g__ETP.IPersist>
             {
                 private readonly PersistCollection _source;

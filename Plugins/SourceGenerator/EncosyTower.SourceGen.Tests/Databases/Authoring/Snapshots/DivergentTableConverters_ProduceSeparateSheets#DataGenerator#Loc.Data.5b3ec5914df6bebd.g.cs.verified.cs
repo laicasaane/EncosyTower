@@ -34,45 +34,45 @@ namespace TestProject
     partial struct Loc : g__ETD.IData, g__ETD.IReadOnlyData<Loc>, g__ETD.IDataWithId<int>, g__ETD.IDataWithReadOnlyView<Loc>, g__S.IEquatable<Loc>
     {
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Id))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Id))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private int _id;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly int Get_Id()
         {
             return (this._id);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Id(int value)
         {
             this._id = (value);
         }
 
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Points))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Points))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private int[] _points;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly int[] Get_Points()
         {
             return (this._points);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Points(int[] value)
         {
             this._points = (int[])(value);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public override readonly int GetHashCode()
         {
             var hash = GetHashCodeInternal();
             return hash.ToHashCode();
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly g__ET.HashValue GetHashCodeInternal()
         {
             var hash = new g__ET.HashValue();
@@ -81,13 +81,13 @@ namespace TestProject
             return hash;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public override readonly bool Equals(object obj)
         {
             return obj is Loc other && Equals(other);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public readonly bool Equals(Loc other)
         {
             return
@@ -96,26 +96,26 @@ namespace TestProject
             ;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public readonly Loc AsReadOnly()
         {
             return this;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public static bool operator ==(in Loc left, in Loc right)
         {
             return left.Equals(right);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public static bool operator !=(in Loc left, in Loc right)
         {
             return !left.Equals(right);
         }
 
         [g__S.Obsolete("This method is not intended to be used directly by user code.")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         internal static class I_TestProject_x002ELoc_ValueSetter
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]

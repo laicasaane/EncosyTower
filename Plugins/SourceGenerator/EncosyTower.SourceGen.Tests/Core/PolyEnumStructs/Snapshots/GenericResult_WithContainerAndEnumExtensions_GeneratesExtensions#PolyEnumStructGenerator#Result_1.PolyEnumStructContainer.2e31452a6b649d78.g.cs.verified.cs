@@ -32,7 +32,7 @@ namespace TestProject
 
         private const string GENERATOR = "EncosyTower.Core.Generators.PolyEnumStructs.PolyEnumStructGenerator";
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public enum EnumCase : byte
         {
             Undefined = 0,
@@ -41,20 +41,20 @@ namespace TestProject
 
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public partial interface IEnumCase
         {
             EnumCase GetEnumCase();
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public partial interface IEnumCase<T> : IEnumCase
         {
             T Value { get; }
 
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         public partial struct Result_Undefined<T> : IEnumCase, IEnumCase<T>
         {
             public readonly T Value
@@ -103,7 +103,7 @@ namespace TestProject
             }
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         internal static partial class EnumCaseAPI
         {
         }
@@ -134,7 +134,7 @@ namespace TestProject
     static partial class ResultCases_EnumCaseExtensions { } // IResultCases_EnumCaseExtensions
 
     [g__ETEESG.GeneratedEnumExtensionsFor(typeof(ResultCases.EnumCase), typeof(IResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtended))]
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
     public partial interface IResultCases_EnumCaseExtensions
         : g__ETEE.IEnumExtensions<ResultCases_EnumCaseExtended, ResultCases.EnumCase, byte>
         , g__ETCon.IToFixedString
@@ -150,7 +150,7 @@ namespace TestProject
     static partial class ResultCases_EnumCaseExtensions { } // ResultCases_EnumCaseExtended
 
     [g__ETEESG.GeneratedEnumExtensionsFor(typeof(ResultCases.EnumCase), typeof(IResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtended))]
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
     public readonly partial struct ResultCases_EnumCaseExtended : IResultCases_EnumCaseExtensions
@@ -331,7 +331,7 @@ namespace TestProject
 #endregion ==========
 
     [g__ETEESG.GeneratedEnumExtensionsFor(typeof(ResultCases.EnumCase), typeof(IResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtended))]
-    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class ResultCases_EnumCaseExtensions // ResultCases_EnumCaseExtensions
     {
@@ -739,7 +739,7 @@ namespace TestProject
                 _ => -1,
             };
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Values
         {
@@ -760,7 +760,7 @@ namespace TestProject
                 => g__UC.CollectionHelper.CreateNativeArray<ResultCases.EnumCase>(s_values, allocator);
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class UnderlyingValues
         {
@@ -788,7 +788,7 @@ namespace TestProject
 
     static partial class ResultCases_EnumCaseExtensions// Names
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class Names
         {
@@ -827,7 +827,7 @@ namespace TestProject
 
     static partial class ResultCases_EnumCaseExtensions// DisplayNames
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class DisplayNames
         {
@@ -866,7 +866,7 @@ namespace TestProject
 
     static partial class ResultCases_EnumCaseExtensions// FixedNames
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class FixedNames
         {
@@ -915,7 +915,7 @@ namespace TestProject
 
     static partial class ResultCases_EnumCaseExtensions// FixedDisplayNames
     {
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public static partial class FixedDisplayNames
         {

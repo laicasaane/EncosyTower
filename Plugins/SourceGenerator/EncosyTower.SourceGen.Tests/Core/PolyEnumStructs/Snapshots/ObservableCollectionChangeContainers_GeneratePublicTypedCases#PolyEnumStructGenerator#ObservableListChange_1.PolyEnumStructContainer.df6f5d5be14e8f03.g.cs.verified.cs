@@ -32,7 +32,7 @@ namespace TestProject
 
         private const string GENERATOR = "EncosyTower.Core.Generators.PolyEnumStructs.PolyEnumStructGenerator";
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         public enum EnumCase : byte
         {
             Undefined = 0,
@@ -57,7 +57,7 @@ namespace TestProject
 
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")]
         partial interface IEnumCase
         {
             EnumCase GetEnumCase();
@@ -287,7 +287,7 @@ namespace TestProject
             }
         }
 
-        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.8-preview.1")][g__SDCA.ExcludeFromCodeCoverage]
         internal static partial class EnumCaseAPI
         {
         }

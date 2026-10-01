@@ -40,7 +40,7 @@ namespace AuthProject
 #if DATABASE_AUTHORING && BAKING_SHEET
 
         [g__S.Serializable]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public abstract partial class LocSheet : g__CBS.Sheet<int, LocSheet.__Loc>, g__ETDBA.IDataSheet, g__ETDBA.IToDataArray<global::DbProject.Loc>
         {
@@ -90,7 +90,7 @@ namespace AuthProject
 
             [g__S.Serializable]
             [g__ETDBASG.GeneratedSheetRow(typeof(int), typeof(global::DbProject.Loc))]
-            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public partial class __Loc : g__CBS.SheetRow<int>
             {
                 public static readonly __Loc Default = new __Loc();
@@ -124,7 +124,7 @@ namespace AuthProject
 #else
 
         [g__S.Serializable]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public abstract partial class LocSheet { }
 

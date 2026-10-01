@@ -35,7 +35,7 @@ namespace EncosyTower.Mvvm.__InternalVariants__.EncosyTower_SourceGen_Tests_Inpu
     /// </summary>
     [g__UES.Preserve]
     [g__ETVSG.GeneratedInternalVariants]
-    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalVariants.InternalVariantGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalVariants.InternalVariantGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class InternalVariants
     {

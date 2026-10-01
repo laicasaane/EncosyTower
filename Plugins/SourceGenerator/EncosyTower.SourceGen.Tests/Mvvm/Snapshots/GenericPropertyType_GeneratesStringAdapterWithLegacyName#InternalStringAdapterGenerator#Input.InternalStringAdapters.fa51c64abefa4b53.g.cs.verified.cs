@@ -21,7 +21,7 @@ namespace EncosyTower.Mvvm.ViewBinding.__InternalStringAdapters.EncosyTower_Sour
 {
     [g__ETMVB.Adapter(sourceType: typeof(global::System.Collections.Generic.List<int>), destType: typeof(string), order: 1)]
     [g__ETA.Label("System.Collections.Generic.List<int> ⇒ String", "Generated/System.Collections.Generic")]
-    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalStringAdapters.InternalStringAdapterGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalStringAdapters.InternalStringAdapterGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public sealed class ListᐸintᐳToStringAdapter : g__ETMVB.IAdapter
     {

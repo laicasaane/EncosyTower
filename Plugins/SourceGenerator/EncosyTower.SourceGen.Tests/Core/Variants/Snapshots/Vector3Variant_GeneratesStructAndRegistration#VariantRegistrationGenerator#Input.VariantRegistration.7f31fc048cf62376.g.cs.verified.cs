@@ -28,7 +28,7 @@ namespace EncosyTower.Variants.__AttributeVariants__.I_EncosyTower_x002ESourceGe
     /// on Unity3D platform.
     /// </summary>
     [g__ETVSG.GeneratedGenericVariants]
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.VariantRegistrationGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.VariantRegistrationGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     [g__UES.Preserve]
     public static partial class AttributeVariants

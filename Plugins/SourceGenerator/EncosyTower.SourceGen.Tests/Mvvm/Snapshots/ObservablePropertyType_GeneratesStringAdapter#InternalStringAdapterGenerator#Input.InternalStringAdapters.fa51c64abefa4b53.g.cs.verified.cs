@@ -21,7 +21,7 @@ namespace EncosyTower.Mvvm.ViewBinding.__InternalStringAdapters.EncosyTower_Sour
 {
     [g__ETMVB.Adapter(sourceType: typeof(global::TestProject.Score), destType: typeof(string), order: 1)]
     [g__ETA.Label("TestProject.Score ⇒ String", "Generated/TestProject")]
-    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalStringAdapters.InternalStringAdapterGenerator", "0.1.7-preview.3")]
+    [g__SCDC.GeneratedCode("EncosyTower.Mvvm.Generators.InternalStringAdapters.InternalStringAdapterGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public sealed class ScoreToStringAdapter : g__ETMVB.IAdapter
     {

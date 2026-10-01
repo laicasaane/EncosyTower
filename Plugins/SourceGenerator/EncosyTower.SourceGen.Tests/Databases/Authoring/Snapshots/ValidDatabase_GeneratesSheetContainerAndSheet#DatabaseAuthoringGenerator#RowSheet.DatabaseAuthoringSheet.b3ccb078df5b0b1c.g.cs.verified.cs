@@ -43,7 +43,7 @@ namespace TestProject
 #if DATABASE_AUTHORING && BAKING_SHEET
 
         [g__S.Serializable]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public abstract partial class RowSheet : g__CBS.Sheet<int, RowSheet.__Row>, g__ETDBA.IDataSheet, g__ETDBA.IToDataArray<global::TestProject.Row>
         {
@@ -93,7 +93,7 @@ namespace TestProject
 
             [g__S.Serializable]
             [g__ETDBASG.GeneratedSheetRow(typeof(int), typeof(global::TestProject.Row))]
-            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+            [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public partial class __Row : g__CBS.SheetRow<int>
             {
                 public static readonly __Row Default = new __Row();
@@ -135,7 +135,7 @@ namespace TestProject
 #else
 
         [g__S.Serializable]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.7-preview.3")]
+        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public abstract partial class RowSheet { }
 

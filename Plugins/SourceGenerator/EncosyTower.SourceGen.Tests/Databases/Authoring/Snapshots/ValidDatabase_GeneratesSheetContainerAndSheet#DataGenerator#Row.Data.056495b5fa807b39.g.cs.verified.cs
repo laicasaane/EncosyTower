@@ -35,77 +35,77 @@ namespace TestProject
     partial struct Row : g__ETD.IData, g__ETD.IReadOnlyData<Row>, g__ETD.IDataWithId<int>, g__ETD.IDataWithReadOnlyView<Row>, g__S.IEquatable<Row>
     {
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Id))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Id))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private int _id;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly int Get_Id()
         {
             return (this._id);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Id(int value)
         {
             this._id = (value);
         }
 
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Items))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Items))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private global::System.Collections.Generic.List<int> _items;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly global::EncosyTower.Collections.ListFast<int>.ReadOnly Get_Items()
         {
             return (this._items);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Items(global::System.Collections.Generic.List<int> value)
         {
             this._items = (global::System.Collections.Generic.List<int>)(value);
         }
 
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Tags))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Tags))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private global::System.Collections.Generic.HashSet<int> _tags;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly global::EncosyTower.Collections.HashSetReadOnly<int> Get_Tags()
         {
             return (this._tags);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Tags(global::System.Collections.Generic.HashSet<int> value)
         {
             this._tags = (global::System.Collections.Generic.HashSet<int>)(value);
         }
 
         [g__UE.SerializeField]
-        [g__ETDSG.GeneratedFieldFromProperty(nameof(Names))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__ETDSG.GeneratedFieldFromProperty(nameof(Names))][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private global::System.Collections.Generic.Dictionary<int, string> _names;
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly global::EncosyTower.Collections.DictionaryReadOnly<int, string> Get_Names()
         {
             return (this._names);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private void Set_Names(global::System.Collections.Generic.Dictionary<int, string> value)
         {
             this._names = (global::System.Collections.Generic.Dictionary<int, string>)(value);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public override readonly int GetHashCode()
         {
             var hash = GetHashCodeInternal();
             return hash.ToHashCode();
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         private readonly g__ET.HashValue GetHashCodeInternal()
         {
             var hash = new g__ET.HashValue();
@@ -116,13 +116,13 @@ namespace TestProject
             return hash;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public override readonly bool Equals(object obj)
         {
             return obj is Row other && Equals(other);
         }
 
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public readonly bool Equals(Row other)
         {
             return
@@ -133,26 +133,26 @@ namespace TestProject
             ;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public readonly Row AsReadOnly()
         {
             return this;
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public static bool operator ==(in Row left, in Row right)
         {
             return left.Equals(right);
         }
 
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         public static bool operator !=(in Row left, in Row right)
         {
             return !left.Equals(right);
         }
 
         [g__S.Obsolete("This method is not intended to be used directly by user code.")]
-        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.7-preview.3")]
+        [g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Data.DataGenerator", "0.1.8-preview.1")]
         internal static class I_TestProject_x002ERow_ValueSetter
         {
             [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
