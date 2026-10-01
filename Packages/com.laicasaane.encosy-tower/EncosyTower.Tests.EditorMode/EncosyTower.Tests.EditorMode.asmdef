@@ -2,9 +2,23 @@
     "name": "EncosyTower.Tests.EditorMode",
     "rootNamespace": "EncosyTower.Tests",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
+        "BakingSheet",
         "EncosyTower.Core",
+        "EncosyTower.Data",
+        "EncosyTower.Databases.Authoring",
+        "EncosyTower.Databases.Settings",
         "EncosyTower.Editor",
+        "EncosyTower.Editor.CodeGen",
+        "EncosyTower.Editor.SourceGen",
+        "EncosyTower.Mvvm",
+        "EncosyTower.Mvvm.TextMeshPro",
+        "EncosyTower.Mvvm.UIElements",
+        "EncosyTower.Mvvm.UnityUI",
+        "EncosyTower.Persistence",
+        "EncosyTower.Processing",
+        "EncosyTower.PubSub",
+        "EncosyTower.Tests.Mvvm.Fixtures",
+        "EncosyTower.VisualToolkit",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",
@@ -18,10 +32,12 @@
         "Unity.Localization",
         "Unity.Mathematics",
         "Unity.PerformanceTesting",
+        "Unity.ProjectAuditor.Editor",
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
         "UnityEditor.TestRunner",
-        "UnityEngine.TestRunner"
+        "UnityEngine.TestRunner",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"
@@ -30,18 +46,17 @@
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
+        "Google.Apis.Core.dll",
+        "Google.Apis.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll",
         "nunit.framework.dll"
     ],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_TEST_FRAMEWORK"
+        "UNITY_TEST_FRAMEWORK",
+        "ENCOSY_TESTS_ENABLED"
     ],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
         {
             "name": "com.cysharp.unitask",
             "expression": "",
@@ -116,6 +131,11 @@
             "name": "com.unity.ugui",
             "expression": "2.0.0",
             "define": "UNITY_TEXTMESHPRO"
+        },
+        {
+            "name": "com.unity.modules.uielements",
+            "expression": "",
+            "define": "UNITY_UI_ELEMENTS"
         }
     ],
     "noEngineReferences": false

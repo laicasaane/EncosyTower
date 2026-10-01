@@ -31,19 +31,10 @@
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_TEST_FRAMEWORK",
-        "UNITY_INCLUDE_TESTS"
+        "UNITY_INCLUDE_TESTS",
+        "ENCOSY_TESTS_ENABLED"
     ],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
-        {
-            "name": "com.cysharp.unitask",
-            "expression": "",
-            "define": "UNITASK"
-        },
         {
             "name": "com.latios.latiosframework",
             "expression": "",
