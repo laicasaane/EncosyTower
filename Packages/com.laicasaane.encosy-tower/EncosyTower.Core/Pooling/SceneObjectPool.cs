@@ -19,8 +19,8 @@ namespace EncosyTower.Pooling
 
     public sealed class SceneObjectPool : IDisposable
     {
-        private readonly FasterList<GameObjectId> _unusedGameObjectIds;
-        private readonly FasterList<TransformId> _unusedTransformIds;
+        private readonly List<GameObjectId> _unusedGameObjectIds;
+        private readonly List<TransformId> _unusedTransformIds;
         private readonly List<UnityObject> _objectList;
 
         private Scene _scene;
@@ -118,11 +118,11 @@ namespace EncosyTower.Pooling
                 _objectList.Clear();
             }
 
-            _unusedGameObjectIds.IncreaseCapacityBy(amount);
-            _unusedTransformIds.IncreaseCapacityBy(amount);
+            _unusedGameObjectIds.AsListFast().IncreaseCapacityBy(amount);
+            _unusedTransformIds.AsListFast().IncreaseCapacityBy(amount);
 
-            _unusedGameObjectIds.AddRange(gameObjectIds.AsReadOnlySpan());
-            _unusedTransformIds.AddRange(transformIds.AsReadOnlySpan());
+            _unusedGameObjectIds.AsListFast().AddRange(gameObjectIds.AsReadOnlySpan());
+            _unusedTransformIds.AsListFast().AddRange(transformIds.AsReadOnlySpan());
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
@@ -168,11 +168,11 @@ namespace EncosyTower.Pooling
             gameObjectIdArray.AsReadOnlySpan().CopyTo(gameObjectIds);
             transformIdArray.AsReadOnlySpan().CopyTo(transformIds);
 
-            _unusedGameObjectIds.IncreaseCapacityBy(amount);
-            _unusedTransformIds.IncreaseCapacityBy(amount);
+            _unusedGameObjectIds.AsListFast().IncreaseCapacityBy(amount);
+            _unusedTransformIds.AsListFast().IncreaseCapacityBy(amount);
 
-            _unusedGameObjectIds.AddRange(gameObjectIds);
-            _unusedTransformIds.AddRange(transformIds);
+            _unusedGameObjectIds.AsListFast().AddRange(gameObjectIds);
+            _unusedTransformIds.AsListFast().AddRange(transformIds);
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
@@ -270,8 +270,8 @@ namespace EncosyTower.Pooling
 
             _objectList.Clear();
 
-            _unusedGameObjectIds.RemoveRange(keep, removeCount);
-            _unusedTransformIds.RemoveRange(keep, removeCount);
+            _unusedGameObjectIds.AsListFast().RemoveRange(keep, removeCount);
+            _unusedTransformIds.AsListFast().RemoveRange(keep, removeCount);
         }
 
         public GameObject RentGameObject(RentingStrategy strategy)
@@ -380,11 +380,11 @@ namespace EncosyTower.Pooling
 
             var startIndex = UnusedCount - length;
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
@@ -413,11 +413,11 @@ namespace EncosyTower.Pooling
 
             var startIndex = UnusedCount - length;
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
 
@@ -445,11 +445,11 @@ namespace EncosyTower.Pooling
 
             var startIndex = UnusedCount - length;
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
 
@@ -483,11 +483,11 @@ namespace EncosyTower.Pooling
             var startIndex = UnusedCount - length;
             var transformIds = NativeArray.CreateFast<TransformId>(length, Allocator.Temp);
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
@@ -517,11 +517,11 @@ namespace EncosyTower.Pooling
             var startIndex = UnusedCount - length;
             var gameObjectIds = NativeArray.CreateFast<GameObjectId>(length, Allocator.Temp);
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
@@ -547,11 +547,11 @@ namespace EncosyTower.Pooling
             var gameObjectIds = NativeArray.CreateFast<GameObjectId>(length, Allocator.Temp);
             var transformIds = NativeArray.CreateFast<TransformId>(length, Allocator.Temp);
 
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
@@ -576,11 +576,11 @@ namespace EncosyTower.Pooling
             var gameObjectIds = NativeArray.CreateFast<GameObjectId>(length, Allocator.Temp);
             var transformIds = NativeArray.CreateFast<TransformId>(length, Allocator.Temp);
 
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertGameObjectIdsToGameObjects(gameObjectIds, gameObjects, _objectList);
 
@@ -604,11 +604,11 @@ namespace EncosyTower.Pooling
             var gameObjectIds = NativeArray.CreateFast<GameObjectId>(length, Allocator.Temp);
             var transformIds = NativeArray.CreateFast<TransformId>(length, Allocator.Temp);
 
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             UnityObjectAPI.ConvertTransformIdsToTransforms(transformIds, transforms, _objectList);
 
@@ -631,11 +631,11 @@ namespace EncosyTower.Pooling
 
             var startIndex = UnusedCount - length;
 
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             if (new RentOperation(RentingStrategy, strategy).ShouldActivate())
             {
@@ -652,10 +652,10 @@ namespace EncosyTower.Pooling
             PrepoolDifference(length);
 
             var startIndex = UnusedCount - length;
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             if (new RentOperation(RentingStrategy, strategy).ShouldActivate())
             {
@@ -674,11 +674,11 @@ namespace EncosyTower.Pooling
             var startIndex = UnusedCount - length;
             var gameObjectIds = NativeArray.CreateFast<GameObjectId>(length, Allocator.Temp);
 
-            _unusedTransformIds.CopyTo(startIndex, transformIds);
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             if (new RentOperation(RentingStrategy, strategy).ShouldActivate())
             {
@@ -699,8 +699,8 @@ namespace EncosyTower.Pooling
             var startIndex = Mathf.Max(UnusedCount - estimatedAmount, 0);
             var length = UnusedCount - startIndex;
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             return length;
         }
@@ -729,11 +729,11 @@ namespace EncosyTower.Pooling
             var startIndex = Mathf.Max(UnusedCount - estimatedAmount, 0);
             var length = UnusedCount - startIndex;
 
-            _unusedTransformIds.CopyTo(startIndex, transformIds[..length]);
-            _unusedGameObjectIds.CopyTo(startIndex, gameObjectIds[..length]);
+            _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds[..length]);
+            _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds[..length]);
 
-            _unusedGameObjectIds.RemoveRange(startIndex, length);
-            _unusedTransformIds.RemoveRange(startIndex, length);
+            _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
+            _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
             return length;
         }
@@ -813,8 +813,8 @@ namespace EncosyTower.Pooling
                 return;
             }
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
@@ -852,8 +852,8 @@ namespace EncosyTower.Pooling
                 return;
             }
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
@@ -891,8 +891,8 @@ namespace EncosyTower.Pooling
                 return;
             }
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
@@ -935,8 +935,8 @@ namespace EncosyTower.Pooling
                 return;
             }
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
@@ -962,8 +962,8 @@ namespace EncosyTower.Pooling
 
             UnityObjectAPI.ConvertGameObjectIdsToObjectList(gameObjectIds, _objectList);
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
@@ -1003,8 +1003,8 @@ namespace EncosyTower.Pooling
 
             UnityObjectAPI.ConvertTransformIdsToObjectList(transformIds, _objectList);
 
-            var unusedGameObjectIds = _unusedGameObjectIds;
-            var unusedTransformIds = _unusedTransformIds;
+            var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
+            var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
             unusedGameObjectIds.IncreaseCapacityTo(capacity);

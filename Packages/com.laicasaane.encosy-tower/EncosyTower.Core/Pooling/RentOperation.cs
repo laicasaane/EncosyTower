@@ -5,10 +5,7 @@ namespace EncosyTower.Pooling
     /// </summary>
     internal readonly record struct RentOperation
     {
-        public RentOperation(
-              RentingStrategy defaultStrategy
-            , RentingStrategy overriddenStrategy
-        )
+        public RentOperation(RentingStrategy defaultStrategy, RentingStrategy overriddenStrategy)
         {
             DefaultStrategy = defaultStrategy;
             OverriddenStrategy = overriddenStrategy;

@@ -22,6 +22,7 @@ namespace EncosyTower.Pooling
             , Action<T> actionOnReturn = null
         )
         {
+            Debugging.ThrowHelper.ThrowIfNull(createFunc);
             _createFunc = createFunc;
             _actionOnRent = actionOnRent;
             _actionOnReturn = actionOnReturn;

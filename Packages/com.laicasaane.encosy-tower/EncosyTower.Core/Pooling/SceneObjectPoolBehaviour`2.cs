@@ -18,16 +18,14 @@ using UnityEngine.SceneManagement;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Pooling
 {
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
 
     public partial class SceneObjectPoolBehaviour<TKey, TKeyComparer> : MonoBehaviour, IDisposable
-#if !(UNITASK || UNITY_6000_0_OR_NEWER)
-        where TKey : ITryLoad<GameObject>
-        where TKeyComparer : IEqualityComparer<TKey>, new()
-#endif
     {
         private SceneObjectPoolContext _context;
         private Dictionary<TKey, PoolRecord> _poolMap;
@@ -46,6 +44,7 @@ namespace EncosyTower.Pooling
 
         protected void Initialize([NotNull] IReadOnlyCollection<KeyEntry<TKey>> entries, int desiredJobCount = -1)
         {
+            DebuggingThrowHelper.ThrowIfNull(entries);
             Dispose();
 
             var poolMap = _poolMap = new(entries.Count, new TKeyComparer());
@@ -101,6 +100,7 @@ namespace EncosyTower.Pooling
             , Option<Vector3> defaultScale = default
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.ContainsKey(key))
@@ -151,6 +151,7 @@ namespace EncosyTower.Pooling
 
         public void Prepool([NotNull] TKey key, int amount, ReturningStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (amount < 1)
@@ -206,6 +207,7 @@ namespace EncosyTower.Pooling
         /// <returns>The actual amount to be prepooled. The value is either a positive number or zero.</returns>
         public int PrepoolDifference([NotNull] TKey key, int estimatedAmount, ReturningStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -308,6 +310,7 @@ namespace EncosyTower.Pooling
 
         public GameObject RentGameObject([NotNull] TKey key, RentingStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -328,6 +331,8 @@ namespace EncosyTower.Pooling
 
         public bool Rent([NotNull] TKey key, int amount, [NotNull] List<GameObject> result, RentingStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
+            DebuggingThrowHelper.ThrowIfNull(result);
             AssertInitialization(this);
 
             if (amount < 1)
@@ -346,8 +351,15 @@ namespace EncosyTower.Pooling
             return true;
         }
 
-        public bool Rent([NotNull] TKey key, int amount, [NotNull] List<GameObjectInfo> result, RentingStrategy strategy)
+        public bool Rent(
+              [NotNull] TKey key
+            , int amount
+            , [NotNull] List<GameObjectInfo> result
+            , RentingStrategy strategy
+        )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
+            DebuggingThrowHelper.ThrowIfNull(result);
             AssertInitialization(this);
 
             if (amount < 1)
@@ -366,8 +378,14 @@ namespace EncosyTower.Pooling
             return true;
         }
 
-        public bool Rent([NotNull] TKey key, int amount, ref NativeList<GameObjectInfo> result, RentingStrategy strategy)
+        public bool Rent(
+              [NotNull] TKey key
+            , int amount
+            , ref NativeList<GameObjectInfo> result
+            , RentingStrategy strategy
+        )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (result.IsCreated == false)
@@ -388,6 +406,7 @@ namespace EncosyTower.Pooling
 
         public bool Rent([NotNull] TKey key, Span<GameObjectInfo> result, RentingStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             var amount = result.Length;
@@ -409,6 +428,7 @@ namespace EncosyTower.Pooling
 
         public void Return([NotNull] TKey key, GameObject gameObject, ReturningStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (gameObject == false)
@@ -436,6 +456,7 @@ namespace EncosyTower.Pooling
 
         public void Return([NotNull] TKey key, ReadOnlySpan<GameObject> gameObjects, ReturningStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -453,6 +474,7 @@ namespace EncosyTower.Pooling
             , ReturningStrategy strategy
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -502,6 +524,7 @@ namespace EncosyTower.Pooling
             , ReturningStrategy strategy
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -549,6 +572,7 @@ namespace EncosyTower.Pooling
             , ReturningStrategy strategy
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.TryGetValue(key, out var record) == false)
@@ -601,10 +625,10 @@ namespace EncosyTower.Pooling
         [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void AssertInitialization(SceneObjectPoolBehaviour<TKey, TKeyComparer> behaviour)
         {
-            const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";
-
-            Checks.IsTrue(behaviour._poolMap != null, MESSAGE);
-            Checks.IsTrue(behaviour._context != null, MESSAGE);
+            ThrowHelper.AssertInitialization(
+                  behaviour._poolMap != null
+                , behaviour._context != null
+            );
             SceneObjectPoolContext.AssertInitialization(behaviour._context);
         }
 

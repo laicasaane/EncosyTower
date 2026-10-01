@@ -4,7 +4,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
-using EncosyTower.Debugging;
 using EncosyTower.UnityExtensions;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -37,13 +36,13 @@ namespace EncosyTower.Pooling
         [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         public static void AssertInitialization(SceneObjectPoolContext context)
         {
-            const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";
-
-            Checks.IsTrue(context._transformArray.isCreated, MESSAGE);
-            Checks.IsTrue(context._goInfoMap.IsCreated, MESSAGE);
-            Checks.IsTrue(context._positions.IsCreated, MESSAGE);
-            Checks.IsTrue(context._scales.IsCreated, MESSAGE);
-            Checks.IsTrue(context._rotations.IsCreated, MESSAGE);
+            ThrowHelper.AssertInitialization(
+                  context._transformArray.isCreated
+                , context._goInfoMap.IsCreated
+                , context._positions.IsCreated
+                , context._scales.IsCreated
+                , context._rotations.IsCreated
+            );
         }
 
         public void Initialize(int capacity, int desiredJobCount)

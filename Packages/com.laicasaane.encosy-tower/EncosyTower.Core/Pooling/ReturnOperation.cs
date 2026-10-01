@@ -5,10 +5,7 @@ namespace EncosyTower.Pooling
     /// </summary>
     internal readonly record struct ReturnOperation
     {
-        public ReturnOperation(
-              ReturningStrategy defaultStrategy
-            , ReturningStrategy overriddenStrategy
-        )
+        public ReturnOperation(ReturningStrategy defaultStrategy, ReturningStrategy overriddenStrategy)
         {
             DefaultStrategy = defaultStrategy;
             OverriddenStrategy = overriddenStrategy;

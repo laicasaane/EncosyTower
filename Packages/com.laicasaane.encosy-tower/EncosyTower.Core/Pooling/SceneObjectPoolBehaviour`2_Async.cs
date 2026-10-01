@@ -1,5 +1,4 @@
 #if UNITY_MATHEMATICS
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -12,14 +11,6 @@ using UnityEngine.SceneManagement;
 
 namespace EncosyTower.Pooling
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     partial class SceneObjectPoolBehaviour<TKey, TKeyComparer>
         where TKey : ITryLoad<GameObject>, ITryLoadAsync<GameObject>
         where TKeyComparer : IEqualityComparer<TKey>, new()
@@ -30,6 +21,7 @@ namespace EncosyTower.Pooling
             , CancellationToken token = default
         )
         {
+            Debugging.ThrowHelper.ThrowIfNull(entries);
             Dispose();
 
             var poolMap = _poolMap = new(entries.Count, new TKeyComparer());
@@ -76,9 +68,10 @@ namespace EncosyTower.Pooling
             await OnInitializeAsync();
         }
 
-        protected virtual UnityTask OnInitializeAsync() => UnityTasks.GetCompleted();
+        protected virtual UnityTask OnInitializeAsync()
+            => UnityTask.CompletedTask;
 
-        protected async UnityTaskBool RegisterAsync(
+        protected async UnityTask<bool> RegisterAsync(
               [NotNull] TKey key
             , Scene scene
             , uint initialCapacity
@@ -88,6 +81,7 @@ namespace EncosyTower.Pooling
             , Option<Vector3> defaultScale = default
         )
         {
+            Debugging.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             AssertInitialization(this);
 
             if (_poolMap.ContainsKey(key))
@@ -117,5 +111,4 @@ namespace EncosyTower.Pooling
     }
 }
 
-#endif
 #endif

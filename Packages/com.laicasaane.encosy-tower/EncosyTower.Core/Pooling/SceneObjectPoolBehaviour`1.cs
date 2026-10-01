@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
-using EncosyTower.Debugging;
 using EncosyTower.UnityExtensions;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -16,15 +15,14 @@ using UnityEngine.SceneManagement;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Pooling
 {
     using GameObjectId = UnityEntityId<GameObject>;
     using TransformId = UnityEntityId<Transform>;
 
     public partial class SceneObjectPoolBehaviour<TKey> : MonoBehaviour, IDisposable
-#if !(UNITASK || UNITY_6000_0_OR_NEWER)
-        where TKey : ITryLoad<GameObject>
-#endif
     {
         [SerializeField] internal Vector3 _defaultPosition;
         [SerializeField] internal Vector3 _defaultRotation;
@@ -54,6 +52,7 @@ namespace EncosyTower.Pooling
             , int desiredJobCount = -1
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(key);
             Dispose();
 
             var prefabOpt = key.TryLoad();
@@ -139,6 +138,7 @@ namespace EncosyTower.Pooling
 
         public bool Rent(int amount, [NotNull] List<GameObject> result, RentingStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNull(result);
             AssertInitialization(this);
 
             var span = result.AsListFast().AddReplicateNoInit(amount);
@@ -148,6 +148,7 @@ namespace EncosyTower.Pooling
 
         public bool Rent(int amount, [NotNull] List<GameObjectInfo> result, RentingStrategy strategy)
         {
+            DebuggingThrowHelper.ThrowIfNull(result);
             AssertInitialization(this);
 
             var span = result.AsListFast().AddReplicateNoInit(amount);
@@ -314,10 +315,10 @@ namespace EncosyTower.Pooling
         [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
         private static void AssertInitialization(SceneObjectPoolBehaviour<TKey> behaviour)
         {
-            const string MESSAGE = "SceneObjectPoolBehaviour must be initialized first!";
-
-            Checks.IsTrue(behaviour._pool != null, MESSAGE);
-            Checks.IsTrue(behaviour._context != null, MESSAGE);
+            ThrowHelper.AssertInitialization(
+                  behaviour._pool != null
+                , behaviour._context != null
+            );
             SceneObjectPoolContext.AssertInitialization(behaviour._context);
         }
     }

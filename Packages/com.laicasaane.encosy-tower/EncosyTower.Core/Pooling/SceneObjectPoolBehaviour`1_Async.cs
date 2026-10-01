@@ -1,5 +1,4 @@
 #if UNITY_MATHEMATICS
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System.Threading;
 using EncosyTower.Loaders;
@@ -9,12 +8,6 @@ using UnityEngine.SceneManagement;
 
 namespace EncosyTower.Pooling
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     partial class SceneObjectPoolBehaviour<TKey>
         where TKey : ITryLoad<GameObject>, ITryLoadAsync<GameObject>
     {
@@ -50,9 +43,9 @@ namespace EncosyTower.Pooling
             await OnInitializeAsync();
         }
 
-        protected virtual UnityTask OnInitializeAsync() => UnityTasks.GetCompleted();
+        protected virtual UnityTask OnInitializeAsync()
+            => UnityTask.CompletedTask;
     }
 }
 
-#endif
 #endif

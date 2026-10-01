@@ -9,6 +9,8 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Pooling
 {
     using GameObjectId = UnityEntityId<GameObject>;
@@ -130,6 +132,7 @@ namespace EncosyTower.Pooling
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void MoveToScene([NotNull] GameObject go, bool moveToPoolScene = false)
         {
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(go);
             if (go.IsInvalid())
             {
                 return;
