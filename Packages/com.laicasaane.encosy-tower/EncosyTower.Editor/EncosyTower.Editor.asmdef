@@ -2,9 +2,10 @@
     "name": "EncosyTower.Editor",
     "rootNamespace": "EncosyTower.Editor",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
         "EncosyTower.Core",
-        "EncosyTower.Core.Extended",
+        "EncosyTower.PageFlows",
+        "EncosyTower.PageFlows.MonoPages",
+        "EncosyTower.VisualToolkit",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",
@@ -28,8 +29,14 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bcl.Runtime.dll",
+        "Bcl.RuntimeUnsafe.dll",
+        "EncosyTower.LowLevel.Unsafe.dll",
+        "Newtonsoft.Json.dll",
+        "Raffinert.FuzzySharp.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [
         "UNITY_EDITOR"
@@ -39,16 +46,6 @@
             "name": "com.unity.2d.sprite",
             "expression": "",
             "define": "UNITY_2D_SPRITE"
-        },
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
-        {
-            "name": "com.cysharp.unitask",
-            "expression": "",
-            "define": "UNITASK"
         },
         {
             "name": "com.latios.latiosframework",

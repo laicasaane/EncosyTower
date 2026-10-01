@@ -60,8 +60,7 @@ namespace EncosyTower.Editor.ProjectSetup
                 return;
             }
 
-            var sb = new StringBuilder(1024)
-                .AppendLine("Some scripting symbols are required to build the scenes.");
+            var sb = new StringBuilder(1024).AppendLine("Some scripting symbols are required to build the scenes.");
 
             foreach (var (name, symbols) in result)
             {

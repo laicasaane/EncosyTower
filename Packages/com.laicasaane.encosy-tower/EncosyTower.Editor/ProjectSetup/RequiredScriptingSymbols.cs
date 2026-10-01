@@ -32,9 +32,7 @@ namespace EncosyTower.Editor.ProjectSetup
             {
                 transform.DetachChildren();
 
-                StaticDevLogger.LogError(
-                    this, $"{nameof(RequiredScriptingSymbols)} cannot have any child GameObject."
-                );
+                StaticDevLogger.LogError(this, $"{nameof(RequiredScriptingSymbols)} cannot have any child GameObject.");
             }
         }
     }

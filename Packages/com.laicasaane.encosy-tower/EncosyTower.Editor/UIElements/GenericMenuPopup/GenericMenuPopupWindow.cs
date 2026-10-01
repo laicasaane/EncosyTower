@@ -3,12 +3,14 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using EncosyTower.Pooling;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.UIElements;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Editor.UIElements
 {
@@ -46,6 +48,8 @@ namespace EncosyTower.Editor.UIElements
 
         public void Initialize([NotNull] GenericMenuPopup popup)
         {
+            DebuggingThrowHelper.ThrowIfNull(popup);
+
             _popup = popup;
         }
 
@@ -230,7 +234,7 @@ namespace EncosyTower.Editor.UIElements
         {
             _scrollView.Clear();
 
-            using var _ = FasterListPool<MenuItemNode>.Get(out var searchResult);
+            using var _ = ListPool<MenuItemNode>.Get(out var searchResult);
 
             _popup.rootNode.Search(_search, searchResult);
 

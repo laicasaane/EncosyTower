@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Logging;
 using UnityEditor;
 using UnityEditor.Experimental;
 using UnityEngine;
 
-namespace EncosyTower.Editor
+namespace EncosyTower.Editor.Icons
 {
     public class EditorIcons : EditorWindow
     {
@@ -31,7 +31,7 @@ namespace EncosyTower.Editor
         private readonly List<GUIContent> _iconContentListAll = new();
         private readonly List<GUIContent> _iconContentListSmall = new();
         private readonly List<GUIContent> _iconContentListBig = new();
-        private readonly FasterList<string> _iconNames = new();
+        private readonly List<string> _iconNames = new();
 
         private GUIContent _iconSelected;
 
@@ -59,13 +59,13 @@ namespace EncosyTower.Editor
             EveryTextures(ref _iconPreviewWhite, Texture2DPixel(new(0.85f, 0.85f, 0.85f)));
 
             var builtInIconNames = GetBuiltinIconNames();
-            _iconNames.AddRange(builtInIconNames);
+            _iconNames.AsListFast().AddRange(builtInIconNames);
 
             var iconContentListAll = _iconContentListAll;
             var iconContentListSmall = _iconContentListSmall;
             var iconContentListBig = _iconContentListBig;
 
-            var iconNames = GetIconNames();
+            var iconNames = _iconNames.AsReadOnlySpan();
             var iconNamesLength = iconNames.Length;
 
             for (var i = 0; i < iconNamesLength; i++)
@@ -91,9 +91,6 @@ namespace EncosyTower.Editor
                 }
             }
         }
-
-        private ReadOnlySpan<string> GetIconNames()
-            => _iconNames.AsReadOnlySpan();
 
         private void OnGUI()
         {
@@ -302,7 +299,7 @@ namespace EncosyTower.Editor
 
             try
             {
-                var iconNames = GetIconNames();
+                var iconNames = _iconNames.AsReadOnlySpan();
                 var iconNamesLength = iconNames.Length;
 
                 for (var i = 0; i < iconNamesLength; i++)

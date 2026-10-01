@@ -16,10 +16,7 @@ namespace EncosyTower.Editor.Common
     {
         private const string ERROR = $"Property is not a valid {nameof(SerializableGuid)} type";
 
-        private static readonly GUIContent s_emptyLabel = new(
-              "Empty"
-            , "Sets to all zeros."
-        );
+        private static readonly GUIContent s_emptyLabel = new("Empty", "Sets to all zeros.");
 
         private static readonly GUIContent s_newV4Label = new(
               "New v4"

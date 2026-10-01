@@ -24,13 +24,9 @@ namespace EncosyTower.Editor.Settings
             where T : Settings<T>
         {
             var attribute = Settings<T>.Attribute;
-            var scope = attribute.Usage == SettingsUsage.EditorUser
-                ? SettingsScope.User
-                : SettingsScope.Project;
+            var scope = attribute.Usage == SettingsUsage.EditorUser ? SettingsScope.User : SettingsScope.Project;
 
-            var path = attribute.Usage == SettingsUsage.EditorUser
-                ? PREFERENCES_PATH
-                : PROJECT_PATH;
+            var path = attribute.Usage == SettingsUsage.EditorUser ? PREFERENCES_PATH : PROJECT_PATH;
 
             var displayPath = attribute.DisplayPath.NotEmptyOr(
                 ObjectNames.NicifyVariableName(typeof(T).GetNameWithoutSuffix(nameof(Settings<T>)))
@@ -43,13 +39,9 @@ namespace EncosyTower.Editor.Settings
             where T : Settings<T>
         {
             var attribute = Settings<T>.Attribute;
-            var scope = attribute.Usage == SettingsUsage.EditorUser
-                ? SettingsScope.User
-                : SettingsScope.Project;
+            var scope = attribute.Usage == SettingsUsage.EditorUser ? SettingsScope.User : SettingsScope.Project;
 
-            var path = attribute.Usage == SettingsUsage.EditorUser
-                ? PREFERENCES_PATH
-                : PROJECT_PATH;
+            var path = attribute.Usage == SettingsUsage.EditorUser ? PREFERENCES_PATH : PROJECT_PATH;
 
             var displayPath = attribute.DisplayPath.NotEmptyOr(
                 ObjectNames.NicifyVariableName(typeof(T).GetNameWithoutSuffix(nameof(Settings<T>)))

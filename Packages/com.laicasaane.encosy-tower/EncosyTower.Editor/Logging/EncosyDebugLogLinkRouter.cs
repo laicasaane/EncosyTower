@@ -1,11 +1,9 @@
 #if UNITY_EDITOR
 
 using System;
-using UnityEngine;
 using UnityEditor;
-using System.Runtime.CompilerServices;
 
-namespace EncosyTower.Editor
+namespace EncosyTower.Editor.Logging
 {
     [InitializeOnLoad]
     internal static class EncosyDebugLogLinkRouter
@@ -47,30 +45,15 @@ namespace EncosyTower.Editor
 
                 if (success == false)
                 {
-                    LogWarningUndefinedMenuPath(path);
+                    ThrowHelper.LogWarningUndefinedMenuPath(path);
                 }
             }
             else
             {
-                LogWarningUnsupportedRoute(href);
+                ThrowHelper.LogWarningUnsupportedRoute(href);
             }
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void LogWarningUndefinedMenuPath(string path)
-        {
-            Debug.LogWarning($"Could not find menu item at path '{path}'" );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void LogWarningUnsupportedRoute(string href)
-        {
-            Debug.LogWarning(
-                $"Could not route to '{href}'. " +
-                $"Current supported routes are <b>\\open:Project/</b>, <b>\\open:Preferences/</b>, " +
-                $" <b>\\menu:</b>."
-            );
-        }
     }
 }
 

@@ -177,13 +177,9 @@ namespace EncosyTower.Editor.ProjectSetup
             var requestInfoToolbar = new Toolbar();
             requestInfoContainer.Add(requestInfoToolbar);
 
-            requestInfoToolbar.Add(new ToolbarButton(Refresh) {
-                text = "Refresh"
-            }.WithClass("refresh-button"));
+            requestInfoToolbar.Add(new ToolbarButton(Refresh) { text = "Refresh" }.WithClass("refresh-button"));
 
-            requestInfoContainer.Add(new Label(LIST_MSG) {
-                name = "request-info-label",
-            });
+            requestInfoContainer.Add(new Label(LIST_MSG) { name = "request-info-label", });
 
             var featureContainer = _featureContainer = new VisualElement() {
                 name = "feature-container",
@@ -194,9 +190,7 @@ namespace EncosyTower.Editor.ProjectSetup
             var featureToolbar = new Toolbar();
             featureContainer.Add(featureToolbar);
 
-            featureToolbar.Add(new ToolbarButton(Refresh) {
-                text = "Refresh",
-            }.WithClass("refresh-button"));
+            featureToolbar.Add(new ToolbarButton(Refresh) { text = "Refresh", }.WithClass("refresh-button"));
 
             featureToolbar.Add(new ToolbarSpacer());
 

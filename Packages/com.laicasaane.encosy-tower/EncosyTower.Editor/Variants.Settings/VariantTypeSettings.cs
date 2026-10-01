@@ -32,12 +32,7 @@ namespace EncosyTower.Editor.Variants.Settings
 
             foreach (var buildTarget in buildTargets)
             {
-                BuildAPI.RemoveScriptingDefineSymbols(
-                      buildTarget
-                    , currLongSymbol
-                    , currIntSymbol
-                    , currByteSymbol
-                );
+                BuildAPI.RemoveScriptingDefineSymbols(buildTarget, currLongSymbol, currIntSymbol, currByteSymbol);
             }
 
             if (nextLongCount > minLongCount)

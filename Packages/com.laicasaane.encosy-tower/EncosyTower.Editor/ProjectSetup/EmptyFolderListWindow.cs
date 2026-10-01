@@ -107,11 +107,7 @@ namespace EncosyTower.Editor.ProjectSetup
             var column = table.AddColumn(" ", 10);
             column.maxWidth = 10;
 
-            column = table.AddColumn("Delete?"
-                , 60
-                , TableColumn_MakeCell_Select
-                , TableColumn_BindCell_Select
-            );
+            column = table.AddColumn("Delete?", 60, TableColumn_MakeCell_Select, TableColumn_BindCell_Select);
 
             column.maxWidth = 60;
 

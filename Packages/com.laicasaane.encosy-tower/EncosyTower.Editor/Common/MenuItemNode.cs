@@ -25,15 +25,17 @@
 // SOFTWARE.
 
 /*
- *	Created by:  Peter @sHTiF Stefcek
+ *    Created by:  Peter @sHTiF Stefcek
  */
 
+using System.Collections.Generic;
 using System.Text;
 using EncosyTower.Collections;
-using EncosyTower.Pooling;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Search;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace EncosyTower.Editor
 {
@@ -50,7 +52,7 @@ namespace EncosyTower.Editor
         {
             Name = name;
             Parent = parent;
-            Nodes = new FasterList<MenuItemNode>();
+            Nodes = new List<MenuItemNode>();
             content = new(name, tooltip);
         }
 
@@ -58,7 +60,7 @@ namespace EncosyTower.Editor
 
         public MenuItemNode Parent { get; private set; }
 
-        public FasterList<MenuItemNode> Nodes { get; private set; }
+        public List<MenuItemNode> Nodes { get; private set; }
 
         public void Reset(string name = "", MenuItemNode parent = null)
         {
@@ -83,12 +85,12 @@ namespace EncosyTower.Editor
         // TODO Optimize
         public MenuItemNode GetOrCreateNode(string name, string tooltip = "")
         {
-            return Nodes.Find(n => n.Name == name).TryGetValue(out var node)
+            return Nodes.AsListFast().Find(n => n.Name == name).TryGetValue(out var node)
                 ? node
                 : CreateNode(name, tooltip);
         }
 
-        public void Search(string search, FasterList<MenuItemNode> result)
+        public void Search(string search, List<MenuItemNode> result)
         {
             foreach (var node in Nodes)
             {
@@ -97,10 +99,10 @@ namespace EncosyTower.Editor
                     result.Add(node);
                 }
 
-                using (FasterListPool<MenuItemNode>.Get(out var searchResult))
+                using (ListPool<MenuItemNode>.Get(out var searchResult))
                 {
                     node.Search(search, searchResult);
-                    result.AddRange(searchResult.AsReadOnlySpan());
+                    result.AsListFast().AddRange(searchResult.AsReadOnlySpan());
                 }
             }
         }

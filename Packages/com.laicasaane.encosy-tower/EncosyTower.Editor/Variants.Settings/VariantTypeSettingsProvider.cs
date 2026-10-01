@@ -27,10 +27,7 @@ namespace EncosyTower.Editor.Variants.Settings
         private static void OpenSettings()
             => VariantTypeSettings.Instance.OpenSettingsWindow();
 
-        private static void Create(
-              ScriptableObjectSettingsProvider provider
-            , VisualElement root
-        )
+        private static void Create(ScriptableObjectSettingsProvider provider, VisualElement root)
         {
             s_instance = new VariantTypeSettingsEditor(
                   provider.Settings as VariantTypeSettings

@@ -1,11 +1,9 @@
 #if UNITY_EDITOR
 
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using EncosyTower.Editor.Common;
 using EncosyTower.Editor.UIElements;
-using EncosyTower.Logging;
 using EncosyTower.UIElements;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
@@ -26,7 +24,7 @@ namespace EncosyTower.Editor.UnityExtensions
 
             if (valueProp == null)
             {
-                WarningIfValuePropertyNull();
+                ThrowHelper.WarningIfValuePropertyNull();
                 return;
             }
 
@@ -127,11 +125,6 @@ namespace EncosyTower.Editor.UnityExtensions
             }
         }
 
-        [HideInCallstack, StackTraceHidden]
-        private static void WarningIfValuePropertyNull()
-        {
-            StaticDevLogger.LogWarning("Could not find the layer index property, was it renamed or removed?");
-        }
     }
 }
 
