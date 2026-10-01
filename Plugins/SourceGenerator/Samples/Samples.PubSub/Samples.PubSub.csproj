@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Samples.PubSub</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.PubSub.dll" Private="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../EncosyTower.PubSub.Generators/EncosyTower.PubSub.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+</Project>
