@@ -1,14 +1,13 @@
-#if UNITY_EDITOR && ANNULUS_CODEGEN && ENCOSY_BYTE_BOOLS_GENERATOR
+#if UNITY_EDITOR
 
 using System;
 using System.Linq;
 using EncosyTower.CodeGen;
 using EncosyTower.Core;
-using UnityCodeGen;
 
 namespace EncosyTower.Editor.Common
 {
-    [Generator]
+    [CodeGenerator]
     [ApiForEditor]
     internal sealed class ByteBoolsGenerator : ICodeGenerator
     {
@@ -16,7 +15,7 @@ namespace EncosyTower.Editor.Common
 
         private static readonly string[] s_components = new string[] { "x", "y", "z", "w" };
 
-        public void Execute(GeneratorContext context)
+        public GeneratedCode[] Generate()
         {
             var p = Printer.DefaultLarge;
             p.PrintLine("#if UNITY_MATHEMATICS").PrintEndLine();
@@ -74,8 +73,9 @@ namespace EncosyTower.Editor.Common
             p.PrintEndLine();
             p.Print("#endif").PrintEndLine();
 
-            context.OverrideFolderPath(CodeGenAPI.GetOutputFolderPathFromCaller());
-            context.AddCode("ByteBools.gen.cs", p.Result);
+            return new GeneratedCode[] {
+                CodeGenAPI.GetGeneratedCode(p.Result, "ByteBools.gen"),
+            };
         }
 
         private static void WriteVector(ref Printer p, int size)
@@ -85,7 +85,9 @@ namespace EncosyTower.Editor.Common
             var components = s_components.AsSpan(0, size).ToArray();
 
             p.PrintLine("/// <summary>");
-            p.PrintLine($"/// A blittable variant of <see cref=\"{boolType}\"/> whose components are <see cref=\"ByteBool\"/>.");
+            p.PrintLine(
+                $"/// A blittable variant of <see cref=\"{boolType}\"/> whose components are <see cref=\"ByteBool\"/>."
+            );
             p.PrintLine("/// </summary>");
             p.PrintLine("[Serializable]");
             p.PrintLine($"public partial struct {typeName} : IEquatable<{typeName}>");
@@ -124,7 +126,9 @@ namespace EncosyTower.Editor.Common
 
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintLine($"public readonly bool Equals({typeName} other)");
-                p.WithIncreasedIndent().PrintLine($"=> {string.Join(" && ", components.Select(static c => $"{c} == other.{c}"))};");
+                p.WithIncreasedIndent().PrintLine(
+                    $"=> {string.Join(" && ", components.Select(static c => $"{c} == other.{c}"))};"
+                );
                 p.PrintEndLine();
 
                 p.PrintLine(AGGRESSIVE_INLINING);
@@ -154,7 +158,9 @@ namespace EncosyTower.Editor.Common
 
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintLine($"public static implicit operator {boolType}({typeName} value)");
-                p.WithIncreasedIndent().PrintLine($"=> new({string.Join(", ", components.Select(static c => $"value.{c}"))});");
+                p.WithIncreasedIndent().PrintLine(
+                    $"=> new({string.Join(", ", components.Select(static c => $"value.{c}"))});"
+                );
                 p.PrintEndLine();
 
                 p.PrintLine(AGGRESSIVE_INLINING);
@@ -174,7 +180,9 @@ namespace EncosyTower.Editor.Common
             var fields = Enumerable.Range(0, columns).Select(static i => $"c{i}").ToArray();
 
             p.PrintLine("/// <summary>");
-            p.PrintLine($"/// A blittable variant of <see cref=\"{boolType}\"/> whose columns are <see cref=\"{columnType}\"/>.");
+            p.PrintLine(
+                $"/// A blittable variant of <see cref=\"{boolType}\"/> whose columns are <see cref=\"{columnType}\"/>."
+            );
             p.PrintLine("/// </summary>");
             p.PrintLine("[Serializable]");
             p.PrintLine($"public partial struct {typeName} : IEquatable<{typeName}>");
@@ -213,7 +221,9 @@ namespace EncosyTower.Editor.Common
 
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintLine($"public readonly bool Equals({typeName} other)");
-                p.WithIncreasedIndent().PrintLine($"=> {string.Join(" && ", fields.Select(static f => $"{f} == other.{f}"))};");
+                p.WithIncreasedIndent().PrintLine(
+                    $"=> {string.Join(" && ", fields.Select(static f => $"{f} == other.{f}"))};"
+                );
                 p.PrintEndLine();
 
                 p.PrintLine(AGGRESSIVE_INLINING);
@@ -243,7 +253,9 @@ namespace EncosyTower.Editor.Common
 
                 p.PrintLine(AGGRESSIVE_INLINING);
                 p.PrintLine($"public static implicit operator {boolType}({inModifier}{typeName} value)");
-                p.WithIncreasedIndent().PrintLine($"=> new({string.Join(", ", fields.Select(static f => $"value.{f}"))});");
+                p.WithIncreasedIndent().PrintLine(
+                    $"=> new({string.Join(", ", fields.Select(static f => $"value.{f}"))});"
+                );
                 p.PrintEndLine();
 
                 p.PrintLine(AGGRESSIVE_INLINING);

@@ -9,7 +9,6 @@ namespace EncosyTower.Common
     [RequiresPackage(PackageRegistry.Unity, "com.unity.collections", "2.6.7")]
     [RequiresPackage(PackageRegistry.Unity, "com.unity.mathematics", "1.3.3")]
 
-    [RequiresPackage(PackageRegistry.OpenUpm, "com.annulusgames.unity-codegen", isOptional: true)]
     [RequiresPackage(PackageRegistry.OpenUpm, "com.cysharp.unitask", isOptional: true)]
     internal readonly struct FeatureCommon { }
 }

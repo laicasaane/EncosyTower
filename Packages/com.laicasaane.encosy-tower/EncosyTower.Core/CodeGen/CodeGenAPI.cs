@@ -1,14 +1,14 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using EncosyTower.Annotations;
 using EncosyTower.Common;
 using EncosyTower.Core;
-using UnityEditor;
 using UnityEngine;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.CodeGen
 {
@@ -16,76 +16,23 @@ namespace EncosyTower.CodeGen
     public static class CodeGenAPI
     {
         [ApiForEditor]
-        public static string GetOutputFolderPathFromCaller(
-              [CallerFilePath] string filePath = ""
+        public static GeneratedCode GetGeneratedCode(
+              [NotNull] string content
+            , [NotNull] string fileName
             , string pathCombine = ""
+            , [NotNull] string extension = "cs"
+            , [CallerFilePath] string filePath = ""
         )
         {
+            DebuggingThrowHelper.ThrowIfNullOrEmpty(content);
+            DebuggingThrowHelper.ThrowIfNullOrEmpty(fileName);
+            DebuggingThrowHelper.ThrowIfNullOrEmpty(extension);
+
             var directoryPath = Path.GetDirectoryName(filePath);
-            return pathCombine.IsNotEmpty() ? Path.Combine(directoryPath, pathCombine) : directoryPath;
-        }
+            directoryPath = pathCombine.IsNotEmpty() ? Path.Combine(directoryPath, pathCombine) : directoryPath;
 
-        [ApiForEditor]
-        public static bool TryGetOutputFolderPath(
-              string fileName
-            , out string path
-            , string extension = "cs"
-            , bool rootIsAssets = false
-        )
-        {
-            var candidates = AssetDatabase.FindAssets($"{fileName} t:Script");
-
-            if (candidates.Length < 1)
-            {
-                goto FAILED;
-            }
-
-            foreach (var guid in candidates)
-            {
-                var relativePath = AssetDatabase.GUIDToAssetPath(guid);
-                var fileNameWithExtension = Path.GetFileName(relativePath);
-
-                if (fileNameWithExtension != $"{fileName}.{extension}")
-                {
-                    continue;
-                }
-
-                path = Path.GetDirectoryName(relativePath);
-
-                if (rootIsAssets)
-                {
-                    path = Path.GetRelativePath("Assets", path);
-                }
-
-                return true;
-            }
-
-        FAILED:
-            {
-                path = default;
-                return false;
-            }
-        }
-
-        [ApiForEditor]
-        public static bool TryGetOutputFolderPath(
-              Type type
-            , out string path
-            , bool rootIsAssets = false
-        )
-        {
-            var filePathAttrib = type.GetCustomAttribute<ThisFilePathAttribute>();
-
-            if (filePathAttrib == null)
-            {
-                path = string.Empty;
-                return false;
-            }
-
-            var rootPath = rootIsAssets ? Application.dataPath : Path.Combine(Application.dataPath, "..");
-            var filePath = Path.GetRelativePath(rootPath, filePathAttrib.FilePath);
-            path = Path.GetDirectoryName(filePath);
-            return true;
+            var filePathResult = Path.Combine(directoryPath, $"{fileName}.{extension}");
+            return new GeneratedCode(content, filePathResult);
         }
 
         [ApiForEditor]

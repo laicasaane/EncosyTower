@@ -56,7 +56,8 @@ namespace EncosyTower.CodeGen
         /// </summary>
         /// <param name="printer"></param>
         /// <returns></returns>
-        public readonly Printer PrintWith(Printer printer) => printer;
+        public readonly Printer PrintWith(Printer printer)
+            => printer;
 
         /// <summary>
         /// Allows to continue inline printing using the same printer from an function call
@@ -110,8 +111,7 @@ namespace EncosyTower.CodeGen
         /// <summary>
         /// The current output of the printer.
         /// </summary>
-        public readonly string Result
-            => _builder.Replace('\r', NEWLINE).ToString();
+        public readonly string Result => _builder.Replace('\r', NEWLINE).ToString();
 
         /// <summary>
         /// Clear the output of the printer and reset indent
