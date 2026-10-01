@@ -143,11 +143,7 @@ internal static class DevToolsForVersion
         }
 
         return Directory.GetDirectories(importedSamplesPath)
-            .Select(static path => new SampleVersionFolder(
-                  Path.GetFileName(path)
-                , GetProjectRelativePath(path)
-                , path
-            ))
+            .Select(static path => new SampleVersionFolder(Path.GetFileName(path), GetProjectRelativePath(path), path))
             .Where(static x => IsSemanticVersion(x.Version))
             .OrderByDescending(x => x.Version, SemanticVersionComparer.Instance)
             .ToArray();
@@ -346,11 +342,7 @@ internal static class DevToolsForVersion
         return changed;
     }
 
-    internal static bool TryReplaceAssetVersionReferences(
-          string content
-        , string replacementVersion
-        , out string result
-    )
+    internal static bool TryReplaceAssetVersionReferences(string content, string replacementVersion, out string result)
     {
         result = s_sampleReferenceRegex.Replace(content, $"Samples/Encosy Tower/{replacementVersion}");
 
@@ -521,9 +513,7 @@ internal static class DevToolsForVersion
                 int.Parse(match.Groups[1].Value),
                 int.Parse(match.Groups[2].Value),
                 int.Parse(match.Groups[3].Value),
-                match.Groups[4].Success
-                    ? match.Groups[4].Value.Split('.')
-                    : Array.Empty<string>()
+                match.Groups[4].Success ? match.Groups[4].Value.Split('.') : Array.Empty<string>()
             );
         }
 
@@ -539,10 +529,7 @@ internal static class DevToolsForVersion
 
             for (var i = 0; i < _prereleaseIdentifiers.Length && i < other._prereleaseIdentifiers.Length; i++)
             {
-                var result = ComparePrereleaseIdentifier(
-                    _prereleaseIdentifiers[i],
-                    other._prereleaseIdentifiers[i]
-                );
+                var result = ComparePrereleaseIdentifier(_prereleaseIdentifiers[i], other._prereleaseIdentifiers[i]);
 
                 if (result != 0)
                 {

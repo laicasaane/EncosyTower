@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.Toolbars;
 using UnityEngine;
 
@@ -8,6 +10,11 @@ namespace EncosyTower.DevTools;
 
 internal static class DevToolsForToolbar
 {
+    private static readonly bool s_isAutomated = Array.Exists(
+          Environment.GetCommandLineArgs()
+        , static argument => string.Equals(argument, "-automated", StringComparison.Ordinal)
+    );
+
     private static readonly ToolDefintion[] s_elements = new ToolDefintion[]
     {
           new("Open in IDE", "Open C# project in default IDE", "Assets/Open C# Project", "cs script icon")
@@ -51,6 +58,23 @@ internal static class DevToolsForToolbar
         Process.Start(startInfo);
     }
 
+    [MenuItem("Dev Tools/Force Recompile Code")]
+    private static void ForceRecompileCode()
+    {
+        if (s_isAutomated == false)
+        {
+            return;
+        }
+
+        CompilationPipeline.RequestScriptCompilation(RequestScriptCompilationOptions.CleanBuildCache);
+    }
+
+    [MenuItem("Dev Tools/Force Recompile Code", isValidateFunction: true)]
+    private static bool CanForceRecompileCode()
+    {
+        return s_isAutomated;
+    }
+
     private struct ToolDefintion
     {
         public string name;
@@ -59,13 +83,7 @@ internal static class DevToolsForToolbar
         public string icon;
         public bool themed;
 
-        public ToolDefintion(
-              string name
-            , string tooltip
-            , string menuPath
-            , string icon
-            , bool themed = true
-        )
+        public ToolDefintion(string name, string tooltip, string menuPath, string icon, bool themed = true)
         {
             this.name = name;
             this.tooltip = tooltip;
