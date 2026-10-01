@@ -2,45 +2,34 @@
     "name": "EncosyTower.Core",
     "rootNamespace": "EncosyTower.Core",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
-        "Latios.Core",
-        "Latios.Psyshock",
-        "Latios.Transforms",
         "UniTask",
         "UniTask.Addressables",
         "Unity.Addressables",
         "Unity.Burst",
         "Unity.Collections",
-        "Unity.Entities",
-        "Unity.Entities.Hybrid",
         "Unity.InternalAPIEngineBridge.017",
         "Unity.Localization",
         "Unity.Mathematics",
-        "Unity.ResourceManager",
-        "Unity.TextMeshPro"
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bcl.Runtime.dll",
+        "Bcl.RuntimeUnsafe.dll",
+        "EncosyTower.LowLevel.Unsafe.dll",
+        "Newtonsoft.Json.dll",
+        "Raffinert.FuzzySharp.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
-        {
             "name": "com.cysharp.unitask",
             "expression": "",
             "define": "UNITASK"
-        },
-        {
-            "name": "com.latios.latiosframework",
-            "expression": "",
-            "define": "LATIOS_FRAMEWORK"
         },
         {
             "name": "com.unity.addressables",
@@ -56,11 +45,6 @@
             "name": "com.unity.collections",
             "expression": "",
             "define": "UNITY_COLLECTIONS"
-        },
-        {
-            "name": "com.unity.entities",
-            "expression": "",
-            "define": "UNITY_ENTITIES"
         },
         {
             "name": "com.unity.mathematics",
@@ -86,21 +70,6 @@
             "name": "com.unity.render-pipelines.universal",
             "expression": "",
             "define": "UNITY_URP"
-        },
-        {
-            "name": "com.unity.textmeshpro",
-            "expression": "",
-            "define": "UNITY_TEXTMESHPRO"
-        },
-        {
-            "name": "com.unity.ugui",
-            "expression": "",
-            "define": "UNITY_UGUI"
-        },
-        {
-            "name": "com.unity.ugui",
-            "expression": "2.0.0",
-            "define": "UNITY_TEXTMESHPRO"
         },
         {
             "name": "org.nuget.raffinert.fuzzysharp",
