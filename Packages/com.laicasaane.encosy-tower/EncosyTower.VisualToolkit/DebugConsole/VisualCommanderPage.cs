@@ -3,7 +3,7 @@ using EncosyTower.PageFlows.MonoPages;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     [RequireComponent(typeof(UIDocument))]
     public partial class VisualCommanderPage : MonoPageBase, IPageOnAfterShow, IPageOnBeforeHide

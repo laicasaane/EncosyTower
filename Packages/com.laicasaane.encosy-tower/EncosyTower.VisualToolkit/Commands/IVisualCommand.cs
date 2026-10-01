@@ -1,6 +1,6 @@
 using UnityEngine.Scripting;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     [RequireImplementors]
     public interface IVisualCommand

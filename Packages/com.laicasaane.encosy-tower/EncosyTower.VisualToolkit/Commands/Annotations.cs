@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public sealed class VisualOrderAttribute : Attribute

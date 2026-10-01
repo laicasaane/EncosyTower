@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace UnityEngine.UIElements.Internal
@@ -8,7 +7,7 @@ namespace UnityEngine.UIElements.Internal
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetCreateMenuCallback<TValueType, TValueChoice>(
-              [NotNull] BasePopupField<TValueType, TValueChoice> field
+              BasePopupField<TValueType, TValueChoice> field
             , Func<AbstractGenericMenu> createMenuCallback
         )
         {
@@ -17,7 +16,7 @@ namespace UnityEngine.UIElements.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetGenericMenu<TValueType, TValueChoice>(
-              [NotNull] BasePopupField<TValueType, TValueChoice> field
+              BasePopupField<TValueType, TValueChoice> field
             , AbstractGenericMenu genericMenu
         )
         {

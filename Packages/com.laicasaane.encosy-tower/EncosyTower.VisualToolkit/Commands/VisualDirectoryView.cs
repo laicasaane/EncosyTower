@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     public class VisualDirectoryView : RadioButton
     {

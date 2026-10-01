@@ -4,7 +4,7 @@ using EncosyTower.Mvvm.ViewBinding;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands.Bindings
+namespace EncosyTower.VisualToolkit.Commands.Bindings
 {
     [Binder]
     internal abstract partial class VisualPropertyBinding

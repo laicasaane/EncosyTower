@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
-using EncosyTower.VisualDebugging.Commands.Bindings;
+using EncosyTower.VisualToolkit.Commands.Bindings;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     public class VisualPropertyView : VisualElement
     {

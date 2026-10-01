@@ -1,9 +1,11 @@
 {
-    "name": "EncosyTower.Core.Extended",
-    "rootNamespace": "EncosyTower.Core.Extended",
+    "name": "EncosyTower.VisualToolkit",
+    "rootNamespace": "EncosyTower.VisualToolkit",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
         "EncosyTower.Core",
+        "EncosyTower.Mvvm",
+        "EncosyTower.PageFlows",
+        "EncosyTower.PageFlows.MonoPages",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",
@@ -27,11 +29,6 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
         {
             "name": "com.cysharp.unitask",
             "expression": "",

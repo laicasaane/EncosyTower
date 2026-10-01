@@ -5,7 +5,7 @@ using EncosyTower.Initialization;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     public class VisualCommandView : VisualElement
     {
@@ -66,7 +66,7 @@ namespace EncosyTower.VisualDebugging.Commands
     {
         private readonly VisualCommandView _view;
         private readonly ObjectPool<VisualPropertyView> _propertyViewPool;
-        private readonly FasterList<VisualPropertyView> _propertyViews;
+        private readonly ListFast<VisualPropertyView> _propertyViews;
 
         private VisualCommandData _data;
 
@@ -80,7 +80,7 @@ namespace EncosyTower.VisualDebugging.Commands
             _view.Clicked += OnClicked;
 
             _propertyViewPool = propertyViewPool;
-            _propertyViews = new FasterList<VisualPropertyView>();
+            _propertyViews = new ListFast<VisualPropertyView>();
         }
 
         public void Initialize([NotNull] VisualCommandData data)

@@ -5,7 +5,7 @@ using EncosyTower.StringIds;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     public class VisualCommanderView : VisualElement, IDisposable
     {
@@ -100,11 +100,11 @@ namespace EncosyTower.VisualDebugging.Commands
         private readonly ObjectPool<VisualDirectoryView> _directoryViewPool;
         private readonly ObjectPool<VisualCommandView> _commandViewPool;
         private readonly ObjectPool<VisualPropertyView> _propertyViewPool;
-        private readonly FasterList<VisualDirectoryView> _directoryViews;
-        private readonly FasterList<VisualCommandView> _commandViews;
+        private readonly ListFast<VisualDirectoryView> _directoryViews;
+        private readonly ListFast<VisualCommandView> _commandViews;
 
-        private ArrayMap<StringId, FasterList<VisualCommandData>>.ReadOnly _directoryToCommands;
-        private FasterList<VisualDirectoryData>.ReadOnly _directories;
+        private ArrayMap<StringId, ListFast<VisualCommandData>>.ReadOnly _directoryToCommands;
+        private ListFast<VisualDirectoryData>.ReadOnly _directories;
 
         // Detect redundant Dispose() calls.
         private bool _isDisposed;
@@ -132,8 +132,8 @@ namespace EncosyTower.VisualDebugging.Commands
                 , defaultCapacity: 0
             );
 
-            _directoryViews = new FasterList<VisualDirectoryView>();
-            _commandViews = new FasterList<VisualCommandView>();
+            _directoryViews = new ListFast<VisualDirectoryView>();
+            _commandViews = new ListFast<VisualCommandView>();
         }
 
         // Public implementation of Dispose pattern callable by consumers.
@@ -144,8 +144,8 @@ namespace EncosyTower.VisualDebugging.Commands
         }
 
         public void Initialize(
-              [NotNull] ArrayMap<StringId, FasterList<VisualCommandData>>.ReadOnly directoryToCommands
-            , [NotNull] FasterList<VisualDirectoryData>.ReadOnly directories
+              [NotNull] ArrayMap<StringId, ListFast<VisualCommandData>>.ReadOnly directoryToCommands
+            , [NotNull] ListFast<VisualDirectoryData>.ReadOnly directories
         )
         {
             _directoryToCommands = directoryToCommands;

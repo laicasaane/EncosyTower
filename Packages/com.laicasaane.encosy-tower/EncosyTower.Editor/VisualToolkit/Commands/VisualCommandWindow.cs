@@ -1,15 +1,15 @@
 #if UNITY_EDITOR
 
 using EncosyTower.Editor.UIElements;
-using EncosyTower.VisualDebugging.Commands;
+using EncosyTower.VisualToolkit.Commands;
 using UnityEditor;
 using UnityEngine;
 
-namespace EncosyTower.Editor.VisualDebugging.Commands
+namespace EncosyTower.Editor.VisualToolkit.Commands
 {
     internal class VisualCommandWindow : EditorWindow
     {
-        private const string MODULE_ROOT = $"{EditorStyleSheetPaths.ROOT}/EncosyTower.Editor/VisualDebugging";
+        private const string MODULE_ROOT = $"{EditorStyleSheetPaths.ROOT}/EncosyTower.Editor/VisualToolkit";
         private const string STYLE_SHEETS_PATH = $"{MODULE_ROOT}/Commands";
         private const string FILE_NAME = nameof(VisualCommandWindow);
 

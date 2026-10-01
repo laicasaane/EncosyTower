@@ -2,11 +2,11 @@
 
 using EncosyTower.Editor.UIElements;
 
-namespace EncosyTower.Editor.VisualDebugging.Commands
+namespace EncosyTower.Editor.VisualToolkit.Commands
 {
     public static class Constants
     {
-        private const string MODULE_ROOT = $"{EditorStyleSheetPaths.ROOT}/EncosyTower.Editor.VisualDebugging";
+        private const string MODULE_ROOT = $"{EditorStyleSheetPaths.ROOT}/EncosyTower.Editor.VisualToolkit";
         private const string STYLE_SHEETS_PATH = $"{MODULE_ROOT}/Commands";
         private const string FILE_NAME = nameof(VisualCommandWindow);
 

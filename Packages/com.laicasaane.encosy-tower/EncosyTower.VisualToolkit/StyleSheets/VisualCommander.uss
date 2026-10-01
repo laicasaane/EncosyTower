@@ -1,7 +1,7 @@
 :root {
-    --icon-cursor-horizontal: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.Core.Extended/VisualDebugging/StyleSheets/image-cursor-resize-horizontal.png') 64 64;
-    --icon-execute: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.Core.Extended/VisualDebugging/StyleSheets/image-execute.png') 64 64;
-    --icon-options: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.Core.Extended/VisualDebugging/StyleSheets/image-options.png') 64 64;
+    --icon-cursor-horizontal: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.VisualToolkit/StyleSheets/image-cursor-resize-horizontal.png') 64 64;
+    --icon-execute: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.VisualToolkit/StyleSheets/image-execute.png') 64 64;
+    --icon-options: url('project://database/Packages/com.laicasaane.encosy-tower/EncosyTower.VisualToolkit/StyleSheets/image-options.png') 64 64;
     --visual-commander-background: #282828;
     --visual-commander-color: #EEEEEE;
     --visual-commander-color-focus: #9FEF3D;

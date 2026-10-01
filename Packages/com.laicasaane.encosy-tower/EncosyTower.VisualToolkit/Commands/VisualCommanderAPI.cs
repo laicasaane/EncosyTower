@@ -16,12 +16,12 @@ using EncosyTower.Types;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands
+namespace EncosyTower.VisualToolkit.Commands
 {
     public static partial class VisualCommanderAPI
     {
-        private static ArrayMap<StringId, FasterList<VisualCommandData>> s_directoryToCommands;
-        private static FasterList<VisualDirectoryData> s_directories;
+        private static ArrayMap<StringId, ListFast<VisualCommandData>> s_directoryToCommands;
+        private static ListFast<VisualDirectoryData> s_directories;
 
         public static VisualCommanderView CreateView([NotNull] VisualElement root, float directoryListWidth)
         {
@@ -40,7 +40,7 @@ namespace EncosyTower.VisualDebugging.Commands
         private static void InitWhenDomainReloadDisabled()
         {
             s_directoryToCommands = null;
-            s_directories = null;
+            s_directories = default;
         }
 #endif
 
@@ -57,17 +57,17 @@ namespace EncosyTower.VisualDebugging.Commands
 
             return;
 
-            static FasterList<VisualCommandData> Filter(ReadOnlySpan<Type> commandTypes)
+            static ListFast<VisualCommandData> Filter(ReadOnlySpan<Type> commandTypes)
             {
                 var typeOfVoid = typeof(void);
                 var typeOfOption = typeof(VisualOption);
                 var typeOfEnum = typeof(Enum);
                 var typeOfStringList = typeof(IReadOnlyList<string>);
                 var typeOfObservableObject = typeof(IObservableObject);
-                var orderedProperties = new FasterList<VisualPropertyData>();
-                var unorderedProperties = new FasterList<VisualPropertyData>();
-                var orderedCommands = new FasterList<VisualCommandData>(commandTypes.Length);
-                var unorderedCommands = new FasterList<VisualCommandData>(commandTypes.Length);
+                var orderedProperties = new ListFast<VisualPropertyData>();
+                var unorderedProperties = new ListFast<VisualPropertyData>();
+                var orderedCommands = new ListFast<VisualCommandData>(commandTypes.Length);
+                var unorderedCommands = new ListFast<VisualCommandData>(commandTypes.Length);
                 var commandMap = new Dictionary<string, Type>();
                 var propertyFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
                 var optionsFlags = propertyFlags | BindingFlags.Static;
@@ -230,8 +230,8 @@ namespace EncosyTower.VisualDebugging.Commands
             static void Map(ReadOnlySpan<VisualCommandData> commands)
             {
                 var length = commands.Length;
-                var map = s_directoryToCommands = new ArrayMap<StringId, FasterList<VisualCommandData>>(length);
-                var directories = s_directories = new FasterList<VisualDirectoryData>(length);
+                var map = s_directoryToCommands = new ArrayMap<StringId, ListFast<VisualCommandData>>(length);
+                var directories = s_directories = new ListFast<VisualDirectoryData>(length);
 
                 for (var i = 0; i < length; i++)
                 {
@@ -240,7 +240,7 @@ namespace EncosyTower.VisualDebugging.Commands
 
                     if (map.TryGetValue(directory.Id, out var indices) == false)
                     {
-                        map[directory.Id] = indices = new FasterList<VisualCommandData>();
+                        map[directory.Id] = indices = new ListFast<VisualCommandData>();
                         directories.Add(directory);
                     }
 

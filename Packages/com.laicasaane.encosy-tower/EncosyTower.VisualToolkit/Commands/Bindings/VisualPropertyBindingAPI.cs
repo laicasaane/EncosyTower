@@ -2,7 +2,7 @@ using System;
 using EncosyTower.Mvvm.ComponentModel;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.VisualDebugging.Commands.Bindings
+namespace EncosyTower.VisualToolkit.Commands.Bindings
 {
     internal static class VisualPropertyBindingAPI
     {
