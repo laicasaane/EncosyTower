@@ -8,7 +8,8 @@ namespace System.Collections.Generic.Exposed;
 
 internal readonly struct HashSetExposed<T>([NotNull] HashSet<T> set)
 {
-    public readonly HashSet<T> Set = set;
+    public readonly HashSet<T> Set
+        = set ?? throw new ArgumentNullException(nameof(set));
 
     public ReadOnlySpan<int> Buckets
     {

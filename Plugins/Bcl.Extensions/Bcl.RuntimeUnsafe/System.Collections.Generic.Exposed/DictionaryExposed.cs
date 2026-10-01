@@ -7,7 +7,8 @@ namespace System.Collections.Generic.Exposed;
 internal readonly struct DictionaryExposed<TKey, TValue>([NotNull] Dictionary<TKey, TValue> dictionary)
     where TKey : notnull
 {
-    public readonly Dictionary<TKey, TValue> Dictionary = dictionary;
+    public readonly Dictionary<TKey, TValue> Dictionary
+        = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
 
     public ReadOnlySpan<int> Buckets
     {
