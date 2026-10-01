@@ -29,11 +29,7 @@ namespace EncosyTower.Tests.Core.Collections
         [Test]
         public void Constructor_UninitializedMemoryCanBeWritten()
         {
-            using var array = new ArrayUnsafe<int>(
-                  3
-                , Allocator.Temp
-                , NativeArrayOptions.UninitializedMemory
-            );
+            using var array = new ArrayUnsafe<int>(3, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
 
             array[0] = 10;
             array[1] = 20;

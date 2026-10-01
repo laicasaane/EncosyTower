@@ -20,10 +20,7 @@ namespace EncosyTower.Tests.Core.Collections
             unsafe
             {
                 var buffer = ListNativeReadOnlyUnsafeAPI.GetBufferUnsafe(in view);
-                ref readonly var second = ref ListNativeReadOnlyUnsafeAPI.GetItemAtUnsafe(
-                      in view
-                    , 1
-                );
+                ref readonly var second = ref ListNativeReadOnlyUnsafeAPI.GetItemAtUnsafe(in view, 1);
 
                 Assert.AreEqual(1, buffer[0]);
                 Assert.AreEqual(2, second);

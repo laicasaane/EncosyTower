@@ -20,10 +20,7 @@ namespace EncosyTower.Tests.Core.Collections
                 var buffer = StackUnsafeAPI.GetBufferUnsafe(in stack);
                 ref var second = ref StackUnsafeAPI.GetItemAtUnsafe(in stack, 1);
                 var readOnlyBuffer = StackUnsafeAPI.GetBufferUnsafe(in readOnly);
-                ref readonly var readOnlySecond = ref StackUnsafeAPI.GetItemAtUnsafe(
-                      in readOnly
-                    , 1
-                );
+                ref readonly var readOnlySecond = ref StackUnsafeAPI.GetItemAtUnsafe(in readOnly, 1);
 
                 buffer[0] = 10;
                 second = 20;

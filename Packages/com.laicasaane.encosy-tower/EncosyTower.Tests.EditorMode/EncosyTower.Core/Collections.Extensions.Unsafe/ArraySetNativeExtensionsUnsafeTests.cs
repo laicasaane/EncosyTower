@@ -22,10 +22,7 @@ namespace EncosyTower.Tests.Core.Collections.Extensions.Unsafe
             var readOnly = set.AsReadOnly();
             var readOnlyNodes = SetReadOnlyAPI.GetNodesUnsafe(in readOnly);
             var readOnlyItems = SetReadOnlyAPI.GetItemsUnsafe(in readOnly);
-            ref readonly var readOnlySecondItem = ref SetReadOnlyAPI.GetItemAtUnsafe(
-                  in readOnly
-                , 1
-            );
+            ref readonly var readOnlySecondItem = ref SetReadOnlyAPI.GetItemAtUnsafe(in readOnly, 1);
 
             Assert.AreEqual(10, nodes[0].key);
             Assert.AreEqual(10, readOnlyNodes[0].key);

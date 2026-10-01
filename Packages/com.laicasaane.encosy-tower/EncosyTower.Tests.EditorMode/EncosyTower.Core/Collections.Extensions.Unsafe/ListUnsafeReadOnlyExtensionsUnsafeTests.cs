@@ -18,10 +18,7 @@ namespace EncosyTower.Tests.Core.Collections
             unsafe
             {
                 var buffer = ListUnsafeReadOnlyAPI.GetBufferUnsafe(in readOnly);
-                ref readonly var second = ref ListUnsafeReadOnlyAPI.GetItemAtUnsafe(
-                      in readOnly
-                    , 1
-                );
+                ref readonly var second = ref ListUnsafeReadOnlyAPI.GetItemAtUnsafe(in readOnly, 1);
 
                 Assert.AreEqual(1, buffer[0]);
                 Assert.AreEqual(2, second);

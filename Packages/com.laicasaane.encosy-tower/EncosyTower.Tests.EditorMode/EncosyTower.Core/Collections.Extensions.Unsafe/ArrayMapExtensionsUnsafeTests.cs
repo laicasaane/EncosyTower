@@ -21,10 +21,7 @@ namespace EncosyTower.Tests.Core.Collections.Extensions.Unsafe
             var readOnly = map.AsReadOnly();
             var readOnlyKeys = MapReadOnlyAPI.GetKeysUnsafe(in readOnly);
             var readOnlyValues = MapReadOnlyAPI.GetValuesUnsafe(in readOnly);
-            ref readonly var readOnlySecondValue = ref MapReadOnlyAPI.GetValueAtUnsafe(
-                  in readOnly
-                , 1
-            );
+            ref readonly var readOnlySecondValue = ref MapReadOnlyAPI.GetValueAtUnsafe(in readOnly, 1);
 
             Assert.AreEqual(1, keys[0].key);
             Assert.AreEqual(1, readOnlyKeys[0].key);

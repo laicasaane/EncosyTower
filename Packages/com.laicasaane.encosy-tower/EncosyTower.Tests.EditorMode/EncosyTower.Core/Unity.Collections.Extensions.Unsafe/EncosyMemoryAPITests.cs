@@ -21,9 +21,7 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
             Assert.AreEqual(1L << 40, EncosyMemoryAPI.MAXIMUM_RAM_SIZE_IN_BYTES);
             Assert.DoesNotThrow(() => EncosyMemoryAPI.CheckByteCountIsReasonable(0));
             Assert.DoesNotThrow(
-                () => EncosyMemoryAPI.CheckByteCountIsReasonable(
-                    EncosyMemoryAPI.MAXIMUM_RAM_SIZE_IN_BYTES
-                )
+                () => EncosyMemoryAPI.CheckByteCountIsReasonable(EncosyMemoryAPI.MAXIMUM_RAM_SIZE_IN_BYTES)
             );
 
 #if __ENCOSY_VALIDATION__
@@ -31,9 +29,7 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
                 () => EncosyMemoryAPI.CheckByteCountIsReasonable(-1)
             );
             Assert.Throws<InvalidOperationException>(
-                () => EncosyMemoryAPI.CheckByteCountIsReasonable(
-                    EncosyMemoryAPI.MAXIMUM_RAM_SIZE_IN_BYTES + 1
-                )
+                () => EncosyMemoryAPI.CheckByteCountIsReasonable(EncosyMemoryAPI.MAXIMUM_RAM_SIZE_IN_BYTES + 1)
             );
 #endif
         }

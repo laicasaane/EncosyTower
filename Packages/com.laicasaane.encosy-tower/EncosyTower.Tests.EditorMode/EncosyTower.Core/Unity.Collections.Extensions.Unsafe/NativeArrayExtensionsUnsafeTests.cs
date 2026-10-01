@@ -13,16 +13,9 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
 
             try
             {
-                ref var writable = ref EncosyNativeArrayExtensionsUnsafe.ElementAsUnsafeRefRW(
-                      array
-                    , 1
-                );
+                ref var writable = ref EncosyNativeArrayExtensionsUnsafe.ElementAsUnsafeRefRW(array, 1);
                 writable = 20;
-                ref readonly var readOnly = ref EncosyNativeArrayExtensionsUnsafe
-                    .ElementAsUnsafeRefRO(
-                          array
-                        , 1
-                    );
+                ref readonly var readOnly = ref EncosyNativeArrayExtensionsUnsafe.ElementAsUnsafeRefRO(array, 1);
 
                 Assert.AreEqual(20, array[1]);
                 Assert.AreEqual(20, readOnly);
@@ -58,26 +51,14 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
 
             try
             {
-                EncosyNativeArrayExtensionsUnsafe.MemoryCopyUnsafe(
-                      source
-                    , 1
-                    , destination
-                    , 0
-                    , 2
-                );
+                EncosyNativeArrayExtensionsUnsafe.MemoryCopyUnsafe(source, 1, destination, 0, 2);
 
                 CollectionAssert.AreEqual(new[] { 2, 3, 0, 0 }, destination.ToArray());
 
                 destination[0] = 0;
                 destination[1] = 0;
 
-                EncosyNativeArrayExtensionsUnsafe.MemoryCopyUnsafeWithoutChecks(
-                      source
-                    , 0
-                    , destination
-                    , 2
-                    , 2
-                );
+                EncosyNativeArrayExtensionsUnsafe.MemoryCopyUnsafeWithoutChecks(source, 0, destination, 2, 2);
 
                 CollectionAssert.AreEqual(new[] { 0, 0, 1, 2 }, destination.ToArray());
             }

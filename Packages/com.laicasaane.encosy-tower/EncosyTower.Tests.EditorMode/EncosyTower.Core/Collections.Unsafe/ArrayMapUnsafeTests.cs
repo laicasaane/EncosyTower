@@ -672,11 +672,7 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
             var bufferReadOnly = buffer.AsReadOnly();
             var key = 7;
             var pair = new ArrayMapUnsafeKeyValuePair<int, int>(in key, in buffer, 1);
-            var readOnlyPair = new ArrayMapUnsafeReadOnlyKeyValuePair<int, int>(
-                  in key
-                , in bufferReadOnly
-                , 0
-            );
+            var readOnlyPair = new ArrayMapUnsafeReadOnlyKeyValuePair<int, int>(in key, in bufferReadOnly, 0);
 
             AssertPair(pair, 7, 20);
             AssertPair(readOnlyPair, 7, 10);
