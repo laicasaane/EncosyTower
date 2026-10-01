@@ -1,0 +1,7 @@
+{
+  "sdk": {
+    "version": "{{ENCOSY_DOTNET_SDK_VERSION}}",
+    "rollForward": "disable",
+    "allowPrerelease": false
+  }
+}

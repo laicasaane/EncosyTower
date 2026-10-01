@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+{{ENCOSY_ISLAND_PROJECT_REFERENCES}}
+  </ItemGroup>
+</Project>

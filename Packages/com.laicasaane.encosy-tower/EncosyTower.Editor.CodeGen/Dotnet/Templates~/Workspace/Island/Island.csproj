@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>{{ENCOSY_LANGUAGE_VERSION}}</LangVersion>
+    <Nullable>{{ENCOSY_NULLABLE_MODE}}</Nullable>
+    <AllowUnsafeBlocks>{{ENCOSY_ALLOW_UNSAFE_BLOCKS}}</AllowUnsafeBlocks>
+    <DefineConstants>{{ENCOSY_DEFINE_CONSTANTS}}</DefineConstants>
+    <PathMap>{{ENCOSY_PATH_MAP}}</PathMap>
+{{ENCOSY_ADDITIONAL_OPTIONS_PROPERTY}}
+{{ENCOSY_CODE_ANALYSIS_RULE_SET_PROPERTY}}
+    <AssemblyName>EncosyCodeGenIsland</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IncludeDefaultUnityAssemblyReferences>false</IncludeDefaultUnityAssemblyReferences>
+    <UnityProjectPath>{{ENCOSY_PROJECT_ROOT}}</UnityProjectPath>
+    <UnityVersionInstallPath>{{ENCOSY_UNITY_VERSION_ROOT}}</UnityVersionInstallPath>
+    <OutputPath>../../artifacts/islands/{{ENCOSY_ISLAND_ID}}/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Unity3D" Version="{{ENCOSY_UNITY3D_VERSION}}" />
+{{ENCOSY_SOURCE_ITEMS}}
+{{ENCOSY_REFERENCE_ITEMS}}
+{{ENCOSY_ANALYZER_ITEMS}}
+{{ENCOSY_ADDITIONAL_FILE_ITEMS}}
+{{ENCOSY_GLOBAL_ANALYZER_CONFIG_ITEM}}
+  </ItemGroup>
+</Project>

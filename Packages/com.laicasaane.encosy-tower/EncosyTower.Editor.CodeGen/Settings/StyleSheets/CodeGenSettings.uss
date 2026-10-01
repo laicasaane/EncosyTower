@@ -1,0 +1,15 @@
+:root {
+    --label-min-width: 200px;
+}
+
+.code-gen .unity-base-field__aligned > .unity-base-field__label {
+    min-width: var(--label-min-width);
+}
+
+.code-gen .unity-base-field {
+    height: 19px;
+}
+
+.button-open-settings-window {
+    min-height: 30px;
+}

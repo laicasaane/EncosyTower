@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>EncosyCodeGenRunner</AssemblyName>
+    <RollForward>Major</RollForward>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <CodeGenPhase Condition="'$(CodeGenPhase)' == ''">Prepare</CodeGenPhase>
+    <DefineConstants Condition="'$(CodeGenPhase)' == 'Prepare'">$(DefineConstants);ENCOSY_CODEGEN_PREPARE</DefineConstants>
+    <DefineConstants Condition="'$(CodeGenPhase)' == 'Execute'">$(DefineConstants);ENCOSY_CODEGEN_EXECUTE</DefineConstants>
+    <OutputPath>$(MSBuildThisFileDirectory)../artifacts/runner/$(CodeGenPhase)/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="ThrowHelper.cs" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="{{ENCOSY_ROSLYN_VERSION}}" />
+  </ItemGroup>
+  <Import
+    Project="../manifests/GeneratedIslands.props"
+    Condition="'$(CodeGenPhase)' == 'Execute' and Exists('../manifests/GeneratedIslands.props')"
+  />
+</Project>
