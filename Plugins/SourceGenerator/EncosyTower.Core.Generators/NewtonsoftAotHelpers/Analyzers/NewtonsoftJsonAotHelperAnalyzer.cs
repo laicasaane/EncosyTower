@@ -17,7 +17,7 @@ namespace EncosyTower.Core.Analyzers.NewtonsoftAotHelpers
         );
 
         public static readonly DiagnosticDescriptor MustNotBeGeneric = new(
-              id: "SG_NEWTONSOFT_AOT_HELPER_0004"
+              id: "SG_NEWTONSOFT_AOT_HELPER_0003"
             , title: "[NewtonsoftJsonAotHelper] cannot be applied to a generic type"
             , messageFormat: "\"{0}\" is a generic type. [NewtonsoftJsonAotHelper] requires a non-generic type."
             , category: "NewtonsoftJsonAotHelperGenerator"
@@ -27,7 +27,7 @@ namespace EncosyTower.Core.Analyzers.NewtonsoftAotHelpers
         );
 
         public static readonly DiagnosticDescriptor BaseTypeMustBeProvided = new(
-              id: "SG_NEWTONSOFT_AOT_HELPER_0003"
+              id: "SG_NEWTONSOFT_AOT_HELPER_0002"
             , title: "[NewtonsoftJsonAotHelper] requires a valid base type argument"
             , messageFormat: "\"{0}\" is annotated with [NewtonsoftJsonAotHelper] but the required base-type constructor argument is missing or is not a type symbol."
             , category: "NewtonsoftJsonAotHelperGenerator"

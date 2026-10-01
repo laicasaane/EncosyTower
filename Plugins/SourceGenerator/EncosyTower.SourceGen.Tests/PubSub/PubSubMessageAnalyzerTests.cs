@@ -14,11 +14,11 @@ public sealed class PubSubMessageAnalyzerTests
 
         CollectionAssert.AreEqual(
               new[] {
+                  "SG_PUBSUB_0001",
                   "SG_PUBSUB_0002",
                   "SG_PUBSUB_0003",
+                  "SG_PUBSUB_0004",
                   "SG_PUBSUB_0005",
-                  "SG_PUBSUB_0012",
-                  "SG_PUBSUB_0013",
               }
             , descriptors.Select(static descriptor => descriptor.Id).ToArray()
         );
@@ -251,7 +251,7 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
     public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = [
         new(
               OWNER
-            , "SG_PUBSUB_0002"
+            , "SG_PUBSUB_0001"
             , "PubSub scope is invalid"
             , "Message '{0}' uses scope '{1}', which cannot be used as a PubSub scope."
             , "PubSub"
@@ -264,7 +264,7 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
         ),
         new(
               OWNER
-            , "SG_PUBSUB_0003"
+            , "SG_PUBSUB_0002"
             , "PubSub scope is repeated"
             , "Scope '{0}' is declared more than once on message '{1}'. Keep exactly one PubSub attribute "
                 + "for this scope."
@@ -277,7 +277,7 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
         ),
         new(
               OWNER
-            , "SG_PUBSUB_0005"
+            , "SG_PUBSUB_0003"
             , "PubSub message declaration is unsupported"
             , "Type '{0}' cannot generate PubSub members."
             , "PubSub"
@@ -290,7 +290,7 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
         ),
         new(
               OWNER
-            , "SG_PUBSUB_0012"
+            , "SG_PUBSUB_0004"
             , "PubSub API mode is invalid"
             , "Message '{0}' uses API mode value '{1}', which is not a defined EncosyTower.CodeGen.ApiMode."
             , "PubSub"
@@ -302,7 +302,7 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
         ),
         new(
               OWNER
-            , "SG_PUBSUB_0013"
+            , "SG_PUBSUB_0005"
             , "PubSub state mode is invalid"
             , "Message '{0}' uses state mode value '{1}', which is not a defined EncosyTower.CodeGen.StateMode."
             , "PubSub"

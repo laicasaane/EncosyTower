@@ -58,7 +58,7 @@ namespace EncosyTower.Persistence.Analyzers
         );
 
         public static readonly DiagnosticDescriptor MustNotBeGenericType = new(
-              id: "SG_PERSISTENCE_0005"
+              id: "SG_PERSISTENCE_0004"
             , title: "[PersistAccessor] type must not be a generic type"
             , messageFormat: "Type \"{0}\" is marked [PersistAccessor] but is a generic type "
                 + "and cannot be processed by the source generator"

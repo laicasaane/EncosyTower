@@ -31,7 +31,7 @@ namespace EncosyTower.Core.Analyzers.EnumTemplates
         );
 
         public static readonly DiagnosticDescriptor MustSpecifyTypeAndOrder = new(
-              id: "SG_ENUM_TEMPLATE_0004"
+              id: "SG_ENUM_TEMPLATE_0003"
             , title: "Must specify type and order"
             , messageFormat: "Must specify type and order"
             , category: "EnumTemplateGenerator"
@@ -41,7 +41,7 @@ namespace EncosyTower.Core.Analyzers.EnumTemplates
         );
 
         public static readonly DiagnosticDescriptor MustBeTypeOfExpression = new(
-              id: "SG_ENUM_TEMPLATE_0005"
+              id: "SG_ENUM_TEMPLATE_0004"
             , title: "First argument must be a type-of expression"
             , messageFormat: "First argument must be a type-of expression"
             , category: "EnumTemplateGenerator"
@@ -51,7 +51,7 @@ namespace EncosyTower.Core.Analyzers.EnumTemplates
         );
 
         public static readonly DiagnosticDescriptor NotSupportUnboundGenericType = new(
-              id: "SG_ENUM_TEMPLATE_0007"
+              id: "SG_ENUM_TEMPLATE_0005"
             , title: "Unbound generic type not supported"
             , messageFormat: "\"{0}\" must be a non-generic type or a closed generic type"
             , category: "EnumTemplateGenerator"

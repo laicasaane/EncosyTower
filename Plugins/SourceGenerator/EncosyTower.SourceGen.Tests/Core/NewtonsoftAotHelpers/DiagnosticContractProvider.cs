@@ -25,7 +25,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.NewtonsoftAotHelpers.NewtonsoftJsonAotHelperAnalyzer"
-            , "SG_NEWTONSOFT_AOT_HELPER_0003"
+            , "SG_NEWTONSOFT_AOT_HELPER_0002"
             , "[NewtonsoftJsonAotHelper] requires a valid base type argument"
             , "\"{0}\" is annotated with [NewtonsoftJsonAotHelper] but the required base-type constructor argument " +
               "is missing or is not a type symbol."
@@ -40,7 +40,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.NewtonsoftAotHelpers.NewtonsoftJsonAotHelperAnalyzer"
-            , "SG_NEWTONSOFT_AOT_HELPER_0004"
+            , "SG_NEWTONSOFT_AOT_HELPER_0003"
             , "[NewtonsoftJsonAotHelper] cannot be applied to a generic type"
             , "\"{0}\" is a generic type. [NewtonsoftJsonAotHelper] requires a non-generic type."
             , "NewtonsoftJsonAotHelperGenerator"

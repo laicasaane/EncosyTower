@@ -3,7 +3,7 @@ namespace EncosyTower.PubSub.Analyzers
     internal sealed partial class PubSubMessageAnalyzer
     {
         public static readonly DiagnosticDescriptor InvalidScope = new(
-              id: "SG_PUBSUB_0002"
+              id: "SG_PUBSUB_0001"
             , title: "PubSub scope is invalid"
             , messageFormat: "Message '{0}' uses scope '{1}', which cannot be used as a PubSub scope."
             , category: "PubSub"
@@ -16,7 +16,7 @@ namespace EncosyTower.PubSub.Analyzers
         );
 
         public static readonly DiagnosticDescriptor RepeatedScope = new(
-              id: "SG_PUBSUB_0003"
+              id: "SG_PUBSUB_0002"
             , title: "PubSub scope is repeated"
             , messageFormat: "Scope '{0}' is declared more than once on message '{1}'. Keep exactly one "
                 + "PubSub attribute for this scope."
@@ -29,7 +29,7 @@ namespace EncosyTower.PubSub.Analyzers
         );
 
         public static readonly DiagnosticDescriptor UnsupportedDeclaration = new(
-              id: "SG_PUBSUB_0005"
+              id: "SG_PUBSUB_0003"
             , title: "PubSub message declaration is unsupported"
             , messageFormat: "Type '{0}' cannot generate PubSub members."
             , category: "PubSub"
@@ -42,7 +42,7 @@ namespace EncosyTower.PubSub.Analyzers
         );
 
         public static readonly DiagnosticDescriptor InvalidApiMode = new(
-              id: "SG_PUBSUB_0012"
+              id: "SG_PUBSUB_0004"
             , title: "PubSub API mode is invalid"
             , messageFormat: "Message '{0}' uses API mode value '{1}', which is not a defined "
                 + "EncosyTower.CodeGen.ApiMode."
@@ -55,7 +55,7 @@ namespace EncosyTower.PubSub.Analyzers
         );
 
         public static readonly DiagnosticDescriptor InvalidStateMode = new(
-              id: "SG_PUBSUB_0013"
+              id: "SG_PUBSUB_0005"
             , title: "PubSub state mode is invalid"
             , messageFormat: "Message '{0}' uses state mode value '{1}', which is not a defined "
                 + "EncosyTower.CodeGen.StateMode."

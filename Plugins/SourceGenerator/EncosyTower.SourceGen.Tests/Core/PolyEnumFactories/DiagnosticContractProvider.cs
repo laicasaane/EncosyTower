@@ -26,7 +26,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
-            , "SG_POLY_ENUM_FACTORY_0003"
+            , "SG_POLY_ENUM_FACTORY_0002"
             , "[PolyEnumFactoryFor] target type must be a [PolyEnumStruct]"
             , "Type \"{0}\" passed to [PolyEnumFactoryFor] is not decorated with [PolyEnumStruct]. Factory " +
               "generation requires a poly-enum struct."
@@ -39,7 +39,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
-            , "SG_POLY_ENUM_FACTORY_0005"
+            , "SG_POLY_ENUM_FACTORY_0003"
             , "[PolyEnumFactoryFor] target type has no case structs"
             , "Type \"{0}\" has no eligible case structs. The generated factory will only contain an Undefined() " +
               "method."
@@ -52,7 +52,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
-            , "SG_POLY_ENUM_FACTORY_0007"
+            , "SG_POLY_ENUM_FACTORY_0005"
             , "Open poly-enum target and factory arity must match"
             , "Open target \"{0}\" has effective arity {1}, but factory \"{2}\" has effective arity {3}."
             , "PolyEnumFactoryGenerator"
@@ -65,7 +65,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
-            , "SG_POLY_ENUM_FACTORY_0008"
+            , "SG_POLY_ENUM_FACTORY_0006"
             , "Open poly-enum target and factory constraints must match"
             , "Open target \"{0}\" and factory \"{1}\" have incompatible positional type parameter constraints."
             , "PolyEnumFactoryGenerator"
@@ -77,7 +77,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
-            , "SG_POLY_ENUM_FACTORY_0006"
+            , "SG_POLY_ENUM_FACTORY_0004"
             , "Case constructor with out parameter is ignored"
             , "Constructor of case struct \"{0}\" has an out parameter and will be skipped by [PolyEnumFactoryFor] " +
               "code generation."

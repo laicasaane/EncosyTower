@@ -58,7 +58,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Persistence.Analyzers.PersistenceDiagnosticAnalyzer"
-            , "SG_PERSISTENCE_0005"
+            , "SG_PERSISTENCE_0004"
             , "[PersistAccessor] type must not be a generic type"
             , "Type \"{0}\" is marked [PersistAccessor] but is a generic type and cannot be processed by the " +
               "source " +

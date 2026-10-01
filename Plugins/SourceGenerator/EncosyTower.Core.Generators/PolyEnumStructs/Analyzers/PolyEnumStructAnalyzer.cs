@@ -11,7 +11,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumStructs
         private const string UNDEFINED_NAME = "Undefined";
 
         public static readonly DiagnosticDescriptor MustHaveCaseStructs = new(
-              id: "SG_POLY_ENUM_STRUCT_0002"
+              id: "SG_POLY_ENUM_STRUCT_0001"
             , title: "No case structs declared in [PolyEnumStruct]"
             , messageFormat: "\"{0}\" has no case structs. At least one nested struct (other than the implicit Undefined case) must be declared."
             , category: "PolyEnumStructGenerator"
@@ -21,7 +21,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumStructs
         );
 
         public static readonly DiagnosticDescriptor IEnumCaseMethodMustNotBeGeneric = new(
-              id: "SG_POLY_ENUM_STRUCT_0003"
+              id: "SG_POLY_ENUM_STRUCT_0002"
             , title: "Generic method in IEnumCase interface is not supported"
             , messageFormat: "Method \"{0}\" declared on IEnumCase is generic. Generic methods in IEnumCase are not supported and will be ignored by the generator."
             , category: "PolyEnumStructGenerator"
@@ -31,7 +31,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumStructs
         );
 
         public static readonly DiagnosticDescriptor CaseStructMethodMustNotBeGeneric = new(
-              id: "SG_POLY_ENUM_STRUCT_0004"
+              id: "SG_POLY_ENUM_STRUCT_0003"
             , title: "Generic method on case struct is not supported"
             , messageFormat: "Method \"{0}\" on case struct \"{1}\" is generic. Generic methods on case structs are not supported and will be ignored by the generator."
             , category: "PolyEnumStructGenerator"
@@ -41,7 +41,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumStructs
         );
 
         public static readonly DiagnosticDescriptor GenericEnumExtensionsUnsupported = new(
-              id: "SG_POLY_ENUM_STRUCT_0005"
+              id: "SG_POLY_ENUM_STRUCT_0004"
             , title: "Generic [PolyEnumStruct] enum extensions require a container"
             , messageFormat: "\"{0}\" is directly generic. Set Container to an explicit non-generic partial type " +
               "when WithEnumExtensions is enabled."
@@ -54,61 +54,61 @@ namespace EncosyTower.Core.Analyzers.PolyEnumStructs
 
         #pragma warning disable RS2008
         public static readonly DiagnosticDescriptor ContainerMustBeNonGeneric = CreateError(
-              "SG_POLY_ENUM_STRUCT_0006"
+              "SG_POLY_ENUM_STRUCT_0005"
             , "Poly-enum container must be non-generic"
             , "Container \"{0}\" for \"{1}\" must be non-generic, including its containing types."
         );
 
         public static readonly DiagnosticDescriptor ContainerMustBeSameAssembly = CreateError(
-              "SG_POLY_ENUM_STRUCT_0007"
+              "SG_POLY_ENUM_STRUCT_0006"
             , "Poly-enum container must be in the target assembly"
             , "Container \"{0}\" must be declared in the same assembly as \"{1}\"."
         );
 
         public static readonly DiagnosticDescriptor ContainerKindUnsupported = CreateError(
-              "SG_POLY_ENUM_STRUCT_0008"
+              "SG_POLY_ENUM_STRUCT_0007"
             , "Poly-enum container cannot contain generated types"
             , "Container \"{0}\" cannot contain generated PolyEnum types."
         );
 
         public static readonly DiagnosticDescriptor TypeParameterMappingInvalid = CreateError(
-              "SG_POLY_ENUM_STRUCT_0009"
+              "SG_POLY_ENUM_STRUCT_0008"
             , "Poly-enum type parameters do not map uniquely"
             , "Type parameters on \"{0}\" do not map uniquely to \"{1}\"."
         );
 
         public static readonly DiagnosticDescriptor TypeParameterConstraintsMismatch = CreateError(
-              "SG_POLY_ENUM_STRUCT_0010"
+              "SG_POLY_ENUM_STRUCT_0009"
             , "Poly-enum type parameter constraints differ"
             , "Type parameter constraints on \"{0}\" must match \"{1}\"."
         );
 
         public static readonly DiagnosticDescriptor CaseMissingInterfaceParameter = CreateError(
-              "SG_POLY_ENUM_STRUCT_0011"
+              "SG_POLY_ENUM_STRUCT_0010"
             , "Poly-enum case omits an interface dependency"
             , "Case \"{0}\" must include type parameter \"{1}\" required by IEnumCase."
         );
 
         public static readonly DiagnosticDescriptor InterfaceMustMoveToContainer = CreateError(
-              "SG_POLY_ENUM_STRUCT_0012"
+              "SG_POLY_ENUM_STRUCT_0011"
             , "Poly-enum interface must move to the container"
             , "Move IEnumCase for \"{0}\" into its non-generic PolyEnum container."
         );
 
         public static readonly DiagnosticDescriptor InterfaceMissingMemberParameter = CreateError(
-              "SG_POLY_ENUM_STRUCT_0013"
+              "SG_POLY_ENUM_STRUCT_0012"
             , "Poly-enum interface omits a member dependency"
             , "IEnumCase \"{0}\" must include type parameter \"{1}\" required by common member \"{2}\"."
         );
 
         public static readonly DiagnosticDescriptor InterfaceMemberDuplicated = CreateError(
-              "SG_POLY_ENUM_STRUCT_0014"
+              "SG_POLY_ENUM_STRUCT_0013"
             , "Poly-enum interface member is duplicated"
             , "Member \"{0}\" is already declared by non-generic IEnumCase."
         );
 
         public static readonly DiagnosticDescriptor UndefinedCaseDuplicated = CreateError(
-              "SG_POLY_ENUM_STRUCT_0015"
+              "SG_POLY_ENUM_STRUCT_0014"
             , "Poly-enum has multiple undefined cases"
             , "PolyEnum \"{0}\" has more than one authored undefined case."
         );

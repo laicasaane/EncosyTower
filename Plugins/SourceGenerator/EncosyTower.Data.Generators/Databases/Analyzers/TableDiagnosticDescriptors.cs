@@ -10,7 +10,7 @@ namespace EncosyTower.Data.Analyzers.Databases
     internal static class TableDiagnosticDescriptors
     {
         public static readonly DiagnosticDescriptor AbstractTypeNotSupported = new DiagnosticDescriptor(
-              id: "SG_DATABASE_TABLE_0003"
+              id: "SG_DATABASE_TABLE_0001"
             , title: "Abstract type is not supported"
             , messageFormat: "The type \"{0}\" must not be abstract"
             , category: "DatabaseGenerator"
@@ -20,7 +20,7 @@ namespace EncosyTower.Data.Analyzers.Databases
         );
 
         public static readonly DiagnosticDescriptor GenericTypeNotSupported = new DiagnosticDescriptor(
-              id: "SG_DATABASE_TABLE_0004"
+              id: "SG_DATABASE_TABLE_0002"
             , title: "Generic type is not supported"
             , messageFormat: "The type \"{0}\" must not be generic"
             , category: "DatabaseGenerator"
@@ -30,7 +30,7 @@ namespace EncosyTower.Data.Analyzers.Databases
         );
 
         public static readonly DiagnosticDescriptor MustBeDerivedFromDataTableAsset = new DiagnosticDescriptor(
-              id: "SG_DATABASE_TABLE_0005"
+              id: "SG_DATABASE_TABLE_0003"
             , title: "Type must be derived from either DataTableAsset<TDataId, TData> or DataTableAsset<TDataId, TData, TConvertedId>"
             , messageFormat: "The type \"{0}\" must be derived from either DataTableAsset<TDataId, TData> or DataTableAsset<TDataId, TData, TConvertedId>"
             , category: "DatabaseGenerator"

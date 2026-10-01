@@ -23,7 +23,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
         );
 
         public static readonly DiagnosticDescriptor TargetMustBePolyEnumStruct = new(
-              id: "SG_POLY_ENUM_FACTORY_0003"
+              id: "SG_POLY_ENUM_FACTORY_0002"
             , title: "[PolyEnumFactoryFor] target type must be a [PolyEnumStruct]"
             , messageFormat: "Type \"{0}\" passed to [PolyEnumFactoryFor] is not decorated with [PolyEnumStruct]. Factory generation requires a poly-enum struct."
             , category: CATEGORY
@@ -33,7 +33,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
         );
 
         public static readonly DiagnosticDescriptor MustHaveCaseStructs = new(
-              id: "SG_POLY_ENUM_FACTORY_0005"
+              id: "SG_POLY_ENUM_FACTORY_0003"
             , title: "[PolyEnumFactoryFor] target type has no case structs"
             , messageFormat: "Type \"{0}\" has no eligible case structs. The generated factory will only contain an Undefined() method."
             , category: CATEGORY
@@ -43,7 +43,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
         );
 
         public static readonly DiagnosticDescriptor CaseCtorOutParameterIgnored = new(
-              id: "SG_POLY_ENUM_FACTORY_0006"
+              id: "SG_POLY_ENUM_FACTORY_0004"
             , title: "Case constructor with out parameter is ignored"
             , messageFormat: "Constructor of case struct \"{0}\" has an out parameter and will be skipped by [PolyEnumFactoryFor] code generation."
             , category: CATEGORY
@@ -53,7 +53,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
         );
 
         public static readonly DiagnosticDescriptor TargetArityMismatch = new(
-              id: "SG_POLY_ENUM_FACTORY_0007"
+              id: "SG_POLY_ENUM_FACTORY_0005"
             , title: "Open poly-enum target and factory arity must match"
             , messageFormat: "Open target \"{0}\" has effective arity {1}, but factory \"{2}\" has effective arity {3}."
             , category: CATEGORY
@@ -64,7 +64,7 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
         );
 
         public static readonly DiagnosticDescriptor TargetConstraintMismatch = new(
-              id: "SG_POLY_ENUM_FACTORY_0008"
+              id: "SG_POLY_ENUM_FACTORY_0006"
             , title: "Open poly-enum target and factory constraints must match"
             , messageFormat: "Open target \"{0}\" and factory \"{1}\" have incompatible positional type parameter " +
               "constraints."

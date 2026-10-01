@@ -37,31 +37,31 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.EnumTemplates.EnumTemplateAnalyzer"
-            , "SG_ENUM_TEMPLATE_0004"
+            , "SG_ENUM_TEMPLATE_0003"
             , "Must specify type and order"
             , "Must specify type and order"
             , "EnumTemplateGenerator"
             , DiagnosticSeverity.Error
             , true
             , "Must specify type and order"
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.EnumTemplates.EnumTemplateAnalyzer"
+            , "SG_ENUM_TEMPLATE_0004"
+            , "First argument must be a type-of expression"
+            , "First argument must be a type-of expression"
+            , "EnumTemplateGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "First argument must be a type-of expression"
             , ""
             , Array.Empty<string>()
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Core.Analyzers.EnumTemplates.EnumTemplateAnalyzer"
             , "SG_ENUM_TEMPLATE_0005"
-            , "First argument must be a type-of expression"
-            , "First argument must be a type-of expression"
-            , "EnumTemplateGenerator"
-            , DiagnosticSeverity.Error
-            , true
-            , "First argument must be a type-of expression"
-            , ""
-            , Array.Empty<string>()
-        ),
-        new DiagnosticDescriptorContract(
-              "EncosyTower.Core.Analyzers.EnumTemplates.EnumTemplateAnalyzer"
-            , "SG_ENUM_TEMPLATE_0007"
             , "Unbound generic type not supported"
             , "\"{0}\" must be a non-generic type or a closed generic type"
             , "EnumTemplateGenerator"

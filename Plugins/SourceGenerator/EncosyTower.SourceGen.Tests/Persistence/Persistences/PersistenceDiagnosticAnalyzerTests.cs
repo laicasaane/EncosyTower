@@ -79,7 +79,7 @@ public class PersistenceDiagnosticAnalyzerTests
     [TestMethod]
     public Task GenericAccessor_ReportsMustNotBeGenericType()
     {
-        Assert.AreEqual("SG_PERSISTENCE_0005", PersistenceDiagnosticAnalyzer.MustNotBeGenericType.Id);
+        Assert.AreEqual("SG_PERSISTENCE_0004", PersistenceDiagnosticAnalyzer.MustNotBeGenericType.Id);
         return RunAsync(
               """
                   [EncosyTower.Persistences.PersistAccessor(typeof(int))]

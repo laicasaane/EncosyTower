@@ -46,7 +46,7 @@ public class NewtonsoftJsonAotHelperAnalyzerTests
     [TestMethod]
     public Task GenericClassWithBaseTypeArg_ReportsMustNotBeGeneric()
     {
-        Assert.AreEqual("SG_NEWTONSOFT_AOT_HELPER_0004", NewtonsoftJsonAotHelperAnalyzer.MustNotBeGeneric.Id);
+        Assert.AreEqual("SG_NEWTONSOFT_AOT_HELPER_0003", NewtonsoftJsonAotHelperAnalyzer.MustNotBeGeneric.Id);
         return RunAsync(
               """
                   public class Base { }

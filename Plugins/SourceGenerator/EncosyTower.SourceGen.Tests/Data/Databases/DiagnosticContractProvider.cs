@@ -25,7 +25,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_HORIZONTAL_0003"
+            , "SG_DATABASE_HORIZONTAL_0002"
             , "Abstract type is not supported"
             , "The type \"{0}\" must not be abstract"
             , "DatabaseGenerator"
@@ -37,7 +37,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_HORIZONTAL_0004"
+            , "SG_DATABASE_HORIZONTAL_0003"
             , "Target type does not implement IData"
             , "The type \"{0}\" must implement IData interface"
             , "DatabaseGenerator"
@@ -49,7 +49,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_HORIZONTAL_0005"
+            , "SG_DATABASE_HORIZONTAL_0004"
             , "Invalid property name"
             , "The property name must be a valid identifier"
             , "DatabaseGenerator"
@@ -61,7 +61,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_TABLE_0003"
+            , "SG_DATABASE_TABLE_0001"
             , "Abstract type is not supported"
             , "The type \"{0}\" must not be abstract"
             , "DatabaseGenerator"
@@ -73,7 +73,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_TABLE_0004"
+            , "SG_DATABASE_TABLE_0002"
             , "Generic type is not supported"
             , "The type \"{0}\" must not be generic"
             , "DatabaseGenerator"
@@ -85,7 +85,7 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
         ),
         new DiagnosticDescriptorContract(
               "EncosyTower.Data.Analyzers.Databases.DatabaseDiagnosticAnalyzer"
-            , "SG_DATABASE_TABLE_0005"
+            , "SG_DATABASE_TABLE_0003"
             , "Type must be derived from either DataTableAsset<TDataId, TData> or DataTableAsset<TDataId, TData, " +
               "TConvertedId>"
             , "The type \"{0}\" must be derived from either DataTableAsset<TDataId, TData> or " +
