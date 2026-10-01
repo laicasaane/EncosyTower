@@ -3,5 +3,16 @@
   <MergeTargetSolution>Plugins/SourceGenerator/EncosyTower.SourceGen.slnx</MergeTargetSolution>
   <ProjectConflictResolution>PreserveOverlay</ProjectConflictResolution>
   <DefaultProcessingPolicy>Merge</DefaultProcessingPolicy>
-  <NestedProjects />
+  <NestedProjects>
+    <NestedProject ProjectName="EncosyTower.Samples.Data" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.MonoPages" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Mvvm" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Persistence" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Pooling" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.PubSub" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Stats.Definitions" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Stats.Systems" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.VisualToolkit" FolderPath="Samples" />
+    <NestedProject ProjectName="EncosyTower.Samples.Processing" FolderPath="Samples" />
+  </NestedProjects>
 </SlnMergeSettings>
