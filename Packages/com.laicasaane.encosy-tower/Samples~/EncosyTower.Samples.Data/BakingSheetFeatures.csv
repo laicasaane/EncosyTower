@@ -1,0 +1,6 @@
+Id:Kind,Id:SubId,Rewards:{rewards}:Key,Rewards:{rewards}:Value:[reward]:Amount
+enemy,1,,
+,,<#{rewards}#>,
+,,gold,
+,,,<#[reward]#>
+,,,100

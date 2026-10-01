@@ -1,0 +1,20 @@
+{
+    "name": "EncosyTower.Samples.VisualToolkit",
+    "rootNamespace": "EncosyTower.Samples.VisualToolkit",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.VisualToolkit",
+        "EncosyTower.Mvvm"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_EDITOR || INCLUDE_ENCOSY_SAMPLES_VISUAL_TOOLKIT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
