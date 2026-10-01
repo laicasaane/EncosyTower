@@ -14,7 +14,7 @@ additional functionality powered by source generators, and so on.
 1. Open Package Manager in Unity Editor and click on the `+` button on the top left corner.
 2. Select `Add package from git URL...` and paste below URL:
     ```
-    https://github.com/laicasaane/EncosyTower.git?path=/Packages/com.laicasaane.encosy-tower#0.1.7-preview.3
+    https://github.com/laicasaane/EncosyTower.git?path=/Packages/com.laicasaane.encosy-tower#0.1.8-preview.1
     ```
 3. Click on the `Add` button and you are done!
 
@@ -46,6 +46,42 @@ openupm add com.laicasaane.encosy-tower
 - `IsExternalInit.cs`: Enable [`init`][init] of C# 9
 
 [init]: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/init
+
+## Project Conventions
+
+Development and contribution workflows are documented in
+[PROJECT-CONVENTIONS.md](docs/conventions/PROJECT-CONVENTIONS.md).
+
+## Code Generation
+
+Run either backend explicitly from its exact Unity Editor menu:
+
+- `Encosy Tower/CodeGen/Generate in Unity`
+- `Encosy Tower/CodeGen/Generate in .NET`
+
+Automatic generation is configured under
+`Preferences/Encosy Tower/CodeGen`. Both `Automatically Generate Code` and
+`Run Generators in Temporary .NET Solution` default to off. These settings are
+local to each Editor user and stored at
+`Assets/Settings/Editor/User/{project-folder}/CodeGenSettings.asset`. Consumer
+repositories should ignore both `Assets/Settings/Editor/User/` and its sibling
+`Assets/Settings/Editor/User.meta`.
+
+The Unity backend runs the last successfully loaded generator assemblies on the
+Editor main thread. After a failed Unity compilation, use the .NET backend to
+run syntax-clean generator sources. The .NET backend requires an installed
+`dotnet` SDK, supports generator sources inside project `Assets` and in-project
+`Packages`, and excludes external packages and `Library/PackageCache`. Active
+syntax errors skip the affected generator and preserve its previous outputs;
+semantic, compilation, worker, and cancellation failures apply no output.
+Generators that depend on Unity native or Editor state must use the Unity
+backend.
+
+Public-only generators need no friend assembly. A generator that accesses
+internal members from the .NET backend requires its owner assembly to grant
+`InternalsVisibleTo("EncosyTower.Temp_Generated.CodeGen")`. Friendship is not
+transitive, and strong-named owners require the matching signed friend/public
+key arrangement.
 
 ## Features
 

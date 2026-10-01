@@ -1,12 +1,13 @@
 {
   "name": "com.laicasaane.encosy-tower",
   "displayName": "Encosy Tower",
-  "version": "0.1.7-preview.3",
+  "version": "0.1.8-preview.1",
   "unity": "6000.3",
   "dependencies": {
-    "com.unity.burst": "1.8.28",
+    "com.unity.burst": "1.8.30",
     "com.unity.collections": "2.6.5",
-    "com.unity.mathematics": "1.3.3"
+    "com.unity.mathematics": "1.3.3",
+    "com.unity.project-auditor": "3.1.1"
   },
   "description": "Encosy Tower is a library that bundles an assortment of functionality such as additional data structures, Game Database, Persistence, ECS Stats, MVVM, Page Flows, Pooling, Pub/Sub, Vaults, additional functionality powered by source generators, and so on.",
   "keywords": [
@@ -36,6 +37,11 @@
       "path": "Samples~/EncosyTower.Samples.Pooling"
     },
     {
+      "displayName": "EncosyTower.Samples.Processing",
+      "description": "Contains sample setup for Encosy Processing",
+      "path": "Samples~/EncosyTower.Samples.Processing"
+    },
+    {
       "displayName": "EncosyTower.Samples.PubSub",
       "description": "Contains sample setup for Encosy PubSub",
       "path": "Samples~/EncosyTower.Samples.PubSub"
@@ -51,9 +57,9 @@
       "path": "Samples~/EncosyTower.Samples.Persistence"
     },
     {
-      "displayName": "EncosyTower.Samples.VisualDebugging",
-      "description": "Contains sample setup for Encosy Visual Debugging",
-      "path": "Samples~/EncosyTower.Samples.VisualDebugging"
+      "displayName": "EncosyTower.Samples.VisualToolkit",
+      "description": "Contains sample setup for Encosy Visual Toolkit",
+      "path": "Samples~/EncosyTower.Samples.VisualToolkit"
     }
   ]
 }
