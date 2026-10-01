@@ -430,13 +430,9 @@ foreach (var (gitUrl, folderName, commitSha) in processingGitFolders)
         Directory.CreateDirectory(unityPluginPath);
     }
 
-    var gitUrlWithoutSuffix = gitUrl.EndsWith(".git", StringComparison.OrdinalIgnoreCase)
-        ? gitUrl[..^4]
-        : gitUrl;
+    var gitUrlWithoutSuffix = gitUrl.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? gitUrl[..^4] : gitUrl;
 
-    var repositoryUrl = string.IsNullOrWhiteSpace(commitSha)
-        ? gitUrl
-        : $"{gitUrlWithoutSuffix}/tree/{commitSha}";
+    var repositoryUrl = string.IsNullOrWhiteSpace(commitSha) ? gitUrl : $"{gitUrlWithoutSuffix}/tree/{commitSha}";
 
     var csprojFilePath = GetCsprojFilePath(unityPluginsRootPath, folderName, out var srcFolderName);
 
@@ -473,9 +469,7 @@ foreach (var (gitUrl, folderName, commitSha) in processingGitFolders)
 
     if (index < 0)
     {
-        slnx.Projects.Add(new PluginsIntegrator.Slnx.Project {
-            Path = csprojFilePathRelative,
-        });
+        slnx.Projects.Add(new PluginsIntegrator.Slnx.Project { Path = csprojFilePathRelative, });
     }
 
     using (Console.WithColor(ConsoleColor.Cyan))
