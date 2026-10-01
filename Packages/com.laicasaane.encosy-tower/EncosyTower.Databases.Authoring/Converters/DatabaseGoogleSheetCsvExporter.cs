@@ -13,6 +13,8 @@ using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using NReco.Csv;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Databases.Authoring
 {
     public class DatabaseGoogleSheetCsvExporter
@@ -40,6 +42,10 @@ namespace EncosyTower.Databases.Authoring
             , ITransform<string, string> sheetNameTransformer = null
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(spreadsheetId);
+            DebuggingThrowHelper.ThrowIfNull(credential);
+            DebuggingThrowHelper.ThrowIfNull(applicationName);
+
             SpreadsheetId = spreadsheetId;
 
             _applicationName = applicationName;
@@ -60,6 +66,9 @@ namespace EncosyTower.Databases.Authoring
             , ITransform<string, string> sheetNameTransformer = null
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(spreadsheetId);
+            DebuggingThrowHelper.ThrowIfNull(initializer);
+
             SpreadsheetId = spreadsheetId;
 
             _initializer = initializer;
@@ -95,9 +104,10 @@ namespace EncosyTower.Databases.Authoring
             if (_isLoaded == false)
             {
                 using (var service = new SheetsService(_initializer ?? new BaseClientService.Initializer {
-                    HttpClientInitializer = _credential,
-                    ApplicationName = _applicationName,
-                }))
+                        HttpClientInitializer = _credential,
+                        ApplicationName = _applicationName,
+                    })
+                )
                 {
                     var sheetReq = service.Spreadsheets.Get(spreadsheetId);
                     sheetReq.Fields = "properties,sheets(properties,data.rowData.values.formattedValue)";
@@ -212,6 +222,8 @@ namespace EncosyTower.Databases.Authoring
 
         private static int CountColumns([NotNull] IList<RowData> rows)
         {
+            DebuggingThrowHelper.ThrowIfNull(rows);
+
             var result = 0;
 
             foreach (var row in rows)

@@ -2,9 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Cathei.BakingSheet;
 using EncosyTower.Collections;
 using Microsoft.Extensions.Logging;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace EncosyTower.Databases.Authoring
 {
@@ -50,6 +53,7 @@ namespace EncosyTower.Databases.Authoring
 
             var properties = GetSheetProperties();
             var rowTypeToSheet = new Dictionary<Type, ISheet>(properties.Count);
+            var rowTypeToProperty = new Dictionary<Type, string>(properties.Count);
             var dataSheets = new List<IDataSheet>(properties.Count);
 
             foreach (var pair in properties)
@@ -61,7 +65,7 @@ namespace EncosyTower.Databases.Authoring
 
                 if (pair.Value.GetValue(this) is not ISheet sheet)
                 {
-                    context.Logger.LogError("Failed to find sheet: {SheetName}", pair.Key);
+                    LogError_MissingSheet(context.Logger, GetType(), pair.Key, pair.Value.PropertyType);
                     continue;
                 }
 
@@ -69,6 +73,8 @@ namespace EncosyTower.Databases.Authoring
 
                 if (rowTypeToSheet.TryAdd(sheet.RowType, sheet))
                 {
+                    rowTypeToProperty.Add(sheet.RowType, pair.Key);
+
                     if (sheet is IDataSheet dataSheet)
                     {
                         dataSheets.Add(dataSheet);
@@ -77,7 +83,13 @@ namespace EncosyTower.Databases.Authoring
                 else
                 {
                     // row type must be unique in a sheet container
-                    context.Logger.LogError("Duplicated Row type is used for {SheetName}", pair.Key);
+                    LogError_DuplicateRowType(
+                          context.Logger
+                        , GetType()
+                        , rowTypeToProperty[sheet.RowType]
+                        , pair.Key
+                        , sheet.RowType
+                    );
                 }
             }
 
@@ -173,5 +185,40 @@ namespace EncosyTower.Databases.Authoring
         /// Callback invoked after all <c>sheet.Postprocess</c>.
         /// </summary>
         protected virtual void OnAfterPostprocess(SheetConvertingContext context) { }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnityEngine.HideInCallstack, StackTraceHidden]
+        private static void LogError_MissingSheet(
+              ILogger logger
+            , Type containerType
+            , string sheetProperty
+            , Type sheetType
+        )
+            => logger.LogError(
+                "Sheet container {ContainerType} property {SheetProperty} expected {SheetType}, but no sheet " +
+                "instance was assigned. Assign a generated sheet before loading."
+                , containerType
+                , sheetProperty
+                , sheetType
+            );
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnityEngine.HideInCallstack, StackTraceHidden]
+        private static void LogError_DuplicateRowType(
+              ILogger logger
+            , Type containerType
+            , string acceptedSheetProperty
+            , string duplicateSheetProperty
+            , Type rowType
+        )
+            => logger.LogError(
+                "Sheet container {ContainerType} properties {AcceptedSheetProperty} and " +
+                "{DuplicateSheetProperty} use the same row type {RowType}. The first sheet remains active; assign " +
+                "a unique row type."
+                , containerType
+                , acceptedSheetProperty
+                , duplicateSheetProperty
+                , rowType
+            );
     }
 }

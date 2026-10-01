@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Cathei.BakingSheet.Internal;
+using Cathei.BakingSheet;
 using Cathei.BakingSheet.Raw;
 using NReco.Csv;
 
 namespace EncosyTower.Databases.Authoring
 {
-    using DCC = Data.Authoring.DataConvertingContext;
-
     public class DatabaseCsvSheetConverter : DatabaseRawSheetConverter
     {
         private readonly Dictionary<string, List<Page>> _pages = new();
@@ -25,12 +23,11 @@ namespace EncosyTower.Databases.Authoring
               string loadPath
             , string extension = "csv"
             , IExtendedFileSystem fileSystem = null
-            , bool splitHeader = false
-            , int emptyRowStreakThreshold = 5
+            , int emptyRowAllowance = 5
             , bool includeSubFolders = true
             , bool includeCommentedFiles = false
         )
-            : base(DCC.Default.TimeZoneInfo, DCC.Default.FormatProvider, splitHeader, emptyRowStreakThreshold)
+            : base(emptyRowAllowance)
         {
             _loadPath = loadPath;
             _extension = extension;
@@ -63,6 +60,20 @@ namespace EncosyTower.Databases.Authoring
             return Enumerable.Empty<IRawSheetImporterPage>();
         }
 
+        protected override int GetColumnCount(
+              IRawSheetImporterPage page
+            , int row
+            , int headerColumnCount
+        )
+        {
+            if (page is not Page csvPage || row < 0 || row >= csvPage.Table.Count)
+            {
+                return headerColumnCount;
+            }
+
+            return csvPage.Table[row]?.Count ?? headerColumnCount;
+        }
+
         protected override IRawSheetExporterPage CreatePage(string sheetName)
         {
             var page = new Page(new CsvTable(), null);
@@ -90,7 +101,7 @@ namespace EncosyTower.Databases.Authoring
                     fileName = fileName.Replace("$", "");
                 }
 
-                var (sheetName, subName) = Config.ParseSheetName(fileName);
+                var (sheetName, subName) = SheetTokens.ParseSheetName(fileName);
 
                 using var stream = _fileSystem.OpenRead(file);
                 using var reader = new StreamReader(stream);

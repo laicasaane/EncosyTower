@@ -85,12 +85,7 @@ namespace EncosyTower.Databases.Authoring
         /// <see cref="ConverterForDataPropertyAttribute(Type, string, Type)"/>
         /// when both are specified for the same property.
         /// </remarks>
-        public ConverterForDataPropertyAttribute(
-              Type dataType
-            , string propertyName
-            , Type converterType
-            , Type tableType
-        )
+        public ConverterForDataPropertyAttribute(Type dataType, string propertyName, Type converterType, Type tableType)
         {
             DataType = dataType;
             PropertyName = propertyName;

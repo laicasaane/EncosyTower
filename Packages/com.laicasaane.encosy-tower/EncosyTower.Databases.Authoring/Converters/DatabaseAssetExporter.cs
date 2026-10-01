@@ -2,9 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Cathei.BakingSheet;
 using EncosyTower.Core;
@@ -14,6 +16,7 @@ using EncosyTower.UnityExtensions;
 using Microsoft.Extensions.Logging;
 using UnityEditor;
 using UnityEngine;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace EncosyTower.Databases.Authoring
 {
@@ -52,13 +55,7 @@ namespace EncosyTower.Databases.Authoring
         {
             var savePath = MakeFolderPath(_savePath);
 
-            GenerateDatabaseAsset(
-                  context
-                , savePath
-                , _databaseName
-                , out var databaseAsset
-                , out var dataTableAssets
-            );
+            GenerateDatabaseAsset(context, savePath, _databaseName, out var databaseAsset, out var dataTableAssets);
 
             SaveAsset(databaseAsset, dataTableAssets);
             Result = databaseAsset;
@@ -70,10 +67,7 @@ namespace EncosyTower.Databases.Authoring
         {
             if (AssetDatabase.IsValidFolder(savePath) == false)
             {
-                savePath = AssetDatabase.CreateFolder(
-                      Path.GetDirectoryName(savePath)
-                    , Path.GetFileName(savePath)
-                );
+                savePath = AssetDatabase.CreateFolder(Path.GetDirectoryName(savePath), Path.GetFileName(savePath));
             }
 
             return savePath;
@@ -148,8 +142,8 @@ namespace EncosyTower.Databases.Authoring
                             continue;
                         }
 
-                        if (TryGetGeneratedSheetAttribute(context, sheet, out var sheetAttrib) == false
-                            || TryGetToDataArrayMethod(context, sheet, out var toDataArrayMethod) == false
+                        if (TryGetGeneratedSheetAttribute(context, pair.Key, sheet, out var sheetAttrib) == false
+                            || TryGetToDataArrayMethod(context, pair.Key, sheet, out var toDataArrayMethod) == false
                         )
                         {
                             continue;
@@ -182,11 +176,7 @@ namespace EncosyTower.Databases.Authoring
 
             if (context.Container is IPostExportDatabase postExport)
             {
-                postExport.PostExport(new DatabaseExportingContext(
-                      databaseAsset
-                    , context.Container
-                    , context.Logger
-                ));
+                postExport.PostExport(new DatabaseExportingContext(databaseAsset, context.Container, context.Logger));
             }
         }
 
@@ -207,16 +197,18 @@ namespace EncosyTower.Databases.Authoring
                     return true;
                 }
 
-                context.Logger.LogError("Cannot find {Attribute} on {Sheet}", typeof(GeneratedSheetAttribute), sheetType);
+                LogError_MissingGeneratedSheetAttribute(context.Logger, sheetProperty, sheetType);
                 return false;
             }
 
+            LogError_MissingSheetProperty(context.Logger, sheetProperty, context.Container.GetType());
             attribute = default;
             return false;
         }
 
         private static bool TryGetGeneratedSheetAttribute(
               SheetConvertingContext context
+            , string sheetProperty
             , ISheet sheet
             , out GeneratedSheetAttribute attribute
         )
@@ -226,7 +218,7 @@ namespace EncosyTower.Databases.Authoring
 
             if (attribute == null)
             {
-                context.Logger.LogError("Cannot find {Attribute} on {Sheet}", typeof(GeneratedSheetAttribute), sheetType);
+                LogError_MissingGeneratedSheetAttribute(context.Logger, sheetProperty, sheetType);
                 return false;
             }
 
@@ -235,6 +227,7 @@ namespace EncosyTower.Databases.Authoring
 
         private static bool TryGetToDataArrayMethod(
               SheetConvertingContext context
+            , string sheetProperty
             , ISheet sheet
             , out MethodInfo toDataArrayMethod
         )
@@ -249,14 +242,52 @@ namespace EncosyTower.Databases.Authoring
                 return true;
             }
 
-            context.Logger.LogError("Cannot find method {MethodName} in {SheetType}", METHOD_NAME, sheetType);
+            LogError_MissingToDataArrayMethod(context.Logger, sheetProperty, sheetType, METHOD_NAME);
             return false;
         }
 
-        private static void SaveAsset(
-              TDatabaseAsset databaseAsset
-            , List<DataTableAssetBase> dataTableAssets
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden]
+        private static void LogError_MissingGeneratedSheetAttribute(
+              ILogger logger
+            , string sheetProperty
+            , Type sheetType
         )
+            => logger.LogError(
+                "Sheet property {SheetProperty} with type {SheetType} is missing {AttributeType}. Regenerate the " +
+                "Database Authoring sheet before exporting."
+                , sheetProperty
+                , sheetType
+                , typeof(GeneratedSheetAttribute)
+            );
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden]
+        private static void LogError_MissingSheetProperty(ILogger logger, string sheetProperty, Type containerType)
+            => logger.LogError(
+                "Sheet property {SheetProperty} was not found on container type {ContainerType}. Regenerate the " +
+                "Database Authoring sheet before exporting."
+                , sheetProperty
+                , containerType
+            );
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden]
+        private static void LogError_MissingToDataArrayMethod(
+              ILogger logger
+            , string sheetProperty
+            , Type sheetType
+            , string methodName
+        )
+            => logger.LogError(
+                "Sheet property {SheetProperty} with type {SheetType} is missing method {MethodName}. Regenerate the " +
+                "Database Authoring sheet before exporting."
+                , sheetProperty
+                , sheetType
+                , methodName
+            );
+
+        private static void SaveAsset(TDatabaseAsset databaseAsset, List<DataTableAssetBase> dataTableAssets)
         {
             EditorUtility.SetDirty(databaseAsset);
 

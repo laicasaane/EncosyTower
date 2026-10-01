@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Cathei.BakingSheet.Internal;
+using Cathei.BakingSheet;
 using Cathei.BakingSheet.Raw;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
@@ -13,6 +13,7 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using GSheet = Google.Apis.Sheets.v4.Data.Sheet;
 
 namespace EncosyTower.Databases.Authoring
@@ -34,10 +35,14 @@ namespace EncosyTower.Databases.Authoring
               [NotNull] string spreadsheetId
             , [NotNull] string credential
             , [NotNull] string applicationName
-            , int emptyRowStreakThreshold = 5
+            , int emptyRowAllowance = 5
         )
-            : base(emptyRowStreakThreshold)
+            : base(emptyRowAllowance)
         {
+            DebuggingThrowHelper.ThrowIfNull(spreadsheetId);
+            DebuggingThrowHelper.ThrowIfNull(credential);
+            DebuggingThrowHelper.ThrowIfNull(applicationName);
+
             SpreadsheetId = spreadsheetId;
 
             _applicationName = applicationName;
@@ -51,10 +56,13 @@ namespace EncosyTower.Databases.Authoring
         public DatabaseGoogleSheetConverter(
               [NotNull] string spreadsheetId
             , [NotNull] BaseClientService.Initializer initializer
-            , int emptyRowStreakThreshold = 5
+            , int emptyRowAllowance = 5
         )
-            : base(emptyRowStreakThreshold)
+            : base(emptyRowAllowance)
         {
+            DebuggingThrowHelper.ThrowIfNull(spreadsheetId);
+            DebuggingThrowHelper.ThrowIfNull(initializer);
+
             SpreadsheetId = spreadsheetId;
 
             _initializer = initializer;
@@ -84,17 +92,16 @@ namespace EncosyTower.Databases.Authoring
 
         protected override IEnumerable<IRawSheetImporterPage> GetPages(string sheetName)
         {
-            return _pages.TryGetValue(sheetName, out var pages)
-                ? pages
-                : Enumerable.Empty<IRawSheetImporterPage>();
+            return _pages.TryGetValue(sheetName, out var pages) ? pages : Enumerable.Empty<IRawSheetImporterPage>();
         }
 
         protected override async Task<bool> LoadData()
         {
             using (var service = new SheetsService(_initializer ?? new BaseClientService.Initializer() {
-                HttpClientInitializer = _credential,
-                ApplicationName = _applicationName,
-            }))
+                    HttpClientInitializer = _credential,
+                    ApplicationName = _applicationName,
+                })
+            )
             {
                 var sheetReq = service.Spreadsheets.Get(SpreadsheetId);
                 sheetReq.Fields = "properties,sheets(properties,data.rowData.values.formattedValue)";
@@ -110,7 +117,7 @@ namespace EncosyTower.Databases.Authoring
                     continue;
                 }
 
-                var (sheetName, subName) = Config.ParseSheetName(gSheet.Properties.Title);
+                var (sheetName, subName) = SheetTokens.ParseSheetName(gSheet.Properties.Title);
 
                 if (_pages.TryGetValue(sheetName, out var sheetList) == false)
                 {
@@ -124,11 +131,31 @@ namespace EncosyTower.Databases.Authoring
             return true;
         }
 
+        protected override int GetColumnCount(
+              IRawSheetImporterPage page
+            , int row
+            , int headerColumnCount
+        )
+        {
+            if (page is not Page googlePage
+                || googlePage.Grid?.RowData == null
+                || row < 0
+                || row >= googlePage.Grid.RowData.Count
+            )
+            {
+                return headerColumnCount;
+            }
+
+            return googlePage.Grid.RowData[row]?.Values?.Count ?? headerColumnCount;
+        }
+
         private class Page : IRawSheetImporterPage
         {
             private readonly GridData _grid;
 
             public string SubName { get; }
+
+            public GridData Grid => _grid;
 
             public Page(GSheet gSheet, string subName)
             {

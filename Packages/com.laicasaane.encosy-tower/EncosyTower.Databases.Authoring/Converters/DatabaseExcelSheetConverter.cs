@@ -6,7 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Cathei.BakingSheet.Internal;
+using Cathei.BakingSheet;
 using Cathei.BakingSheet.Raw;
 using ExcelDataReader;
 
@@ -25,11 +25,11 @@ namespace EncosyTower.Databases.Authoring
               string loadPath
             , string extension = "xlsx"
             , IExtendedFileSystem fileSystem = null
-            , int emptyRowStreakThreshold = 5
+            , int emptyRowAllowance = 5
             , bool includeSubFolders = true
             , bool includeCommentedFiles = false
         )
-            : base(emptyRowStreakThreshold)
+            : base(emptyRowAllowance)
         {
             _loadPath = loadPath;
             _extension = extension;
@@ -89,7 +89,7 @@ namespace EncosyTower.Databases.Authoring
                         continue;
                     }
 
-                    var (sheetName, subName) = Config.ParseSheetName(tableName);
+                    var (sheetName, subName) = SheetTokens.ParseSheetName(tableName);
 
                     if (_pages.TryGetValue(sheetName, out var sheetList) == false)
                     {
@@ -106,9 +106,21 @@ namespace EncosyTower.Databases.Authoring
 
         protected override IEnumerable<IRawSheetImporterPage> GetPages(string sheetName)
         {
-            return _pages.TryGetValue(sheetName, out var page)
-                ? page
-                : Enumerable.Empty<IRawSheetImporterPage>();
+            return _pages.TryGetValue(sheetName, out var page) ? page : Enumerable.Empty<IRawSheetImporterPage>();
+        }
+
+        protected override int GetColumnCount(
+              IRawSheetImporterPage page
+            , int row
+            , int headerColumnCount
+        )
+        {
+            if (page is not Page excelPage || row < 0 || row >= excelPage.Table.Rows.Count)
+            {
+                return headerColumnCount;
+            }
+
+            return excelPage.Table.Columns.Count;
         }
 
         private class Page : IRawSheetImporterPage
@@ -117,6 +129,8 @@ namespace EncosyTower.Databases.Authoring
             private readonly IFormatProvider _formatProvider;
 
             public string SubName { get; }
+
+            public DataTable Table => _table;
 
             public Page(DataTable table, string subName, IFormatProvider formatProvider)
             {
