@@ -1,19 +1,13 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using EncosyTower.Collections;
 using EncosyTower.Common;
+using EncosyTower.Tasks;
 
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     public interface IPageFlow
     {
         bool IsInTransition { get; }
@@ -49,51 +43,63 @@ namespace EncosyTower.PageFlows
     {
     }
 
-    public interface ISinglePageStack<TPage> : IPageFlow, IPageStackStrategy<TPage>
+    public interface ISinglePageStack<TPage> : IPageFlow
+        , IPageStackStrategy<TPage>
+        , IHasCurrentPage<TPage>
         where TPage : class, IPage
     {
-        Option<TPage> CurrentPage { get; }
     }
 
-    public interface IMultiPageStack<TPage> : IPageFlow, IPageStackStrategy<TPage>
+    public interface IMultiPageStack<TPage> : IPageFlow
+        , IPageStackStrategy<TPage>
+        , IHasCurrentPage<TPage>
+        , IHasPageCollection<TPage>
         where TPage : class, IPage
     {
-        Option<TPage> CurrentPage { get; }
-
-        IReadOnlyCollection<TPage> Pages { get; }
-
-        UnityTaskBool RemoveAllAsync(PageContext context, CancellationToken token);
+        UnityTask<bool> RemoveAllAsync(PageContext context, CancellationToken token);
     }
 
-    public interface ISinglePageList<TPage> : IPageFlow, IPageListStrategy<TPage>
+    public interface ISinglePageList<TPage> : IPageFlow
+        , IPageListStrategy<TPage>
+        , IHasCurrentPage<TPage>
+        , IHasPages<TPage>
+        , IHasPageCollection<TPage>
         where TPage : class, IPage
     {
-        Option<TPage> CurrentPage { get; }
-
-        IReadOnlyList<TPage> Pages { get; }
-
-        UnityTaskBool HideAsync(PageContext context, CancellationToken token);
+        UnityTask<bool> HideAsync(PageContext context, CancellationToken token);
     }
 
-    public interface IMultiPageList<TPage> : IPageFlow, IPageListStrategy<TPage>
+    public interface IMultiPageList<TPage> : IPageFlow
+        , IPageListStrategy<TPage>
+        , IHasPages<TPage>
         where TPage : class, IPage
     {
-        IReadOnlyList<TPage> Pages { get; }
+        UnityTask<bool> HideAsync([NotNull] TPage page, PageContext context, CancellationToken token);
 
-        UnityTaskBool HideAsync([NotNull] TPage page, PageContext context, CancellationToken token);
-
-        UnityTaskBool HideAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        UnityTask<bool> HideAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         );
 
-        UnityTaskBool HideAsync(int index, PageContext context, CancellationToken token);
+        UnityTask<bool> HideAsync(int index, PageContext context, CancellationToken token);
+    }
+
+    public interface IHasCurrentPage<TPage>
+        where TPage : class, IPage
+    {
+        Option<TPage> CurrentPage { get; }
+    }
+
+    public interface IHasPageCollection<TPage>
+        where TPage : class, IPage
+    {
+        IReadOnlyCollection<TPage> PageCollection { get; }
+    }
+
+    public interface IHasPages<TPage>
+        where TPage : class, IPage
+    {
+        ListFast<TPage>.ReadOnly Pages { get; }
     }
 }
-
-#endif

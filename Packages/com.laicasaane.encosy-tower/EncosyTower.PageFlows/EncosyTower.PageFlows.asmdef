@@ -1,0 +1,22 @@
+{
+    "name": "EncosyTower.PageFlows",
+    "rootNamespace": "EncosyTower.PageFlows",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.PubSub",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bcl.Runtime.dll",
+        "Bcl.RuntimeUnsafe.dll",
+        "EncosyTower.LowLevel.Unsafe.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

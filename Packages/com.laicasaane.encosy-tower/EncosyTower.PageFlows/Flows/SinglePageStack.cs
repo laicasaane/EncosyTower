@@ -1,20 +1,15 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Logging;
+using EncosyTower.Tasks;
+
+using ETDBG = EncosyTower.Debugging;
 
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     public class SinglePageStack<TPage> : ISinglePageStack<TPage>, IDisposable
         where TPage : class, IPage
     {
@@ -24,6 +19,8 @@ namespace EncosyTower.PageFlows
 
         public SinglePageStack([NotNull] IPageFlowContext context)
         {
+            ETDBG.ThrowHelper.ThrowIfNull(context);
+
             _logger = context.Logger ?? DevLogger.Default;
             _flow = new PageFlow(
                   context.TaskArrayPool
@@ -45,7 +42,7 @@ namespace EncosyTower.PageFlows
             _pages.Clear();
         }
 
-        public async UnityTaskBool PopAsync(PageContext context, CancellationToken token)
+        public async UnityTask<bool> PopAsync(PageContext context, CancellationToken token)
         {
             if (_pages.Count < 1)
             {
@@ -86,8 +83,10 @@ namespace EncosyTower.PageFlows
             return result;
         }
 
-        public async UnityTaskBool PushAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> PushAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
             if (token.IsCancellationRequested)
             {
                 return default;
@@ -131,16 +130,14 @@ namespace EncosyTower.PageFlows
             return result;
         }
 
-        public async UnityTaskBool PushAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        public async UnityTask<bool> PushAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(factory);
+
             if (token.IsCancellationRequested)
             {
                 return default;
@@ -151,5 +148,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif

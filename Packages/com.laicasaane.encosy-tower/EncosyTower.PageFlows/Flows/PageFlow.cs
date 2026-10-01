@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 #if ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO_DEV
 #define __PUBSUB_INCLUDE_CALLER_INFO__
@@ -21,21 +19,13 @@ using EncosyTower.Logging;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 
+using ETDBG = EncosyTower.Debugging;
+
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskUntyped = Cysharp.Threading.Tasks.UniTask;
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTaskUntyped = UnityEngine.Awaitable;
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public sealed class PageFlow
     {
-        private readonly ArrayPool<UnityTaskUntyped> _taskArrayPool;
+        private readonly ArrayPool<UnityTask> _taskArrayPool;
         private readonly MessageSubscriber _subscriber;
         private readonly MessagePublisher _publisher;
         private readonly IPage _defaultPage;
@@ -45,7 +35,7 @@ namespace EncosyTower.PageFlows
         private readonly bool _warnNoSubscriber;
 
         public PageFlow(
-              [NotNull] ArrayPool<UnityTaskUntyped> taskArrayPool
+              [NotNull] ArrayPool<UnityTask> taskArrayPool
             , MessageSubscriber subscriber
             , MessagePublisher publisher
             , PageFlowScope flowScope
@@ -54,21 +44,29 @@ namespace EncosyTower.PageFlows
             , [NotNull] ILogger logger
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(taskArrayPool);
+            ETDBG.ThrowHelper.ThrowIfNull(logger);
+
             _taskArrayPool = taskArrayPool;
             _subscriber = subscriber;
             _publisher = publisher;
-            _defaultPage = PageFlows.DefaultPage.Default;
+            _defaultPage = DefaultPage.Default;
             _logger = logger;
             _flowScope = flowScope;
             _flowScopeCollectionApplier = flowScopeCollectionApplier;
             _warnNoSubscriber = warnNoSubscriber;
         }
 
-        public ArrayPool<UnityTaskUntyped> TaskArrayPool { get; }
+        public ArrayPool<UnityTask> TaskArrayPool { get; }
 
         public ILogger Logger => _logger;
 
-        public async UnityTaskBool AttachAsync(IPageFlow flow, IPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> AttachAsync(
+              IPageFlow flow
+            , IPage page
+            , PageContext context
+            , CancellationToken token
+        )
         {
             if (token.IsCancellationRequested)
             {
@@ -77,8 +75,10 @@ namespace EncosyTower.PageFlows
 
             InitializeIPageNeedsInterfaces(page, this);
 
-            await _publisher.Scope(_flowScope).PublishAsync(
-                  new AttachPageMessage(flow, page ?? _defaultPage, token)
+            var publisher = _publisher.Scope(_flowScope);
+            await AttachPageMessage.Async.Publish(
+                  in publisher
+                , new AttachPageMessage(flow, page ?? _defaultPage, token)
                 , GetPublishingContext(token)
             );
 
@@ -96,7 +96,12 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool DetachAsync(IPageFlow flow, IPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> DetachAsync(
+              IPageFlow flow
+            , IPage page
+            , PageContext context
+            , CancellationToken token
+        )
         {
             if (token.IsCancellationRequested)
             {
@@ -113,8 +118,10 @@ namespace EncosyTower.PageFlows
                 }
             }
 
-            await _publisher.Scope(_flowScope).PublishAsync(
-                  new DetachPageMessage(flow, page ?? _defaultPage, token)
+            var publisher = _publisher.Scope(_flowScope);
+            await DetachPageMessage.Async.Publish(
+                  in publisher
+                , new DetachPageMessage(flow, page ?? _defaultPage, token)
                 , GetPublishingContext(token)
             );
 
@@ -123,12 +130,14 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool PublishDetachAsync(IPageFlow flow, IPage page, CancellationToken token)
+        public async UnityTask<bool> PublishDetachAsync(IPageFlow flow, IPage page, CancellationToken token)
         {
             if (token.IsCancellationRequested == false)
             {
-                await _publisher.Scope(_flowScope).PublishAsync(
-                      new DetachPageMessage(flow, page ?? _defaultPage, token)
+                var publisher = _publisher.Scope(_flowScope);
+                await DetachPageMessage.Async.Publish(
+                      in publisher
+                    , new DetachPageMessage(flow, page ?? _defaultPage, token)
                     , GetPublishingContext(token)
                 );
             }
@@ -140,7 +149,7 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool TransitionAsync(
+        public async UnityTask<bool> TransitionAsync(
               PageTransition transition
             , IPage pageToHide
             , IPage pageToShow
@@ -152,14 +161,16 @@ namespace EncosyTower.PageFlows
             var parallelTasks = taskArrayPool.Rent(4);
             var sequentialTasks = taskArrayPool.Rent(2);
             var defaultPage = _defaultPage;
+            var publisher = _publisher.Scope(_flowScope);
             var result = true;
 
             try
             {
                 if (token.IsCancellationRequested == false)
                 {
-                    await _publisher.Scope(_flowScope).PublishAsync(
-                          new BeginTransitionMessage(pageToHide ?? defaultPage, pageToShow ?? defaultPage, token)
+                    await BeginTransitionMessage.Async.Publish(
+                          in publisher
+                        , new BeginTransitionMessage(pageToHide ?? defaultPage, pageToShow ?? defaultPage, token)
                         , GetPublishingContext(token)
                     );
                 }
@@ -255,8 +266,9 @@ namespace EncosyTower.PageFlows
                         , context.HideOptions
                     );
 
-                    await _publisher.Scope(_flowScope).PublishAsync(
-                          new EndTransitionMessage(pageToHide, pageToShow, token)
+                    await EndTransitionMessage.Async.Publish(
+                          in publisher
+                        , new EndTransitionMessage(pageToHide, pageToShow, token)
                         , GetPublishingContext(token)
                     );
                 }
@@ -319,11 +331,7 @@ namespace EncosyTower.PageFlows
             }
         }
 
-        private static PageContext ProcessContext(
-              IPage pageToHide
-            , IPage pageToShow
-            , PageContext context
-        )
+        private static PageContext ProcessContext(IPage pageToHide, IPage pageToShow, PageContext context)
         {
             context = context with {
                 ShowOptions = TrySetZeroDuration(
@@ -401,7 +409,7 @@ namespace EncosyTower.PageFlows
         }
 
         private static async UnityTask BeginTransitionAsync(
-              UnityTaskUntyped[] tasks
+              UnityTask[] tasks
             , IPage pageToHide
             , IPage pageToShow
             , IPageTransition pageToHideTransition
@@ -413,23 +421,21 @@ namespace EncosyTower.PageFlows
             PageTransitionOptions showOptions = context.ShowOptions;
             PageTransitionOptions hideOptions = context.HideOptions;
 
-            tasks[0] = (pageToShow as IPageOnBeforeShowAsync)
-                ?.OnBeforeShowAsync(context, token)
-                ?? UnityTasks.GetCompleted();
+            tasks[0] = (pageToShow as IPageOnBeforeShowAsync)?.OnBeforeShowAsync(context, token)
+                ?? UnityTask.CompletedTask;
 
             tasks[1] = pageToShowTransition
                 ?.OnBeforeTransitionAsync(PageTransition.Show, showOptions, hideOptions, token)
-                ?? UnityTasks.GetCompleted();
+                ?? UnityTask.CompletedTask;
 
-            tasks[2] = (pageToHide as IPageOnBeforeHideAsync)
-                ?.OnBeforeHideAsync(context, token)
-                ?? UnityTasks.GetCompleted();
+            tasks[2] = (pageToHide as IPageOnBeforeHideAsync)?.OnBeforeHideAsync(context, token)
+                ?? UnityTask.CompletedTask;
 
             tasks[3] = pageToHideTransition
                 ?.OnBeforeTransitionAsync(PageTransition.Hide, showOptions, hideOptions, token)
-                ?? UnityTasks.GetCompleted();
+                ?? UnityTask.CompletedTask;
 
-            await UnityTasks.WhenAll(tasks);
+            await UnityTask.WhenAll(tasks);
 
             if (token.IsCancellationRequested)
             {
@@ -441,7 +447,7 @@ namespace EncosyTower.PageFlows
         }
 
         private static async UnityTask ParallelTransitionAsync(
-              UnityTaskUntyped[] tasks
+              UnityTask[] tasks
             , IPage pageToHide
             , IPage pageToShow
             , IPageTransition pageToHideTransition
@@ -458,7 +464,7 @@ namespace EncosyTower.PageFlows
             {
                 tasks[0] = withShow && pageToShow is IPageOnShowAsync pageShow
                     ? pageShow.OnShowAsync(context, token)
-                    : UnityTasks.GetCompleted();
+                    : UnityTask.CompletedTask;
 
                 if (pageToShowTransition is not null)
                 {
@@ -466,18 +472,18 @@ namespace EncosyTower.PageFlows
 
                     tasks[1] = withShow
                         ? pageToShowTransition.OnShowAsync(showOptions, token)
-                        : UnityTasks.GetCompleted();
+                        : UnityTask.CompletedTask;
                 }
                 else
                 {
-                    tasks[1] = UnityTasks.GetCompleted();
+                    tasks[1] = UnityTask.CompletedTask;
                 }
             }
 
             {
                 tasks[2] = withHide && pageToHide is IPageOnHideAsync pageHide
                     ? pageHide.OnHideAsync(context, token)
-                    : UnityTasks.GetCompleted();
+                    : UnityTask.CompletedTask;
 
                 if (pageToHideTransition is not null)
                 {
@@ -485,22 +491,22 @@ namespace EncosyTower.PageFlows
 
                     tasks[3] = withHide
                         ? pageToHideTransition.OnHideAsync(hideOptions, token)
-                        : UnityTasks.GetCompleted();
+                        : UnityTask.CompletedTask;
                 }
                 else
                 {
-                    tasks[3] = UnityTasks.GetCompleted();
+                    tasks[3] = UnityTask.CompletedTask;
                 }
             }
 
             if (withShow || withHide)
             {
-                await UnityTasks.WhenAll(tasks);
+                await UnityTask.WhenAll(tasks);
             }
         }
 
         private static async UnityTask SequentialTransitionAsync(
-              UnityTaskUntyped[] tasks
+              UnityTask[] tasks
             , IPage pageToHide
             , IPage pageToShow
             , IPageTransition pageToHideTransition
@@ -517,7 +523,7 @@ namespace EncosyTower.PageFlows
             {
                 tasks[0] = withShow && pageToShow is IPageOnShowAsync pageShow
                     ? pageShow.OnShowAsync(context, token)
-                    : UnityTasks.GetCompleted();
+                    : UnityTask.CompletedTask;
 
                 if (pageToShowTransition is not null)
                 {
@@ -525,20 +531,20 @@ namespace EncosyTower.PageFlows
 
                     tasks[1] = withShow
                         ? pageToShowTransition.OnShowAsync(showOptions, token)
-                        : UnityTasks.GetCompleted();
+                        : UnityTask.CompletedTask;
                 }
                 else
                 {
-                    tasks[1] = UnityTasks.GetCompleted();
+                    tasks[1] = UnityTask.CompletedTask;
                 }
 
-                await UnityTasks.WhenAll(tasks);
+                await UnityTask.WhenAll(tasks);
             }
 
             {
                 tasks[0] = withHide && pageToHide is IPageOnHideAsync pageHide
                     ? pageHide.OnHideAsync(context, token)
-                    : UnityTasks.GetCompleted();
+                    : UnityTask.CompletedTask;
 
                 if (pageToHideTransition is not null)
                 {
@@ -546,14 +552,14 @@ namespace EncosyTower.PageFlows
 
                     tasks[1] = withHide
                         ? pageToHideTransition.OnHideAsync(hideOptions, token)
-                        : UnityTasks.GetCompleted();
+                        : UnityTask.CompletedTask;
                 }
                 else
                 {
-                    tasks[1] = UnityTasks.GetCompleted();
+                    tasks[1] = UnityTask.CompletedTask;
                 }
 
-                await UnityTasks.WhenAll(tasks);
+                await UnityTask.WhenAll(tasks);
             }
         }
 
@@ -626,5 +632,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif

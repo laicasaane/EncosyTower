@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,14 +7,10 @@ using EncosyTower.Common;
 using EncosyTower.Logging;
 using EncosyTower.Tasks;
 
+using ETDBG = EncosyTower.Debugging;
+
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     public sealed class MultiPageStack<TPage> : IMultiPageStack<TPage>, IDisposable
         where TPage : class, IPage
     {
@@ -26,6 +20,8 @@ namespace EncosyTower.PageFlows
 
         public MultiPageStack([NotNull] IPageFlowContext context)
         {
+            ETDBG.ThrowHelper.ThrowIfNull(context);
+
             _logger = context.Logger ?? DevLogger.Default;
             _flow = new PageFlow(
                   context.TaskArrayPool
@@ -40,7 +36,7 @@ namespace EncosyTower.PageFlows
 
         public Option<TPage> CurrentPage => Option.SomeIf(_pages.TryPeek(out var page), page);
 
-        public IReadOnlyCollection<TPage> Pages => _pages;
+        public IReadOnlyCollection<TPage> PageCollection => _pages;
 
         public bool IsInTransition { get; private set; }
 
@@ -49,7 +45,7 @@ namespace EncosyTower.PageFlows
             _pages.Clear();
         }
 
-        public async UnityTaskBool PopAsync(PageContext context, CancellationToken token)
+        public async UnityTask<bool> PopAsync(PageContext context, CancellationToken token)
         {
             if (_pages.Count < 1)
             {
@@ -90,8 +86,10 @@ namespace EncosyTower.PageFlows
             return result;
         }
 
-        public async UnityTaskBool PushAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> PushAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
             if (token.IsCancellationRequested)
             {
                 return default;
@@ -125,16 +123,14 @@ namespace EncosyTower.PageFlows
             return result;
         }
 
-        public async UnityTaskBool PushAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        public async UnityTask<bool> PushAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(factory);
+
             if (token.IsCancellationRequested)
             {
                 return false;
@@ -144,7 +140,7 @@ namespace EncosyTower.PageFlows
             return await PushAsync(page, context, token);
         }
 
-        public async UnityTaskBool RemoveAllAsync(PageContext context, CancellationToken token)
+        public async UnityTask<bool> RemoveAllAsync(PageContext context, CancellationToken token)
         {
             var pages = _pages;
             var count = pages.Count;
@@ -175,19 +171,19 @@ namespace EncosyTower.PageFlows
                     flowTasks[index] = flow.PublishDetachAsync(self, page, token).AsUnityTask();
                     pageTasks[index] = (page as IPageOnDetachFromFlowAsync)
                         ?.OnDetachFromFlowAsync(self, context, token).AsUnityTask()
-                        ?? UnityTasks.GetCompleted();
+                        ?? UnityTask.CompletedTask;
 
                     index += 1;
                 }
 
                 if (token.IsCancellationRequested == false)
                 {
-                    await UnityTasks.WhenAll(flowTasks);
+                    await UnityTask.WhenAll(flowTasks);
                 }
 
                 if (token.IsCancellationRequested == false)
                 {
-                    await UnityTasks.WhenAll(pageTasks);
+                    await UnityTask.WhenAll(pageTasks);
                 }
             }
             catch (Exception ex)
@@ -211,5 +207,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif

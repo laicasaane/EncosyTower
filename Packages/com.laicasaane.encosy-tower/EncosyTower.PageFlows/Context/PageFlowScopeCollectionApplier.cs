@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
@@ -78,5 +76,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif

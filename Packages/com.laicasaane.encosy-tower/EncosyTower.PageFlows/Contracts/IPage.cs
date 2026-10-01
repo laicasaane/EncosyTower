@@ -1,22 +1,15 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.PubSub;
+using EncosyTower.Tasks;
 
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     public interface IPage { }
 
     public interface IPageOnCreateAsync : IPage
     {
-        UnityTaskBool OnCreateAsync(PageContext context, CancellationToken token);
+        UnityTask<bool> OnCreateAsync(PageContext context, CancellationToken token);
     }
 
     public interface IPageOnReturnToPool : IPage
@@ -26,12 +19,12 @@ namespace EncosyTower.PageFlows
 
     public interface IPageOnAttachToFlowAsync : IPage
     {
-        UnityTaskBool OnAttachToFlowAsync(IPageFlow flow, PageContext context, CancellationToken token);
+        UnityTask<bool> OnAttachToFlowAsync(IPageFlow flow, PageContext context, CancellationToken token);
     }
 
     public interface IPageOnDetachFromFlowAsync : IPage
     {
-        UnityTaskBool OnDetachFromFlowAsync(IPageFlow flow, PageContext context, CancellationToken token);
+        UnityTask<bool> OnDetachFromFlowAsync(IPageFlow flow, PageContext context, CancellationToken token);
     }
 
     public interface IPageHasOptions : IPage
@@ -65,5 +58,3 @@ namespace EncosyTower.PageFlows
         Option<TCollection> FlowScopeCollection { set; }
     }
 }
-
-#endif

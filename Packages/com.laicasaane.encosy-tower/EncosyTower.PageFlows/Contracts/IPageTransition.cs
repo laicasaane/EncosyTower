@@ -1,15 +1,8 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Threading;
+using EncosyTower.Tasks;
 
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public interface IPageTransition
     {
         bool ForceRunHide { get; }
@@ -74,5 +67,3 @@ namespace EncosyTower.PageFlows
         UnityTask OnHideAsync(PageContext context, CancellationToken token);
     }
 }
-
-#endif

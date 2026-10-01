@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 #if ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO_DEV
 #define __PUBSUB_INCLUDE_CALLER_INFO_DEV__
@@ -43,5 +41,3 @@ namespace EncosyTower.PageFlows
         Always,
     }
 }
-
-#endif

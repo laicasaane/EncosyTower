@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -7,27 +5,22 @@ using System.Threading;
 using EncosyTower.Logging;
 using EncosyTower.Tasks;
 
+using ETDBG = EncosyTower.Debugging;
+
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     internal static partial class Validator
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetLogCurrentlyInTransition(IPageFlow flow)
-            => $"{flow.GetType()} is currently in transition.";
-
-        public static async UnityTaskBool ValidateTransitionAsync(
+        public static async UnityTask<bool> ValidateTransitionAsync(
               [NotNull] IPageFlow flow
             , [NotNull] ILogger logger
             , PageAsyncOperation asyncOperation
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(flow);
+            ETDBG.ThrowHelper.ThrowIfNull(logger);
+
             if (flow.IsInTransition == false)
             {
                 return true;
@@ -37,7 +30,7 @@ namespace EncosyTower.PageFlows
             {
                 case PageAsyncOperation.Sequential:
                 {
-                    await UnityTasks.WaitWhile(flow, static state => state.IsInTransition, token);
+                    await UnityTask.WaitWhile(flow, static state => state.IsInTransition, token);
                     return !token.IsCancellationRequested;
                 }
 
@@ -58,7 +51,9 @@ namespace EncosyTower.PageFlows
                 }
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string GetLogCurrentlyInTransition(IPageFlow flow)
+            => $"{flow.GetType()} is currently in transition.";
     }
 }
-
-#endif

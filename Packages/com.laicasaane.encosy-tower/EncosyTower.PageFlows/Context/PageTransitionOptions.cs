@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using EncosyTower.EnumExtensions;
 
@@ -24,5 +22,3 @@ namespace EncosyTower.PageFlows
     [EnumExtensionsFor(typeof(PageTransitionOptions))]
     public static partial class PageTransitionOptionsExtensions { }
 }
-
-#endif

@@ -1,30 +1,27 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Logging;
 using EncosyTower.Tasks;
 
+using ETDBG = EncosyTower.Debugging;
+
 namespace EncosyTower.PageFlows
 {
-#if UNITASK
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     public class MultiPageList<TPage> : IMultiPageList<TPage>, IDisposable
         where TPage : class, IPage
     {
-        private readonly FasterList<TPage> _pages = new();
+        private readonly List<TPage> _pages = new();
         private readonly ILogger _logger;
         private readonly PageFlow _flow;
 
         public MultiPageList([NotNull] IPageFlowContext context)
         {
+            ETDBG.ThrowHelper.ThrowIfNull(context);
+
             _logger = context.Logger ?? DevLogger.Default;
             _flow = new PageFlow(
                   context.TaskArrayPool
@@ -37,7 +34,9 @@ namespace EncosyTower.PageFlows
             );
         }
 
-        public IReadOnlyList<TPage> Pages => _pages;
+        public ListFast<TPage>.ReadOnly Pages => _pages;
+
+        public IReadOnlyCollection<TPage> PageCollection => _pages;
 
         public bool IsInTransition { get; private set; }
 
@@ -47,10 +46,15 @@ namespace EncosyTower.PageFlows
         }
 
         public int IndexOf([NotNull] TPage page)
-            => _pages.IndexOf(page);
-
-        public async UnityTaskBool AddAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+            return _pages.IndexOf(page);
+        }
+
+        public async UnityTask<bool> AddAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
             var result = await _flow.AttachAsync(this, page, context, token);
 
             if (token.IsCancellationRequested || result == false)
@@ -62,16 +66,14 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool AddAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        public async UnityTask<bool> AddAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(factory);
+
             if (token.IsCancellationRequested)
             {
                 return false;
@@ -81,9 +83,11 @@ namespace EncosyTower.PageFlows
             return await AddAsync(page, context, token);
         }
 
-        public async UnityTaskBool HideAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> HideAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
-            var pages = _pages;
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
+            var pages = _pages.AsListFast();
             var index = pages.IndexOf(page);
 
             if (index < 0)
@@ -95,16 +99,14 @@ namespace EncosyTower.PageFlows
             return await HideAsync(index, context, token);
         }
 
-        public async UnityTaskBool HideAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        public async UnityTask<bool> HideAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(factory);
+
             if (token.IsCancellationRequested)
             {
                 return false;
@@ -114,9 +116,9 @@ namespace EncosyTower.PageFlows
             return await HideAsync(page, context, token);
         }
 
-        public async UnityTaskBool HideAsync(int index, PageContext context, CancellationToken token)
+        public async UnityTask<bool> HideAsync(int index, PageContext context, CancellationToken token)
         {
-            var pages = _pages;
+            var pages = _pages.AsListFast();
             var count = pages.Count;
 
             if ((uint)index >= (uint)count)
@@ -151,9 +153,9 @@ namespace EncosyTower.PageFlows
             return result;
         }
 
-        public async UnityTaskBool RemoveAllAsync(PageContext context, CancellationToken token)
+        public async UnityTask<bool> RemoveAllAsync(PageContext context, CancellationToken token)
         {
-            var pages = _pages;
+            var pages = _pages.AsListFast();
             var count = pages.Count;
 
             if (count < 1)
@@ -182,19 +184,19 @@ namespace EncosyTower.PageFlows
                     flowTasks[index] = flow.PublishDetachAsync(self, page, token).AsUnityTask();
                     pageTasks[index] = (page as IPageOnDetachFromFlowAsync)
                         ?.OnDetachFromFlowAsync(self, context, token).AsUnityTask()
-                        ?? UnityTasks.GetCompleted();
+                        ?? UnityTask.CompletedTask;
 
                     index += 1;
                 }
 
                 if (token.IsCancellationRequested == false)
                 {
-                    await UnityTasks.WhenAll(flowTasks);
+                    await UnityTask.WhenAll(flowTasks);
                 }
 
                 if (token.IsCancellationRequested == false)
                 {
-                    await UnityTasks.WhenAll(pageTasks);
+                    await UnityTask.WhenAll(pageTasks);
                 }
             }
             catch (Exception ex)
@@ -217,8 +219,10 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool RemoveAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> RemoveAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
             var index = _pages.IndexOf(page);
 
             if (index < 0)
@@ -238,7 +242,7 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool RemoveAsync(int index, PageContext context, CancellationToken token)
+        public async UnityTask<bool> RemoveAsync(int index, PageContext context, CancellationToken token)
         {
             if ((uint)index >= (uint)_pages.Count)
             {
@@ -259,9 +263,11 @@ namespace EncosyTower.PageFlows
             return true;
         }
 
-        public async UnityTaskBool ShowAsync([NotNull] TPage page, PageContext context, CancellationToken token)
+        public async UnityTask<bool> ShowAsync([NotNull] TPage page, PageContext context, CancellationToken token)
         {
-            var pages = _pages;
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(page);
+
+            var pages = _pages.AsListFast();
             var count = pages.Count;
             var index = pages.IndexOf(page);
 
@@ -280,16 +286,14 @@ namespace EncosyTower.PageFlows
             return await ShowAsync(index, context, token);
         }
 
-        public async UnityTaskBool ShowAsync(
-#if UNITASK
-              [NotNull] Func<CancellationToken, Cysharp.Threading.Tasks.UniTask<TPage>> factory
-#else
-              [NotNull] Func<CancellationToken, UnityEngine.Awaitable<TPage>> factory
-#endif
+        public async UnityTask<bool> ShowAsync(
+              [NotNull] Func<CancellationToken, UnityTask<TPage>> factory
             , PageContext context
             , CancellationToken token
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(factory);
+
             if (token.IsCancellationRequested)
             {
                 return false;
@@ -299,9 +303,9 @@ namespace EncosyTower.PageFlows
             return await ShowAsync(page, context, token);
         }
 
-        public async UnityTaskBool ShowAsync(int index, PageContext context, CancellationToken token)
+        public async UnityTask<bool> ShowAsync(int index, PageContext context, CancellationToken token)
         {
-            var pages = _pages;
+            var pages = _pages.AsListFast();
             var count = pages.Count;
 
             if ((uint)index >= (uint)count)
@@ -332,5 +336,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif

@@ -1,12 +1,12 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.PageFlows
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     public struct PageOptions
     {
         public ShowOperationOptions showOptions;
@@ -35,6 +35,7 @@ namespace EncosyTower.PageFlows
         }
 
         [Serializable]
+        [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
         public struct ShowOperationOptions
         {
             public Options showThisPage;
@@ -42,6 +43,7 @@ namespace EncosyTower.PageFlows
         }
 
         [Serializable]
+        [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
         public struct HideOperationOptions
         {
             public Options hideThisPage;
@@ -49,6 +51,7 @@ namespace EncosyTower.PageFlows
         }
 
         [Serializable]
+        [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
         public struct Options
         {
             public bool forceUse;
@@ -64,5 +67,3 @@ namespace EncosyTower.PageFlows
         }
     }
 }
-
-#endif
