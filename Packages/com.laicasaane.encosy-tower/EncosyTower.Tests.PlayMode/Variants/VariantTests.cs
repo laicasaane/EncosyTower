@@ -9,6 +9,31 @@ namespace EncosyTower.Tests.Variants
 {
     public class VariantTests
     {
+        [Test]
+        public void StringValues_PreserveNullEmptyNonemptyAndRejectWrongType()
+        {
+            var nullValue = new Variant((string)null);
+            Assert.IsTrue(nullValue.TryGetValue(out string nullResult));
+            Assert.IsNull(nullResult);
+            var destination = "preserved";
+            Assert.IsTrue(nullValue.TrySetValueTo(ref destination));
+            Assert.IsNull(destination);
+
+            var emptyValue = new Variant(string.Empty);
+            Assert.IsTrue(emptyValue.TryGetValue(out string emptyResult));
+            Assert.AreEqual(string.Empty, emptyResult);
+
+            var textValue = new Variant("message");
+            Assert.IsTrue(textValue.TryGetValue(out string textResult));
+            Assert.AreEqual("message", textResult);
+
+            var wrongValue = new Variant(1);
+            destination = "preserved";
+            Assert.IsFalse(wrongValue.TryGetValue(out string _));
+            Assert.IsFalse(wrongValue.TrySetValueTo(ref destination));
+            Assert.AreEqual("preserved", destination);
+        }
+
         [Test, Performance]
         public void Variant_Performance()
         {

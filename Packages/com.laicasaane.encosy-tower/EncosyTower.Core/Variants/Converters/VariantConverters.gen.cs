@@ -53,7 +53,7 @@ namespace EncosyTower.Variants.Converters
         public bool GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out bool result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -65,20 +65,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Bool.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -97,7 +83,7 @@ namespace EncosyTower.Variants.Converters
         public byte GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out byte result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -109,20 +95,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Byte.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -141,7 +113,7 @@ namespace EncosyTower.Variants.Converters
         public sbyte GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out sbyte result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -153,20 +125,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.SByte.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -185,7 +143,7 @@ namespace EncosyTower.Variants.Converters
         public char GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out char result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -197,20 +155,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Char.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -229,7 +173,7 @@ namespace EncosyTower.Variants.Converters
         public double GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out double result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -241,20 +185,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Double.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -273,7 +203,7 @@ namespace EncosyTower.Variants.Converters
         public float GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out float result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -285,20 +215,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Float.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -317,7 +233,7 @@ namespace EncosyTower.Variants.Converters
         public int GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out int result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -329,20 +245,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Int.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -361,7 +263,7 @@ namespace EncosyTower.Variants.Converters
         public uint GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out uint result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -373,20 +275,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.UInt.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -405,7 +293,7 @@ namespace EncosyTower.Variants.Converters
         public long GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out long result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -417,20 +305,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Long.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -449,7 +323,7 @@ namespace EncosyTower.Variants.Converters
         public ulong GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out ulong result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -461,20 +335,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.ULong.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -493,7 +353,7 @@ namespace EncosyTower.Variants.Converters
         public short GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out short result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -505,20 +365,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.Short.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 
@@ -537,7 +383,7 @@ namespace EncosyTower.Variants.Converters
         public ushort GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out ushort result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -549,20 +395,6 @@ namespace EncosyTower.Variants.Converters
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ToString(in Variant variant) => variant.UShort.ToString();
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
 
     }
 

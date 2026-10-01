@@ -1,11 +1,5 @@
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Types;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Variants.Converters
 {
@@ -26,7 +20,7 @@ namespace EncosyTower.Variants.Converters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetValue(in Variant variant)
         {
-            ThrowIfInvalidCast(false);
+            ThrowHelper.ThrowIfUndefinedInvalidCast<T>(false);
             return default;
         }
 
@@ -49,18 +43,5 @@ namespace EncosyTower.Variants.Converters
             return variant.ToString();
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new($"Cannot get value of {typeof(T)} from the input variant.");
-        }
     }
 }

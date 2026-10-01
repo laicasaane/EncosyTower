@@ -1,10 +1,4 @@
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Variants.Converters
 {
@@ -25,7 +19,7 @@ namespace EncosyTower.Variants.Converters
         public object GetValue(in Variant variant)
         {
             var validCast = variant.TryGetValue(out object result);
-            ThrowIfInvalidCast(validCast);
+            ThrowHelper.ThrowIfObjectInvalidCast(validCast);
             return result;
         }
 
@@ -41,18 +35,5 @@ namespace EncosyTower.Variants.Converters
         public string ToString(in Variant variant)
             => variant.Object?.ToString() ?? string.Empty;
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalidCast([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidCastException CreateException()
-                => new("Cannot get value of object from the input variant.");
-        }
     }
 }

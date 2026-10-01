@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using EncosyTower.Types;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Variants.Converters
 {
     public static partial class VariantConverter
     {
+        private static readonly object s_cacheResetLock = new();
+        private static readonly List<Action> s_cacheResetCallbacks = new();
+
         private static ConcurrentDictionary<TypeId, IVariantConverter> s_converters;
 
         static VariantConverter()
@@ -25,18 +26,39 @@ namespace EncosyTower.Variants.Converters
 #endif
         private static void Init()
         {
-            s_converters = new();
+            lock (s_cacheResetLock)
+            {
+                var count = s_cacheResetCallbacks.Count;
 
-            TryRegisterGeneratedConverters();
-            TryRegister(VariantConverterString.Default);
-            TryRegister(VariantConverterObject.Default);
+                for (var i = 0; i < count; i++)
+                {
+                    s_cacheResetCallbacks[i]();
+                }
+
+                s_converters = new();
+
+                TryRegisterGeneratedConverters();
+                TryRegister(VariantConverterString.Default);
+                TryRegister(VariantConverterObject.Default);
+            }
         }
 
         static partial void TryRegisterGeneratedConverters();
 
+        internal static void RegisterCacheReset(Action reset)
+        {
+            DebuggingThrowHelper.ThrowIfNull(reset);
+
+            lock (s_cacheResetLock)
+            {
+                s_cacheResetCallbacks.Add(reset);
+            }
+        }
+
         public static bool TryRegister<T>([NotNull] IVariantConverter<T> converter)
         {
-            ThrowIfSizeInvalid<T>(IsSizeValid<T>());
+            DebuggingThrowHelper.ThrowIfNull(converter);
+            ThrowHelper.ThrowIfSizeInvalid<T>(IsSizeValid<T>());
 
             return s_converters.TryAdd((TypeId)Type<T>.Id, converter);
         }
@@ -118,41 +140,5 @@ namespace EncosyTower.Variants.Converters
             return sizeOfT <= VariantData.BYTE_COUNT;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfSizeInvalid<T>([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            return;
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static NotSupportedException CreateException()
-                => new(
-                    $"The size of {typeof(T)} is {UnsafeUtility.SizeOf(typeof(T))} bytes, " +
-                    $"while a Variant can only store {VariantData.BYTE_COUNT} bytes of custom data. " +
-                    $"To enable the automatic conversion between {typeof(T)} and {typeof(Variant)}, " +
-                    $"please {GetDefineSymbolMessage(UnsafeUtility.SizeOf(typeof(T)))}"
-                );
-
-            static string GetDefineSymbolMessage(int size)
-            {
-                var longCount = (int)Math.Ceiling((double)size / VariantData.SIZE_OF_LONG);
-                var nextSize = longCount * VariantData.SIZE_OF_LONG;
-
-                if (size > VariantData.MAX_BYTE_COUNT)
-                {
-                    return $"contact the author to increase the maximum size of Variant type to {nextSize} bytes " +
-                        $"(currently it is capped at {VariantData.MAX_BYTE_COUNT} bytes).";
-                }
-                else
-                {
-                    return $"define VARIANT_{longCount}_LONGS, or use the menu 'Encosy Tower/Project Settings/Variant Type'.";
-                }
-            }
-        }
     }
 }

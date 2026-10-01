@@ -288,9 +288,9 @@ namespace EncosyTower.Variants
 
         public bool TryGetValue(out string result)
         {
-            if (TypeKind == VariantTypeKind.String && Object is string stringValue)
+            if (TypeKind == VariantTypeKind.String)
             {
-                result = stringValue;
+                result = Object as string;
                 return true;
             }
 
@@ -476,9 +476,9 @@ namespace EncosyTower.Variants
 
         public bool TrySetValueTo(ref string dest)
         {
-            if (TypeKind == VariantTypeKind.String && Object is string stringValue)
+            if (TypeKind == VariantTypeKind.String)
             {
-                dest = stringValue;
+                dest = Object as string;
                 return true;
             }
 
@@ -517,9 +517,7 @@ namespace EncosyTower.Variants
                 case VariantTypeKind.ValueType: return VariantConverter.ToString(this);
                 default:
                 {
-                    return (TypeId != TypeId.Undefined)
-                        ? $"Undefined: {TypeId.ToType()}"
-                        : string.Empty;
+                    return (TypeId != TypeId.Undefined) ? $"Undefined: {TypeId.ToType()}" : string.Empty;
                 }
             }
         }

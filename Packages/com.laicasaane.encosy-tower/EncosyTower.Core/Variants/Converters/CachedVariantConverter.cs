@@ -8,7 +8,10 @@ namespace EncosyTower.Variants.Converters
 
         private IVariantConverter<T> _converter;
 
-        private CachedVariantConverter() { }
+        private CachedVariantConverter()
+        {
+            VariantConverter.RegisterCacheReset(Reset);
+        }
 
         public IVariantConverter<T> Converter
         {
@@ -46,5 +49,10 @@ namespace EncosyTower.Variants.Converters
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySetValueTo(in Variant variant, ref T dest)
             => Converter.TrySetValueTo(variant, ref dest);
+
+        private void Reset()
+        {
+            _converter = null;
+        }
     }
 }

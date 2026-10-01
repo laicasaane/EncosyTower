@@ -26,16 +26,20 @@ namespace EncosyTower.Variants
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetValue() => Converter.GetValue(Value);
+        public T GetValue()
+            => Converter.GetValue(Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetValue(out T result) => Converter.TryGetValue(Value, out result);
+        public bool TryGetValue(out T result)
+            => Converter.TryGetValue(Value, out result);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TrySetValueTo(ref T dest) => Converter.TrySetValueTo(Value, ref dest);
+        public bool TrySetValueTo(ref T dest)
+            => Converter.TrySetValueTo(Value, ref dest);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ToString() => Converter.ToString(Value);
+        public override string ToString()
+            => Converter.ToString(Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator Variant<T>(in Variant variant)
