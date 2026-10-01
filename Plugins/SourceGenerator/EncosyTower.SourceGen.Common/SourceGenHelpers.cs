@@ -9,9 +9,9 @@
 // Please review the license for details on these and other terms and conditions.
 
 using System;
-using System.IO;
 using System.Linq;
-using Microsoft.CodeAnalysis;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.CodeAnalysis.Text;
 
 namespace EncosyTower.SourceGen
@@ -27,132 +27,59 @@ namespace EncosyTower.SourceGen
 
         public const string NEWLINE = "\n";
 
-        public struct SourceGenConfig : IEquatable<SourceGenConfig>
-        {
-            public const string OUTPUT_PATH_ADDITIONAL_FILE
-                = "sourcegen-output-path.EncosyTower.SourceGen.Generators.additionalfile";
+        private const int SEMANTIC_HINT_HASH_BYTE_COUNT = 8;
 
-            public string projectPath;
-            public bool outputSourceGenFiles;
-
-            public readonly override bool Equals(object obj)
-                => obj is SourceGenConfig other && Equals(other);
-
-            public readonly bool Equals(SourceGenConfig other)
-                => string.Equals(projectPath, other.projectPath, StringComparison.Ordinal)
-                && outputSourceGenFiles == other.outputSourceGenFiles
-                ;
-
-            public readonly override int GetHashCode()
-                => HashValue.Combine(projectPath, outputSourceGenFiles);
-        }
-
-        public static IncrementalValueProvider<SourceGenConfig> GetSourceGenConfigProvider(
-            IncrementalGeneratorInitializationContext context
+        public static string BuildSemanticHintName(
+              string generatorMetadataName
+            , string consumerAssemblyName
+            , string targetMetadataName
+            , string outputRole
+            , string discriminator
         )
         {
-            var sourceGenConfigProvider = context.AdditionalTextsProvider.Collect().Select((texts, token) => {
-                var config = new SourceGenConfig();
+            var segments = new[] {
+                generatorMetadataName ?? string.Empty,
+                consumerAssemblyName ?? string.Empty,
+                targetMetadataName ?? string.Empty,
+                outputRole ?? string.Empty,
+                discriminator ?? string.Empty,
+            };
+            var encodedSegments = new byte[segments.Length][];
+            var keyLength = 2;
 
-                if (texts.Length == 0)
-                {
-                    return config;
-                }
-
-                var index = -1;
-
-                for (var i = 0; i < texts.Length; i++)
-                {
-                    if (texts[i].Path.EndsWith(SourceGenConfig.OUTPUT_PATH_ADDITIONAL_FILE))
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                if (index < 0)
-                {
-                    return config;
-                }
-
-                var path = texts[index].GetText(token)?.ToString();
-
-                if (string.IsNullOrEmpty(path))
-                {
-                    return config;
-                }
-
-                path = path.Replace('\\', '/');
-
-                config.outputSourceGenFiles = Directory.Exists(path);
-                config.projectPath = path;
-
-                return config;
-            });
-
-            return sourceGenConfigProvider;
-        }
-
-        public static string BuildSourceFilePath(string assemblyName, string hintName, string projectPath)
-        {
-            var tempFilePath = GetTempFilePath(assemblyName, hintName);
-
-            return string.IsNullOrEmpty(projectPath)
-                ? tempFilePath
-                : $"{projectPath}/{tempFilePath}";
-        }
-
-        public static string BuildHintName(string assemblyName, string fileName, string toStableHash, int salting)
-        {
-            var stableHashCode = GetStableHashCode(toStableHash) & 0x7fffffff;
-            return BuildHintName(assemblyName, fileName, stableHashCode, salting);
-        }
-
-        public static string BuildHintName(string assemblyName, string fileName, int stableHashCode, int salting)
-        {
-            return $"{fileName}_{assemblyName}_{stableHashCode}_{salting}.g.cs";
-        }
-
-        public static string GetTempFilePath(string assemblyName, string hintName)
-        {
-            return $"Temp/GeneratedCode/{assemblyName}/{hintName}";
-        }
-
-        // Stable version of String.GetHashCode
-        public static int GetStableHashCode(string str)
-        {
-            unchecked
+            for (var i = 0; i < segments.Length; i++)
             {
-                var hash1 = 5381;
-                var hash2 = hash1;
-                var span = str.AsSpan();
-
-                for (var i = 0; i < span.Length && span[i] != '\0'; i += 2)
-                {
-                    hash1 = ((hash1 << 5) + hash1) ^ span[i];
-
-                    if (i == span.Length - 1 || span[i + 1] == '\0')
-                    {
-                        break;
-                    }
-
-                    hash2 = ((hash2 << 5) + hash2) ^ span[i + 1];
-                }
-
-                return hash1 + (hash2 * 1566083941);
+                var encodedSegment = Encoding.UTF8.GetBytes(segments[i]);
+                encodedSegments[i] = encodedSegment;
+                keyLength += sizeof(int) + encodedSegment.Length;
             }
-        }
 
-        public static SourceText WithInitialLineDirectiveToGeneratedSource(
-              this SourceText sourceText
-            , string generatedSourceFilePath
-        )
-        {
-            var firstLine = sourceText.Lines.FirstOrDefault();
-            return sourceText.WithChanges(new TextChange(
-                  firstLine.Span
-                , $"#line 2 \"{generatedSourceFilePath}\"{NEWLINE}{firstLine}"
-            ));
+            var key = new byte[keyLength];
+            key[0] = (byte)'v';
+            key[1] = (byte)'1';
+            var offset = 2;
+
+            foreach (var encodedSegment in encodedSegments)
+            {
+                WriteLengthPrefix(key, offset, encodedSegment.Length);
+                offset += sizeof(int);
+                Buffer.BlockCopy(encodedSegment, 0, key, offset, encodedSegment.Length);
+                offset += encodedSegment.Length;
+            }
+
+            byte[] hash;
+
+            using (var sha256 = SHA256.Create())
+            {
+                hash = sha256.ComputeHash(key);
+            }
+
+            var simpleTargetName = GetSimpleMetadataName(targetMetadataName);
+            var readableTarget = SanitizeHintSegment(simpleTargetName, 64);
+            var readableRole = SanitizeHintSegment(outputRole, 32);
+            var hashText = ToLowerHex(hash);
+
+            return $"{readableTarget}.{readableRole}.{hashText}.g.cs";
         }
 
         public static SourceText WithIgnoreUnassignedVariableWarning(this SourceText sourceText)
@@ -162,6 +89,69 @@ namespace EncosyTower.SourceGen
                   firstLine.Span
                 , $"#pragma warning disable 0219{NEWLINE}{firstLine}"
             ));
+        }
+
+        private static string GetSimpleMetadataName(string metadataName)
+        {
+            if (string.IsNullOrEmpty(metadataName))
+            {
+                return string.Empty;
+            }
+
+            var namespaceSeparator = metadataName.LastIndexOf('.');
+            var nestingSeparator = metadataName.LastIndexOf('+');
+            var separator = Math.Max(namespaceSeparator, nestingSeparator);
+
+            return separator < 0 ? metadataName : metadataName.Substring(separator + 1);
+        }
+
+        private static string SanitizeHintSegment(string value, int maximumLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "_";
+            }
+
+            var length = Math.Min(value.Length, maximumLength);
+            var chars = new char[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                var c = value[i];
+                chars[i] = c is >= 'a' and <= 'z'
+                    or >= 'A' and <= 'Z'
+                    or >= '0' and <= '9'
+                    or '.'
+                    or '_'
+                    or '-'
+                        ? c
+                        : '_';
+            }
+
+            return new string(chars);
+        }
+
+        private static string ToLowerHex(byte[] bytes)
+        {
+            const string HEX = "0123456789abcdef";
+            var chars = new char[SEMANTIC_HINT_HASH_BYTE_COUNT * 2];
+
+            for (var i = 0; i < SEMANTIC_HINT_HASH_BYTE_COUNT; i++)
+            {
+                var value = bytes[i];
+                chars[i * 2] = HEX[value >> 4];
+                chars[(i * 2) + 1] = HEX[value & 0x0f];
+            }
+
+            return new string(chars);
+        }
+
+        private static void WriteLengthPrefix(byte[] destination, int offset, int value)
+        {
+            destination[offset] = (byte)(value >> 24);
+            destination[offset + 1] = (byte)(value >> 16);
+            destination[offset + 2] = (byte)(value >> 8);
+            destination[offset + 3] = (byte)value;
         }
     }
 }

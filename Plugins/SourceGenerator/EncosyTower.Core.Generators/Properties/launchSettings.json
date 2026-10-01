@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EncosyTower.Core.Generators": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Samples\\Samples.Data\\Samples.Data.csproj"
+    }
+  }
+}

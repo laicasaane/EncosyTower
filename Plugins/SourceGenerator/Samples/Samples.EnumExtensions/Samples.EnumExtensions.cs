@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using EncosyTower.EnumExtensions;
 
 namespace Samples.EnumExtensions
@@ -8,7 +8,7 @@ namespace Samples.EnumExtensions
 
     partial class FruitTypeExtensions { }
 
-    [EnumExtensionsFor(typeof(System.DayOfWeek))]
+    [EnumExtensionsFor(typeof(DayOfWeek))]
     public static partial class DayOfWeekExtensions { }
 
     [Flags, EnumExtensions]

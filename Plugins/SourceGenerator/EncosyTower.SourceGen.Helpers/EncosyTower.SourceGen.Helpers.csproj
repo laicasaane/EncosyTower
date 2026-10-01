@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,10 +7,6 @@
         <IsRoslynComponent>true</IsRoslynComponent>
 
         <!-- does not need runtime self -->
-        <IncludeBuildOutput>false</IncludeBuildOutput>
-        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-        <IncludeSymbols>false</IncludeSymbols>
-        <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
 
 	<ItemGroup>
@@ -21,7 +17,6 @@
 
 	<ItemGroup>
         <!-- Create nuget package as analyzer -->
-        <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
     <ItemGroup>

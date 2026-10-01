@@ -23,29 +23,31 @@ namespace EncosyTower.SourceGen
         public const string NEWLINE = "\n";
 
         public static SourceText GenerateSourceText(
-              string generatedSourceFilePath
-            , string openingSource
+              string openingSource
             , string bodySource
             , string closingSource
+            , CancellationToken token
             , Printer? overridePrinter = default
         )
         {
+            token.ThrowIfCancellationRequested();
+
             // DO NOT worry about #if directives
             // Because source generators run after preprocessors,
             // every disabled code will be removed from the compilation context.
             // So there might be no generated code to worry about.
 
-            var printer = overridePrinter ?? Printer.DefaultLarge;
+            var printer = overridePrinter ?? new Printer(0, 1024 * 16, token);
 
             printer.PrintLine(openingSource);
             printer.PrintLine(bodySource);
             printer.PrintLine(closingSource);
 
-            // Output as source
-            return SourceText.From(printer.Result, Encoding.UTF8)
-                .WithIgnoreUnassignedVariableWarning()
-                .WithInitialLineDirectiveToGeneratedSource(generatedSourceFilePath)
-                ;
+            token.ThrowIfCancellationRequested();
+            var source = SourceText.From(printer.Result, Encoding.UTF8);
+            token.ThrowIfCancellationRequested();
+
+            return source.WithIgnoreUnassignedVariableWarning();
         }
 
         public static void GenerateOpeningAndClosingSource(
@@ -57,7 +59,8 @@ namespace EncosyTower.SourceGen
             , PrinterAction printAdditionalUsings = default
         )
         {
-            var printer = overridePrinter ?? Printer.DefaultLarge;
+            token.ThrowIfCancellationRequested();
+            var printer = overridePrinter ?? new Printer(0, 1024 * 16, token);
 
             var result = WriteOpeningSyntax_AndReturnClosingSyntax(
                   ref printer
@@ -119,15 +122,66 @@ namespace EncosyTower.SourceGen
                 printer.PrintEndLine();
             }
 
-            foreach (var (openingValue, addIndentAfter) in openingSyntaxes)
+            foreach (var syntax in openingSyntaxes)
             {
                 token.ThrowIfCancellationRequested();
 
-                printer.PrintLine(openingValue);
-
-                if (addIndentAfter)
+                switch (syntax)
                 {
-                    printer = printer.IncreasedIndent();
+                    case RecordDeclarationSyntax recordSyntax:
+                    {
+                        // e.g. class/struct
+                        var keyword = recordSyntax.ClassOrStructKeyword.ValueText;
+
+                        // e.g. Outer/Generic<T>
+                        var typeName = recordSyntax.Identifier.ToString();
+                        var typeParameters = recordSyntax.TypeParameterList?.ToString();
+
+                        // e.g. where T: new()
+                        var constraint = recordSyntax.ConstraintClauses.ToString();
+
+                        printer.PrintBeginLine("partial record ").Print(keyword).Print(" ")
+                            .Print(typeName).Print(typeParameters).Print(" ").Print(constraint).PrintEndLine();
+                        printer.PrintLine("{");
+                        printer = printer.IncreasedIndent();
+                        break;
+                    }
+
+                    case TypeDeclarationSyntax typeSyntax:
+                    {
+                        // e.g. class/struct
+                        var keyword = typeSyntax.Keyword.ValueText;
+
+                        // e.g. Outer/Generic<T>
+                        var typeName = typeSyntax.Identifier.ToString();
+                        var typeParameters = typeSyntax.TypeParameterList?.ToString();
+
+                        // e.g. where T: new()
+                        var constraint = typeSyntax.ConstraintClauses.ToString();
+
+                        printer.PrintBeginLine("partial ").Print(keyword).Print(" ")
+                            .Print(typeName).Print(typeParameters).Print(" ").Print(constraint).PrintEndLine();
+                        printer.PrintLine("{");
+                        printer = printer.IncreasedIndent();
+                        break;
+                    }
+
+                    case BaseNamespaceDeclarationSyntax namespaceSyntax:
+                    {
+                        printer.PrintBeginLine("namespace ").Print(namespaceSyntax.Name.ToString()).PrintEndLine();
+                        printer.PrintLine("{");
+                        printer = printer.IncreasedIndent();
+
+                        var namespaceUsings = namespaceSyntax.Usings;
+
+                        for (var i = namespaceUsings.Count - 1; i >= 0; i--)
+                        {
+                            token.ThrowIfCancellationRequested();
+                            printer.PrintLine(namespaceUsings[i].ToString());
+                        }
+
+                        break;
+                    }
                 }
             }
 
@@ -168,7 +222,7 @@ namespace EncosyTower.SourceGen
         {
             token.ThrowIfCancellationRequested();
 
-            var opening = new Stack<OpeningSyntax>();
+            var opening = new Stack<SyntaxNode>();
             var numBracesToClose = 0;
             var parentSyntax = node?.Parent;
 
@@ -178,49 +232,11 @@ namespace EncosyTower.SourceGen
 
                 switch (parentSyntax)
                 {
-                    case RecordDeclarationSyntax recordSyntax:
+                    case RecordDeclarationSyntax:
+                    case TypeDeclarationSyntax:
+                    case BaseNamespaceDeclarationSyntax:
                     {
-                        // e.g. class/struct
-                        var keyword = recordSyntax.ClassOrStructKeyword.ValueText;
-
-                        // e.g. Outer/Generic<T>
-                        var typeName = recordSyntax.Identifier.ToString() + recordSyntax.TypeParameterList;
-
-                        // e.g. where T: new()
-                        var constraint = recordSyntax.ConstraintClauses.ToString();
-
-                        opening.Push(new("{", AddIndentAfter: true));
-                        opening.Push(new($"partial record {keyword} {typeName} {constraint}", AddIndentAfter: false));
-                        numBracesToClose++;
-                        break;
-                    }
-
-                    case TypeDeclarationSyntax typeSyntax:
-                    {
-                        // e.g. class/struct
-                        var keyword = typeSyntax.Keyword.ValueText;
-
-                        // e.g. Outer/Generic<T>
-                        var typeName = typeSyntax.Identifier.ToString() + typeSyntax.TypeParameterList;
-
-                        // e.g. where T: new()
-                        var constraint = typeSyntax.ConstraintClauses.ToString();
-
-                        opening.Push(new("{", AddIndentAfter: true));
-                        opening.Push(new($"partial {keyword} {typeName} {constraint}", AddIndentAfter: false));
-                        numBracesToClose++;
-                        break;
-                    }
-
-                    case BaseNamespaceDeclarationSyntax namespaceSyntax:
-                    {
-                        foreach (var usingDir in namespaceSyntax.Usings)
-                        {
-                            opening.Push(new($"{usingDir}", AddIndentAfter: false));
-                        }
-
-                        opening.Push(new("{", AddIndentAfter: true));
-                        opening.Push(new($"namespace {namespaceSyntax.Name}", AddIndentAfter: false));
+                        opening.Push(parentSyntax);
                         numBracesToClose++;
                         break;
                     }
@@ -234,8 +250,6 @@ namespace EncosyTower.SourceGen
 
         private record struct ClosingSyntax(int NumClosingBraces);
 
-        private record struct OpeningSyntax(string Value, bool AddIndentAfter);
-
-        private record struct OpeningSyntaxes(Stack<OpeningSyntax> Syntaxes, int NumClosingBraces);
+        private record struct OpeningSyntaxes(Stack<SyntaxNode> Syntaxes, int NumClosingBraces);
     }
 }

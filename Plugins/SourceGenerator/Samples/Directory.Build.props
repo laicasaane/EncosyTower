@@ -16,11 +16,11 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DefineConstants>$(DefineConstants);UNITY_5_3_OR_NEWER;MODULE_CORE_LOG_INTERNAL_UNIONS_REGISTRIES;UNITY_EDITOR;DATABASE_AUTHORING;UNITASK;UNITY_ADDRESSABLES</DefineConstants>
+        <DefineConstants>$(DefineConstants);UNITY_5_3_OR_NEWER;MODULE_CORE_LOG_INTERNAL_UNIONS_REGISTRIES;UNITY_EDITOR;DATABASE_AUTHORING;UNITY_ADDRESSABLES</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DefineConstants>$(DefineConstants);UNITY_5_3_OR_NEWER;MODULE_CORE_LOG_INTERNAL_UNIONS_REGISTRIES;UNITY_EDITOR;DATABASE_AUTHORING;UNITASK;UNITY_ADDRESSABLES</DefineConstants>
+        <DefineConstants>$(DefineConstants);UNITY_5_3_OR_NEWER;MODULE_CORE_LOG_INTERNAL_UNIONS_REGISTRIES;UNITY_EDITOR;DATABASE_AUTHORING;UNITY_ADDRESSABLES</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -44,21 +44,49 @@
         <Reference Include="$(UnityScriptAssembliesPath)/Unity.TextMeshPro.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/Latios.Core.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/Latios.Psyshock.dll" Private="false" />
-        <Reference Include="$(UnityScriptAssembliesPath)/Latios.Transforms.dll" Private="false" />
-        <Reference Include="$(UnityScriptAssembliesPath)/UniTask.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Core.dll" Private="false" />
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Mvvm.dll" Private="false" />
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Data.dll" Private="false" />
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Entities.dll" Private="false" />
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Persistence.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Databases.Authoring.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Entities.Stats.dll" Private="false" />
-        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.Mvvm.dll" Private="false" />
         <Reference Include="$(UnityScriptAssembliesPath)/BakingSheet.dll" Private="false" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Formatters/EncosyTower.Formatters.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Analyzers/EncosyTower.SourceGen.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.CodeRefactors/EncosyTower.SourceGen.CodeRefactors.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Data.Generators/EncosyTower.Data.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Data.CodeRefactors/EncosyTower.Data.CodeRefactors.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Databases.Authoring.Generators/EncosyTower.Databases.Authoring.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Entities.Generators/EncosyTower.Entities.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Entities.CodeRefactors/EncosyTower.Entities.CodeRefactors.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Entities.Stats.Generators/EncosyTower.Entities.Stats.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Persistence.Generators/EncosyTower.Persistence.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Mvvm.Generators/EncosyTower.Mvvm.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Mvvm.CodeRefactors/EncosyTower.Mvvm.CodeRefactors.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
         <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Common/EncosyTower.SourceGen.Common.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Generators/EncosyTower.SourceGen.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.Core.Generators/EncosyTower.Core.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Helpers/EncosyTower.SourceGen.Helpers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Data.Helpers/EncosyTower.SourceGen.Data.Helpers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="$(MSBuildThisFileDirectory)../EncosyTower.SourceGen.Helpers.Variants/EncosyTower.SourceGen.Helpers.Variants.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

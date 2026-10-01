@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -45,9 +45,11 @@ namespace EncosyTower.SourceGen
                 return LiteralExpression(SyntaxKind.NullLiteralExpression);
             }
 
-            public override bool Equals(TypedConstantInfo other) => other is Null;
+            public override bool Equals(TypedConstantInfo other)
+                => other is Null;
 
-            public override int GetHashCode() => HashValue.Combine(3);
+            public override int GetHashCode()
+                => HashValue.Combine(3);
         }
 
         /// <summary>
@@ -83,7 +85,8 @@ namespace EncosyTower.SourceGen
                     && ElementTypeName == arr.ElementTypeName
                     && Items.Equals(arr.Items);
 
-            public override int GetHashCode() => HashValue.Combine(5, ElementTypeName, Items);
+            public override int GetHashCode()
+                => HashValue.Combine(5, ElementTypeName, Items);
         }
 
         /// <summary>
@@ -110,9 +113,11 @@ namespace EncosyTower.SourceGen
                     return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(Value));
                 }
 
-                public override bool Equals(TypedConstantInfo other) => other is String s && Value == s.Value;
+                public override bool Equals(TypedConstantInfo other)
+                    => other is String s && Value == s.Value;
 
-                public override int GetHashCode() => HashValue.Combine(7, Value);
+                public override int GetHashCode()
+                    => HashValue.Combine(7, Value);
             }
 
             /// <summary>
@@ -134,9 +139,11 @@ namespace EncosyTower.SourceGen
                     return LiteralExpression(Value ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression);
                 }
 
-                public override bool Equals(TypedConstantInfo other) => other is Boolean b && Value == b.Value;
+                public override bool Equals(TypedConstantInfo other)
+                    => other is Boolean b && Value == b.Value;
 
-                public override int GetHashCode() => HashValue.Combine(11, Value);
+                public override int GetHashCode()
+                    => HashValue.Combine(11, Value);
             }
 
             /// <summary>
@@ -179,9 +186,11 @@ namespace EncosyTower.SourceGen
                     });
                 }
 
-                public override bool Equals(TypedConstantInfo other) => other is Of<T> o && Value.Equals(o.Value);
+                public override bool Equals(TypedConstantInfo other)
+                    => other is Of<T> o && Value.Equals(o.Value);
 
-                public override int GetHashCode() => HashValue.Combine(13, Value);
+                public override int GetHashCode()
+                    => HashValue.Combine(13, Value);
             }
         }
 
@@ -204,9 +213,11 @@ namespace EncosyTower.SourceGen
                 return TypeOfExpression(IdentifierName(TypeName));
             }
 
-            public override bool Equals(TypedConstantInfo other) => other is Type t && TypeName == t.TypeName;
+            public override bool Equals(TypedConstantInfo other)
+                => other is Type t && TypeName == t.TypeName;
 
-            public override int GetHashCode() => HashValue.Combine(17, TypeName);
+            public override int GetHashCode()
+                => HashValue.Combine(17, TypeName);
         }
 
         /// <summary>
@@ -236,9 +247,10 @@ namespace EncosyTower.SourceGen
             }
 
             public override bool Equals(TypedConstantInfo other)
-                => other is Enum e && TypeName == e.TypeName && object.Equals(Value, e.Value);
+                => other is Enum e && TypeName == e.TypeName && Equals(Value, e.Value);
 
-            public override int GetHashCode() => HashValue.Combine(19, TypeName, Value);
+            public override int GetHashCode()
+                => HashValue.Combine(19, TypeName, Value);
         }
     }
 }

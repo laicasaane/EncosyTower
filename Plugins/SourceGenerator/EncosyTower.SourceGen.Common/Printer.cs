@@ -10,6 +10,7 @@
 
 using System;
 using System.Text;
+using System.Threading;
 
 // Almost everything in this file was copied from Unity's source generators.
 // Some minor modifications have been made for convenience
@@ -23,23 +24,38 @@ namespace EncosyTower.SourceGen
         public const string INDENT = "    ";
 
         private readonly StringBuilder _builder;
+        private readonly CancellationToken _token;
 
         private int _currentIndentIndex;
 
         public Printer(int indentCount)
         {
             _builder = new StringBuilder();
+            _token = default;
             _currentIndentIndex = indentCount;
         }
+
         public Printer(int indentCount, int capacity)
+            : this(indentCount, capacity, default(CancellationToken))
+        {
+        }
+
+        public Printer(int indentCount, int capacity, CancellationToken token)
         {
             _builder = new StringBuilder(capacity);
+            _token = token;
             _currentIndentIndex = indentCount;
         }
 
         public Printer(StringBuilder builder, int indentCount)
+            : this(builder, indentCount, default(CancellationToken))
+        {
+        }
+
+        public Printer(StringBuilder builder, int indentCount, CancellationToken token)
         {
             _builder = builder;
+            _token = token;
             _currentIndentIndex = indentCount;
         }
 
@@ -54,30 +70,35 @@ namespace EncosyTower.SourceGen
         /// </summary>
         /// <param name="printer"></param>
         /// <returns></returns>
-        public static Printer NewCopy(Printer printer) => new(printer._currentIndentIndex);
+        public static Printer NewCopy(Printer printer)
+            => new(new StringBuilder(), printer._currentIndentIndex, printer._token);
 
         /// <summary>
         /// Allows to continue inline printing using a different printer
         /// </summary>
         /// <param name="printer"></param>
         /// <returns></returns>
-        public Printer PrintWith(Printer printer) => printer;
+        public Printer PrintWith(Printer printer)
+            => printer;
 
         /// <summary>
         /// Allows to continue inline printing using the same printer from an function call
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public Printer PrintWith(Func<Printer, Printer> func) => func(this);
+        public Printer PrintWith(Func<Printer, Printer> func)
+            => func(this);
 
         /// <summary>
         /// Creates a copy of this printer but with a relative indentCount
         /// </summary>
         /// <returns></returns>
-        public Printer WithRelativeIndent(int indentCount) => new(_builder, _currentIndentIndex + indentCount);
+        public Printer WithRelativeIndent(int indentCount)
+            => new(_builder, _currentIndentIndex + indentCount, _token);
 
         public Printer RelativeIndent(int indentCount)
         {
+            _token.ThrowIfCancellationRequested();
             _currentIndentIndex += indentCount;
             return this;
         }
@@ -86,10 +107,12 @@ namespace EncosyTower.SourceGen
         /// Creates a copy of this printer but with a deeper indent
         /// </summary>
         /// <returns></returns>
-        public Printer WithIncreasedIndent() => new(_builder, _currentIndentIndex + 1);
+        public Printer WithIncreasedIndent()
+            => new(_builder, _currentIndentIndex + 1, _token);
 
         public Printer IncreasedIndent()
         {
+            _token.ThrowIfCancellationRequested();
             ++_currentIndentIndex;
             return this;
         }
@@ -98,10 +121,12 @@ namespace EncosyTower.SourceGen
         /// Creates a copy of this printer but with a shallower indent
         /// </summary>
         /// <returns></returns>
-        public Printer WithDecreasedIndent() => new(_builder, _currentIndentIndex - 1);
+        public Printer WithDecreasedIndent()
+            => new(_builder, _currentIndentIndex - 1, _token);
 
         public Printer DecreasedIndent()
         {
+            _token.ThrowIfCancellationRequested();
             --_currentIndentIndex;
             return this;
         }
@@ -109,7 +134,14 @@ namespace EncosyTower.SourceGen
         /// <summary>
         /// The current output of the printer.
         /// </summary>
-        public string Result => _builder.Replace("\r\n", NEWLINE).ToString();
+        public string Result
+        {
+            get
+            {
+                _token.ThrowIfCancellationRequested();
+                return _builder.Replace("\r\n", NEWLINE).ToString();
+            }
+        }
 
         /// <summary>
         /// Clear the output of the printer and reset indent
@@ -117,6 +149,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Clear()
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Clear();
             _currentIndentIndex = 0;
             return this;
@@ -129,6 +162,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer ClearAndIndent(int indentCount)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Clear();
             _currentIndentIndex = indentCount;
             return this;
@@ -141,6 +175,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(bool value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value ? "true" : "false");
             return this;
         }
@@ -152,6 +187,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(sbyte value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -163,6 +199,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(byte value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -174,6 +211,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(char value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -185,6 +223,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(short value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -196,6 +235,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(ushort value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -207,6 +247,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(int value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -218,6 +259,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(uint value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -229,6 +271,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(float value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -240,6 +283,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(double value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -251,6 +295,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(long value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -262,6 +307,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(ulong value)
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(value);
             return this;
         }
@@ -273,6 +319,8 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(string text)
         {
+            _token.ThrowIfCancellationRequested();
+
             if (string.IsNullOrEmpty(text) == false)
             {
                 _builder.Append(text);
@@ -288,6 +336,8 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer Print(StringBuilder text)
         {
+            _token.ThrowIfCancellationRequested();
+
             if (text != null)
             {
                 _builder.Append(text);
@@ -303,6 +353,8 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer PrintRepeat(char ch, int repeatCount)
         {
+            _token.ThrowIfCancellationRequested();
+
             if (repeatCount > 0)
             {
                 _builder.Append(ch, repeatCount);
@@ -354,6 +406,7 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer PrintEndLine()
         {
+            _token.ThrowIfCancellationRequested();
             _builder.Append(NEWLINE);
             return this;
         }
@@ -365,6 +418,8 @@ namespace EncosyTower.SourceGen
         /// <returns></returns>
         public Printer PrintEndLine(string text)
         {
+            _token.ThrowIfCancellationRequested();
+
             if (string.IsNullOrEmpty(text) == false)
             {
                 _builder.Append(text);
@@ -529,4 +584,3 @@ namespace EncosyTower.SourceGen
         }
     }
 }
-

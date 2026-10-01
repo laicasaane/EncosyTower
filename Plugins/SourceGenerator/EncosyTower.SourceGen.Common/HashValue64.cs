@@ -539,9 +539,7 @@ namespace EncosyTower.SourceGen
         /// <returns>The new hash code.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static HashValue64 CombineEach<T>(IEnumerable<T> items)
-            => items == null
-            ? new(BASIS)
-            : new(GetHashCodeEach(BASIS, items));
+            => items == null ? new(BASIS) : new(GetHashCodeEach(BASIS, items));
 
         /// <summary>
         /// Takes the hash code of the specified items.
@@ -569,9 +567,7 @@ namespace EncosyTower.SourceGen
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static HashValue64 CombineEach<T, TEnumerator>(TEnumerator enumerator)
             where TEnumerator : IEnumerator<T>
-            => enumerator == null
-            ? new(BASIS)
-            : new(GetHashCodeEach<T, TEnumerator>(BASIS, enumerator));
+            => enumerator == null ? new(BASIS) : new(GetHashCodeEach<T, TEnumerator>(BASIS, enumerator));
 
         /// <summary>
         /// Takes the hash code of the specified items.
@@ -667,9 +663,7 @@ namespace EncosyTower.SourceGen
         /// <param name="items">The collection of items to add to the hash code.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HashValue64 AddEach<T>(IEnumerable<T> items)
-            => items == null
-            ? new(_value)
-            : new(GetHashCodeEach(_value, items));
+            => items == null ? new(_value) : new(GetHashCodeEach(_value, items));
 
         /// <summary>
         /// Adds a collection of items to the hash code, specifying the type that provides the hash code function.
@@ -696,9 +690,7 @@ namespace EncosyTower.SourceGen
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HashValue64 AddEach<T, TEnumerator>(TEnumerator enumerator)
             where TEnumerator : IEnumerator<T>
-            => enumerator == null
-            ? new(_value)
-            : new(GetHashCodeEach<T, TEnumerator>(_value, enumerator));
+            => enumerator == null ? new(_value) : new(GetHashCodeEach<T, TEnumerator>(_value, enumerator));
 
         /// <summary>
         /// Adds a collection of items to the hash code, specifying the type that provides the hash code function.
@@ -754,10 +746,7 @@ namespace EncosyTower.SourceGen
         private static ulong GetHashCode<T>(T item)
             => (ulong)(item?.GetHashCode() ?? 0);
 
-        private static ulong GetHashCodeEach<T>(
-              ulong startHashCode
-            , ReadOnlySpan<T> items
-        )
+        private static ulong GetHashCodeEach<T>(ulong startHashCode, ReadOnlySpan<T> items)
         {
             var result = startHashCode;
             var enumerator = items.GetEnumerator();
@@ -802,10 +791,7 @@ namespace EncosyTower.SourceGen
             return result;
         }
 
-        private static ulong GetHashCodeEach<T>(
-              ulong startHashCode
-            , IEnumerable<T> items
-        )
+        private static ulong GetHashCodeEach<T>(ulong startHashCode, IEnumerable<T> items)
         {
             var result = startHashCode;
             var enumerator = items.GetEnumerator();

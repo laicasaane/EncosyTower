@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -25,24 +26,6 @@ namespace EncosyTower.SourceGen
     {
         private const string STRUCT_LAYOUT_ATTRIBUTE = "global::System.Runtime.InteropServices.StructLayoutAttribute";
         private const string FIELD_OFFSET_ATTRIBUTE = "global::System.Runtime.InteropServices.FieldOffsetAttribute";
-
-        private static SymbolDisplayFormat SimpleFormat { get; }
-            = new SymbolDisplayFormat(
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
-                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-                miscellaneousOptions:
-                SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
-                SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-            );
-
-        private static SymbolDisplayFormat SimpleNoSpecialTypeFormat { get; }
-            = new SymbolDisplayFormat(
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
-                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
-                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
-            );
 
         public static SymbolDisplayFormat MemberNameFormat { get; }
             = new SymbolDisplayFormat(
@@ -89,8 +72,7 @@ namespace EncosyTower.SourceGen
                     SymbolDisplayMemberOptions.IncludeParameters |
                     SymbolDisplayMemberOptions.IncludeExplicitInterface,
                 parameterOptions:
-                    SymbolDisplayParameterOptions.IncludeType |
-                    SymbolDisplayParameterOptions.IncludeParamsRefOut,
+                    SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeParamsRefOut,
                 miscellaneousOptions:
                     SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
                     SymbolDisplayMiscellaneousOptions.UseSpecialTypes
@@ -103,11 +85,9 @@ namespace EncosyTower.SourceGen
                 genericsOptions:
                     SymbolDisplayGenericsOptions.IncludeTypeParameters,
                 memberOptions:
-                    SymbolDisplayMemberOptions.IncludeParameters |
-                    SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                    SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeExplicitInterface,
                 parameterOptions:
-                    SymbolDisplayParameterOptions.IncludeType |
-                    SymbolDisplayParameterOptions.IncludeParamsRefOut,
+                    SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeParamsRefOut,
                 globalNamespaceStyle:
                     SymbolDisplayGlobalNamespaceStyle.Included,
                 miscellaneousOptions:
@@ -169,9 +149,7 @@ namespace EncosyTower.SourceGen
                 return;
             }
 
-            if (symbol.IsReferenceType
-                || symbol.TypeKind is TypeKind.Pointer or TypeKind.FunctionPointer
-            )
+            if (symbol.IsReferenceType || symbol.TypeKind is TypeKind.Pointer or TypeKind.FunctionPointer)
             {
                 size += sizeof(ulong);
                 alignment = Math.Max(alignment, sizeof(ulong));
@@ -374,16 +352,178 @@ namespace EncosyTower.SourceGen
             => symbol.ToDisplayString(QualifiedFormatWithoutGlobalPrefix);
 
         public static string ToValidIdentifier(this ITypeSymbol symbol)
-            => symbol.ToDisplayString(QualifiedFormatWithoutGlobalPrefix).ToValidIdentifier();
+            => symbol?.ToMetadataIdentity().ToValidIdentifier() ?? string.Empty;
+
+        public static string ToMetadataIdentity(this ITypeSymbol symbol)
+        {
+            if (symbol == null)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder();
+            AppendMetadataIdentity(symbol, builder);
+            return builder.ToString();
+        }
 
         public static string ToFileName(this ITypeSymbol symbol)
             => symbol.ToDisplayString(QualifiedFormatWithoutGlobalPrefix).ToFileName();
 
-        public static string ToSimpleValidIdentifier(this ITypeSymbol symbol)
-            => symbol.ToDisplayString(SimpleFormat).ToValidIdentifier();
+        public static string ToMetadataName(this INamedTypeSymbol symbol)
+        {
+            if (symbol == null)
+            {
+                return string.Empty;
+            }
 
-        public static string ToSimpleNoSpecialTypeValidIdentifier(this ITypeSymbol symbol)
-            => symbol.ToDisplayString(SimpleNoSpecialTypeFormat).ToValidIdentifier();
+            var names = new Stack<string>();
+
+            for (var current = symbol; current != null; current = current.ContainingType)
+            {
+                names.Push(current.MetadataName);
+            }
+
+            var typeName = string.Join("+", names);
+            var ns = symbol.ContainingNamespace;
+
+            return ns is { IsGlobalNamespace: false } ? $"{ns.ToDisplayString()}.{typeName}" : typeName;
+        }
+
+        private static void AppendMetadataIdentity(ITypeSymbol symbol, StringBuilder builder)
+        {
+            if (symbol is IDynamicTypeSymbol)
+            {
+                builder.Append("System.Object");
+                return;
+            }
+
+            if (symbol is IArrayTypeSymbol arrayType)
+            {
+                AppendMetadataIdentity(arrayType.ElementType, builder);
+                builder.Append('[');
+
+                for (var i = 1; i < arrayType.Rank; i++)
+                {
+                    builder.Append(',');
+                }
+
+                builder.Append(']');
+                return;
+            }
+
+            if (symbol is IPointerTypeSymbol pointerType)
+            {
+                AppendMetadataIdentity(pointerType.PointedAtType, builder);
+                builder.Append('*');
+                return;
+            }
+
+            if (symbol is ITypeParameterSymbol typeParameter)
+            {
+                AppendTypeParameterIdentity(typeParameter, builder);
+                return;
+            }
+
+            if (symbol is not INamedTypeSymbol namedType)
+            {
+                builder.Append(symbol.MetadataName);
+                return;
+            }
+
+            if (namedType.IsTupleType && namedType.TupleUnderlyingType is { } tupleType)
+            {
+                namedType = tupleType;
+            }
+
+            if (namedType.ContainingType is { } containingType)
+            {
+                AppendMetadataIdentity(containingType, builder);
+                builder.Append('+');
+            }
+            else if (namedType.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace)
+            {
+                AppendNamespaceIdentity(containingNamespace, builder);
+                builder.Append('.');
+            }
+
+            builder.Append(namedType.MetadataName);
+
+            if (namedType.Arity < 1)
+            {
+                return;
+            }
+
+            builder.Append('<');
+
+            for (var i = 0; i < namedType.Arity; i++)
+            {
+                if (i > 0)
+                {
+                    builder.Append(',');
+                }
+
+                AppendMetadataIdentity(namedType.TypeArguments[i], builder);
+            }
+
+            builder.Append('>');
+        }
+
+        private static void AppendTypeParameterIdentity(ITypeParameterSymbol typeParameter, StringBuilder builder)
+        {
+            if (typeParameter.TypeParameterKind == TypeParameterKind.Type
+                && typeParameter.ContainingType is { } containingType
+            )
+            {
+                AppendNamedTypeDefinitionIdentity(containingType, builder);
+                builder.Append('!').Append(typeParameter.Ordinal);
+                return;
+            }
+
+            if (typeParameter.ContainingSymbol is IMethodSymbol containingMethod)
+            {
+                if (containingMethod.ContainingType is { } methodContainingType)
+                {
+                    AppendNamedTypeDefinitionIdentity(methodContainingType, builder);
+                    builder.Append('+');
+                }
+
+                builder.Append(containingMethod.MetadataName)
+                    .Append("``")
+                    .Append(containingMethod.Arity)
+                    .Append("!!")
+                    .Append(typeParameter.Ordinal);
+                return;
+            }
+
+            builder.Append(typeParameter.MetadataName).Append('!').Append(typeParameter.Ordinal);
+        }
+
+        private static void AppendNamedTypeDefinitionIdentity(INamedTypeSymbol namedType, StringBuilder builder)
+        {
+            if (namedType.ContainingType is { } containingType)
+            {
+                AppendNamedTypeDefinitionIdentity(containingType, builder);
+                builder.Append('+');
+            }
+            else if (namedType.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace)
+            {
+                AppendNamespaceIdentity(containingNamespace, builder);
+                builder.Append('.');
+            }
+
+            builder.Append(namedType.MetadataName);
+        }
+
+        private static void AppendNamespaceIdentity(INamespaceSymbol namespaceSymbol, StringBuilder builder)
+        {
+            if (namespaceSymbol.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace)
+            {
+                AppendNamespaceIdentity(containingNamespace, builder);
+                builder.Append('.');
+            }
+
+            builder.Append(namespaceSymbol.MetadataName);
+        }
 
         public static bool ImplementsInterface(
               this ISymbol symbol
@@ -963,12 +1103,7 @@ namespace EncosyTower.SourceGen
         {
             using var propertyAttributesInfo = ImmutableArrayBuilder<AttributeInfo>.Rent();
 
-            GatherForwardedAttributes(
-                  fieldSymbol
-                , semanticModel
-                , token
-                , in propertyAttributesInfo
-            );
+            GatherForwardedAttributes(fieldSymbol, semanticModel, token, in propertyAttributesInfo);
 
             propertyAttributes = propertyAttributesInfo.ToImmutable();
 
@@ -1047,12 +1182,7 @@ namespace EncosyTower.SourceGen
         {
             using var propertyAttributesInfo = ImmutableArrayBuilder<(string, AttributeInfo)>.Rent();
 
-            GatherForwardedAttributes(
-                  fieldSymbol
-                , semanticModel
-                , token
-                , in propertyAttributesInfo
-            );
+            GatherForwardedAttributes(fieldSymbol, semanticModel, token, in propertyAttributesInfo);
 
             propertyAttributes = propertyAttributesInfo.ToImmutable();
 
@@ -1132,12 +1262,7 @@ namespace EncosyTower.SourceGen
         {
             using var fieldAttributesInfo = ImmutableArrayBuilder<(string, AttributeInfo)>.Rent();
 
-            GatherForwardedAttributes(
-                  propertySymbol
-                , semanticModel
-                , token
-                , in fieldAttributesInfo
-            );
+            GatherForwardedAttributes(propertySymbol, semanticModel, token, in fieldAttributesInfo);
 
             fieldAttributes = fieldAttributesInfo.ToImmutable();
 
@@ -1210,13 +1335,7 @@ namespace EncosyTower.SourceGen
         {
             using var attributeBuilder = ImmutableArrayBuilder<(string, AttributeInfo)>.Rent();
 
-            GatherAttributes(
-                  fieldSymbol
-                , semanticModel
-                , token
-                , in attributeBuilder
-                , attributeFullyQualifiedTypeName
-            );
+            GatherAttributes(fieldSymbol, semanticModel, token, in attributeBuilder, attributeFullyQualifiedTypeName);
 
             attributes = attributeBuilder.ToImmutable();
 
@@ -1920,7 +2039,7 @@ namespace EncosyTower.SourceGen
 
             if (indexOfAngle >= 0)
             {
-                // e.g. "System.Collections.Generic.Dictionary<" — match the base type name exactly
+                // e.g. "System.Collections.Generic.Dictionary<", match the base type name exactly
                 // and verify the symbol has at least one type argument.
                 var namePart = span.Slice(0, indexOfAngle);
                 return MatchesQualifiedSpan(symbol, namePart, token)
@@ -2165,11 +2284,7 @@ namespace EncosyTower.SourceGen
                     : accessibility == Accessibility.Public;
             }
 
-            static bool IsAccessibleThroughInheritance(
-                  ITypeSymbol type
-                , ITypeSymbol otherType
-                , CancellationToken token
-            )
+            static bool IsAccessibleThroughInheritance(ITypeSymbol type, ITypeSymbol otherType, CancellationToken token)
             {
                 token.ThrowIfCancellationRequested();
 
@@ -2204,11 +2319,7 @@ namespace EncosyTower.SourceGen
                 return false;
             }
 
-            static bool IsDerivedFrom(
-                  ITypeSymbol derivedSymbol
-                , ITypeSymbol baseSymbol
-                , CancellationToken token
-            )
+            static bool IsDerivedFrom(ITypeSymbol derivedSymbol, ITypeSymbol baseSymbol, CancellationToken token)
             {
                 var current = derivedSymbol.BaseType;
                 var comparer = SymbolEqualityComparer.Default;
@@ -2276,4 +2387,3 @@ namespace EncosyTower.SourceGen
         CrossAssemblyInheritance,
     }
 }
-

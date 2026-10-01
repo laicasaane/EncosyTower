@@ -97,6 +97,7 @@ namespace Samples.PolyEnumStructs
                 return ref ColorAPI.Value;
             }
         }
+
         public partial struct Undefined
         {
             public bool capture;

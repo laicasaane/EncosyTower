@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/Samples/">
+  <Folder Name="/SourceGen.Samples/">
     <File Path="Samples/Directory.Build.props" />
     <Project Path="Samples/Samples.Data/Samples.Data.csproj" />
     <Project Path="Samples/Samples.DatabaseAuthoring/Samples.DatabaseAuthoring.csproj" />
@@ -13,6 +13,8 @@
     <Project Path="Samples/Samples.Mvvm/Samples.Mvvm.csproj" />
     <Project Path="Samples/Samples.NewtonsoftAotHelpers/Samples.NewtonsoftAotHelpers.csproj" />
     <Project Path="Samples/Samples.PolyEnumStructs/Samples.PolyEnumStructs.csproj" />
+    <Project Path="Samples/Samples.Processing/Samples.Processing.csproj" />
+    <Project Path="Samples/Samples.PubSub/Samples.PubSub.csproj" />
     <Project Path="Samples/Samples.RuntimeTypeCaches/Samples.RuntimeTypeCaches.csproj" />
     <Project Path="Samples/Samples.TypeWraps/Samples.TypeWraps.csproj" />
     <Project Path="Samples/Samples.UnionIds/Samples.UnionIds.csproj" />
@@ -21,12 +23,24 @@
   </Folder>
   <Folder Name="/SourceGen/">
     <File Path="Directory.Build.props" />
-    <Project Path="EncosyTower.SourceGen.Analyzers/EncosyTower.SourceGen.Analyzers.csproj" />
-    <Project Path="EncosyTower.SourceGen.CodeRefactors/EncosyTower.SourceGen.CodeRefactors.csproj" />
+    <File Path="Directory.Build.targets" />
     <Project Path="EncosyTower.Formatters/EncosyTower.Formatters.csproj" />
     <Project Path="EncosyTower.SourceGen.Common/EncosyTower.SourceGen.Common.csproj" />
-    <Project Path="EncosyTower.SourceGen.Generators/EncosyTower.SourceGen.Generators.csproj" />
+    <Project Path="EncosyTower.Core.Generators/EncosyTower.Core.Generators.csproj" />
     <Project Path="EncosyTower.SourceGen.Helpers/EncosyTower.SourceGen.Helpers.csproj" />
+    <Project Path="EncosyTower.SourceGen.Data.Helpers/EncosyTower.SourceGen.Data.Helpers.csproj" />
+    <Project Path="EncosyTower.SourceGen.Helpers.Variants/EncosyTower.SourceGen.Helpers.Variants.csproj" />
+    <Project Path="EncosyTower.Data.CodeRefactors/EncosyTower.Data.CodeRefactors.csproj" />
+    <Project Path="EncosyTower.Data.Generators/EncosyTower.Data.Generators.csproj" />
+    <Project Path="EncosyTower.Databases.Authoring.Generators/EncosyTower.Databases.Authoring.Generators.csproj" />
+    <Project Path="EncosyTower.Entities.CodeRefactors/EncosyTower.Entities.CodeRefactors.csproj" />
+    <Project Path="EncosyTower.Entities.Generators/EncosyTower.Entities.Generators.csproj" />
+    <Project Path="EncosyTower.Entities.Stats.Generators/EncosyTower.Entities.Stats.Generators.csproj" />
+    <Project Path="EncosyTower.Mvvm.CodeRefactors/EncosyTower.Mvvm.CodeRefactors.csproj" />
+    <Project Path="EncosyTower.Mvvm.Generators/EncosyTower.Mvvm.Generators.csproj" />
+    <Project Path="EncosyTower.Persistence.Generators/EncosyTower.Persistence.Generators.csproj" />
+    <Project Path="EncosyTower.Processing.Generators/EncosyTower.Processing.Generators.csproj" />
+    <Project Path="EncosyTower.PubSub.Generators/EncosyTower.PubSub.Generators.csproj" />
     <Project Path="EncosyTower.SourceGen.Tests/EncosyTower.SourceGen.Tests.csproj" />
   </Folder>
 </Solution>

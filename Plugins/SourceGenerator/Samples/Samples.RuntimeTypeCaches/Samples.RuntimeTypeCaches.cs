@@ -5,7 +5,9 @@ using EncosyTower.Types;
 namespace Samples.RuntimeTypeCaches
 {
     public class YourType { }
+
     public class SomeAttribute : Attribute { }
+
     public class SpecialAttribute : Attribute { }
 
     public partial class Tests

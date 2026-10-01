@@ -160,12 +160,7 @@ namespace Samples.UnionIds.Game2
             throw new NotImplementedException();
         }
 
-        public bool TryParse(
-              string str
-            , out MapId result
-            , bool ignoreCase
-            , bool allowMatchingMetadataAttribute
-        )
+        public bool TryParse(string str, out MapId result, bool ignoreCase, bool allowMatchingMetadataAttribute)
         {
             throw new NotImplementedException();
         }

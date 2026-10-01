@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>10.0</LangVersion>
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
+        <IsRoslynComponent>true</IsRoslynComponent>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="bin/**" />
+        <EmbeddedResource Remove="bin/**" />
+        <None Remove="bin/**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../EncosyTower.SourceGen.Common/EncosyTower.SourceGen.Common.csproj" />
+        <ProjectReference Include="../EncosyTower.SourceGen.Helpers/EncosyTower.SourceGen.Helpers.csproj" />
+    </ItemGroup>
+
+</Project>

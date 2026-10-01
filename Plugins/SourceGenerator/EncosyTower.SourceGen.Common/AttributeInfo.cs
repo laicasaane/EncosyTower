@@ -22,11 +22,20 @@ namespace EncosyTower.SourceGen
               string typeName
             , EquatableArray<TypedConstantInfo> constructorArgumentInfo
             , EquatableArray<(string Name, TypedConstantInfo Value)> namedArgumentInfo
+        ) : this(typeName, constructorArgumentInfo, namedArgumentInfo, default)
+        { }
+
+        public AttributeInfo(
+              string typeName
+            , EquatableArray<TypedConstantInfo> constructorArgumentInfo
+            , EquatableArray<(string Name, TypedConstantInfo Value)> namedArgumentInfo
+            , EquatableArray<string> constructorArgumentNames
         )
         {
             this.TypeName = typeName;
             this.ConstructorArgumentInfo = constructorArgumentInfo;
             this.NamedArgumentInfo = namedArgumentInfo;
+            this.ConstructorArgumentNames = constructorArgumentNames;
         }
 
         public bool IsValid => string.IsNullOrEmpty(TypeName) == false;
@@ -34,6 +43,8 @@ namespace EncosyTower.SourceGen
         public string TypeName { get; }
 
         public EquatableArray<TypedConstantInfo> ConstructorArgumentInfo { get; }
+
+        public EquatableArray<string> ConstructorArgumentNames { get; }
 
         public EquatableArray<(string Name, TypedConstantInfo Value)> NamedArgumentInfo { get; }
 
@@ -59,10 +70,7 @@ namespace EncosyTower.SourceGen
                 namedArguments.Add((namedConstant.Key, TypedConstantInfo.From(namedConstant.Value)));
             }
 
-            return new(
-                typeName,
-                constructorArguments.ToImmutable(),
-                namedArguments.ToImmutable());
+            return new(typeName, constructorArguments.ToImmutable(), namedArguments.ToImmutable());
         }
 
         /// <summary>
@@ -85,6 +93,7 @@ namespace EncosyTower.SourceGen
             string typeName = typeSymbol.ToFullName();
 
             using var constructorArguments = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
+            using var constructorArgumentNames = ImmutableArrayBuilder<string>.Rent();
             using var namedArguments = ImmutableArrayBuilder<(string, TypedConstantInfo)>.Rent();
 
             foreach (AttributeArgumentSyntax argument in arguments)
@@ -105,6 +114,7 @@ namespace EncosyTower.SourceGen
                 else
                 {
                     constructorArguments.Add(argumentInfo);
+                    constructorArgumentNames.Add(argument.NameColon?.Name.Identifier.ValueText ?? string.Empty);
                 }
             }
 
@@ -112,6 +122,7 @@ namespace EncosyTower.SourceGen
                   typeName
                 , constructorArguments.ToImmutable()
                 , namedArguments.ToImmutable()
+                , constructorArgumentNames.ToImmutable()
             );
         }
 
@@ -122,14 +133,15 @@ namespace EncosyTower.SourceGen
 
         public override int GetHashCode()
         {
-            return HashValue.Combine(TypeName, ConstructorArgumentInfo, NamedArgumentInfo);
+            return HashValue.Combine(TypeName, ConstructorArgumentInfo, NamedArgumentInfo, ConstructorArgumentNames);
         }
 
         public bool Equals(AttributeInfo other)
         {
             return string.Equals(TypeName, other.TypeName, StringComparison.Ordinal)
                 && ConstructorArgumentInfo.Equals(other.ConstructorArgumentInfo)
-                && NamedArgumentInfo.Equals(other.NamedArgumentInfo);
+                && NamedArgumentInfo.Equals(other.NamedArgumentInfo)
+                && ConstructorArgumentNames.Equals(other.ConstructorArgumentNames);
         }
 
         /// <summary>
@@ -138,7 +150,15 @@ namespace EncosyTower.SourceGen
         /// <returns>The <see cref="ExpressionSyntax"/> instance representing the current value.</returns>
         public AttributeSyntax GetSyntax()
         {
-            var arguments = ConstructorArgumentInfo.Select(static arg => AttributeArgument(arg.GetSyntax()));
+            var constructorNames = ConstructorArgumentNames;
+            var arguments = ConstructorArgumentInfo.Select((arg, index) => {
+                var syntax = AttributeArgument(arg.GetSyntax());
+                var name = constructorNames.Count > index ? constructorNames[index] : string.Empty;
+
+                return string.IsNullOrEmpty(name)
+                    ? syntax
+                    : syntax.WithNameColon(NameColon(IdentifierName(name.EscapeCSharpIdentifier())));
+            });
             var namedArguments = NamedArgumentInfo.Select(static arg => AttributeArgument(arg.Value.GetSyntax())
                 .WithNameEquals(NameEquals(IdentifierName(arg.Name))));
 

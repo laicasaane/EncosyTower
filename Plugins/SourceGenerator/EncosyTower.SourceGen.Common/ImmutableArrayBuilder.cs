@@ -13,28 +13,23 @@ using System.Runtime.CompilerServices;
 namespace EncosyTower.SourceGen
 {
     /// <summary>
-    /// A helper type to build sequences of values with pooled buffers.
+    /// A helper type to build sequences of values with callback-local buffers.
     /// </summary>
     /// <typeparam name="T">The type of items to create sequences for.</typeparam>
     public struct ImmutableArrayBuilder<T> : IDisposable
     {
-        /// <summary>
-        /// The shared <see cref="ObjectPool{T}"/> instance to share <see cref="Writer"/> objects.
-        /// </summary>
-        private static readonly ObjectPool<Writer> s_sharedObjectPool = new(static () => new Writer());
-
         /// <summary>
         /// The rented <see cref="Writer"/> instance to use.
         /// </summary>
         private Writer _writer;
 
         /// <summary>
-        /// Creates a <see cref="ImmutableArrayBuilder{T}"/> value with a pooled underlying data writer.
+        /// Creates a <see cref="ImmutableArrayBuilder{T}"/> value with a new underlying data writer.
         /// </summary>
         /// <returns>A <see cref="ImmutableArrayBuilder{T}"/> instance to write data to.</returns>
         public static ImmutableArrayBuilder<T> Rent()
         {
-            return new(s_sharedObjectPool.Allocate());
+            return new(new Writer());
         }
 
         /// <summary>
@@ -131,8 +126,6 @@ namespace EncosyTower.SourceGen
             if (writer is not null)
             {
                 writer.Clear();
-
-                s_sharedObjectPool.Free(writer);
             }
         }
 

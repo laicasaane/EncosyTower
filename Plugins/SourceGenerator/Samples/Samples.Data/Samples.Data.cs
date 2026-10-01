@@ -315,7 +315,8 @@ namespace Samples.Data.DataConverters
             this.value = value;
         }
 
-        public readonly IntWrapper Convert(int value) => new(value);
+        public readonly IntWrapper Convert(int value)
+            => new(value);
     }
 
     [Serializable]
@@ -328,22 +329,26 @@ namespace Samples.Data.DataConverters
             this.value = value;
         }
 
-        public readonly FloatWrapper Convert(float value) => new(value);
+        public readonly FloatWrapper Convert(float value)
+            => new(value);
     }
 
     public struct IntWrapperConverter
     {
-        public static IntWrapper Convert(int value) => new(value);
+        public static IntWrapper Convert(int value)
+            => new(value);
     }
 
     public struct FloatWrapperConverter
     {
-        public readonly FloatWrapper Convert(float value) => new(value);
+        public readonly FloatWrapper Convert(float value)
+            => new(value);
     }
 
     public struct WrapperConverter<TFrom, TTo> where TTo : struct, IConvert<TFrom, TTo>
     {
-        public readonly TTo Convert(TFrom value) => default(TTo).Convert(value);
+        public readonly TTo Convert(TFrom value)
+            => default(TTo).Convert(value);
     }
 }
 
@@ -363,11 +368,14 @@ namespace Samples.Data.ConvertibleIds
         public static implicit operator int(IdData id)
             => id.Value;
 
-        private static int Convert(int a) => a;
+        private static int Convert(int a)
+            => a;
 
-        public static bool Equals(int a, int b) => a == b;
+        public static bool Equals(int a, int b)
+            => a == b;
 
-        public static bool Equals<T, U>(T a, T b) => false;
+        public static bool Equals<T, U>(T a, T b)
+            => false;
     }
 
     [Data]
@@ -430,6 +438,7 @@ namespace Samples.Data.Databases.Settings
         [DataProperty]
         public readonly string Url => Get_Url();
     }
+
     public readonly struct StringIdValueConverter
     {
         public static StringId Convert(uint value)
@@ -445,24 +454,29 @@ namespace Samples.Data.Databases.Settings
 
     public readonly struct Converters
     {
-        public static int Convert(uint value) => (int)value;
+        public static int Convert(uint value)
+            => (int)value;
 
-        public static uint Convert(int value) => (uint)value;
+        public static uint Convert(int value)
+            => (uint)value;
     }
 
     public readonly struct Comparers
     {
-        public static bool Equals(int a, int b) => a == b;
+        public static bool Equals(int a, int b)
+            => a == b;
     }
 
     public readonly struct StringConverter
     {
-        public static string Convert(string value) => value;
+        public static string Convert(string value)
+            => value;
     }
 
     public readonly struct StringComparer
     {
-        public static bool Equals(string a, string b) => string.Equals(a, b, System.StringComparison.Ordinal);
+        public static bool Equals(string a, string b)
+            => string.Equals(a, b, System.StringComparison.Ordinal);
     }
 }
 

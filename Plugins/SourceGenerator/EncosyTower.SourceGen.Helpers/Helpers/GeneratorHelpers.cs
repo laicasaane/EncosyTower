@@ -23,11 +23,11 @@ namespace EncosyTower.SourceGen
         };
 
         public readonly static string[] Print_FixedStringTypeNames = new string[] {
-            "UC.FixedString32Bytes",
-            "UC.FixedString64Bytes",
-            "UC.FixedString128Bytes",
-            "UC.FixedString512Bytes",
-            "UC.FixedString4096Bytes",
+            "g__UC.FixedString32Bytes",
+            "g__UC.FixedString64Bytes",
+            "g__UC.FixedString128Bytes",
+            "g__UC.FixedString512Bytes",
+            "g__UC.FixedString4096Bytes",
         };
 
         public static bool IsValidCompilation(
@@ -47,11 +47,7 @@ namespace EncosyTower.SourceGen
             return (skipAllSourceGen && isAllowed)
                 || (skipAllSourceGen == false && skipThisSourceGen == false);
 
-            static bool CanSkipThisSourceGen(
-                  IAssemblySymbol assembly
-                , string skipAttribute
-                , CancellationToken token
-            )
+            static bool CanSkipThisSourceGen(IAssemblySymbol assembly, string skipAttribute, CancellationToken token)
             {
                 return string.IsNullOrWhiteSpace(skipAttribute) == false
                     && assembly.HasAttribute(skipAttribute, token);
@@ -83,9 +79,7 @@ namespace EncosyTower.SourceGen
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (value.Value is string ns
-                        && string.Equals(ns, generatorNamespace, StringComparison.Ordinal)
-                    )
+                    if (value.Value is string ns && string.Equals(ns, generatorNamespace, StringComparison.Ordinal))
                     {
                         return true;
                     }
@@ -239,11 +233,11 @@ namespace EncosyTower.SourceGen
 
         public static string GetPrintFixedStringTypeName(int maxByteCount)
             => maxByteCount switch {
-                <= 32 - 3 => "UC.FixedString32Bytes",
-                <= 64 - 3 => "UC.FixedString64Bytes",
-                <= 128 - 3 => "UC.FixedString128Bytes",
-                <= 512 - 3 => "UC.FixedString512Bytes",
-                _ => "UC.FixedString4096Bytes",
+                <= 32 - 3 => "g__UC.FixedString32Bytes",
+                <= 64 - 3 => "g__UC.FixedString64Bytes",
+                <= 128 - 3 => "g__UC.FixedString128Bytes",
+                <= 512 - 3 => "g__UC.FixedString512Bytes",
+                _ => "g__UC.FixedString4096Bytes",
             };
 
         public static string GetEnumUnderlyingTypeFromMemberCount(ulong memberCount)

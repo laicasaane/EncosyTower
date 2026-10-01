@@ -20,30 +20,8 @@ namespace EncosyTower.SourceGen
 {
     public static class SyntaxNodeExt
     {
-        public static int GetStableHashCode(this SyntaxTree syntaxTree)
-            => SourceGenHelpers.GetStableHashCode(syntaxTree.FilePath) & 0x7fffffff;
-
-        public static string GetHintName( this SyntaxTree syntaxTree, SyntaxNode node, string fileName)
-            => GetHintName(syntaxTree, node.GetLineNumber(), fileName);
-
-        public static string GetHintName(this SyntaxTree syntaxTree, int salting, string fileName)
-        {
-            var stableHashCode = syntaxTree.GetStableHashCode();
-            var postfix = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(fileName) == false)
-            {
-                postfix = $"{fileName}{postfix}";
-            }
-
-            return $"{postfix}_{stableHashCode}_{salting}.g.cs";
-        }
-
         public static bool HasModifier(this MemberDeclarationSyntax cls, SyntaxKind modifier)
             => cls.Modifiers.Any(m => m.IsKind(modifier));
-
-        public static int GetLineNumber(this SyntaxNode node)
-            => node.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
 
         /// <summary>
         /// Test if a node represent an identifier by comparing string followed

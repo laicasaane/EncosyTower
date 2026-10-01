@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup Condition="'$(IsRoslynComponent)' == 'true' AND '$(Configuration)' == 'Release'">
+        <EnableSourceLink>false</EnableSourceLink>
+    </PropertyGroup>
+</Project>

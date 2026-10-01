@@ -4,14 +4,23 @@ using Unity.Entities;
 namespace Samples.Entities.TypeHandles
 {
     public struct ComponentA : IComponentData { }
+
     public struct ComponentB : IComponentData { }
+
     public struct BufferA : IBufferElementData { }
+
     public struct BufferB : IBufferElementData { }
+
     public struct EnableableBufferA : IBufferElementData, IEnableableComponent { }
+
     public struct EnableableBufferB : IBufferElementData, IEnableableComponent { }
+
     public struct EnableableComponentA : IComponentData, IEnableableComponent { }
+
     public struct EnableableComponentB : IComponentData, IEnableableComponent { }
+
     public struct SharedComponentA : ISharedComponentData { }
+
     public struct SharedComponentB : ISharedComponentData { }
 
     [TypeHandle(typeof(ComponentA), true)]

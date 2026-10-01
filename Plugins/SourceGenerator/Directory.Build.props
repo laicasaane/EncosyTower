@@ -1,17 +1,28 @@
 <Project>
     <PropertyGroup>
-        <BaseOutputPath>$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/bin/</BaseOutputPath>
-        <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
-        <ResultsDirectory>$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/TestResults/</ResultsDirectory>
+        <IsPackable>false</IsPackable>
+        <BaseOutputPath Condition="'$(ArtifactsPath)' == ''">$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/bin/</BaseOutputPath>
+        <BaseIntermediateOutputPath Condition="'$(ArtifactsPath)' == ''">$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+        <ResultsDirectory Condition="'$(ArtifactsPath)' == ''">$(MSBuildThisFileDirectory)Build/$(MSBuildProjectName)/TestResults/</ResultsDirectory>
+        <BaseOutputPath Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)/$(MSBuildProjectName)/bin/</BaseOutputPath>
+        <BaseIntermediateOutputPath Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+        <ResultsDirectory Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)/$(MSBuildProjectName)/TestResults/</ResultsDirectory>
+        <PathMap Condition="'$(ArtifactsPath)' != ''">$(ArtifactsPath)=/_artifacts</PathMap>
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+        <UnityAnalyzerDestination>
+            $(MSBuildThisFileDirectory)../../Packages/com.laicasaane.encosy-tower/EncosyTower.Core/SourceGenerators/
+        </UnityAnalyzerDestination>
     </PropertyGroup>
 
     <Target Name="CopyBuildArtifacts" AfterTargets="Build"
-            Condition="'$(Configuration)'=='Release' AND '$(MSBuildProjectName)'!='EncosyTower.SourceGen.Tests'">
+            Condition="'$(Configuration)'=='Release'
+                AND '$(MSBuildProjectName)'!='EncosyTower.SourceGen.Tests'
+                AND '$(UnityAnalyzerDestination)'!=''">
         <ItemGroup>
-            <DataFiles Include="$(OutDir)*.dll" />
+            <DataFiles Include="$(TargetPath)" />
         </ItemGroup>
         <Copy SourceFiles="@(DataFiles)"
-              DestinationFolder="$(MSBuildThisFileDirectory)../../Packages/com.laicasaane.encosy-tower/EncosyTower.Core/SourceGenerators/"
+              DestinationFolder="$(UnityAnalyzerDestination)"
               SkipUnchangedFiles="true" />
     </Target>
 

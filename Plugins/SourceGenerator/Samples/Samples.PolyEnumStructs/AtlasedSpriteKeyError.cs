@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.AtlasedSprites;
+using EncosyTower.Debugging;
 using EncosyTower.PolyEnumStructs;
 
 namespace Samples.PolyEnumStructs.Errors3
@@ -33,7 +34,10 @@ namespace Samples.PolyEnumStructs.Errors3
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log([NotNull] EncosyTower.Logging.ILogger logger)
-            => _error.Log(logger, _prefix);
+        {
+            ThrowHelper.ThrowIfNull(logger);
+            _error.Log(logger, _prefix);
+        }
 
         [PolyEnumStruct]
         readonly partial struct Error
