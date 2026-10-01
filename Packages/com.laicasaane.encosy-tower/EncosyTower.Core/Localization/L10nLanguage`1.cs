@@ -20,6 +20,7 @@ namespace EncosyTower.Localization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public L10nLanguage(ushort value, [NotNull] string code)
         {
+            Debugging.ThrowHelper.ThrowIfNull(code);
             _value = value;
             _code = code;
         }

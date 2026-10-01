@@ -1,18 +1,11 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using EncosyTower.Tasks;
 using UnityEngine;
 
 namespace EncosyTower.UnityExtensions
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public static partial class EncosyGameObjectExtensions
     {
         /// <summary>
@@ -20,11 +13,11 @@ namespace EncosyTower.UnityExtensions
         /// </summary>
         public static async UnityTask ActivateAsync([NotNull] this GameObject self, CancellationToken token = default)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
 
             self.SetActive(false);
 
-            await UnityTasks.NextFrameAsync(token);
+            await UnityTask.NextFrameAsync(token);
 
             self.SetActive(true);
         }
@@ -32,20 +25,22 @@ namespace EncosyTower.UnityExtensions
         /// <summary>
         /// SetActive(false) => N frame => SetActive(true);
         /// </summary>
-        public static async UnityTask ActivateAsync([NotNull] this GameObject self, int delayFrames, CancellationToken token = default)
+        public static async UnityTask ActivateAsync(
+              [NotNull] this GameObject self
+            , int delayFrames
+            , CancellationToken token = default
+        )
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
 
             self.SetActive(false);
 
             for (var i = 0; i < delayFrames; i++)
             {
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
             }
 
             self.SetActive(true);
         }
     }
 }
-
-#endif

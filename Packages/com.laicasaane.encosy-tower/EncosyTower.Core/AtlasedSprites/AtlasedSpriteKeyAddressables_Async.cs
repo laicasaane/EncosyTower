@@ -1,11 +1,11 @@
 #if UNITY_ADDRESSABLES
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.AddressableKeys;
 using EncosyTower.Common;
 using EncosyTower.Loaders;
+using EncosyTower.Tasks;
 using UnityEngine;
 using UnityEngine.U2D;
 
@@ -14,54 +14,47 @@ namespace EncosyTower.AtlasedSprites
     using Error = AtlasedSpriteKeyError;
     using ValueHandlePair = ValueHandlePair<Sprite, SpriteAtlas>;
 
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask<Sprite>;
-    using UnityTaskHandle = Cysharp.Threading.Tasks.UniTask<ValueHandlePair<Sprite, SpriteAtlas>>;
-    using UnityTaskOpt = Cysharp.Threading.Tasks.UniTask<Option<Sprite>>;
-    using UnityTaskResult = Cysharp.Threading.Tasks.UniTask<Result<Sprite, AtlasedSpriteKeyError>>;
-    using UnityTaskHandleOpt = Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<Sprite, SpriteAtlas>>>;
-    using UnityTaskHandleResult = Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<Sprite, SpriteAtlas>, AtlasedSpriteKeyError>>;
-#else
-    using UnityTask = UnityEngine.Awaitable<UnityEngine.Sprite>;
-    using UnityTaskHandle = UnityEngine.Awaitable<ValueHandlePair<UnityEngine.Sprite, SpriteAtlas>>;
-    using UnityTaskOpt = UnityEngine.Awaitable<Option<UnityEngine.Sprite>>;
-    using UnityTaskResult = UnityEngine.Awaitable<Result<UnityEngine.Sprite, AtlasedSpriteKeyError>>;
-    using UnityTaskHandleOpt = UnityEngine.Awaitable<Option<ValueHandlePair<UnityEngine.Sprite, SpriteAtlas>>>;
-    using UnityTaskHandleResult = UnityEngine.Awaitable<Result<ValueHandlePair<UnityEngine.Sprite, SpriteAtlas>, AtlasedSpriteKeyError>>;
-#endif
-
-    partial struct AtlasedSpriteKeyAddressables : ILoadAsync<Sprite>, ITryLoadAsync<Sprite>, ILoadOrErrorAsync<Sprite, Error>
+    partial struct AtlasedSpriteKeyAddressables
+        : ILoadAsync<Sprite>
+        , ITryLoadAsync<Sprite>
+        , ILoadOrErrorAsync<Sprite, Error>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTask LoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Sprite> LoadAsync(CancellationToken token = default)
         {
             var result = await TryLoadAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTaskHandle LoadGetHandleAsync(CancellationToken token = default)
+        public readonly async UnityTask<ValueHandlePair<Sprite, SpriteAtlas>> LoadGetHandleAsync(
+            CancellationToken token = default
+        )
         {
             var result = await TryLoadGetHandleAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTaskOpt TryLoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<Sprite>> TryLoadAsync(CancellationToken token = default)
         {
             var result = await LoadOrErrorAsync(token);
             return result.Value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTaskHandleOpt TryLoadGetHandleAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<ValueHandlePair<Sprite, SpriteAtlas>>> TryLoadGetHandleAsync(
+            CancellationToken token = default
+        )
         {
             var result = await LoadGetHandleOrErrorAsync(token);
             return result.Value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTaskResult LoadOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<Sprite, AtlasedSpriteKeyError>> LoadOrErrorAsync(
+            CancellationToken token = default
+        )
         {
             var result = await LoadGetHandleOrErrorAsync(token);
 
@@ -78,7 +71,9 @@ namespace EncosyTower.AtlasedSprites
             return Error.Undefined((AtlasedSpriteKey)this);
         }
 
-        public readonly async UnityTaskHandleResult LoadGetHandleOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<ValueHandlePair<Sprite, SpriteAtlas>, AtlasedSpriteKeyError>> LoadGetHandleOrErrorAsync(
+            CancellationToken token = default
+        )
         {
             if (IsValid == false)
             {
@@ -114,5 +109,4 @@ namespace EncosyTower.AtlasedSprites
     }
 }
 
-#endif
 #endif

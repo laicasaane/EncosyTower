@@ -1,14 +1,13 @@
 #if UNITY_ADDRESSABLES
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Loaders;
+using EncosyTower.Tasks;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using EncosyTower.Tasks;
-using System;
 
 namespace EncosyTower.AddressableKeys
 {
@@ -17,52 +16,28 @@ namespace EncosyTower.AddressableKeys
     partial struct AddressableKey<T> : ILoadAsync<T>, ITryLoadAsync<T>, ILoadOrErrorAsync<T, Error>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<T>
-#else
-            UnityEngine.Awaitable<T>
-#endif
-            LoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<T> LoadAsync(CancellationToken token = default)
         {
             var result = await TryLoadAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<ValueHandlePair<T>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<T>>
-#endif
-            LoadGetHandleAsync(CancellationToken token = default)
+        public readonly async UnityTask<ValueHandlePair<T>> LoadGetHandleAsync(CancellationToken token = default)
         {
             var result = await TryLoadGetHandleAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-            UnityEngine.Awaitable<Option<T>>
-#endif
-            TryLoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<T>> TryLoadAsync(CancellationToken token = default)
         {
             var result = await TryLoadGetHandleAsync(token);
             return Option.SomeIf(result.HasValue, result.GetValueOrDefault().Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<T, Error>>
-#else
-            UnityEngine.Awaitable<Result<T, Error>>
-#endif
-            LoadOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<T, Error>> LoadOrErrorAsync(CancellationToken token = default)
         {
             var result = await LoadGetHandleOrErrorAsync(token);
 
@@ -80,25 +55,17 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-    Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<T>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<T>>>
-#endif
-            TryLoadGetHandleAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<ValueHandlePair<T>>> TryLoadGetHandleAsync(
+            CancellationToken token = default
+        )
         {
             var result = await LoadGetHandleOrErrorAsync(token);
             return result.Value;
         }
 
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<T>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<T>, Error>>
-#endif
-            LoadGetHandleOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<ValueHandlePair<T>, Error>> LoadGetHandleOrErrorAsync(
+            CancellationToken token = default
+        )
         {
             if (IsValid == false)
             {
@@ -122,7 +89,7 @@ namespace EncosyTower.AddressableKeys
                         break;
                     }
 
-                    await UnityTasks.NextFrameAsync(token);
+                    await UnityTask.NextFrameAsync(token);
 
                     if (token.IsCancellationRequested)
                     {
@@ -160,5 +127,4 @@ namespace EncosyTower.AddressableKeys
     }
 }
 
-#endif
 #endif

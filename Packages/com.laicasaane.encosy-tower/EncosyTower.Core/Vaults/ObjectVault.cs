@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using EncosyTower.UnityExtensions;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Vaults
 {
@@ -33,7 +30,7 @@ namespace EncosyTower.Vaults
         public bool TryAdd<T>(TId id, [NotNull] T obj)
             where T : class
         {
-            ThrowIfObjectNull(IsNotNull(obj), typeof(T));
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(obj);
 
             var map = _map;
 
@@ -91,7 +88,7 @@ namespace EncosyTower.Vaults
         {
             if (obj == null)
             {
-                ErrorIfRegisteredObjectIsNull(id, context);
+                ThrowHelper.LogErrorRegisteredObjectIsNull(id, context);
                 return Option.None;
             }
 
@@ -112,11 +109,11 @@ namespace EncosyTower.Vaults
 
             if (unityObj == false)
             {
-                ErrorIfRegisteredObjectIsNull(id, context);
+                ThrowHelper.LogErrorRegisteredObjectIsNull(id, context);
             }
 
         FAILED:
-            ErrorIfTypeMismatch<T>(id, obj, context);
+            ThrowHelper.LogErrorTypeMismatch<T, TId>(id, obj, context);
             return Option.None;
         }
 
@@ -129,72 +126,18 @@ namespace EncosyTower.Vaults
                     return Option.Some(unityObj);
                 }
 
-                ErrorIfRegisteredObjectIsNull(id, context);
+                ThrowHelper.LogErrorRegisteredObjectIsNull(id, context);
                 return Option.None;
             }
 
             if (obj == null)
             {
-                ErrorIfRegisteredObjectIsNull(id, context);
+                ThrowHelper.LogErrorRegisteredObjectIsNull(id, context);
                 return Option.None;
             }
 
             return Option.Some(obj);
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static bool IsNotNull(object obj)
-            => obj is UnityObject unityObj ? unityObj.IsValid() : obj != null;
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfObjectNull([DoesNotReturnIf(false)] bool isNotNull, Type type)
-        {
-            if (isNotNull == false)
-            {
-                throw CreateException(type);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentNullException CreateException(Type type)
-                => typeof(UnityObject).IsAssignableFrom(type)
-                    ? new("obj", new MissingReferenceException($"Unity object of type {type} is missing or destroyed."))
-                    : new("obj", $"Object of type {type} is null.");
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ErrorIfTypeMismatch<T>(TId id, object obj, UnityObject context)
-        {
-            var message = "Id \"{0}\" is mapped to an object of type \"{1}\". " +
-                "However an object of type \"{2}\" is being requested from it. " +
-                "It might be a bug at the time of registering.";
-
-            if (context)
-            {
-                StaticDevLogger.LogErrorFormat(context, message, id, obj?.GetType(), typeof(T));
-            }
-            else
-            {
-                StaticDevLogger.LogErrorFormat(message, id, obj?.GetType(), typeof(T));
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden, Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
-        private static void ErrorIfRegisteredObjectIsNull(TId id, UnityObject context)
-        {
-            var message = "The object registered with id \"{0}\" is null.";
-
-            if (context)
-            {
-                StaticDevLogger.LogErrorFormat(context, message, id);
-            }
-            else
-            {
-                StaticDevLogger.LogErrorFormat(message, id);
-            }
-        }
     }
 }

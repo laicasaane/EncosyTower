@@ -8,6 +8,8 @@ using EncosyTower.Debugging;
 using Unity.Collections;
 using UnityEngine;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.UnityExtensions
 {
     using UnityObject = UnityEngine.Object;
@@ -23,6 +25,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             var idArray = NativeArray.CreateFrom(entityIds, Allocator.Temp);
             ConvertEntityIdsToObjectList(idArray, objectList);
         }
@@ -33,6 +36,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             var idArray = NativeArray.CreateFrom(gameObjectIds, Allocator.Temp);
             ConvertGameObjectIdsToObjectList(idArray, objectList);
         }
@@ -43,6 +47,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             var idArray = NativeArray.CreateFrom(transformIds, Allocator.Temp);
             ConvertTransformIdsToObjectList(idArray, objectList);
         }
@@ -54,6 +59,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> temporaryList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(temporaryList);
             var idArray = NativeArray.CreateFrom(gameObjectIds, Allocator.Temp);
             ConvertGameObjectIdsToGameObjects(idArray, gameObjects, temporaryList);
         }
@@ -65,6 +71,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> temporaryList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(temporaryList);
             var idArray = NativeArray.CreateFrom(transformIds, Allocator.Temp);
             ConvertTransformIdsToTransforms(idArray, transforms, temporaryList);
         }
@@ -74,6 +81,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             if (entityIds.Length < 1)
             {
                 return;
@@ -87,6 +95,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             if (gameObjectIds.Length < 1)
             {
                 return;
@@ -100,6 +109,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> objectList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(objectList);
             if (transformIds.Length < 1)
             {
                 return;
@@ -114,6 +124,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> temporaryList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(temporaryList);
             var length = gameObjects.Length;
 
             Checks.IsTrue(length == gameObjects.Length, "'gameObjectIds' and 'gameObjects' do not have the same size");
@@ -141,6 +152,7 @@ namespace EncosyTower.UnityExtensions
             , [NotNull] List<UnityObject> temporaryList
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(temporaryList);
             var length = transforms.Length;
 
             Checks.IsTrue(length == transforms.Length, "'transformIds' and 'transforms' do not have the same size");

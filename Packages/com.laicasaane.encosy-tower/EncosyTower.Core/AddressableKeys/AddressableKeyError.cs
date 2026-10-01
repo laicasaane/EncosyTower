@@ -8,6 +8,8 @@ using EncosyTower.PolyEnumStructs;
 using EncosyTower.Pooling;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.AddressableKeys
 {
     [PolyEnumFactoryFor(typeof(Error))]
@@ -38,7 +40,10 @@ namespace EncosyTower.AddressableKeys
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log([NotNull] Logging.ILogger logger)
-            => _error.Log(logger, _prefix);
+        {
+            DebuggingThrowHelper.ThrowIfNull(logger);
+            _error.Log(logger, _prefix);
+        }
 
         [PolyEnumStruct]
         internal readonly partial struct Error

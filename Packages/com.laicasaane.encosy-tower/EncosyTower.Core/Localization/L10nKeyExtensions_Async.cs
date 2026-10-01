@@ -1,5 +1,4 @@
 #if UNITY_LOCALIZATION
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -9,27 +8,31 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace EncosyTower.Localization
 {
-#if UNITASK
-    using UnityTaskString = Cysharp.Threading.Tasks.UniTask<string>;
-#else
-    using UnityTaskString = UnityEngine.Awaitable<string>;
-#endif
-
     public static partial class L10nKeyExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTaskString LocalizeAsync(this L10nKey<string> key, CancellationToken token = default)
+        public static UnityTask<string> LocalizeAsync(
+              this L10nKey<string> key
+            , CancellationToken token = default
+        )
             => LocalizeAsyncInternal(key, token, null);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTaskString LocalizeAsync(this L10nKey<string> key, params object[] arguments)
+        public static UnityTask<string> LocalizeAsync(
+              this L10nKey<string> key
+            , params object[] arguments
+        )
             => LocalizeAsyncInternal(key, default, arguments);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTaskString LocalizeAsync(this L10nKey<string> key, CancellationToken token, params object[] arguments)
+        public static UnityTask<string> LocalizeAsync(
+              this L10nKey<string> key
+            , CancellationToken token
+            , params object[] arguments
+        )
             => LocalizeAsyncInternal(key, token, arguments);
 
-        private static async UnityTaskString LocalizeAsyncInternal(
+        private static async UnityTask<string> LocalizeAsyncInternal(
               L10nKey<string> key
             , CancellationToken token
             , object[] arguments
@@ -54,7 +57,7 @@ namespace EncosyTower.Localization
                     break;
                 }
 
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
 
                 if (token.IsCancellationRequested)
                 {
@@ -70,13 +73,10 @@ namespace EncosyTower.Localization
             return handle.Status == AsyncOperationStatus.Succeeded ? handle.Result : default;
         }
 
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<TObject>
-#else
-            UnityEngine.Awaitable<TObject>
-#endif
-            LocalizeAssetAsync<TObject>(this L10nKey<TObject> key, CancellationToken token = default)
+        public static async UnityTask<TObject> LocalizeAssetAsync<TObject>(
+              this L10nKey<TObject> key
+            , CancellationToken token = default
+        )
             where TObject : UnityEngine.Object
         {
             if (key.IsValid == false) return default;
@@ -95,7 +95,7 @@ namespace EncosyTower.Localization
                     break;
                 }
 
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
 
                 if (token.IsCancellationRequested)
                 {
@@ -118,5 +118,4 @@ namespace EncosyTower.Localization
     }
 }
 
-#endif
 #endif

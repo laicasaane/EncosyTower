@@ -1,12 +1,10 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EncosyTower.Common;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.UnityExtensions
 {
@@ -20,7 +18,7 @@ namespace EncosyTower.UnityExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UnityEntityId(T obj)
         {
-            ThrowIfInvalid(obj.IsValid());
+            ThrowHelper.ThrowIfEntityIdInvalid(obj.IsValid());
             _value = obj.GetEntityId();
         }
 
@@ -45,7 +43,7 @@ namespace EncosyTower.UnityExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Option<T> ToObject()
         {
-            ThrowIfNotCreated(IsValid);
+            ThrowHelper.ThrowIfEntityIdNotCreated(IsValid);
             return Resources.EntityIdToObject(_value) as T;
         }
 
@@ -109,7 +107,10 @@ namespace EncosyTower.UnityExtensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator UnityEntityId<T>([NotNull] T obj)
-            => new(obj);
+        {
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(obj);
+            return new(obj);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(UnityEntityId<T> left, UnityEntityId<T> right)
@@ -133,32 +134,5 @@ namespace EncosyTower.UnityExtensions
             => new((EntityId)instanceId);
 #endif
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("UnityEngine.Object is null or invalid.", "obj");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfNotCreated([DoesNotReturnIf(false)] bool value)
-        {
-            if (value == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("UnityEntityId must be created using the constructor that takes a UnityEngine.Object.");
-        }
     }
 }

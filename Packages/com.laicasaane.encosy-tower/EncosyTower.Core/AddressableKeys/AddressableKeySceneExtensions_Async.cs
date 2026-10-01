@@ -1,5 +1,4 @@
 #if UNITY_ADDRESSABLES
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
 using System.Runtime.CompilerServices;
@@ -15,26 +14,10 @@ namespace EncosyTower.AddressableKeys
 {
     using Error = AddressableKeyError;
 
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask<SceneInstance>;
-    using UnityTaskHandle = Cysharp.Threading.Tasks.UniTask<ValueHandlePair<SceneInstance>>;
-    using UnityTaskOpt = Cysharp.Threading.Tasks.UniTask<Option<SceneInstance>>;
-    using UnityTaskResult = Cysharp.Threading.Tasks.UniTask<Result<SceneInstance, AddressableKeyError>>;
-    using UnityTaskHandleOpt = Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<SceneInstance>>>;
-    using UnityTaskHandleResult = Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<SceneInstance>, AddressableKeyError>>;
-#else
-    using UnityTask = UnityEngine.Awaitable<SceneInstance>;
-    using UnityTaskHandle = UnityEngine.Awaitable<ValueHandlePair<SceneInstance>>;
-    using UnityTaskOpt = UnityEngine.Awaitable<Option<SceneInstance>>;
-    using UnityTaskResult = UnityEngine.Awaitable<Result<SceneInstance, AddressableKeyError>>;
-    using UnityTaskHandleOpt = UnityEngine.Awaitable<Option<ValueHandlePair<SceneInstance>>>;
-    using UnityTaskHandleResult = UnityEngine.Awaitable<Option<ValueHandlePair<SceneInstance>, AddressableKeyError>>;
-#endif
-
     public static partial class AddressableKeySceneExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTask LoadAsync(
+        public static async UnityTask<SceneInstance> LoadAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode = LoadSceneMode.Single
             , bool activateOnLoad = true
@@ -47,7 +30,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskOpt TryLoadAsync(
+        public static async UnityTask<Option<SceneInstance>> TryLoadAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode = LoadSceneMode.Single
             , bool activateOnLoad = true
@@ -60,7 +43,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskResult LoadOrErrorAsync(
+        public static async UnityTask<Result<SceneInstance, AddressableKeyError>> LoadOrErrorAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode = LoadSceneMode.Single
             , bool activateOnLoad = true
@@ -84,7 +67,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskHandle LoadGetHandleAsync(
+        public static async UnityTask<ValueHandlePair<SceneInstance>> LoadGetHandleAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode = LoadSceneMode.Single
             , bool activateOnLoad = true
@@ -97,7 +80,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskHandleOpt TryLoadGetHandleAsync(
+        public static async UnityTask<Option<ValueHandlePair<SceneInstance>>> TryLoadGetHandleAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode
             , bool activateOnLoad
@@ -109,7 +92,7 @@ namespace EncosyTower.AddressableKeys
             return result.Value;
         }
 
-        public static async UnityTaskHandleResult LoadGetHandleOrErrorAsync(
+        public static async UnityTask<Result<ValueHandlePair<SceneInstance>, AddressableKeyError>> LoadGetHandleOrErrorAsync(
               this AddressableKey<Scene> key
             , LoadSceneMode mode
             , bool activateOnLoad
@@ -139,7 +122,7 @@ namespace EncosyTower.AddressableKeys
                         break;
                     }
 
-                    await UnityTasks.NextFrameAsync(token);
+                    await UnityTask.NextFrameAsync(token);
 
                     if (token.IsCancellationRequested)
                     {
@@ -169,5 +152,4 @@ namespace EncosyTower.AddressableKeys
     }
 }
 
-#endif
 #endif

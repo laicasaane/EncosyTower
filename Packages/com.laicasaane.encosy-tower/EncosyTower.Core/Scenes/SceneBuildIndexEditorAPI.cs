@@ -34,7 +34,7 @@ namespace EncosyTower.Editor.Scenes
         {
             var scenes = EditorBuildSettings.scenes.AsSpan();
             var length = scenes.Length;
-            var result = new ListFast<SceneBuildIndex>(new(length));
+            var result = new ListFast<SceneBuildIndex>(length);
 
             for (var i = 0; i < length; i++)
             {

@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
@@ -7,14 +5,6 @@ using EncosyTower.Tasks;
 
 namespace EncosyTower.Vaults
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-    using UnityTaskObject = Cysharp.Threading.Tasks.UniTask<Option<object>>;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-    using UnityTaskObject = UnityEngine.Awaitable<Option<object>>;
-#endif
-
     using UnityObject = UnityEngine.Object;
 
     partial class ObjectVault<TId>
@@ -31,7 +21,7 @@ namespace EncosyTower.Vaults
                     break;
                 }
 
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
 
                 if (token.IsCancellationRequested)
                 {
@@ -41,17 +31,7 @@ namespace EncosyTower.Vaults
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-            UnityEngine.Awaitable<Option<T>>
-#endif
-            TryGetAsync<T>(
-              TId id
-            , UnityObject context
-            , CancellationToken token
-        )
+        public async UnityTask<Option<T>> TryGetAsync<T>(TId id, UnityObject context, CancellationToken token)
         {
             await WaitUntilContains(id, token);
 
@@ -64,11 +44,7 @@ namespace EncosyTower.Vaults
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async UnityTaskObject TryGetAsync(
-              TId id
-            , UnityObject context
-            , CancellationToken token
-        )
+        public async UnityTask<Option<object>> TryGetAsync(TId id, UnityObject context, CancellationToken token)
         {
             await WaitUntilContains(id, token);
 
@@ -81,5 +57,3 @@ namespace EncosyTower.Vaults
         }
     }
 }
-
-#endif

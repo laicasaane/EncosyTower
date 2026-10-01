@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -8,12 +6,6 @@ using EncosyTower.Tasks;
 
 namespace EncosyTower.Vaults
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     partial class ValueVault<TId, TValue>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -28,7 +20,7 @@ namespace EncosyTower.Vaults
                     break;
                 }
 
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
 
                 if (token.IsCancellationRequested)
                 {
@@ -51,7 +43,7 @@ namespace EncosyTower.Vaults
                     break;
                 }
 
-                await UnityTasks.NextFrameAsync(token);
+                await UnityTask.NextFrameAsync(token);
 
                 if (token.IsCancellationRequested)
                 {
@@ -61,21 +53,11 @@ namespace EncosyTower.Vaults
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<TValue>>
-#else
-            UnityEngine.Awaitable<Option<TValue>>
-#endif
-            TryGetAsync(TId id, CancellationToken token = default)
+        public async UnityTask<Option<TValue>> TryGetAsync(TId id, CancellationToken token = default)
         {
             await WaitUntilContains(id, token);
 
-            return token.IsCancellationRequested
-                ? Option.None
-                : _map.GetValueOrDefault(id);
+            return token.IsCancellationRequested ? Option.None : _map.GetValueOrDefault(id);
         }
     }
 }
-
-#endif

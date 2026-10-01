@@ -6,6 +6,8 @@ using EncosyTower.Common;
 using UnityEngine;
 using UnityEngine.U2D;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.AtlasedSprites
 {
     using Error = AtlasedSpriteKeyError;
@@ -39,12 +41,14 @@ namespace EncosyTower.AtlasedSprites
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<Sprite> TryGetSprite([NotNull] this SpriteAtlas atlas, AssetKey<Sprite> name)
         {
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(atlas);
             var result = GetSpriteOrError(atlas, name);
             return result.Value;
         }
 
         public static Result<Sprite, Error> GetSpriteOrError([NotNull] this SpriteAtlas atlas, AssetKey<Sprite> name)
         {
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(atlas);
             if (name.IsValid == false)
             {
                 return Error.InvalidSpriteKey((AssetKey)name);

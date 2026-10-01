@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,38 +14,20 @@ namespace EncosyTower.ResourceKeys
     partial struct ResourceKey<T> : ILoadAsync<T>, ITryLoadAsync<T>, ILoadOrErrorAsync<T, Error>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<T>
-#else
-            UnityEngine.Awaitable<T>
-#endif
-            LoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<T> LoadAsync(CancellationToken token = default)
         {
             var result = await TryLoadAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-            UnityEngine.Awaitable<Option<T>>
-#endif
-            TryLoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<T>> TryLoadAsync(CancellationToken token = default)
         {
             var result = await LoadOrErrorAsync(token);
             return result.Value;
         }
 
-        public readonly async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<T, ResourceKeyError>>
-#else
-            UnityEngine.Awaitable<Result<T, ResourceKeyError>>
-#endif
-             LoadOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<T, ResourceKeyError>> LoadOrErrorAsync(CancellationToken token = default)
         {
             if (IsValid == false)
             {
@@ -70,7 +50,7 @@ namespace EncosyTower.ResourceKeys
                         break;
                     }
 
-                    await UnityTasks.NextFrameAsync(token);
+                    await UnityTask.NextFrameAsync(token);
 
                     if (token.IsCancellationRequested)
                     {
@@ -104,5 +84,3 @@ namespace EncosyTower.ResourceKeys
         }
     }
 }
-
-#endif

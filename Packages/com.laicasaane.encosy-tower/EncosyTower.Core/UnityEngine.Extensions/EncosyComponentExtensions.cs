@@ -1,10 +1,6 @@
-using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.UnityExtensions
 {
@@ -12,7 +8,7 @@ namespace EncosyTower.UnityExtensions
     {
         public static T GetOrAddComponent<T>([NotNull] this Component self) where T : Component
         {
-            ThrowIfComponentInvalid(self.IsValid(), 0);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
 
             if (self.TryGetComponent(out T component) == false)
             {
@@ -24,14 +20,14 @@ namespace EncosyTower.UnityExtensions
 
         public static void DetachParent([NotNull] this Transform self, bool worldPositionStays = true)
         {
-            ThrowIfComponentInvalid(self.IsValid(), 0);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
             self.SetParent(null, worldPositionStays);
         }
 
         public static void FillParent([NotNull] this RectTransform self, [NotNull] RectTransform parent)
         {
-            ThrowIfComponentInvalid(self.IsValid(), 0);
-            ThrowIfComponentInvalid(parent.IsValid(), 1);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(parent);
 
             self.SetParent(parent, false);
             self.localPosition = Vector3.zero;
@@ -46,33 +42,13 @@ namespace EncosyTower.UnityExtensions
 
         public static void SetParentRect([NotNull] this RectTransform self, [NotNull] RectTransform parent)
         {
-            ThrowIfComponentInvalid(self.IsValid(), 0);
-            ThrowIfComponentInvalid(parent.IsValid(), 1);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(parent);
 
             self.SetParent(parent, false);
             self.localPosition = Vector3.zero;
             self.rotation = Quaternion.identity;
             self.localScale = Vector3.one;
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfComponentInvalid([DoesNotReturnIf(false)] bool isValid, int paramIndex)
-        {
-            if (isValid == false)
-            {
-                throw CreateException(paramIndex);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException(int paramIndex)
-                => new("Component is null or invalid.", GetParamName(paramIndex));
-
-            static string GetParamName(int index)
-                => index switch {
-                    1 => "parent",
-                    _ => "self",
-                };
         }
     }
 }

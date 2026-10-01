@@ -5,6 +5,8 @@ using EncosyTower.Ids;
 using EncosyTower.StringIds;
 using EncosyTower.Types;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Vaults
 {
     public static partial class GlobalObjectVault
@@ -39,7 +41,10 @@ namespace EncosyTower.Vaults
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryAdd<T>(Id<T> id, [NotNull] T obj)
             where T : class
-            => s_vaultIdT.TryAdd(ToId2(id), obj);
+        {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(obj);
+            return s_vaultIdT.TryAdd(ToId2(id), obj);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryRemove<T>(Id<T> id, out Option<T> obj)
@@ -61,7 +66,10 @@ namespace EncosyTower.Vaults
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryAdd<T>(Id2 id, [NotNull] T obj)
             where T : class
-            => s_vaultId2.TryAdd(id, obj);
+        {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(obj);
+            return s_vaultId2.TryAdd(id, obj);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryRemove<T>(Id2 id, out Option<T> obj)
@@ -87,7 +95,10 @@ namespace EncosyTower.Vaults
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryAdd<T>(StringId<T> id, [NotNull] T obj)
             where T : class
-            => s_vaultStringId.TryAdd(ToMetaStringId(id), obj);
+        {
+            DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(obj);
+            return s_vaultStringId.TryAdd(ToMetaStringId(id), obj);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryRemove<T>(StringId<T> id, out Option<T> obj)

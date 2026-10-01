@@ -1,11 +1,9 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.UnityExtensions
 {
@@ -15,8 +13,12 @@ namespace EncosyTower.UnityExtensions
 
         public static Component GetOrAddComponent([NotNull] this GameObject self, [NotNull] Type componentType)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
-            ThrowIfComponentTypeInvalid(IsComponentType(componentType), componentType);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
+            DebuggingThrowHelper.ThrowIfNull(componentType);
+            ThrowHelper.ThrowIfComponentTypeInvalid(
+                  IsComponentType(componentType)
+                , componentType
+            );
 
             if (self.TryGetComponent(componentType, out var component) == false)
             {
@@ -28,7 +30,7 @@ namespace EncosyTower.UnityExtensions
 
         public static T GetOrAddComponent<T>([NotNull] this GameObject self) where T : Component
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
 
             if (self.TryGetComponent(out T component) == false)
             {
@@ -41,16 +43,16 @@ namespace EncosyTower.UnityExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void MoveToScene([NotNull] this GameObject self, Scene scene)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
-            ThrowIfSceneInvalid(scene.IsValid(), scene);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
+            ThrowHelper.ThrowIfSceneInvalid(scene.IsValid(), scene);
             SceneManager.MoveGameObjectToScene(self, scene);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void MoveToSceneWithoutParent([NotNull] this GameObject self, Scene scene)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
-            ThrowIfSceneInvalid(scene.IsValid(), scene);
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
+            ThrowHelper.ThrowIfSceneInvalid(scene.IsValid(), scene);
             self.transform.SetParent(null, true);
             SceneManager.MoveGameObjectToScene(self, scene);
         }
@@ -58,7 +60,7 @@ namespace EncosyTower.UnityExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DetachParent([NotNull] this GameObject self, bool worldPositionStays = true)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
             self.transform.SetParent(null, worldPositionStays);
         }
 
@@ -69,7 +71,7 @@ namespace EncosyTower.UnityExtensions
         /// <returns></returns>
         public static GameObject TrimCloneSuffix([NotNull] this GameObject self)
         {
-            ThrowIfGameObjectInvalid(self.IsValid());
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(self);
 
             var name = self.name.AsSpan();
 
@@ -84,46 +86,5 @@ namespace EncosyTower.UnityExtensions
         private static bool IsComponentType(Type type)
             => typeof(Component).IsAssignableFrom(type);
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfGameObjectInvalid([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("GameObject is null or invalid.", "self");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfComponentTypeInvalid([DoesNotReturnIf(false)] bool isValid, Type type)
-        {
-            if (isValid == false)
-            {
-                throw CreateException(type);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException(Type componentType)
-                => new($"Type {componentType} is not a 'UnityEngine.Component'.", nameof(componentType));
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfSceneInvalid([DoesNotReturnIf(false)] bool isValid, Scene scene)
-        {
-            if (isValid == false)
-            {
-                throw CreateException(scene);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(Scene scene)
-                => new($"Scene {scene.handle} is invalid");
-        }
     }
 }

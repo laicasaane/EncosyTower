@@ -1,42 +1,36 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Loaders;
+using EncosyTower.Tasks;
 using UnityEngine;
 
 namespace EncosyTower.AtlasedSprites
 {
     using Error = AtlasedSpriteKeyError;
 
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask<Sprite>;
-    using UnityTaskOpt = Cysharp.Threading.Tasks.UniTask<Option<Sprite>>;
-    using UnityTaskResult = Cysharp.Threading.Tasks.UniTask<Result<Sprite, AtlasedSpriteKeyError>>;
-#else
-    using UnityTask = UnityEngine.Awaitable<UnityEngine.Sprite>;
-    using UnityTaskOpt = UnityEngine.Awaitable<Option<UnityEngine.Sprite>>;
-    using UnityTaskResult = UnityEngine.Awaitable<Result<UnityEngine.Sprite, AtlasedSpriteKeyError>>;
-#endif
-
-    partial struct AtlasedSpriteKeyResources : ILoadAsync<Sprite>, ITryLoadAsync<Sprite>, ILoadOrErrorAsync<Sprite, Error>
+    partial struct AtlasedSpriteKeyResources
+        : ILoadAsync<Sprite>
+        , ITryLoadAsync<Sprite>
+        , ILoadOrErrorAsync<Sprite, Error>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTask LoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Sprite> LoadAsync(CancellationToken token = default)
         {
             var result = await TryLoadAsync(token);
             return result.GetValueOrDefault();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly async UnityTaskOpt TryLoadAsync(CancellationToken token = default)
+        public readonly async UnityTask<Option<Sprite>> TryLoadAsync(CancellationToken token = default)
         {
             var result = await LoadOrErrorAsync(token);
             return result.Value;
         }
 
-        public readonly async UnityTaskResult LoadOrErrorAsync(CancellationToken token = default)
+        public readonly async UnityTask<Result<Sprite, AtlasedSpriteKeyError>> LoadOrErrorAsync(
+            CancellationToken token = default
+        )
         {
             if (IsValid == false)
             {
@@ -71,5 +65,3 @@ namespace EncosyTower.AtlasedSprites
         }
     }
 }
-
-#endif

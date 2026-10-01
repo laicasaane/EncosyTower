@@ -2,21 +2,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Ids;
-using EncosyTower.Logging;
 using EncosyTower.Types;
 using EncosyTower.UnityExtensions;
 using EncosyTower.Vaults;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Localization
 {
@@ -50,6 +46,8 @@ namespace EncosyTower.Localization
             , [NotNull] Func<SystemLanguage, L10nLanguage> toLanguage
         )
         {
+            Debugging.ThrowHelper.ThrowIfNull(getLanguages);
+            Debugging.ThrowHelper.ThrowIfNull(toLanguage);
             GlobalValueVault<bool>.TrySet(TypeId, false);
 
             s_getLanguages = getLanguages;
@@ -74,7 +72,7 @@ namespace EncosyTower.Localization
         {
             if (IsReady() == false)
             {
-                ErrorNotReady();
+                ThrowHelper.ErrorNotReady();
                 localeCode = default;
                 return false;
             }
@@ -85,7 +83,7 @@ namespace EncosyTower.Localization
 
             if (localeOpt.HasValue == false)
             {
-                ErrorCannotFindLanguage(localeCode);
+                ThrowHelper.ErrorCannotFindLanguage(localeCode);
                 localeCode = L10nLanguage.Default.ToLocaleCode();
                 localeOpt = FindLocale(localeCode);
             }
@@ -95,9 +93,10 @@ namespace EncosyTower.Localization
 
         public static string SetLocale([NotNull] string localeCode)
         {
+            Debugging.ThrowHelper.ThrowIfNull(localeCode);
             if (IsReady() == false)
             {
-                ErrorNotReady();
+                ThrowHelper.ErrorNotReady();
                 return L10nLanguage.Default.ToLocaleCode();
             }
 
@@ -110,26 +109,26 @@ namespace EncosyTower.Localization
 
             if (localeOpt.HasValue == false)
             {
-                ErrorCannotFindLanguage(localeCode);
+                ThrowHelper.ErrorCannotFindLanguage(localeCode);
                 localeCode = s_toLanguage(Application.systemLanguage).ToLocaleCode();
                 localeOpt = FindLocale(localeCode);
             }
 
             if (localeOpt.HasValue == false)
             {
-                ErrorCannotFindLanguage(localeCode);
+                ThrowHelper.ErrorCannotFindLanguage(localeCode);
                 localeCode = L10nLanguage.Default.ToLocaleCode();
                 localeOpt = FindLocale(localeCode);
             }
 
             if (localeOpt.HasValue == false)
             {
-                ErrorCannotFindLanguage(localeCode);
+                ThrowHelper.ErrorCannotFindLanguage(localeCode);
             }
             else
             {
                 var locale = localeOpt.GetValueOrThrow();
-                InfoChangeLanguage(locale.LocaleName);
+                ThrowHelper.InfoChangeLanguage(locale.LocaleName);
                 LocalizationSettings.SelectedLocale = locale;
             }
 
@@ -138,6 +137,7 @@ namespace EncosyTower.Localization
 
         public static void GetActiveLocales([NotNull] ICollection<string> locales)
         {
+            Debugging.ThrowHelper.ThrowIfNull(locales);
             locales.Clear();
 
             var languages = s_getLanguages().Span;
@@ -151,9 +151,10 @@ namespace EncosyTower.Localization
 
         public static void SaveSelectedLanguage([NotNull] Action<string> onSave)
         {
+            Debugging.ThrowHelper.ThrowIfNull(onSave);
             if (IsReady() == false)
             {
-                ErrorNotReady();
+                ThrowHelper.ErrorNotReady();
                 return;
             }
 
@@ -164,27 +165,6 @@ namespace EncosyTower.Localization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Option<Locale> FindLocale(string localeCode)
             => Option.SomeIf(s_codeToLocaleMap.TryGetValue(localeCode, out var locale) && locale.IsValid(), locale);
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ErrorNotReady()
-        {
-            StaticDevLogger.LogError("Must call \"L10n.Initialize()\" first.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ErrorCannotFindLanguage(string value)
-        {
-            StaticDevLogger.LogError($"Cannot find any language by locale code {value}");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void InfoChangeLanguage(string value)
-        {
-            StaticDevLogger.LogInfo($"Change language to {value}");
-        }
 
         public readonly struct Localization { }
     }

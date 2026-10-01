@@ -6,13 +6,13 @@ namespace EncosyTower.UnityExtensions
     public static class EncosyLayerMaskExtensions
     {
         /// <summary>
-		/// Determines whether some of the bit fields are set in the current instance.
-		/// </summary>
-		/// <returns>
+        /// Determines whether some of the bit fields are set in the current instance.
+        /// </summary>
+        /// <returns>
         /// <c>true</c> if all the bit fields that are set in <c>flag</c> are also set in the current instance;
         /// otherwise, <c>false</c>.
         /// </returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains(this LayerMask value, LayerMask flag)
             => (value & flag) == flag;
 

@@ -5,6 +5,8 @@ using EncosyTower.Common;
 using EncosyTower.PolyEnumStructs;
 using EncosyTower.Pooling;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.ResourceKeys
 {
     [PolyEnumFactoryFor(typeof(Error))]
@@ -35,7 +37,10 @@ namespace EncosyTower.ResourceKeys
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log([NotNull] Logging.ILogger logger)
-            => _error.Log(logger, _prefix);
+        {
+            DebuggingThrowHelper.ThrowIfNull(logger);
+            _error.Log(logger, _prefix);
+        }
 
         [PolyEnumStruct]
         internal readonly partial struct Error

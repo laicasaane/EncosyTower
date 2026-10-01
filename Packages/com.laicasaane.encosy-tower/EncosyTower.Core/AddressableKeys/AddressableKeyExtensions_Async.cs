@@ -1,5 +1,4 @@
 #if UNITY_ADDRESSABLES
-#if UNITASK || UNITY_6000_0_OR_NEWER
 
 using System;
 using System.Runtime.CompilerServices;
@@ -18,73 +17,43 @@ namespace EncosyTower.AddressableKeys
     public static partial class AddressableKeyExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<T>
-#else
-            UnityEngine.Awaitable<T>
-#endif
-            LoadAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).LoadAsync(token);
+        public static UnityTask<T> LoadAsync<T>(this AddressableKey key, CancellationToken token = default)
+            => ((AddressableKey<T>)key).LoadAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-            UnityEngine.Awaitable<Option<T>>
-#endif
-            TryLoadAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).TryLoadAsync(token);
+        public static UnityTask<Option<T>> TryLoadAsync<T>(this AddressableKey key, CancellationToken token = default)
+            => ((AddressableKey<T>)key).TryLoadAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<T, Error>>
-#else
-            UnityEngine.Awaitable<Result<T, Error>>
-#endif
-            LoadOrErrorAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).LoadOrErrorAsync(token);
+        public static UnityTask<Result<T, Error>> LoadOrErrorAsync<T>(
+              this AddressableKey key
+            , CancellationToken token = default
+        )
+            => ((AddressableKey<T>)key).LoadOrErrorAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-    Cysharp.Threading.Tasks.UniTask<ValueHandlePair<T>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<T>>
-#endif
-            LoadGetHandleAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).LoadGetHandleAsync(token);
+        public static UnityTask<ValueHandlePair<T>> LoadGetHandleAsync<T>(
+              this AddressableKey key
+            , CancellationToken token = default
+        )
+            => ((AddressableKey<T>)key).LoadGetHandleAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<T>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<T>>>
-#endif
-            TryLoadGetHandleAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).TryLoadGetHandleAsync(token);
+        public static UnityTask<Option<ValueHandlePair<T>>> TryLoadGetHandleAsync<T>(
+              this AddressableKey key
+            , CancellationToken token = default
+        )
+            => ((AddressableKey<T>)key).TryLoadGetHandleAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<T>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<T>, Error>>
-#endif
-            LoadGetHandleOrErrorAsync<T>(this AddressableKey key, CancellationToken token = default)
-                => ((AddressableKey<T>)key).LoadGetHandleOrErrorAsync(token);
+        public static UnityTask<Result<ValueHandlePair<T>, Error>> LoadGetHandleOrErrorAsync<T>(
+              this AddressableKey key
+            , CancellationToken token = default
+        )
+            => ((AddressableKey<T>)key).LoadGetHandleOrErrorAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<GameObject>
-#else
-            UnityEngine.Awaitable<GameObject>
-#endif
-            InstantiateAsync(
+        public static UnityTask<GameObject> InstantiateAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -92,22 +61,11 @@ namespace EncosyTower.AddressableKeys
             , CancellationToken token = default
         )
         {
-            return ((AddressableKey<GameObject>)key).InstantiateAsync(
-                  parent
-                , inWorldSpace
-                , trimCloneSuffix
-                , token
-            );
+            return ((AddressableKey<GameObject>)key).InstantiateAsync(parent, inWorldSpace, trimCloneSuffix, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<GameObject>>
-#else
-            UnityEngine.Awaitable<Option<GameObject>>
-#endif
-            TryInstantiateAsync(
+        public static UnityTask<Option<GameObject>> TryInstantiateAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -115,22 +73,11 @@ namespace EncosyTower.AddressableKeys
             , CancellationToken token = default
         )
         {
-            return ((AddressableKey<GameObject>)key).TryInstantiateAsync(
-                  parent
-                , inWorldSpace
-                , trimCloneSuffix
-                , token
-            );
+            return ((AddressableKey<GameObject>)key).TryInstantiateAsync(parent, inWorldSpace, trimCloneSuffix, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<GameObject, Error>>
-#else
-            UnityEngine.Awaitable<Result<GameObject, Error>>
-#endif
-            InstantiateOrErrorAsync(
+        public static UnityTask<Result<GameObject, Error>> InstantiateOrErrorAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -147,13 +94,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-    Cysharp.Threading.Tasks.UniTask<ValueHandlePair<GameObject>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<GameObject>>
-#endif
-            InstantiateGetHandleAsync(
+        public static UnityTask<ValueHandlePair<GameObject>> InstantiateGetHandleAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -170,13 +111,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<GameObject>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<GameObject>>>
-#endif
-            TryInstantiateGetHandleAsync(
+        public static UnityTask<Option<ValueHandlePair<GameObject>>> TryInstantiateGetHandleAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -193,13 +128,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<GameObject>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<GameObject>, Error>>
-#endif
-            InstantiateGetHandleOrErrorAsync(
+        public static UnityTask<Result<ValueHandlePair<GameObject>, Error>> InstantiateGetHandleOrErrorAsync(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -216,13 +145,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<TComponent>
-#else
-            UnityEngine.Awaitable<TComponent>
-#endif
-            InstantiateAsync<TComponent>(
+        public static UnityTask<TComponent> InstantiateAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -240,13 +163,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<TComponent>>
-#else
-            UnityEngine.Awaitable<Option<TComponent>>
-#endif
-            TryInstantiateAsync<TComponent>(
+        public static UnityTask<Option<TComponent>> TryInstantiateAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -264,13 +181,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<TComponent, Error>>
-#else
-            UnityEngine.Awaitable<Result<TComponent, Error>>
-#endif
-            InstantiateOrErrorAsync<TComponent>(
+        public static UnityTask<Result<TComponent, Error>> InstantiateOrErrorAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -288,13 +199,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-    Cysharp.Threading.Tasks.UniTask<ValueHandlePair<TComponent, GameObject>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<TComponent, GameObject>>
-#endif
-            InstantiateGetHandleAsync<TComponent>(
+        public static UnityTask<ValueHandlePair<TComponent, GameObject>> InstantiateGetHandleAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -312,13 +217,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<TComponent, GameObject>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<TComponent, GameObject>>>
-#endif
-            TryInstantiateGetHandleAsync<TComponent>(
+        public static UnityTask<Option<ValueHandlePair<TComponent, GameObject>>> TryInstantiateGetHandleAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -336,13 +235,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<TComponent, GameObject>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<TComponent, GameObject>, Error>>
-#endif
-            InstantiateGetHandleOrErrorAsync<TComponent>(
+        public static UnityTask<Result<ValueHandlePair<TComponent, GameObject>, Error>> InstantiateGetHandleOrErrorAsync<TComponent>(
               this AddressableKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -360,13 +253,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<GameObject>
-#else
-            UnityEngine.Awaitable<GameObject>
-#endif
-            InstantiateAsync(
+        public static async UnityTask<GameObject> InstantiateAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -379,13 +266,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<TComponent>
-#else
-            UnityEngine.Awaitable<TComponent>
-#endif
-            InstantiateAsync<TComponent>(
+        public static async UnityTask<TComponent> InstantiateAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -406,13 +287,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<ValueHandlePair<GameObject>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<GameObject>>
-#endif
-            InstantiateGetHandleAsync(
+        public static async UnityTask<ValueHandlePair<GameObject>> InstantiateGetHandleAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -425,13 +300,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<ValueHandlePair<TComponent, GameObject>>
-#else
-            UnityEngine.Awaitable<ValueHandlePair<TComponent, GameObject>>
-#endif
-            InstantiateGetHandleAsync<TComponent>(
+        public static async UnityTask<ValueHandlePair<TComponent, GameObject>> InstantiateGetHandleAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -452,13 +321,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<GameObject>>
-#else
-            UnityEngine.Awaitable<Option<GameObject>>
-#endif
-            TryInstantiateAsync(
+        public static async UnityTask<Option<GameObject>> TryInstantiateAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -471,13 +334,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<TComponent>>
-#else
-            UnityEngine.Awaitable<Option<TComponent>>
-#endif
-            TryInstantiateAsync<TComponent>(
+        public static async UnityTask<Option<TComponent>> TryInstantiateAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -486,18 +343,18 @@ namespace EncosyTower.AddressableKeys
         )
             where TComponent : Component
         {
-            var result = await TryInstantiateGetHandleAsync<TComponent>(key, parent, inWorldSpace, trimCloneSuffix, token);
+            var result = await TryInstantiateGetHandleAsync<TComponent>(
+                  key
+                , parent
+                , inWorldSpace
+                , trimCloneSuffix
+                , token
+            );
             return Option.SomeIf(result.HasValue, result.GetValueOrDefault().Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<GameObject, Error>>
-#else
-            UnityEngine.Awaitable<Result<GameObject, Error>>
-#endif
-            InstantiateOrErrorAsync(
+        public static async UnityTask<Result<GameObject, Error>> InstantiateOrErrorAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -505,13 +362,7 @@ namespace EncosyTower.AddressableKeys
             , CancellationToken token = default
         )
         {
-            var result = await InstantiateGetHandleOrErrorAsync(
-                  key
-                , parent
-                , inWorldSpace
-                , trimCloneSuffix
-                , token
-            );
+            var result = await InstantiateGetHandleOrErrorAsync(key, parent, inWorldSpace, trimCloneSuffix, token);
 
             if (result.TryGetValue(out var value))
             {
@@ -527,13 +378,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<TComponent, Error>>
-#else
-            UnityEngine.Awaitable<Result<TComponent, Error>>
-#endif
-            InstantiateOrErrorAsync<TComponent>(
+        public static async UnityTask<Result<TComponent, Error>> InstantiateOrErrorAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -564,13 +409,7 @@ namespace EncosyTower.AddressableKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<GameObject>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<GameObject>>>
-#endif
-            TryInstantiateGetHandleAsync(
+        public static async UnityTask<Option<ValueHandlePair<GameObject>>> TryInstantiateGetHandleAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent
             , bool inWorldSpace
@@ -578,25 +417,13 @@ namespace EncosyTower.AddressableKeys
             , CancellationToken token = default
         )
         {
-            var result = await InstantiateGetHandleOrErrorAsync(
-                  key
-                , parent
-                , inWorldSpace
-                , trimCloneSuffix
-                , token
-            );
+            var result = await InstantiateGetHandleOrErrorAsync(key, parent, inWorldSpace, trimCloneSuffix, token);
 
             return result.Value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<ValueHandlePair<TComponent, GameObject>>>
-#else
-            UnityEngine.Awaitable<Option<ValueHandlePair<TComponent, GameObject>>>
-#endif
-            TryInstantiateGetHandleAsync<TComponent>(
+        public static async UnityTask<Option<ValueHandlePair<TComponent, GameObject>>> TryInstantiateGetHandleAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -616,13 +443,7 @@ namespace EncosyTower.AddressableKeys
             return result.Value;
         }
 
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<GameObject>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<GameObject>, Error>>
-#endif
-            InstantiateGetHandleOrErrorAsync(
+        public static async UnityTask<Result<ValueHandlePair<GameObject>, Error>> InstantiateGetHandleOrErrorAsync(
               this AddressableKey<GameObject> key
             , TransformOrScene parent
             , bool inWorldSpace
@@ -652,7 +473,7 @@ namespace EncosyTower.AddressableKeys
                         break;
                     }
 
-                    await UnityTasks.NextFrameAsync(token);
+                    await UnityTask.NextFrameAsync(token);
 
                     if (token.IsCancellationRequested)
                     {
@@ -704,13 +525,7 @@ namespace EncosyTower.AddressableKeys
             }
         }
 
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<ValueHandlePair<TComponent, GameObject>, Error>>
-#else
-            UnityEngine.Awaitable<Result<ValueHandlePair<TComponent, GameObject>, Error>>
-#endif
-            InstantiateGetHandleOrErrorAsync<TComponent>(
+        public static async UnityTask<Result<ValueHandlePair<TComponent, GameObject>, Error>> InstantiateGetHandleOrErrorAsync<TComponent>(
               this AddressableKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -750,5 +565,4 @@ namespace EncosyTower.AddressableKeys
     }
 }
 
-#endif
 #endif

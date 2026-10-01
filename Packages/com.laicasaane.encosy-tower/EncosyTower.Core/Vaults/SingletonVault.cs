@@ -6,12 +6,7 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using EncosyTower.Logging;
 using EncosyTower.Types;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Vaults
 {
@@ -26,15 +21,14 @@ namespace EncosyTower.Vaults
 
         public bool Contains<T>(T instance)
             where T : class, TBase
-            => _singletons.TryGetValue(Type<T>.Hash, out var obj)
-               && ReferenceEquals(obj, instance);
+            => _singletons.TryGetValue(Type<T>.Hash, out var obj) && ReferenceEquals(obj, instance);
 
         public bool TryAdd<T>()
             where T : class, TBase, new()
         {
             if (_singletons.ContainsKey(Type<T>.Hash))
             {
-                LogError_InstanceAlreadyExists<T>();
+                ThrowHelper.LogErrorInstanceAlreadyExists<T>();
                 return false;
             }
 
@@ -47,7 +41,7 @@ namespace EncosyTower.Vaults
             if (instance == null)
             {
 #if __ENCOSY_VALIDATION__
-                throw CreateArgumentNullException_Instance();
+                throw ThrowHelper.CreateArgumentNullExceptionInstance();
 #else
                 return false;
 #endif
@@ -55,7 +49,7 @@ namespace EncosyTower.Vaults
 
             if (_singletons.ContainsKey(Type<T>.Hash))
             {
-                LogError_InstanceAlreadyExists<T>();
+                ThrowHelper.LogErrorInstanceAlreadyExists<T>();
                 return false;
             }
 
@@ -74,7 +68,7 @@ namespace EncosyTower.Vaults
                 }
                 else
                 {
-                    ThrowCannotCastEvenRegistered<T>(obj);
+                    ThrowHelper.ThrowCannotCastEvenRegistered<T>(obj);
                 }
             }
 
@@ -94,7 +88,7 @@ namespace EncosyTower.Vaults
                 }
                 else
                 {
-                    ThrowCannotCast<T>(obj);
+                    ThrowHelper.ThrowCannotCast<T>(obj);
                 }
             }
 
@@ -117,30 +111,5 @@ namespace EncosyTower.Vaults
             singletons.Clear();
         }
 
-        private static Exception CreateArgumentNullException_Instance()
-            => new ArgumentNullException("instance");
-
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogError_InstanceAlreadyExists<T>()
-            => StaticDevLogger.LogError($"An instance of {typeof(T)} has already been existing");
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowCannotCastEvenRegistered<T>(TBase obj)
-        {
-            throw new InvalidCastException(
-                $"Cannot cast an instance of type {obj.GetType()} to {typeof(T)}" +
-                $"even though it is registered for {typeof(T)}"
-            );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowCannotCast<T>(TBase obj)
-        {
-            throw new InvalidCastException(
-                $"Cannot cast an instance of type {obj.GetType()} to {typeof(T)}"
-            );
-        }
     }
 }

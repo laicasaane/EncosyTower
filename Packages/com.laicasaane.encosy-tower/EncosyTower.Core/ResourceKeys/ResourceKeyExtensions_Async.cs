@@ -1,70 +1,44 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
+using EncosyTower.Tasks;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 
 namespace EncosyTower.ResourceKeys
 {
     using Error = ResourceKeyError;
-
-#if UNITASK
-    using UnityTaskGameObject = Cysharp.Threading.Tasks.UniTask<GameObject>;
-    using UnityTaskGameObjectOpt = Cysharp.Threading.Tasks.UniTask<Option<GameObject>>;
-    using UnityTaskGameObjectResult = Cysharp.Threading.Tasks.UniTask<Result<GameObject, ResourceKeyError>>;
-    using UnityTaskInstancedAndPrefabResult = Cysharp.Threading.Tasks.UniTask<Result<InstancedAndPrefab, ResourceKeyError>>;
-#else
-    using UnityTaskGameObject = UnityEngine.Awaitable<GameObject>;
-    using UnityTaskGameObjectOpt = UnityEngine.Awaitable<Option<GameObject>>;
-    using UnityTaskGameObjectResult = UnityEngine.Awaitable<Result<GameObject, ResourceKeyError>>;
-    using UnityTaskInstancedAndPrefabResult = UnityEngine.Awaitable<Result<InstancedAndPrefab, ResourceKeyError>>;
-#endif
-
     using UnityObject = UnityEngine.Object;
 
     public static partial class ResourceKeyExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<T>
-#else
-            UnityEngine.Awaitable<T>
-#endif
-            LoadAsync<T>(this ResourceKey key, CancellationToken token = default) where T : UnityObject
-                => ((ResourceKey<T>)key).LoadAsync(token);
+        public static UnityTask<T> LoadAsync<T>(
+              this ResourceKey key
+            , CancellationToken token = default
+        )
+            where T : UnityObject
+            => ((ResourceKey<T>)key).LoadAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<T>>
-#else
-            UnityEngine.Awaitable<Option<T>>
-#endif
-            TryLoadAsync<T>(this ResourceKey key, CancellationToken token = default) where T : UnityObject
-                => ((ResourceKey<T>)key).TryLoadAsync(token);
+        public static UnityTask<Option<T>> TryLoadAsync<T>(
+              this ResourceKey key
+            , CancellationToken token = default
+        )
+            where T : UnityObject
+            => ((ResourceKey<T>)key).TryLoadAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<T, ResourceKeyError>>
-#else
-            UnityEngine.Awaitable<Result<T, ResourceKeyError>>
-#endif
-            LoadOrErrorAsync<T>(this ResourceKey key, CancellationToken token = default) where T : UnityObject
-                => ((ResourceKey<T>)key).LoadOrErrorAsync(token);
+        public static UnityTask<Result<T, ResourceKeyError>> LoadOrErrorAsync<T>(
+              this ResourceKey key
+            , CancellationToken token = default
+        )
+            where T : UnityObject
+            => ((ResourceKey<T>)key).LoadOrErrorAsync(token);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<GameObject>
-#else
-            UnityEngine.Awaitable<GameObject>
-#endif
-            InstantiateAsync(
+        public static UnityTask<GameObject> InstantiateAsync(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -76,13 +50,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<GameObject>>
-#else
-            UnityEngine.Awaitable<Option<GameObject>>
-#endif
-            TryInstantiateAsync(
+        public static UnityTask<Option<GameObject>> TryInstantiateAsync(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -94,13 +62,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<GameObject, ResourceKeyError>>
-#else
-            UnityEngine.Awaitable<Result<GameObject, ResourceKeyError>>
-#endif
-            InstantiateOrErrorAsync(
+        public static UnityTask<Result<GameObject, ResourceKeyError>> InstantiateOrErrorAsync(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -108,22 +70,11 @@ namespace EncosyTower.ResourceKeys
             , CancellationToken token = default
         )
         {
-            return ((ResourceKey<GameObject>)key).InstantiateOrErrorAsync(
-                  parent
-                , inWorldSpace
-                , trimCloneSuffix
-                , token
-            );
+            return ((ResourceKey<GameObject>)key).InstantiateOrErrorAsync(parent, inWorldSpace, trimCloneSuffix, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<TComponent>
-#else
-            UnityEngine.Awaitable<TComponent>
-#endif
-            InstantiateAsync<TComponent>(
+        public static UnityTask<TComponent> InstantiateAsync<TComponent>(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -141,13 +92,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<TComponent>>
-#else
-            UnityEngine.Awaitable<Option<TComponent>>
-#endif
-            TryInstantiateAsync<TComponent>(
+        public static UnityTask<Option<TComponent>> TryInstantiateAsync<TComponent>(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -165,13 +110,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<TComponent, ResourceKeyError>>
-#else
-            UnityEngine.Awaitable<Result<TComponent, ResourceKeyError>>
-#endif
-            InstantiateOrErrorAsync<TComponent>(
+        public static UnityTask<Result<TComponent, ResourceKeyError>> InstantiateOrErrorAsync<TComponent>(
               this ResourceKey key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -189,7 +128,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskGameObject InstantiateAsync(
+        public static async UnityTask<GameObject> InstantiateAsync(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -202,13 +141,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<TComponent>
-#else
-            UnityEngine.Awaitable<TComponent>
-#endif
-            InstantiateAsync<TComponent>(
+        public static async UnityTask<TComponent> InstantiateAsync<TComponent>(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -222,7 +155,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskGameObjectOpt TryInstantiateAsync(
+        public static async UnityTask<Option<GameObject>> TryInstantiateAsync(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -235,13 +168,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Option<TComponent>>
-#else
-            UnityEngine.Awaitable<Option<TComponent>>
-#endif
-            TryInstantiateAsync<TComponent>(
+        public static async UnityTask<Option<TComponent>> TryInstantiateAsync<TComponent>(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -255,7 +182,7 @@ namespace EncosyTower.ResourceKeys
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async UnityTaskGameObjectResult InstantiateOrErrorAsync(
+        public static async UnityTask<Result<GameObject, ResourceKeyError>> InstantiateOrErrorAsync(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -278,13 +205,7 @@ namespace EncosyTower.ResourceKeys
             return Error.Undefined((ResourceKey)key);
         }
 
-        public static async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask<Result<TComponent, Error>>
-#else
-            UnityEngine.Awaitable<Result<TComponent, Error>>
-#endif
-            InstantiateOrErrorAsync<TComponent>(
+        public static async UnityTask<Result<TComponent, Error>> InstantiateOrErrorAsync<TComponent>(
               this ResourceKey<GameObject> key
             , TransformOrScene parent = default
             , bool inWorldSpace = false
@@ -314,7 +235,7 @@ namespace EncosyTower.ResourceKeys
             return Error.MissingComponent((ResourceKey)key, value.Prefab, typeof(TComponent));
         }
 
-        private static async UnityTaskInstancedAndPrefabResult InstantiateOrErrorAsyncInternal(
+        private static async UnityTask<Result<InstancedAndPrefab, ResourceKeyError>> InstantiateOrErrorAsyncInternal(
               ResourceKey<GameObject> key
             , TransformOrScene parent
             , bool inWorldSpace
@@ -378,5 +299,3 @@ namespace EncosyTower.ResourceKeys
         }
     }
 }
-
-#endif
