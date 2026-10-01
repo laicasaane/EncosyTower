@@ -151,14 +151,10 @@ namespace EncosyTower.Editor.PageFlows.MonoPages.Settings.Views
                 return;
             }
 
-            try
+            if (Equals(evt.newValue, evt.previousValue) == false)
             {
-                if (evt.newValue.Equals(evt.previousValue) == false)
-                {
-                    _valueUpdated = true;
-                }
+                _valueUpdated = true;
             }
-            catch { }
         }
 
         private void IncludeCallerInfoToggle_OnValueChanged(ChangeEvent<Enum> evt)
@@ -179,11 +175,7 @@ namespace EncosyTower.Editor.PageFlows.MonoPages.Settings.Views
 
             foreach (var buildTarget in buildTargets)
             {
-                BuildAPI.RemoveScriptingDefineSymbols(
-                      buildTarget
-                    , SYMBOL_FOR_DEV
-                    , SYMBOL_ALWAYS
-                );
+                BuildAPI.RemoveScriptingDefineSymbols(buildTarget, SYMBOL_FOR_DEV, SYMBOL_ALWAYS);
             }
 
             var symbol = newValue switch

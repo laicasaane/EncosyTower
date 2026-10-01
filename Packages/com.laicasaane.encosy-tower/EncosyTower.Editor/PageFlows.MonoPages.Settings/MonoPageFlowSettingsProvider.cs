@@ -31,16 +31,9 @@ namespace EncosyTower.Editor.PageFlows.MonoPages.Settings
         private static void OpenSettings()
             => MonoPageFlowSettings.Instance.OpenSettingsWindow();
 
-        private static void Create(
-              ScriptableObjectSettingsProvider provider
-            , VisualElement root
-        )
+        private static void Create(ScriptableObjectSettingsProvider provider, VisualElement root)
         {
-            s_instance = new MonoPageFlowSettingsEditor(
-                  provider.Settings
-                , provider.SerializedSettings
-                , root
-            );
+            s_instance = new MonoPageFlowSettingsEditor(provider.Settings, provider.SerializedSettings, root);
         }
 
         private static void Update()
