@@ -21,9 +21,7 @@ namespace EncosyTower.Formatters.Refactorings
         {
             var token = context.CancellationToken;
 
-            var root = await context.Document
-                .GetSyntaxRootAsync(token)
-                .ConfigureAwait(false);
+            var root = await context.Document.GetSyntaxRootAsync(token).ConfigureAwait(false);
 
             if (root is null)
             {
@@ -113,15 +111,9 @@ namespace EncosyTower.Formatters.Refactorings
             var space = TriviaUtil.Space();
 
             var newCondition = conditional.Condition.WithTrailingTrivia();
-            var newQuestion = conditional.QuestionToken
-                .WithLeadingTrivia(space)
-                .WithTrailingTrivia(space);
-            var newWhenTrue = conditional.WhenTrue
-                .WithLeadingTrivia()
-                .WithTrailingTrivia();
-            var newColon = conditional.ColonToken
-                .WithLeadingTrivia(space)
-                .WithTrailingTrivia(space);
+            var newQuestion = conditional.QuestionToken.WithLeadingTrivia(space).WithTrailingTrivia(space);
+            var newWhenTrue = conditional.WhenTrue.WithLeadingTrivia().WithTrailingTrivia();
+            var newColon = conditional.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia(space);
             var newWhenFalse = conditional.WhenFalse
                 .WithLeadingTrivia()
                 .WithTrailingTrivia(conditional.WhenFalse.GetTrailingTrivia());

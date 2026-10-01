@@ -19,9 +19,7 @@ namespace EncosyTower.Formatters.Refactorings
         {
             var token = context.CancellationToken;
 
-            var root = await context.Document
-                .GetSyntaxRootAsync(token)
-                .ConfigureAwait(false);
+            var root = await context.Document.GetSyntaxRootAsync(token).ConfigureAwait(false);
 
             if (root is null)
             {

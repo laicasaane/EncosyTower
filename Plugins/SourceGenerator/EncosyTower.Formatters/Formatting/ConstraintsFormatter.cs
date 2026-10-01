@@ -25,15 +25,11 @@ namespace EncosyTower.Formatters.Formatting
 
             if (style == SeparatorStyle.Leading)
             {
-                newColon = clause.ColonToken
-                    .WithLeadingTrivia(space)
-                    .WithTrailingTrivia(space);
+                newColon = clause.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia(space);
             }
             else
             {
-                newColon = clause.ColonToken
-                    .WithLeadingTrivia(space)
-                    .WithTrailingTrivia();
+                newColon = clause.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia();
             }
 
             var nodesAndTokens = clause.Constraints.GetWithSeparators();
@@ -53,9 +49,7 @@ namespace EncosyTower.Formatters.Formatting
                     }
                     else
                     {
-                        item = item
-                            .WithLeadingTrivia(eol, ws)
-                            .WithTrailingTrivia();
+                        item = item.WithLeadingTrivia(eol, ws).WithTrailingTrivia();
                     }
 
                     rebuilt.Add(item);
@@ -66,15 +60,11 @@ namespace EncosyTower.Formatters.Formatting
 
                     if (style == SeparatorStyle.Leading)
                     {
-                        sep = sep
-                            .WithLeadingTrivia(eol, ws)
-                            .WithTrailingTrivia(space);
+                        sep = sep.WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
                     }
                     else
                     {
-                        sep = sep
-                            .WithLeadingTrivia()
-                            .WithTrailingTrivia();
+                        sep = sep.WithLeadingTrivia().WithTrailingTrivia();
                     }
 
                     rebuilt.Add(sep);
@@ -93,9 +83,7 @@ namespace EncosyTower.Formatters.Formatting
         {
             var space = TriviaUtil.Space();
 
-            var newColon = clause.ColonToken
-                .WithLeadingTrivia(space)
-                .WithTrailingTrivia(space);
+            var newColon = clause.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia(space);
 
             var nodesAndTokens = clause.Constraints.GetWithSeparators();
             var rebuilt = new List<SyntaxNodeOrToken>(nodesAndTokens.Count);
@@ -106,16 +94,12 @@ namespace EncosyTower.Formatters.Formatting
 
                 if (nt.IsNode)
                 {
-                    var item = nt.AsNode()
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia();
+                    var item = nt.AsNode().WithLeadingTrivia().WithTrailingTrivia();
                     rebuilt.Add(item);
                 }
                 else
                 {
-                    var sep = nt.AsToken()
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia(space);
+                    var sep = nt.AsToken().WithLeadingTrivia().WithTrailingTrivia(space);
                     rebuilt.Add(sep);
                 }
             }

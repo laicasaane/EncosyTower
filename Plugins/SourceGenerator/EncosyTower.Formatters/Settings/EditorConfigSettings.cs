@@ -21,9 +21,7 @@ namespace EncosyTower.Formatters.Settings
 
         private static SeparatorStyle Read(Document document, SyntaxTree tree, string key)
         {
-            var opts = document.Project.AnalyzerOptions
-                .AnalyzerConfigOptionsProvider
-                .GetOptions(tree);
+            var opts = document.Project.AnalyzerOptions.AnalyzerConfigOptionsProvider.GetOptions(tree);
 
             if (opts.TryGetValue(key, out var raw)
                 && string.Equals(raw, VALUE_TRAILING, StringComparison.OrdinalIgnoreCase)

@@ -135,9 +135,7 @@ namespace EncosyTower.Formatters.Formatting
                 }
                 else
                 {
-                    items[i] = items[i]
-                        .WithLeadingTrivia(eol, ws)
-                        .WithTrailingTrivia();
+                    items[i] = items[i].WithLeadingTrivia(eol, ws).WithTrailingTrivia();
                 }
             }
 
@@ -149,15 +147,11 @@ namespace EncosyTower.Formatters.Formatting
             {
                 if (style == SeparatorStyle.Leading)
                 {
-                    ops[i] = ops[i]
-                        .WithLeadingTrivia(eol, ws)
-                        .WithTrailingTrivia(space);
+                    ops[i] = ops[i].WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
                 }
                 else
                 {
-                    ops[i] = ops[i]
-                        .WithLeadingTrivia(space)
-                        .WithTrailingTrivia();
+                    ops[i] = ops[i].WithLeadingTrivia(space).WithTrailingTrivia();
                 }
             }
         }
@@ -183,9 +177,7 @@ namespace EncosyTower.Formatters.Formatting
                 }
                 else
                 {
-                    items[i] = items[i]
-                        .WithLeadingTrivia(eol, ws)
-                        .WithTrailingTrivia();
+                    items[i] = items[i].WithLeadingTrivia(eol, ws).WithTrailingTrivia();
                 }
             }
 
@@ -197,15 +189,11 @@ namespace EncosyTower.Formatters.Formatting
             {
                 if (style == SeparatorStyle.Leading)
                 {
-                    ops[i] = ops[i]
-                        .WithLeadingTrivia(eol, ws)
-                        .WithTrailingTrivia(space);
+                    ops[i] = ops[i].WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
                 }
                 else
                 {
-                    ops[i] = ops[i]
-                        .WithLeadingTrivia(space)
-                        .WithTrailingTrivia();
+                    ops[i] = ops[i].WithLeadingTrivia(space).WithTrailingTrivia();
                 }
             }
         }
@@ -229,9 +217,7 @@ namespace EncosyTower.Formatters.Formatting
 
             for (var i = 0; i < opCount; i++)
             {
-                ops[i] = ops[i]
-                    .WithLeadingTrivia(space)
-                    .WithTrailingTrivia(space);
+                ops[i] = ops[i].WithLeadingTrivia(space).WithTrailingTrivia(space);
             }
         }
 
@@ -254,17 +240,11 @@ namespace EncosyTower.Formatters.Formatting
 
             for (var i = 0; i < opCount; i++)
             {
-                ops[i] = ops[i]
-                    .WithLeadingTrivia(space)
-                    .WithTrailingTrivia(space);
+                ops[i] = ops[i].WithLeadingTrivia(space).WithTrailingTrivia(space);
             }
         }
 
-        private static ExpressionSyntax Rebuild(
-              SyntaxKind kind
-            , List<ExpressionSyntax> items
-            , List<SyntaxToken> ops
-        )
+        private static ExpressionSyntax Rebuild(SyntaxKind kind, List<ExpressionSyntax> items, List<SyntaxToken> ops)
         {
             ExpressionSyntax expr = items[0];
             var opCount = ops.Count;
@@ -277,19 +257,14 @@ namespace EncosyTower.Formatters.Formatting
             return expr;
         }
 
-        private static PatternSyntax RebuildPattern(
-              List<PatternSyntax> items
-            , List<SyntaxToken> ops
-        )
+        private static PatternSyntax RebuildPattern(List<PatternSyntax> items, List<SyntaxToken> ops)
         {
             PatternSyntax pat = items[0];
             var opCount = ops.Count;
 
             for (var i = 0; i < opCount; i++)
             {
-                var opKind = ops[i].IsKind(SyntaxKind.OrKeyword)
-                    ? SyntaxKind.OrPattern
-                    : SyntaxKind.AndPattern;
+                var opKind = ops[i].IsKind(SyntaxKind.OrKeyword) ? SyntaxKind.OrPattern : SyntaxKind.AndPattern;
                 pat = SyntaxFactory.BinaryPattern(opKind, pat, ops[i], items[i + 1]);
             }
 

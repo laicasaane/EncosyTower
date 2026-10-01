@@ -22,9 +22,7 @@ namespace EncosyTower.Formatters.Refactorings
         {
             var token = context.CancellationToken;
 
-            var root = await context.Document
-                .GetSyntaxRootAsync(token)
-                .ConfigureAwait(false);
+            var root = await context.Document.GetSyntaxRootAsync(token).ConfigureAwait(false);
 
             if (root is null)
             {
@@ -110,15 +108,9 @@ namespace EncosyTower.Formatters.Refactorings
             var space = TriviaUtil.Space();
 
             var newCondition = conditional.Condition.WithTrailingTrivia();
-            var newQuestion = conditional.QuestionToken
-                .WithLeadingTrivia(eol, ws)
-                .WithTrailingTrivia(space);
-            var newWhenTrue = conditional.WhenTrue
-                .WithLeadingTrivia()
-                .WithTrailingTrivia();
-            var newColon = conditional.ColonToken
-                .WithLeadingTrivia(eol, ws)
-                .WithTrailingTrivia(space);
+            var newQuestion = conditional.QuestionToken.WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
+            var newWhenTrue = conditional.WhenTrue.WithLeadingTrivia().WithTrailingTrivia();
+            var newColon = conditional.ColonToken.WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
 
             ExpressionSyntax newWhenFalse;
 
@@ -136,13 +128,7 @@ namespace EncosyTower.Formatters.Refactorings
                     .WithTrailingTrivia(conditional.WhenFalse.GetTrailingTrivia());
             }
 
-            return SyntaxFactory.ConditionalExpression(
-                  newCondition
-                , newQuestion
-                , newWhenTrue
-                , newColon
-                , newWhenFalse
-            );
+            return SyntaxFactory.ConditionalExpression(newCondition, newQuestion, newWhenTrue, newColon, newWhenFalse);
         }
     }
 }

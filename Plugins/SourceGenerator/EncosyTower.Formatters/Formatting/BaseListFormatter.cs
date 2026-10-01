@@ -10,11 +10,7 @@ namespace EncosyTower.Formatters.Formatting
     {
         private const string INDENT_UNIT = "    ";
 
-        public static BaseListSyntax Split(
-              BaseListSyntax baseList
-            , string baseIndent
-            , SeparatorStyle style
-        )
+        public static BaseListSyntax Split(BaseListSyntax baseList, string baseIndent, SeparatorStyle style)
         {
             var indent = baseIndent + INDENT_UNIT;
             var eol = TriviaUtil.Eol();
@@ -25,15 +21,11 @@ namespace EncosyTower.Formatters.Formatting
 
             if (style == SeparatorStyle.Leading)
             {
-                newColon = baseList.ColonToken
-                    .WithLeadingTrivia(eol, ws)
-                    .WithTrailingTrivia(space);
+                newColon = baseList.ColonToken.WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
             }
             else
             {
-                newColon = baseList.ColonToken
-                    .WithLeadingTrivia(space)
-                    .WithTrailingTrivia();
+                newColon = baseList.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia();
             }
 
             var nodesAndTokens = baseList.Types.GetWithSeparators();
@@ -53,9 +45,7 @@ namespace EncosyTower.Formatters.Formatting
                     }
                     else
                     {
-                        item = item
-                            .WithLeadingTrivia(eol, ws)
-                            .WithTrailingTrivia();
+                        item = item.WithLeadingTrivia(eol, ws).WithTrailingTrivia();
                     }
 
                     rebuilt.Add(item);
@@ -66,33 +56,25 @@ namespace EncosyTower.Formatters.Formatting
 
                     if (style == SeparatorStyle.Leading)
                     {
-                        sep = sep
-                            .WithLeadingTrivia(eol, ws)
-                            .WithTrailingTrivia(space);
+                        sep = sep.WithLeadingTrivia(eol, ws).WithTrailingTrivia(space);
                     }
                     else
                     {
-                        sep = sep
-                            .WithLeadingTrivia()
-                            .WithTrailingTrivia();
+                        sep = sep.WithLeadingTrivia().WithTrailingTrivia();
                     }
 
                     rebuilt.Add(sep);
                 }
             }
 
-            return baseList
-                .WithColonToken(newColon)
-                .WithTypes(SyntaxFactory.SeparatedList<BaseTypeSyntax>(rebuilt));
+            return baseList.WithColonToken(newColon).WithTypes(SyntaxFactory.SeparatedList<BaseTypeSyntax>(rebuilt));
         }
 
         public static BaseListSyntax Combine(BaseListSyntax baseList)
         {
             var space = TriviaUtil.Space();
 
-            var newColon = baseList.ColonToken
-                .WithLeadingTrivia(space)
-                .WithTrailingTrivia(space);
+            var newColon = baseList.ColonToken.WithLeadingTrivia(space).WithTrailingTrivia(space);
 
             var nodesAndTokens = baseList.Types.GetWithSeparators();
             var rebuilt = new List<SyntaxNodeOrToken>(nodesAndTokens.Count);
@@ -103,23 +85,17 @@ namespace EncosyTower.Formatters.Formatting
 
                 if (nt.IsNode)
                 {
-                    var item = nt.AsNode()
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia();
+                    var item = nt.AsNode().WithLeadingTrivia().WithTrailingTrivia();
                     rebuilt.Add(item);
                 }
                 else
                 {
-                    var sep = nt.AsToken()
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia(space);
+                    var sep = nt.AsToken().WithLeadingTrivia().WithTrailingTrivia(space);
                     rebuilt.Add(sep);
                 }
             }
 
-            return baseList
-                .WithColonToken(newColon)
-                .WithTypes(SyntaxFactory.SeparatedList<BaseTypeSyntax>(rebuilt));
+            return baseList.WithColonToken(newColon).WithTypes(SyntaxFactory.SeparatedList<BaseTypeSyntax>(rebuilt));
         }
 
         public static bool HasComment(BaseListSyntax baseList)

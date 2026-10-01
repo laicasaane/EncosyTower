@@ -310,9 +310,7 @@ namespace EncosyTower.Formatters.Formatting
                         newLeading = BuildLeading(eol, indent, keptLeading);
                     }
 
-                    item = item
-                        .WithLeadingTrivia(newLeading)
-                        .WithTrailingTrivia(keptTrailing);
+                    item = item.WithLeadingTrivia(newLeading).WithTrailingTrivia(keptTrailing);
                     rebuilt.Add(item);
                     itemIndex++;
                 }
@@ -328,9 +326,7 @@ namespace EncosyTower.Formatters.Formatting
                     }
                     else
                     {
-                        sep = sep
-                            .WithLeadingTrivia()
-                            .WithTrailingTrivia();
+                        sep = sep.WithLeadingTrivia().WithTrailingTrivia();
                     }
 
                     rebuilt.Add(sep);
@@ -353,16 +349,12 @@ namespace EncosyTower.Formatters.Formatting
                 if (nt.IsNode)
                 {
                     var item = (T)nt.AsNode();
-                    item = item
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia();
+                    item = item.WithLeadingTrivia().WithTrailingTrivia();
                     rebuilt.Add(item);
                 }
                 else
                 {
-                    var sep = nt.AsToken()
-                        .WithLeadingTrivia()
-                        .WithTrailingTrivia(TriviaUtil.Space());
+                    var sep = nt.AsToken().WithLeadingTrivia().WithTrailingTrivia(TriviaUtil.Space());
                     rebuilt.Add(sep);
                 }
             }
@@ -388,11 +380,7 @@ namespace EncosyTower.Formatters.Formatting
             return close.WithLeadingTrivia(eol, ws);
         }
 
-        private static SyntaxTriviaList BuildLeading(
-              SyntaxTrivia eol
-            , string indent
-            , SyntaxTriviaList comments
-        )
+        private static SyntaxTriviaList BuildLeading(SyntaxTrivia eol, string indent, SyntaxTriviaList comments)
         {
             var ws = TriviaUtil.Indent(indent);
 
