@@ -2,15 +2,13 @@
     "name": "EncosyTower.DevTools",
     "rootNamespace": "EncosyTower.DevTools",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
         "EncosyTower.Core",
-        "EncosyTower.Core.Extended",
         "EncosyTower.Databases.Authoring",
         "EncosyTower.Databases.Settings",
         "EncosyTower.Editor",
-        "EncosyTower.Editor.Mvvm",
         "EncosyTower.Entities.Stats",
         "EncosyTower.Mvvm",
+        "EncosyTower.VisualToolkit",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",
@@ -45,16 +43,6 @@
             "name": "com.unity.2d.sprite",
             "expression": "",
             "define": "UNITY_2D_SPRITE"
-        },
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
-        {
-            "name": "com.cysharp.unitask",
-            "expression": "",
-            "define": "UNITASK"
         },
         {
             "name": "com.latios.latiosframework",
