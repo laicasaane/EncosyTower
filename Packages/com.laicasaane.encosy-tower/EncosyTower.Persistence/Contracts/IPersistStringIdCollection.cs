@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Collections.Generic;
 using EncosyTower.Collections;
 using EncosyTower.StringIds;
@@ -11,5 +9,3 @@ namespace EncosyTower.Persistences
     {
     }
 }
-
-#endif

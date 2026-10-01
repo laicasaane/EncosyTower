@@ -1,16 +1,9 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Threading;
 using EncosyTower.Initialization;
+using EncosyTower.Tasks;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public interface IPersistDirectory : IInitializable, IDeinitializable
     {
         string Id { get; set; }
@@ -24,5 +17,3 @@ namespace EncosyTower.Persistences
         UnityTask SaveEntireDirectoryAsync(SaveDestination destination, CancellationToken token);
     }
 }
-
-#endif

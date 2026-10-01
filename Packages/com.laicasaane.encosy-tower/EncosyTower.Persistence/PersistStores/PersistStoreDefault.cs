@@ -1,28 +1,23 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
+using EncosyTower.Debugging;
 using EncosyTower.Encryption;
 using EncosyTower.Initialization;
 using EncosyTower.StringIds;
-using UnityEngine;
+using EncosyTower.Tasks;
+
+using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public sealed class PersistStoreDefault<TData> : PersistStoreBase<TData>, IIsInitialized
         where TData : IPersist
     {
-        private readonly PersistSourceDevice<TData> _source;
+        private readonly PersistSourceLocal<TData> _source;
         private readonly Func<TData> _createDataFunc;
         private readonly bool _isValueType;
 
@@ -39,22 +34,16 @@ namespace EncosyTower.Persistences
         )
             : base(key, stringVault, encryption, logger, ignoreEncryption, args)
         {
-            if (args is not Args storeArgs)
-            {
-                throw CreateArgumentException_InstanceOfType();
-            }
+            ThrowHelper.ThrowIfNull(args);
+
+            ThrowIfArgsIsNotInstanceOfType(args is Args);
+
+            var (createDataFunc, sourceArgs) = (Args)args;
 
             _id = string.Empty;
-            _createDataFunc = storeArgs.CreateDataFunc;
+            _createDataFunc = createDataFunc;
             _isValueType = typeof(TData).IsValueType;
-            _source = new PersistSourceDevice<TData>(
-                  key
-                , stringVault
-                , encryption
-                , logger
-                , ignoreEncryption
-                , storeArgs.SourceArgs
-            );
+            _source = new PersistSourceLocal<TData>(key, stringVault, encryption, logger, ignoreEncryption, sourceArgs);
         }
 
         public bool IsInitialized
@@ -132,9 +121,9 @@ namespace EncosyTower.Persistences
             return ref _data;
         }
 
-        public override void SetData(TData data)
+        public override void SetData(TData data, bool allowNull = false)
         {
-            if (data is not null)
+            if (data != null || allowNull)
             {
                 _data = data;
                 _source.IsDirty = true;
@@ -163,9 +152,12 @@ namespace EncosyTower.Persistences
             }
         }
 
-        public override async UnityTask SaveAsync(SaveDestination destination = default, CancellationToken token = default)
+        public override async UnityTask SaveAsync(
+              SaveDestination destination = default
+            , CancellationToken token = default
+        )
         {
-            if (IsDataValid && destination.Contains(SaveDestination.Device))
+            if (IsDataValid && destination.Contains(SaveDestination.Local))
             {
                 await _source.SaveAsync(Data, token);
             }
@@ -178,15 +170,24 @@ namespace EncosyTower.Persistences
                 : Option.None;
         }
 
-        public override bool TryCloneDataFromRemote()
+        [UnityEngine.HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PERSISTENCE_CHECKS)]
+        private static void ThrowIfArgsIsNotInstanceOfType([DoesNotReturnIf(false)] bool isInstance)
         {
-            return false;
+            if (isInstance == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException()
+                => new($"'args' must be an instance of '{typeof(Args).FullName}'.");
         }
 
-        private static Exception CreateArgumentException_InstanceOfType()
-            => new ArgumentException($"'args' must be an instance of '{typeof(Args).FullName}'.");
-
-        [HideInCallstack, StackTraceHidden]
+        [UnityEngine.HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PERSISTENCE_CHECKS)]
         private static void ThrowInvalidOperationIfNotValueType(
               [DoesNotReturnIf(false)] bool check
             , [CallerMemberName] string memberName = ""
@@ -207,8 +208,27 @@ namespace EncosyTower.Persistences
         public sealed record class Args(
               [NotNull] Func<TData> CreateDataFunc
             , [NotNull] PersistSourceArgs SourceArgs
-        ) : PersistStoreArgs;
+        ) : PersistStoreArgs
+        {
+            public Func<TData> CreateDataFunc { get; init; }
+                = GetNotNull(CreateDataFunc, nameof(CreateDataFunc));
+
+            public PersistSourceArgs SourceArgs { get; init; }
+                = GetNotNull(SourceArgs, nameof(SourceArgs));
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static Func<TData> GetNotNull(Func<TData> value, string paramName)
+            {
+                ThrowHelper.ThrowIfNull(value, paramName);
+                return value;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static PersistSourceArgs GetNotNull(PersistSourceArgs value, string paramName)
+            {
+                ThrowHelper.ThrowIfNull(value, paramName);
+                return value;
+            }
+        }
     }
 }
-
-#endif

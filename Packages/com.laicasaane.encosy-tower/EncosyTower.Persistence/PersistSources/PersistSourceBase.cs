@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using EncosyTower.Common;
@@ -7,15 +5,12 @@ using EncosyTower.Encryption;
 using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.StringIds;
+using EncosyTower.Tasks;
+
+using ETDBG = EncosyTower.Debugging;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public abstract class PersistSourceBase<TData> : IInitializable
         where TData : IPersist
     {
@@ -28,6 +23,9 @@ namespace EncosyTower.Persistences
             , PersistSourceArgs _
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(stringVault);
+            ETDBG.ThrowHelper.ThrowIfNull(encryption);
+
             Key = key;
             StringVault = stringVault;
             Encryption = encryption;
@@ -59,6 +57,8 @@ namespace EncosyTower.Persistences
 
         public async UnityTask SaveAsync([NotNull] TData data, CancellationToken token)
         {
+            ETDBG.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(data);
+
             if (IsDirty == false)
             {
                 return;
@@ -71,16 +71,8 @@ namespace EncosyTower.Persistences
 
         protected abstract UnityTask OnSaveAsync([NotNull] TData data, CancellationToken token);
 
-        public abstract
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask
-#else
-            UnityEngine.Awaitable
-#endif
-            <Option<TData>> TryLoadAsync(CancellationToken token);
+        public abstract UnityTask<Option<TData>> TryLoadAsync(CancellationToken token);
 
         public abstract Option<TData> TryCloneData(TData source);
     }
 }
-
-#endif

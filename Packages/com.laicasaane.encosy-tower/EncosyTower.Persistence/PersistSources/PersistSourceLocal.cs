@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -8,6 +6,7 @@ using System.Text;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Conversion;
+using EncosyTower.Debugging;
 using EncosyTower.Encryption;
 using EncosyTower.Initialization;
 using EncosyTower.IO;
@@ -18,13 +17,7 @@ using EncosyTower.Tasks;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
-    public class PersistSourceDevice<TData> : PersistSourceBase<TData>, IIsInitialized
+    public class PersistSourceLocal<TData> : PersistSourceBase<TData>, IIsInitialized
         where TData : IPersist
     {
         private readonly RootPath _rootPath;
@@ -38,7 +31,7 @@ namespace EncosyTower.Persistences
         private string _subFolderName;
         private string _filePath;
 
-        public PersistSourceDevice(
+        public PersistSourceLocal(
               StringId<string> key
             , [NotNull] StringVault stringVault
             , [NotNull] EncryptionBase encryption
@@ -48,6 +41,8 @@ namespace EncosyTower.Persistences
         )
             : base(key, stringVault, encryption, logger, ignoreEncryption, args)
         {
+            ThrowHelper.ThrowIfNull(args);
+
             if (args is not Args deviceArgs)
             {
                 throw CreateArgumentException_InstanceOfType();
@@ -128,6 +123,8 @@ namespace EncosyTower.Persistences
 
         protected override async UnityTask OnSaveAsync([NotNull] TData data, CancellationToken token)
         {
+            ThrowHelper.ThrowIfNullOrUnityObjectInvalid(data);
+
             if (IsInitialized == false)
             {
                 throw CreateInvalidOperationException_NotInitialized_SaveAsync();
@@ -147,7 +144,7 @@ namespace EncosyTower.Persistences
                         : Encryption.Encrypt(text);
 #endif
 
-                    await File.WriteAllTextAsync(filePath, raw, Encoding.UTF8, token).AsUnityTask();
+                    await File.WriteAllTextAsync(filePath, raw, Encoding.UTF8, token);
                 }
             }
             catch (Exception ex)
@@ -156,13 +153,7 @@ namespace EncosyTower.Persistences
             }
         }
 
-        public override async
-#if UNITASK
-            Cysharp.Threading.Tasks.UniTask
-#else
-            UnityEngine.Awaitable
-#endif
-            <Option<TData>> TryLoadAsync(CancellationToken token)
+        public override async UnityTask<Option<TData>> TryLoadAsync(CancellationToken token)
         {
             try
             {
@@ -175,7 +166,7 @@ namespace EncosyTower.Persistences
 
                 if (File.Exists(filePath))
                 {
-                    var raw = await File.ReadAllTextAsync(filePath, token).AsUnityTask();
+                    var raw = await File.ReadAllTextAsync(filePath, token);
 
                     if (token.IsCancellationRequested)
                     {
@@ -259,8 +250,27 @@ namespace EncosyTower.Persistences
             , [NotNull] TransformFunc<string, TData> DeserializeFunc
             , string FileExtension = null
             , MakeFilePathFunc MakeFilePathFunc = null
-        ) : PersistSourceArgs;
+        ) : PersistSourceArgs
+        {
+            public TransformFunc<TData, string> SerializeFunc { get; init; }
+                = GetNotNull(SerializeFunc, nameof(SerializeFunc));
+
+            public TransformFunc<string, TData> DeserializeFunc { get; init; }
+                = GetNotNull(DeserializeFunc, nameof(DeserializeFunc));
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static TransformFunc<TData, string> GetNotNull(TransformFunc<TData, string> value, string paramName)
+            {
+                ThrowHelper.ThrowIfNull(value, paramName);
+                return value;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static TransformFunc<string, TData> GetNotNull(TransformFunc<string, TData> value, string paramName)
+            {
+                ThrowHelper.ThrowIfNull(value, paramName);
+                return value;
+            }
+        }
     }
 }
-
-#endif

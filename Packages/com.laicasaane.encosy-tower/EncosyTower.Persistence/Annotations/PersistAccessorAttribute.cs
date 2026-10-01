@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 
 namespace EncosyTower.Persistences
@@ -15,5 +13,3 @@ namespace EncosyTower.Persistences
         public Type PersistenceType { get; }
     }
 }
-
-#endif

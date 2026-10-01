@@ -1,5 +1,3 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using EncosyTower.Common;
@@ -7,15 +5,12 @@ using EncosyTower.Encryption;
 using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using EncosyTower.StringIds;
+using EncosyTower.Tasks;
+
+using ETDBG = EncosyTower.Debugging;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-#endif
-
     public abstract class PersistStoreBase<TData> : IInitializable, IDeinitializable
         where TData : IPersist
     {
@@ -29,6 +24,8 @@ namespace EncosyTower.Persistences
             , PersistStoreArgs args
         )
         {
+            ETDBG.ThrowHelper.ThrowIfNull(stringVault);
+            ETDBG.ThrowHelper.ThrowIfNull(encryption);
         }
 #pragma warning restore IDE0060 // Remove unused parameter
 
@@ -44,7 +41,7 @@ namespace EncosyTower.Persistences
 
         public abstract TData GetData(SourcePriority priority);
 
-        public abstract void SetData(TData data);
+        public abstract void SetData(TData data, bool allowNull = false);
 
         public abstract void SetIdAndVersion(string id, int version);
 
@@ -53,9 +50,5 @@ namespace EncosyTower.Persistences
         public abstract UnityTask SaveAsync(SaveDestination destination, CancellationToken token);
 
         public abstract Option<TData> TryCloneData(SourcePriority priority);
-
-        public abstract bool TryCloneDataFromRemote();
     }
 }
-
-#endif

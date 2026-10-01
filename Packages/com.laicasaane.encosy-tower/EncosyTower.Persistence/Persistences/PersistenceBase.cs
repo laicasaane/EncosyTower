@@ -1,24 +1,15 @@
-#if UNITASK || UNITY_6000_0_OR_NEWER
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using EncosyTower.Debugging;
 using EncosyTower.Initialization;
 using EncosyTower.Tasks;
 using UnityEngine;
 
 namespace EncosyTower.Persistences
 {
-#if UNITASK
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-    using UnityTaskBool = Cysharp.Threading.Tasks.UniTask<bool>;
-#else
-    using UnityTask = UnityEngine.Awaitable;
-    using UnityTaskBool = UnityEngine.Awaitable<bool>;
-#endif
-
     using ILogger = Logging.ILogger;
 
     public abstract class PersistenceBase : IDeinitializable, IDisposable
@@ -27,7 +18,7 @@ namespace EncosyTower.Persistences
 
         protected abstract IPersistDirectory PersistDirectory { get; }
 
-        public async UnityTaskBool TryLoadAsync(
+        public async UnityTask<bool> TryLoadAsync(
               [NotNull] ILogger logger
             , string id
             , SourcePriority priority
@@ -35,6 +26,8 @@ namespace EncosyTower.Persistences
             , CancellationToken token = default
         )
         {
+            ThrowHelper.ThrowIfNull(logger);
+
             _markDirtyBeforeSaving = true;
 
             PersistDirectory.Id = id;
@@ -91,7 +84,7 @@ namespace EncosyTower.Persistences
             await PersistDirectory.SaveEntireDirectoryAsync(destination, token: token);
         }
 
-        protected virtual UnityTaskBool OnTryLoadAsync(
+        protected virtual UnityTask<bool> OnTryLoadAsync(
               [NotNull] ILogger logger
             , string id
             , SourcePriority priority
@@ -99,7 +92,9 @@ namespace EncosyTower.Persistences
             , CancellationToken token
         )
         {
-            return UnityTasks.GetCompleted(true);
+            ThrowHelper.ThrowIfNull(logger);
+
+            return UnityTask.FromResult(true);
         }
 
         protected virtual void OnDeinitialize() { }
@@ -115,5 +110,3 @@ namespace EncosyTower.Persistences
         }
     }
 }
-
-#endif
