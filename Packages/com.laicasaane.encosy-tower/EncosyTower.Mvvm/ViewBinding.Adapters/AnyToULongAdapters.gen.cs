@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Byte ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(byte), destType: typeof(ulong), order: 0)]
     public sealed class ByteToULongAdapter : IAdapter
@@ -32,6 +34,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("SByte ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(sbyte), destType: typeof(ulong), order: 0)]
     public sealed class SByteToULongAdapter : IAdapter
@@ -48,6 +51,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Char ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(char), destType: typeof(ulong), order: 0)]
     public sealed class CharToULongAdapter : IAdapter
@@ -64,6 +68,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Double ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(double), destType: typeof(ulong), order: 0)]
     public sealed class DoubleToULongAdapter : IAdapter
@@ -80,6 +85,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Float ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(float), destType: typeof(ulong), order: 0)]
     public sealed class FloatToULongAdapter : IAdapter
@@ -96,6 +102,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Int ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(int), destType: typeof(ulong), order: 0)]
     public sealed class IntToULongAdapter : IAdapter
@@ -112,6 +119,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UInt ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(uint), destType: typeof(ulong), order: 0)]
     public sealed class UIntToULongAdapter : IAdapter
@@ -128,6 +136,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Long ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(long), destType: typeof(ulong), order: 0)]
     public sealed class LongToULongAdapter : IAdapter
@@ -144,6 +153,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("ULong ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(ulong), destType: typeof(ulong), order: 0)]
     public sealed class ULongToULongAdapter : IAdapter
@@ -160,6 +170,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Short ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(short), destType: typeof(ulong), order: 0)]
     public sealed class ShortToULongAdapter : IAdapter
@@ -176,6 +187,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UShort ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(ushort), destType: typeof(ulong), order: 0)]
     public sealed class UShortToULongAdapter : IAdapter

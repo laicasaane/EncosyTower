@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Byte ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(byte), destType: typeof(int), order: 0)]
     public sealed class ByteToIntAdapter : IAdapter
@@ -32,6 +34,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("SByte ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(sbyte), destType: typeof(int), order: 0)]
     public sealed class SByteToIntAdapter : IAdapter
@@ -48,6 +51,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Char ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(char), destType: typeof(int), order: 0)]
     public sealed class CharToIntAdapter : IAdapter
@@ -64,6 +68,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Double ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(double), destType: typeof(int), order: 0)]
     public sealed class DoubleToIntAdapter : IAdapter
@@ -80,6 +85,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Float ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(float), destType: typeof(int), order: 0)]
     public sealed class FloatToIntAdapter : IAdapter
@@ -96,6 +102,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Int ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(int), destType: typeof(int), order: 0)]
     public sealed class IntToIntAdapter : IAdapter
@@ -112,6 +119,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UInt ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(uint), destType: typeof(int), order: 0)]
     public sealed class UIntToIntAdapter : IAdapter
@@ -128,6 +136,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Long ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(long), destType: typeof(int), order: 0)]
     public sealed class LongToIntAdapter : IAdapter
@@ -144,6 +153,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("ULong ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(ulong), destType: typeof(int), order: 0)]
     public sealed class ULongToIntAdapter : IAdapter
@@ -160,6 +170,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Short ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(short), destType: typeof(int), order: 0)]
     public sealed class ShortToIntAdapter : IAdapter
@@ -176,6 +187,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UShort ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(ushort), destType: typeof(int), order: 0)]
     public sealed class UShortToIntAdapter : IAdapter

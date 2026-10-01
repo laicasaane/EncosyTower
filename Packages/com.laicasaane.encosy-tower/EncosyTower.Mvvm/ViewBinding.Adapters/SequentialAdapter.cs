@@ -6,10 +6,12 @@ using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Variants;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Sequence of Adapters", "Default")]
     public sealed class SequentialAdapter : IAdapter
     {

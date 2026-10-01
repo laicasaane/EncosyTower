@@ -1,19 +1,18 @@
-#if UNITY_EDITOR && ANNULUS_CODEGEN && UNITY_ADDRESSABLES && ENCOSY_MVVM_ADAPTERS_GENERATOR
+#if UNITY_EDITOR && UNITY_ADDRESSABLES
 
 using System;
 using System.Globalization;
 using EncosyTower.CodeGen;
 using EncosyTower.Common;
 using EncosyTower.Core;
-using UnityCodeGen;
 
 namespace EncosyTower.Editor.Mvvm.ViewBinding.Adapters.AddressableKeys
 {
-    [Generator]
+    [CodeGenerator]
     [ApiForEditor]
     internal class AnyAddressablesAdaptersGenerator : ICodeGenerator
     {
-        public void Execute(GeneratorContext context)
+        public GeneratedCode[] Generate()
         {
             var p = Printer.DefaultLarge;
             p.PrintLine("#if UNITY_ADDRESSABLES").PrintEndLine();
@@ -103,8 +102,9 @@ using EncosyTower.Variants.Converters;
             p.PrintEndLine();
             p.PrintLine("#endif").PrintEndLine();
 
-            context.OverrideFolderPath(CodeGenAPI.GetOutputFolderPathFromCaller());
-            context.AddCode($"AnyAddressablesAdapters.gen.cs", p.Result);
+            return new GeneratedCode[] {
+                CodeGenAPI.GetGeneratedCode(p.Result, "AnyAddressablesAdapters.gen"),
+            };
         }
     }
 }

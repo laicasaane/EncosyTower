@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Byte ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(byte), destType: typeof(float), order: 0)]
     public sealed class ByteToFloatAdapter : IAdapter
@@ -32,6 +34,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("SByte ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(sbyte), destType: typeof(float), order: 0)]
     public sealed class SByteToFloatAdapter : IAdapter
@@ -48,6 +51,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Char ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(char), destType: typeof(float), order: 0)]
     public sealed class CharToFloatAdapter : IAdapter
@@ -64,6 +68,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Double ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(double), destType: typeof(float), order: 0)]
     public sealed class DoubleToFloatAdapter : IAdapter
@@ -80,6 +85,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Float ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(float), destType: typeof(float), order: 0)]
     public sealed class FloatToFloatAdapter : IAdapter
@@ -96,6 +102,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Int ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(int), destType: typeof(float), order: 0)]
     public sealed class IntToFloatAdapter : IAdapter
@@ -112,6 +119,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UInt ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(uint), destType: typeof(float), order: 0)]
     public sealed class UIntToFloatAdapter : IAdapter
@@ -128,6 +136,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Long ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(long), destType: typeof(float), order: 0)]
     public sealed class LongToFloatAdapter : IAdapter
@@ -144,6 +153,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("ULong ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(ulong), destType: typeof(float), order: 0)]
     public sealed class ULongToFloatAdapter : IAdapter
@@ -160,6 +170,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Short ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(short), destType: typeof(float), order: 0)]
     public sealed class ShortToFloatAdapter : IAdapter
@@ -176,6 +187,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UShort ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(ushort), destType: typeof(float), order: 0)]
     public sealed class UShortToFloatAdapter : IAdapter

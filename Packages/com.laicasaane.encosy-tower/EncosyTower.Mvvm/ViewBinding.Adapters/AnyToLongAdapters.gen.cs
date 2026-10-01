@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Byte ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(byte), destType: typeof(long), order: 0)]
     public sealed class ByteToLongAdapter : IAdapter
@@ -32,6 +34,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("SByte ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(sbyte), destType: typeof(long), order: 0)]
     public sealed class SByteToLongAdapter : IAdapter
@@ -48,6 +51,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Char ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(char), destType: typeof(long), order: 0)]
     public sealed class CharToLongAdapter : IAdapter
@@ -64,6 +68,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Double ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(double), destType: typeof(long), order: 0)]
     public sealed class DoubleToLongAdapter : IAdapter
@@ -80,6 +85,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Float ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(float), destType: typeof(long), order: 0)]
     public sealed class FloatToLongAdapter : IAdapter
@@ -96,6 +102,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Int ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(int), destType: typeof(long), order: 0)]
     public sealed class IntToLongAdapter : IAdapter
@@ -112,6 +119,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UInt ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(uint), destType: typeof(long), order: 0)]
     public sealed class UIntToLongAdapter : IAdapter
@@ -128,6 +136,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Long ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(long), destType: typeof(long), order: 0)]
     public sealed class LongToLongAdapter : IAdapter
@@ -144,6 +153,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("ULong ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(ulong), destType: typeof(long), order: 0)]
     public sealed class ULongToLongAdapter : IAdapter
@@ -160,6 +170,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Short ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(short), destType: typeof(long), order: 0)]
     public sealed class ShortToLongAdapter : IAdapter
@@ -176,6 +187,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UShort ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(ushort), destType: typeof(long), order: 0)]
     public sealed class UShortToLongAdapter : IAdapter

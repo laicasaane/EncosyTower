@@ -17,11 +17,6 @@
     ],
     "versionDefines": [
         {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
-        {
             "name": "com.cysharp.unitask",
             "expression": "",
             "define": "UNITASK"

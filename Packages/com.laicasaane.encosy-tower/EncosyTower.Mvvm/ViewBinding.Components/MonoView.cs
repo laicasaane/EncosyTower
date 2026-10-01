@@ -14,9 +14,6 @@ using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Mvvm.ViewBinding.Components
 {
-    using UnityTask = Cysharp.Threading.Tasks.UniTask;
-    using UnityTaskObservable = Cysharp.Threading.Tasks.UniTask<IObservableObject>;
-
     /// <summary>
     /// Represents a collection of <see cref="MonoBinder"/>.
     /// </summary>
@@ -124,9 +121,9 @@ namespace EncosyTower.Mvvm.ViewBinding.Components
             }
         }
 
-        private async UnityTaskObservable GetContextAsync(CancellationToken token)
+        private async UnityTask<IObservableObject> GetContextAsync(CancellationToken token)
         {
-            await UnityTasks.WaitUntil(
+            await UnityTask.WaitUntil(
                   this
                 , static state => state._context != null && state._context.TryGetContext(out _)
                 , token

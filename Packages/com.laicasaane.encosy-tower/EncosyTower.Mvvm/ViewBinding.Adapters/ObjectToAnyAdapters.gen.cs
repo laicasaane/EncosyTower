@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Byte", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(byte), order: 0)]
     public sealed class ObjectToByteAdapter : IAdapter
@@ -34,6 +36,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ SByte", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(sbyte), order: 0)]
     public sealed class ObjectToSByteAdapter : IAdapter
@@ -52,6 +55,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Char", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(char), order: 0)]
     public sealed class ObjectToCharAdapter : IAdapter
@@ -70,6 +74,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Double", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(double), order: 0)]
     public sealed class ObjectToDoubleAdapter : IAdapter
@@ -88,6 +93,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(float), order: 0)]
     public sealed class ObjectToFloatAdapter : IAdapter
@@ -106,6 +112,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(int), order: 0)]
     public sealed class ObjectToIntAdapter : IAdapter
@@ -124,6 +131,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ UInt", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(uint), order: 0)]
     public sealed class ObjectToUIntAdapter : IAdapter
@@ -142,6 +150,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(long), order: 0)]
     public sealed class ObjectToLongAdapter : IAdapter
@@ -160,6 +169,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(ulong), order: 0)]
     public sealed class ObjectToULongAdapter : IAdapter
@@ -178,6 +188,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Short", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(short), order: 0)]
     public sealed class ObjectToShortAdapter : IAdapter
@@ -196,6 +207,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ UShort", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(ushort), order: 0)]
     public sealed class ObjectToUShortAdapter : IAdapter

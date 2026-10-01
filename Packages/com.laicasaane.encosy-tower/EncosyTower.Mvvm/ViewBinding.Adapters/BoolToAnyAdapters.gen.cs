@@ -12,10 +12,12 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Byte", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(byte), order: 0)]
     public sealed class BoolToByteAdapter : IAdapter
@@ -32,6 +34,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ SByte", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(sbyte), order: 0)]
     public sealed class BoolToSByteAdapter : IAdapter
@@ -48,6 +51,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Char", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(char), order: 0)]
     public sealed class BoolToCharAdapter : IAdapter
@@ -64,6 +68,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Double", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(double), order: 0)]
     public sealed class BoolToDoubleAdapter : IAdapter
@@ -80,6 +85,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Float", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(float), order: 0)]
     public sealed class BoolToFloatAdapter : IAdapter
@@ -96,6 +102,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Int", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(int), order: 0)]
     public sealed class BoolToIntAdapter : IAdapter
@@ -112,6 +119,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ UInt", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(uint), order: 0)]
     public sealed class BoolToUIntAdapter : IAdapter
@@ -128,6 +136,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Long", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(long), order: 0)]
     public sealed class BoolToLongAdapter : IAdapter
@@ -144,6 +153,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ ULong", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(ulong), order: 0)]
     public sealed class BoolToULongAdapter : IAdapter
@@ -160,6 +170,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Short", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(short), order: 0)]
     public sealed class BoolToShortAdapter : IAdapter
@@ -176,6 +187,7 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
+    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ UShort", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(ushort), order: 0)]
     public sealed class BoolToUShortAdapter : IAdapter

@@ -2,7 +2,6 @@
     "name": "EncosyTower.Mvvm",
     "rootNamespace": "EncosyTower.Mvvm",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
         "EncosyTower.Core",
         "UniTask",
         "UniTask.Addressables",
@@ -22,11 +21,6 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
         {
             "name": "com.cysharp.unitask",
             "expression": "",
