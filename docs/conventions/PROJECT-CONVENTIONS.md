@@ -30,7 +30,7 @@ project-level ownership rules.
 ## 3. Samples
 
 - `Assets/Samples` is the canonical authoring source in the development Unity
-  project even though Git ignores the imported sample tree.
+  project and is tracked by Git.
 - `Packages/com.laicasaane.encosy-tower/Samples~` is the tracked release
   deployment output.
 - Make and maintain sample changes in `Assets/Samples`, not in `Samples~`.
@@ -77,7 +77,3 @@ project-level ownership rules.
   for another or claim a check that was not run.
 - Follow task-specific validation restrictions. Report the exact checks and
   results, plus anything intentionally not run or left for the Project Owner.
-
-## 7. Feature Documentation
-
-- Database authoring with BakingSheet: [database-authoring-bakingsheet.md](../database-authoring-bakingsheet.md).
