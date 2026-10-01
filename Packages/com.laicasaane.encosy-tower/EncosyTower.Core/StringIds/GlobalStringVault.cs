@@ -1,10 +1,11 @@
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
@@ -60,6 +61,7 @@ namespace EncosyTower.StringIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static StringId GetOrMakeId([NotNull] string str)
         {
+            DebuggingThrowHelper.ThrowIfNull(str);
             return s_vault.GetOrMakeId(str);
         }
 
@@ -89,17 +91,7 @@ namespace EncosyTower.StringIds
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
         internal static void ThrowIfNotDefined([DoesNotReturnIf(false)] bool check, StringId key)
         {
-            if (check == false)
-            {
-                throw CreateException(key);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(StringId key)
-                => new(
-                    $"No StringId has not been globally defined with id \"{key}\". " +
-                    $"To define one, use StringToId.Get() API."
-                );
+            ThrowHelper.ThrowIfNotDefined(check, key);
         }
     }
 }

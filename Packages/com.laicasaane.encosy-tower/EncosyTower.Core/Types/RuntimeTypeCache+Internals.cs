@@ -22,6 +22,8 @@ using UnityEngine.Scripting;
 using EncosyTower.AddressableKeys;
 #endif
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Types
 {
     partial class RuntimeTypeCache
@@ -37,6 +39,7 @@ namespace EncosyTower.Types
         [Preserve]
         internal static TypeInfo<T> Register<T>([NotNull] Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             var id = TypeIdVault.Register(type);
             var isUnmanaged = EncosyTypeExtensions.IsUnmanaged<T>();
             var isBlittable = isUnmanaged && type.IsAutoLayout == false && type != typeof(bool);

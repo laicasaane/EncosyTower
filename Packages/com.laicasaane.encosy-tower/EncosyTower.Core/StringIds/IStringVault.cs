@@ -4,11 +4,7 @@ using EncosyTower.Common;
 
 namespace EncosyTower.StringIds
 {
-    public interface IStringVault
-        : IReadOnlyStringVault
-        , IDisposable
-        , IClearable
-        , IIncreaseCapacity
+    public interface IStringVault : IReadOnlyStringVault, IDisposable, IClearable, IIncreaseCapacity
     {
         StringId GetOrMakeId(in UnmanagedString str);
     }

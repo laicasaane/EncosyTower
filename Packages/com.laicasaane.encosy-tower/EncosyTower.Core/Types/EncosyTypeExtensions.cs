@@ -5,6 +5,8 @@ using EncosyTower.CodeGen;
 using EncosyTower.Common;
 using EncosyTower.Pooling;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Types
 {
     public static class EncosyTypeExtensions
@@ -13,14 +15,21 @@ namespace EncosyTower.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<TypeId> FindId([NotNull] this Type type)
-            => Option.SomeIf(TypeIdVault.TryGetId(type, out var id), id);
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            return Option.SomeIf(TypeIdVault.TryGetId(type, out var id), id);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TypeId GetOrRegisterId([NotNull] this Type type)
-            => TypeIdVault.TryGetId(type, out var id) ? id : RuntimeTypeCache.GetInfo(type).Id;
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            return TypeIdVault.TryGetId(type, out var id) ? id : RuntimeTypeCache.GetInfo(type).Id;
+        }
 
         public static string GetName([NotNull] this Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (type.IsEnum)
             {
                 return type.Name;
@@ -47,6 +56,7 @@ namespace EncosyTower.Types
 
         public static string GetFullName([NotNull] this Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (type.IsEnum)
             {
                 return type.FullName;
@@ -73,6 +83,7 @@ namespace EncosyTower.Types
 
         public static string GetFriendlyName([NotNull] this Type type, bool fullName = false)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (type == typeof(void))
             {
                 return VOID_TYPE_NAME;
@@ -117,6 +128,7 @@ namespace EncosyTower.Types
 
         public static bool IsReferenceOrContainsReferences([NotNull] this Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (type.IsValueType == false)
             {
                 return true;
@@ -147,6 +159,8 @@ namespace EncosyTower.Types
 
         public static string GetNameWithoutSuffix([NotNull] this Type type, [NotNull] string suffix)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            DebuggingThrowHelper.ThrowIfNull(suffix);
             var name = type.Name;
 
             if (string.IsNullOrEmpty(suffix))
@@ -167,7 +181,10 @@ namespace EncosyTower.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullableType([NotNull] this Type type)
-            => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsUnmanaged<T>()

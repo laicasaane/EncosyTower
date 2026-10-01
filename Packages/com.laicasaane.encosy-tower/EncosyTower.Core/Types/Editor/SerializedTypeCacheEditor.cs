@@ -30,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Core;
 using EncosyTower.Logging;
 using EncosyTower.Types.Caches;
@@ -318,7 +319,7 @@ namespace EncosyTower.Types.Editor
                         baseType = typeStore.Add(baseType),
                     };
 
-                    var derivedTypes = item.derivedTypes;
+                    var derivedTypes = item.derivedTypes.AsListFast();
                     derivedTypes.IncreaseCapacityTo(derivedTypes.Count);
 
                     foreach (var type in filteredTypes)
@@ -371,16 +372,14 @@ namespace EncosyTower.Types.Editor
                         attributeType = typeStore.Add(attribType),
                     };
 
-                    var matches = item.matches;
+                    var matches = item.matches.AsListFast();
                     matches.IncreaseCapacityTo(filteredTypes.Count);
 
                     foreach (var type in filteredTypes)
                     {
                         var indexedType = typeStore.Add(type);
 
-                        matches.Add(new MemberRef<Type>(type) {
-                            declaringType = indexedType,
-                        });
+                        matches.Add(new MemberRef<Type>(type) { declaringType = indexedType, });
 
                         linkXmlTypeStore.Add(indexedType);
                     }
@@ -433,16 +432,14 @@ namespace EncosyTower.Types.Editor
                         attributeType = typeStore.Add(attribType),
                     };
 
-                    var matches = item.matches;
+                    var matches = item.matches.AsListFast();
                     matches.IncreaseCapacityTo(filteredMembers.Count);
 
                     foreach (var member in filteredMembers)
                     {
                         var indexedType = typeStore.Add(member.DeclaringType);
 
-                        matches.Add(new MemberRef<FieldInfo>(member) {
-                            declaringType = indexedType,
-                        });
+                        matches.Add(new MemberRef<FieldInfo>(member) { declaringType = indexedType, });
 
                         linkXmlTypeStore.Add(indexedType, member);
                     }
@@ -495,16 +492,14 @@ namespace EncosyTower.Types.Editor
                         attributeType = typeStore.Add(attribType),
                     };
 
-                    var matches = item.matches;
+                    var matches = item.matches.AsListFast();
                     matches.IncreaseCapacityTo(filteredMembers.Count);
 
                     foreach (var member in filteredMembers)
                     {
                         var indexedType = typeStore.Add(member.DeclaringType);
 
-                        matches.Add(new MemberRef<MethodInfo>(member) {
-                            declaringType = indexedType,
-                        });
+                        matches.Add(new MemberRef<MethodInfo>(member) { declaringType = indexedType, });
 
                         linkXmlTypeStore.Add(indexedType, member);
                     }
@@ -690,7 +685,7 @@ namespace EncosyTower.Types.Editor
         {
             public string assemblyName;
             public IndexedType baseType;
-            public FasterList<IndexedType> derivedTypes = new();
+            public List<IndexedType> derivedTypes = new();
         }
 
         private class TempSerializedAnnonatedMembers<T>
@@ -698,7 +693,7 @@ namespace EncosyTower.Types.Editor
         {
             public string assemblyName;
             public IndexedType attributeType;
-            public FasterList<MemberRef<T>> matches = new();
+            public List<MemberRef<T>> matches = new();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
@@ -20,10 +20,7 @@ namespace EncosyTower.StringIds
             private int _index;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal Enumerator(
-                  SharedListNative<Range>.ReadOnly ranges
-                , SharedListNative<byte>.ReadOnly buffer
-            )
+            internal Enumerator(SharedListNative<Range>.ReadOnly ranges, SharedListNative<byte>.ReadOnly buffer)
             {
                 _ranges = ranges;
                 _buffer = buffer;
@@ -48,7 +45,7 @@ namespace EncosyTower.StringIds
 
             private bool MoveNextRare()
             {
-                ThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
+                CollectionsThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
 
                 _index = _ranges.Count + 1;
                 _current = default;
@@ -63,7 +60,7 @@ namespace EncosyTower.StringIds
 
             public void Reset()
             {
-                ThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
+                CollectionsThrowHelper.ThrowIfCollectionWasModified(_version == _ranges.Version);
 
                 _index = 0;
                 _current = default;
@@ -78,7 +75,7 @@ namespace EncosyTower.StringIds
             {
                 get
                 {
-                    ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _ranges.Count + 1);
+                    CollectionsThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _ranges.Count + 1);
 
                     return Current;
                 }

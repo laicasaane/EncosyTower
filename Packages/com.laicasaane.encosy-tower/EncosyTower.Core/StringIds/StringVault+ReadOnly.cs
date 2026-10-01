@@ -10,12 +10,18 @@ namespace EncosyTower.StringIds
 {
     partial class StringVault
     {
+        /// <safety>The returned view must not outlive this vault or survive backing collection resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
-            => new(this);
+        public unsafe ReadOnly AsReadOnly()
+        {
+            // SAFETY: This vault owns every collection borrowed by the returned read-only view.
+            unsafe
+            {
+                return new(this);
+            }
+        }
 
-        public readonly partial struct ReadOnly : IReadOnlyStringVault
-            , IReadOnlyList<UnmanagedString>
+        public readonly partial struct ReadOnly : IReadOnlyStringVault, IReadOnlyList<UnmanagedString>
         {
             internal readonly SharedArrayMapNative<StringHash, StringId>.ReadOnly _map;
             internal readonly SharedArrayMapNative<UnmanagedString, StringId>.ReadOnly _collisionMap;
@@ -24,15 +30,22 @@ namespace EncosyTower.StringIds
             internal readonly SharedListNative<Option<StringHash>>.ReadOnly _hashes;
             internal readonly NativeArray<int>.ReadOnly _count;
 
+            /// <safety>
+            /// The vault must remain alive and must not resize its backing collections while this view is used.
+            /// </safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnly(StringVault vault)
+            public unsafe ReadOnly(StringVault vault)
             {
-                _map = vault._map.AsNative();
-                _collisionMap = vault._collisionMap.AsNative();
-                _unmanagedStringRanges = vault._unmanagedStringRanges.AsNative();
-                _unmanagedStringBuffer = vault._unmanagedStringBuffer.AsNative();
-                _hashes = vault._hashes.AsNative();
-                _count = vault._count.AsNativeArray().AsReadOnly();
+                // SAFETY: One vault owns all six backing allocations for the complete borrowed-view lifetime.
+                unsafe
+                {
+                    _map = vault._map.AsNative();
+                    _collisionMap = vault._collisionMap.AsNative();
+                    _unmanagedStringRanges = vault._unmanagedStringRanges.AsNative();
+                    _unmanagedStringBuffer = vault._unmanagedStringBuffer.AsNative();
+                    _hashes = vault._hashes.AsNative();
+                    _count = vault._count.AsNativeArray().AsReadOnly();
+                }
 
                 AllowEmptyString = vault.AllowEmptyString;
             }
@@ -65,7 +78,9 @@ namespace EncosyTower.StringIds
             public UnmanagedString this[int index]
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => UnmanagedString.FromBufferAt(_unmanagedStringRanges[index], _unmanagedStringBuffer).GetValueOrThrow();
+                get => UnmanagedString
+                    .FromBufferAt(_unmanagedStringRanges[index], _unmanagedStringBuffer)
+                    .GetValueOrThrow();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -145,8 +160,16 @@ namespace EncosyTower.StringIds
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-                => new UnmanagedStringSpan(_unmanagedStringRanges.AsReadOnlySpan()[1..Count], _unmanagedStringBuffer.AsReadOnlySpan())
-                    .CopyTo(sourceStartIndex, destination, length);
+            {
+                // SAFETY: The copy consumes both borrowed spans before this method returns.
+                unsafe
+                {
+                    new UnmanagedStringSpan(
+                          _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                        , _unmanagedStringBuffer.AsReadOnlySpan()
+                    ).CopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(Span<UnmanagedString> destination)
@@ -162,24 +185,60 @@ namespace EncosyTower.StringIds
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-                => new UnmanagedStringSpan(_unmanagedStringRanges.AsReadOnlySpan()[1..Count], _unmanagedStringBuffer.AsReadOnlySpan())
-                    .TryCopyTo(sourceStartIndex, destination, length);
+            {
+                // SAFETY: The copy consumes both borrowed spans before this method returns.
+                unsafe
+                {
+                    return new UnmanagedStringSpan(
+                          _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                        , _unmanagedStringBuffer.AsReadOnlySpan()
+                    ).TryCopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
+            /// <safety>The vault must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Enumerator GetEnumerator()
-                => new(_unmanagedStringRanges, _unmanagedStringBuffer);
+            public unsafe Enumerator GetEnumerator()
+            {
+                // SAFETY: The enumerator borrows two collections owned by the same live vault.
+                unsafe
+                {
+                    return new(_unmanagedStringRanges, _unmanagedStringBuffer);
+                }
+            }
 
+            /// <safety>The vault must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator<UnmanagedString> IEnumerable<UnmanagedString>.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator<UnmanagedString> IEnumerable<UnmanagedString>.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this live vault view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The vault must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this live vault view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The returned alias must not outlive the source vault.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(StringVault vault)
-                => new(vault);
+            public static unsafe implicit operator ReadOnly(StringVault vault)
+            {
+                // SAFETY: The caller accepts the source vault lifetime inherited by the alias.
+                unsafe
+                {
+                    return new(vault);
+                }
+            }
         }
     }
 }

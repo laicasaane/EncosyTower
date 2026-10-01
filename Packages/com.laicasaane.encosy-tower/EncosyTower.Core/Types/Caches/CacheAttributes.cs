@@ -41,8 +41,7 @@ namespace EncosyTower.Types.Caches
     /// is open to direct modifications.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    public sealed class CacheTypesDerivedFromThisTypeAttribute : Attribute
-        , ICacheAttributeWithAssemblyNames
+    public sealed class CacheTypesDerivedFromThisTypeAttribute : Attribute, ICacheAttributeWithAssemblyNames
     {
         public string[] AssemblyNames { get; }
 
@@ -62,8 +61,7 @@ namespace EncosyTower.Types.Caches
     /// the attribute source code is open to direct modifications.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class CacheTypesWithThisAttributeAttribute : Attribute
-        , ICacheAttributeWithAssemblyNames
+    public sealed class CacheTypesWithThisAttributeAttribute : Attribute, ICacheAttributeWithAssemblyNames
     {
         public string[] AssemblyNames { get; }
 
@@ -83,8 +81,7 @@ namespace EncosyTower.Types.Caches
     /// the attribute source code is open to direct modifications.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class CacheFieldsWithThisAttributeAttribute : Attribute
-        , ICacheAttributeWithAssemblyNames
+    public sealed class CacheFieldsWithThisAttributeAttribute : Attribute, ICacheAttributeWithAssemblyNames
     {
         public string[] AssemblyNames { get; }
 
@@ -104,8 +101,7 @@ namespace EncosyTower.Types.Caches
     /// the attribute source code is open to direct modifications.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class CacheMethodsWithThisAttributeAttribute : Attribute
-        , ICacheAttributeWithAssemblyNames
+    public sealed class CacheMethodsWithThisAttributeAttribute : Attribute, ICacheAttributeWithAssemblyNames
     {
         public string[] AssemblyNames { get; }
 
@@ -124,8 +120,7 @@ namespace EncosyTower.Types.Caches
     /// is closed to direct modifications.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]
-    public sealed class CacheTypeAttribute : Attribute
-        , ICacheAttributeWithType
+    public sealed class CacheTypeAttribute : Attribute, ICacheAttributeWithType
     {
         public Type Type { get; }
 

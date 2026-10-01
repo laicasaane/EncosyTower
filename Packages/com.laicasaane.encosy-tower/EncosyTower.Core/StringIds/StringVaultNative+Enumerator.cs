@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
@@ -103,7 +103,7 @@ namespace EncosyTower.StringIds
                     // SAFETY: CheckRead validates the owner before reading the enumerator's live vault header.
                     unsafe
                     {
-                        ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _data->_count + 1);
+                        CollectionsThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _data->_count + 1);
 
                         return Current;
                     }

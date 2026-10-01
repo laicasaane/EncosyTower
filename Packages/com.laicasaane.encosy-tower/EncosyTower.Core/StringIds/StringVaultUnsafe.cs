@@ -1,19 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using EncosyTower.Ids;
 using Unity.Jobs;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
-
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
@@ -31,11 +26,7 @@ namespace EncosyTower.StringIds
         internal ByteBool _allowEmptyString;
         internal AllocatorStrategy _allocator;
 
-        public StringVaultUnsafe(
-              int initialCapacity
-            , AllocatorStrategy allocator
-            , bool allowEmptyString = false
-        )
+        public StringVaultUnsafe(int initialCapacity, AllocatorStrategy allocator, bool allowEmptyString = false)
         {
             var capacity = Math.Max(1, initialCapacity);
             _map = new(capacity, allocator);
@@ -122,10 +113,7 @@ namespace EncosyTower.StringIds
         }
 
         /// <safety>The returned vault header is owned by the supplied allocator and must be freed exactly once with Free.</safety>
-        public static unsafe StringVaultUnsafe* Alloc(
-              in StringVaultUnsafe source
-            , AllocatorStrategy allocator
-        )
+        public static unsafe StringVaultUnsafe* Alloc(in StringVaultUnsafe source, AllocatorStrategy allocator)
         {
             // SAFETY: The validated allocator returns an owned vault header for the deep-copied storage.
             unsafe
@@ -231,7 +219,7 @@ namespace EncosyTower.StringIds
                 EnsureCapacity();
 
                 var added = _collisionMap.TryAdd(str, id, out _);
-                ThrowIfFailedRegistering(added, str, id);
+                ThrowHelper.ThrowIfFailedRegistering(added, str, id);
 
                 if (added)
                 {
@@ -246,7 +234,7 @@ namespace EncosyTower.StringIds
                 var index = _count;
                 id = new Id(index);
                 var added = _map.TryAdd(hash, id, out _);
-                ThrowIfFailedRegistering(added, str, id);
+                ThrowHelper.ThrowIfFailedRegistering(added, str, id);
 
                 if (added)
                 {
@@ -361,7 +349,7 @@ namespace EncosyTower.StringIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IncreaseCapacityBy(int amount)
         {
-            ThrowIfAmountIsNotValid(amount > 0, amount);
+            ThrowHelper.ThrowIfAmountIsNotValid(amount > 0, amount);
             return IncreaseCapacityTo(Capacity + amount);
         }
 
@@ -430,41 +418,6 @@ namespace EncosyTower.StringIds
             get => _stringBuffer.AsReadOnlySpan()[.._stringBufferLength];
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfFailedRegistering(
-              [DoesNotReturnIf(false)] bool check
-            , in UnmanagedString str
-            , StringId id
-        )
-        {
-            if (check == false)
-            {
-                throw CreateException(str, id);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(in UnmanagedString str, StringId id)
-                => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAmountIsNotValid([DoesNotReturnIf(false)] bool isValid, int amount)
-        {
-            if (isValid == false)
-            {
-                throw CreateException(amount);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException(int amount)
-                => new(nameof(amount), amount, "amount must be greater than 0");
-        }
 
         public struct Enumerator : IEnumerator<UnmanagedString>
         {
@@ -499,7 +452,7 @@ namespace EncosyTower.StringIds
             {
                 get
                 {
-                    ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _data._count + 1);
+                    CollectionsThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _data._count + 1);
 
                     return Current;
                 }

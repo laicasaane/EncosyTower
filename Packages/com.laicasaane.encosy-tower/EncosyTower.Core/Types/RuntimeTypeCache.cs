@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine.Scripting;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Types
 {
     /// <summary>
@@ -32,6 +34,7 @@ namespace EncosyTower.Types
         /// </returns>
         public static TypeInfo GetInfo([NotNull] Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (s_vault.TryGetValue(type, out var info))
             {
                 return info;
@@ -70,7 +73,10 @@ namespace EncosyTower.Types
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesDerivedFrom<T>([NotNull] string assemblyName)
-            => s_source.GetTypesDerivedFrom<T>(assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetTypesDerivedFrom<T>(assemblyName);
+        }
 
         /// <summary>
         /// Retrieves an unordered collection of types derived from <paramref name="type"/>.
@@ -81,7 +87,10 @@ namespace EncosyTower.Types
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesDerivedFrom([NotNull] Type type)
-            => s_source.GetTypesDerivedFrom(type);
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            return s_source.GetTypesDerivedFrom(type);
+        }
 
         /// <summary>
         /// Retrieves an unordered collection of types derived from <paramref name="type"/>.
@@ -97,7 +106,11 @@ namespace EncosyTower.Types
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesDerivedFrom([NotNull] Type type, [NotNull] string assemblyName)
-            => s_source.GetTypesDerivedFrom(type, assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetTypesDerivedFrom(type, assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesWithAttribute<T>() where T : Attribute
@@ -105,15 +118,25 @@ namespace EncosyTower.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesWithAttribute<T>([NotNull] string assemblyName) where T : Attribute
-            => s_source.GetTypesWithAttribute<T>(assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetTypesWithAttribute<T>(assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesWithAttribute([NotNull] Type attrType)
-            => s_source.GetTypesWithAttribute(attrType);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            return s_source.GetTypesWithAttribute(attrType);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<Type> GetTypesWithAttribute([NotNull] Type attrType, [NotNull] string assemblyName)
-            => s_source.GetTypesWithAttribute(attrType, assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetTypesWithAttribute(attrType, assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<FieldInfo> GetFieldsWithAttribute<T>() where T : Attribute
@@ -121,15 +144,25 @@ namespace EncosyTower.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<FieldInfo> GetFieldsWithAttribute<T>([NotNull] string assemblyName) where T : Attribute
-            => s_source.GetFieldsWithAttribute<T>(assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetFieldsWithAttribute<T>(assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<FieldInfo> GetFieldsWithAttribute([NotNull] Type attrType)
-            => s_source.GetFieldsWithAttribute(attrType);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            return s_source.GetFieldsWithAttribute(attrType);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<FieldInfo> GetFieldsWithAttribute([NotNull] Type attrType, [NotNull] string assemblyName)
-            => s_source.GetFieldsWithAttribute(attrType, assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetFieldsWithAttribute(attrType, assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<MethodInfo> GetMethodsWithAttribute<T>() where T : Attribute
@@ -137,14 +170,24 @@ namespace EncosyTower.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<MethodInfo> GetMethodsWithAttribute<T>([NotNull] string assemblyName) where T : Attribute
-            => s_source.GetMethodsWithAttribute<T>(assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetMethodsWithAttribute<T>(assemblyName);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<MethodInfo> GetMethodsWithAttribute([NotNull] Type attrType)
-            => s_source.GetMethodsWithAttribute(attrType);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            return s_source.GetMethodsWithAttribute(attrType);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<MethodInfo> GetMethodsWithAttribute([NotNull] Type attrType, [NotNull] string assemblyName)
-            => s_source.GetMethodsWithAttribute(attrType, assemblyName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(attrType);
+            DebuggingThrowHelper.ThrowIfNull(assemblyName);
+            return s_source.GetMethodsWithAttribute(attrType, assemblyName);
+        }
     }
 }

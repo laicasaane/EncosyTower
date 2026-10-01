@@ -28,9 +28,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Initialization;
 using EncosyTower.Logging;
 using UnityEngine;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Types.Internals
 {
@@ -43,7 +46,7 @@ namespace EncosyTower.Types.Internals
         [SerializeField] internal List<string> _assemblyQualifiedNames = new();
 
         private readonly Dictionary<Type, int> _typeToIndex = new();
-        private readonly FasterList<Type> _types = new();
+        private readonly List<Type> _types = new();
         private bool _initialized;
 
         public Type this[int index]
@@ -64,6 +67,7 @@ namespace EncosyTower.Types.Internals
         /// </returns>
         public int Add([NotNull] Type type)
         {
+            DebuggingThrowHelper.ThrowIfNull(type);
             if (_typeToIndex.TryGetValue(type, out var index) == false)
             {
                 index = _types.Count;
@@ -89,7 +93,7 @@ namespace EncosyTower.Types.Internals
 
             var assemblyQualifiedNames = _assemblyQualifiedNames;
             var typeToIndex = _typeToIndex;
-            var types = _types;
+            var types = _types.AsListFast();
 
             typeToIndex.Clear();
             types.Clear();
@@ -113,7 +117,7 @@ namespace EncosyTower.Types.Internals
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            var assemblyQualifiedNames = _types.Select(static t => t.AssemblyQualifiedName);
+            var assemblyQualifiedNames = _types.AsListFast().Select(static t => t.AssemblyQualifiedName);
             _assemblyQualifiedNames.Clear();
             _assemblyQualifiedNames.AddRange(assemblyQualifiedNames);
         }

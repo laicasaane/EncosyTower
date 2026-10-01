@@ -10,8 +10,7 @@ namespace EncosyTower.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Type ToType(this TypeId self)
         {
-            return TypeIdVault.TryGetType(self, out var type)
-                ? type : TypeIdVault.UndefinedType;
+            return TypeIdVault.TryGetType(self, out var type) ? type : TypeIdVault.UndefinedType;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

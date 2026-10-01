@@ -23,15 +23,14 @@
 // https://github.com/thebeardphantom/Runtime-TypeCache
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Collections.Extensions.Unsafe;
 using EncosyTower.Common;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Types.Internals
 {
@@ -42,6 +41,7 @@ namespace EncosyTower.Types.Internals
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TypeCacheSourceRuntime([NotNull] DeserializedTypeCache cache)
         {
+            DebuggingThrowHelper.ThrowIfNull(cache);
             _cache = cache;
         }
 
@@ -70,7 +70,7 @@ namespace EncosyTower.Types.Internals
 
         public ReadOnlyMemory<Type> GetTypesDerivedFrom(Type type, string assemblyName)
         {
-            ThrowIfNull(_cache != null);
+            ThrowHelper.ThrowIfRuntimeTypeCacheIsNull(_cache != null);
 
             EnsureValidAssemblyName(ref assemblyName);
 
@@ -80,7 +80,7 @@ namespace EncosyTower.Types.Internals
                 && memberMap.TryGetValue(type, out var members)
             )
             {
-                members.GetBufferUnsafe(out var buffer, out var count);
+                members.AsListFast().GetBufferUnsafe(out var buffer, out var count);
                 return buffer.AsMemory(0, count);
             }
 
@@ -107,7 +107,7 @@ namespace EncosyTower.Types.Internals
 
         public ReadOnlyMemory<Type> GetTypesWithAttribute(Type attrType, string assemblyName)
         {
-            ThrowIfNull(_cache != null);
+            ThrowHelper.ThrowIfRuntimeTypeCacheIsNull(_cache != null);
 
             EnsureValidAssemblyName(ref assemblyName);
 
@@ -117,7 +117,7 @@ namespace EncosyTower.Types.Internals
                 && memberMap.TryGetValue(attrType, out var members)
             )
             {
-                members.GetBufferUnsafe(out var buffer, out var count);
+                members.AsListFast().GetBufferUnsafe(out var buffer, out var count);
                 return buffer.AsMemory(0, count);
             }
 
@@ -144,7 +144,7 @@ namespace EncosyTower.Types.Internals
 
         public ReadOnlyMemory<FieldInfo> GetFieldsWithAttribute(Type attrType, string assemblyName)
         {
-            ThrowIfNull(_cache != null);
+            ThrowHelper.ThrowIfRuntimeTypeCacheIsNull(_cache != null);
 
             EnsureValidAssemblyName(ref assemblyName);
 
@@ -154,7 +154,7 @@ namespace EncosyTower.Types.Internals
                 && memberMap.TryGetValue(attrType, out var members)
             )
             {
-                members.GetBufferUnsafe(out var buffer, out var count);
+                members.AsListFast().GetBufferUnsafe(out var buffer, out var count);
                 return buffer.AsMemory(0, count);
             }
 
@@ -181,7 +181,7 @@ namespace EncosyTower.Types.Internals
 
         public ReadOnlyMemory<MethodInfo> GetMethodsWithAttribute(Type attrType, string assemblyName)
         {
-            ThrowIfNull(_cache != null);
+            ThrowHelper.ThrowIfRuntimeTypeCacheIsNull(_cache != null);
 
             EnsureValidAssemblyName(ref assemblyName);
 
@@ -191,7 +191,7 @@ namespace EncosyTower.Types.Internals
                 && memberMap.TryGetValue(attrType, out var members)
             )
             {
-                members.GetBufferUnsafe(out var buffer, out var count);
+                members.AsListFast().GetBufferUnsafe(out var buffer, out var count);
                 return buffer.AsMemory(0, count);
             }
 
@@ -204,18 +204,5 @@ namespace EncosyTower.Types.Internals
             assemblyName = string.IsNullOrWhiteSpace(assemblyName) ? string.Empty : assemblyName;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfNull([DoesNotReturnIf(false)] bool isNotNull)
-        {
-            if (isNotNull == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("RuntimeTypeCache is not initialized correctly.");
-        }
     }
 }

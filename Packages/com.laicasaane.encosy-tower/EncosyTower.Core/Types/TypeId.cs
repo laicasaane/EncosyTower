@@ -4,11 +4,7 @@ namespace EncosyTower.Types
     using System.Runtime.CompilerServices;
     using EncosyTower.Ids;
 
-    public readonly partial struct TypeId
-        : IEquatable<TypeId>
-        , IComparable<TypeId>
-        , IComparable
-        , ISpanFormattable
+    public readonly partial struct TypeId : IEquatable<TypeId>, IComparable<TypeId>, IComparable, ISpanFormattable
     {
         public static readonly TypeId Undefined = default;
 

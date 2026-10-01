@@ -18,8 +18,7 @@ namespace EncosyTower.StringIds
         [StructLayout(LayoutKind.Sequential)]
         [NativeContainer]
         [NativeContainerIsReadOnly]
-        public readonly struct ReadOnly : IReadOnlyStringVault
-            , IReadOnlyList<UnmanagedString>
+        public readonly struct ReadOnly : IReadOnlyStringVault, IReadOnlyList<UnmanagedString>
         {
 #pragma warning disable IDE1006 // Naming Styles
             [NativeDisableUnsafePtrRestriction]
@@ -218,11 +217,7 @@ namespace EncosyTower.StringIds
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void CopyTo(
-                  int sourceStartIndex
-                , Span<UnmanagedString> destination
-                , int length
-            )
+            public void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
             {
                 CheckRead();
                 // SAFETY: CheckRead validates the borrowed vault before copying from it.
@@ -266,11 +261,7 @@ namespace EncosyTower.StringIds
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryCopyTo(
-                  int sourceStartIndex
-                , Span<UnmanagedString> destination
-                , int length
-            )
+            public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
             {
                 CheckRead();
                 // SAFETY: CheckRead validates the borrowed vault before copying from it.

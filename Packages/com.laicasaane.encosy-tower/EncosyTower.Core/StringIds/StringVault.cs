@@ -1,15 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Ids;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
@@ -26,7 +25,7 @@ namespace EncosyTower.StringIds
         internal SharedArrayMap<UnmanagedString, StringId> _collisionMap;
         internal SharedList<Range> _unmanagedStringRanges;
         internal SharedList<byte> _unmanagedStringBuffer;
-        internal FasterList<string> _managedStrings;
+        internal List<string> _managedStrings;
         internal SharedList<Option<StringHash>> _hashes;
         internal SharedReference<int> _count;
         internal readonly object _lock = new();
@@ -194,7 +193,7 @@ namespace EncosyTower.StringIds
                     }
                     else
                     {
-                        ThrowIfFailedRegistering(false, str, id);
+                        ThrowHelper.ThrowIfFailedRegistering(false, str, id);
                     }
                 }
 
@@ -213,6 +212,7 @@ namespace EncosyTower.StringIds
         /// </remarks>
         public StringId GetOrMakeId([NotNull] string managedString)
         {
+            DebuggingThrowHelper.ThrowIfNull(managedString);
             if (AllowEmptyString == false && managedString.IsEmpty())
             {
                 return default;
@@ -266,7 +266,7 @@ namespace EncosyTower.StringIds
                     }
                     else
                     {
-                        ThrowIfFailedRegistering(false, managedString, id);
+                        ThrowHelper.ThrowIfFailedRegistering(false, managedString, id);
                     }
                 }
 
@@ -357,9 +357,18 @@ namespace EncosyTower.StringIds
             var index = (int)indexUnsigned;
             var validIndex = indexUnsigned < (uint)_hashes.Count;
 
-            var resultOpt = validIndex
-                ? UnmanagedString.FromBufferAt(_unmanagedStringRanges.AsReadOnly()[index], _unmanagedStringBuffer.AsReadOnlySpan())
-                : Option.None;
+            Option<UnmanagedString> resultOpt;
+
+            // SAFETY: Both lists are owned by this vault and the borrowed aliases are consumed immediately.
+            unsafe
+            {
+                resultOpt = validIndex
+                    ? UnmanagedString.FromBufferAt(
+                          _unmanagedStringRanges.AsReadOnly()[index]
+                        , _unmanagedStringBuffer.AsReadOnlySpan()
+                    )
+                    : Option.None;
+            }
 
             result = resultOpt.GetValueOrDefault();
             return resultOpt.HasValue;
@@ -438,8 +447,16 @@ namespace EncosyTower.StringIds
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-            => new UnmanagedStringSpan(_unmanagedStringRanges.AsReadOnlySpan()[1..Count], _unmanagedStringBuffer.AsReadOnlySpan())
-                .CopyTo(sourceStartIndex, destination, length);
+        {
+            // SAFETY: Both lists are owned by this vault and the borrowed spans are consumed before return.
+            unsafe
+            {
+                new UnmanagedStringSpan(
+                      _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                    , _unmanagedStringBuffer.AsReadOnlySpan()
+                ).CopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(Span<UnmanagedString> destination)
@@ -455,12 +472,20 @@ namespace EncosyTower.StringIds
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
-            => new UnmanagedStringSpan(_unmanagedStringRanges.AsReadOnlySpan()[1..Count], _unmanagedStringBuffer.AsReadOnlySpan())
-                .TryCopyTo(sourceStartIndex, destination, length);
+        {
+            // SAFETY: Both lists are owned by this vault and the borrowed spans are consumed before return.
+            unsafe
+            {
+                return new UnmanagedStringSpan(
+                      _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                    , _unmanagedStringBuffer.AsReadOnlySpan()
+                ).TryCopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
         public int IncreaseCapacityBy(int amount)
         {
-            ThrowIfAmountIsNotValid(amount > 0, amount);
+            ThrowHelper.ThrowIfAmountIsNotValid(amount > 0, amount);
             return IncreaseCapacityTo(Capacity + amount);
         }
 
@@ -472,8 +497,8 @@ namespace EncosyTower.StringIds
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public FasterListEnumerator<string> GetEnumerator()
-            => _managedStrings.GetEnumerator();
+        public ListFastEnumerator<string> GetEnumerator()
+            => _managedStrings.AsListFast().GetEnumerator();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator<string> IEnumerable<string>.GetEnumerator()
@@ -492,7 +517,7 @@ namespace EncosyTower.StringIds
             {
                 _hashes.IncreaseCapacityTo(newCapacity);
                 _unmanagedStringRanges.IncreaseCapacityTo(newCapacity);
-                _managedStrings.IncreaseCapacityTo(newCapacity);
+                _managedStrings.AsListFast().IncreaseCapacityTo(newCapacity);
             }
 
             if (_hashes.Count < newCapacity)
@@ -507,7 +532,7 @@ namespace EncosyTower.StringIds
 
             if (_managedStrings.Count < newCapacity)
             {
-                _managedStrings.AddReplicateNoInit(Math.Max(newCapacity - _managedStrings.Count, 0));
+                _managedStrings.AsListFast().AddReplicateNoInit(Math.Max(newCapacity - _managedStrings.Count, 0));
             }
 
             var newBufferCapacity = newCapacity * 512;
@@ -529,60 +554,5 @@ namespace EncosyTower.StringIds
             return new(startIndex, startIndex + amount);
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfFailedRegistering(
-              [DoesNotReturnIf(false)] bool check
-            , in UnmanagedString str
-            , StringId id
-        )
-        {
-            if (check == false)
-            {
-                throw CreateException(str, id);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(in UnmanagedString str, StringId id)
-                => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfFailedRegistering(
-              [DoesNotReturnIf(false)] bool check
-            , string str
-            , StringId id
-        )
-        {
-            if (check == false)
-            {
-                throw CreateException(str, id);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(string str, StringId id)
-                => new($"Cannot register a StringId by the same value \"{str}\" with different id \"{id}\".");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAmountIsNotValid([DoesNotReturnIf(false)] bool isValid, int amount)
-        {
-            if (isValid == false)
-            {
-                throw CreateException(amount);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException(int amount)
-                => new(nameof(amount), amount, "amount must be greater than 0");
-        }
     }
 }

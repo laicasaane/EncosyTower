@@ -36,11 +36,7 @@ namespace EncosyTower.StringIds
 #endif
 #pragma warning restore IDE1006 // Naming Styles
 
-        public StringVaultNative(
-              int initialCapacity
-            , AllocatorStrategy allocator
-            , bool allowEmptyString = false
-        )
+        public StringVaultNative(int initialCapacity, AllocatorStrategy allocator, bool allowEmptyString = false)
             : this()
         {
             // SAFETY: The allocation returns an owned native vault header kept alive by this container.
@@ -322,11 +318,7 @@ namespace EncosyTower.StringIds
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void CopyTo(
-              int sourceStartIndex
-            , Span<UnmanagedString> destination
-            , int length
-        )
+        public readonly void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
         {
             CheckRead();
             // SAFETY: CheckRead validates the owner before copying from the live vault.
@@ -370,11 +362,7 @@ namespace EncosyTower.StringIds
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool TryCopyTo(
-              int sourceStartIndex
-            , Span<UnmanagedString> destination
-            , int length
-        )
+        public readonly bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
         {
             CheckRead();
             // SAFETY: CheckRead validates the owner before copying from the live vault.

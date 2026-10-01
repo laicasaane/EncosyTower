@@ -29,6 +29,8 @@ using System.Reflection;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Types.Internals
 {
     internal sealed class DeserializedTypeCache
@@ -40,6 +42,7 @@ namespace EncosyTower.Types.Internals
 
         public DeserializedTypeCache([NotNull] SerializedTypeCache cache)
         {
+            DebuggingThrowHelper.ThrowIfNull(cache);
             _typesDerivedFromTypeMap = MapFromSerialized(cache, cache._typesDerivedFromTypeList);
             _typesWithAttributeMap = MapFromSerialized<SerializedType, Type>(cache, cache._typesWithAttributeList);
             _fieldsWithAttributeMap = MapFromSerialized<SerializedField, FieldInfo>(cache, cache._fieldsWithAttributeList);
@@ -66,9 +69,7 @@ namespace EncosyTower.Types.Internals
                     continue;
                 }
 
-                var assemblyName = string.IsNullOrWhiteSpace(item._assemblyName)
-                    ? string.Empty
-                    : item._assemblyName;
+                var assemblyName = string.IsNullOrWhiteSpace(item._assemblyName) ? string.Empty : item._assemblyName;
 
                 if (map.TryGetValue(assemblyName, out var memberMap) == false)
                 {
@@ -78,11 +79,11 @@ namespace EncosyTower.Types.Internals
 
                 if (memberMap.TryGetValue(baseType, out var types) == false)
                 {
-                    types = new FasterList<Type>();
+                    types = new List<Type>();
                     memberMap[baseType] = types;
                 }
 
-                Deserialize(typeStore, types, item._derivedTypes.AsSpan());
+                Deserialize(typeStore, types.AsListFast(), item._derivedTypes.AsSpan());
             }
 
             return map;
@@ -110,9 +111,7 @@ namespace EncosyTower.Types.Internals
                     continue;
                 }
 
-                var assemblyName = string.IsNullOrWhiteSpace(item._assemblyName)
-                    ? string.Empty
-                    : item._assemblyName;
+                var assemblyName = string.IsNullOrWhiteSpace(item._assemblyName) ? string.Empty : item._assemblyName;
 
                 if (map.TryGetValue(assemblyName, out var memberMap) == false)
                 {
@@ -122,11 +121,11 @@ namespace EncosyTower.Types.Internals
 
                 if (memberMap.TryGetValue(attributeType, out var members) == false)
                 {
-                    members = new FasterList<T2>();
+                    members = new List<T2>();
                     memberMap[attributeType] = members;
                 }
 
-                Deserialize(typeStore, members, item._matches.AsSpan());
+                Deserialize(typeStore, members.AsListFast(), item._matches.AsSpan());
             }
 
             return map;
@@ -134,7 +133,7 @@ namespace EncosyTower.Types.Internals
 
         private static void Deserialize<T1, T2>(
               SerializedTypeStore typeStore
-            , FasterList<T2> output
+            , ListFast<T2> output
             , Span<T1> items
         )
             where T1 : struct, ISerializedMember<T2>
@@ -156,7 +155,7 @@ namespace EncosyTower.Types.Internals
             }
         }
 
-        internal sealed class TypeToMemberMap<T> : Dictionary<Type, FasterList<T>>
+        internal sealed class TypeToMemberMap<T> : Dictionary<Type, List<T>>
             where T : MemberInfo
         {
         }
