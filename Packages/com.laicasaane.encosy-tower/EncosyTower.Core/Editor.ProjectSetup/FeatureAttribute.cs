@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Editor.ProjectSetup
 {
     [Conditional("UNITY_EDITOR")]
@@ -14,6 +16,7 @@ namespace EncosyTower.Editor.ProjectSetup
 
         public FeatureAttribute([NotNull] string name)
         {
+            DebuggingThrowHelper.ThrowIfNull(name);
             Name = name;
         }
     }

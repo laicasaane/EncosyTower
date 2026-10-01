@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Common
 {
@@ -118,7 +113,7 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TFailure GetFailureOrThrow()
         {
-            ThrowIfHasNoValue(IsFailure);
+            ThrowHelper.ThrowIfSuccessHasNoValue<TFailure>(IsFailure);
             return _failure;
         }
 
@@ -167,19 +162,6 @@ namespace EncosyTower.Common
         internal static bool DefaultEquals(in Success<TFailure> a, in Success<TFailure> b)
             => a.IsFailure == b.IsFailure && EqualityComparer<TFailure>.Default.Equals(a._failure, b._failure);
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfHasNoValue([DoesNotReturnIf(false)] bool hasValue)
-        {
-            if (hasValue == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new($"The instance of Option<{typeof(TFailure)}> has no value");
-        }
     }
 
     public static class SuccessExtensions

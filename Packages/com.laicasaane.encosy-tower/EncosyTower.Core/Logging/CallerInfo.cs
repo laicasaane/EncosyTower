@@ -21,11 +21,7 @@ namespace EncosyTower.Logging
         public readonly int LineNumber;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CallerInfo(
-              int lineNumber
-            , string memberName
-            , string filePath
-        )
+        public CallerInfo(int lineNumber, string memberName, string filePath)
         {
             LineNumber = lineNumber;
             MemberName = memberName;

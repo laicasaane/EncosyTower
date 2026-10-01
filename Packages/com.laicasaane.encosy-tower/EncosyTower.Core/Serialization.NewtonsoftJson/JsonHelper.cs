@@ -2,17 +2,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using JsonThrowHelper = EncosyTower.Serialization.NewtonsoftJson.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Serialization.NewtonsoftJson
 {
@@ -73,7 +71,10 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryDeserialize<T>([NotNull] string json, out T data)
-            => TryDeserialize(json, out data, null);
+        {
+            DebuggingThrowHelper.ThrowIfNull(json);
+            return TryDeserialize(json, out data, null);
+        }
 
         public static bool TrySerialize(object data, out string json, Logging.ILogger logger)
         {
@@ -83,7 +84,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
                 if (string.Equals(json, "null", StringComparison.OrdinalIgnoreCase))
                 {
-                    LogErrorSerializeToNull(logger);
+                    JsonThrowHelper.LogErrorSerializeToNull(logger);
                     return false;
                 }
 
@@ -91,7 +92,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             }
             catch (Exception ex)
             {
-                LogException(ex, logger);
+                JsonThrowHelper.LogException(ex, logger);
                 json = string.Empty;
                 return false;
             }
@@ -99,6 +100,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
         public static bool TryDeserialize<T>([NotNull] string json, out T data, Logging.ILogger logger)
         {
+            DebuggingThrowHelper.ThrowIfNull(json);
             try
             {
                 data = JsonConvert.DeserializeObject<T>(json, Settings);
@@ -106,7 +108,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             }
             catch (Exception ex)
             {
-                LogException(ex, logger);
+                JsonThrowHelper.LogException(ex, logger);
                 data = default;
                 return false;
             }
@@ -120,12 +122,16 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
                 if (string.Equals(json, "null", StringComparison.OrdinalIgnoreCase))
                 {
-                    return Result<string>.Err(GetSerializedStringIsNullMessage());
+                    return Result<string>.Err(
+                        JsonThrowHelper.GetSerializedStringIsNullMessage()
+                    );
                 }
 
                 return string.IsNullOrWhiteSpace(json) == false
                     ? Result<string>.Succeed(json)
-                    : Result<string>.Err(GetSerializedStringIsEmptyMessage());
+                    : Result<string>.Err(
+                        JsonThrowHelper.GetSerializedStringIsEmptyMessage()
+                    );
             }
             catch (Exception ex)
             {
@@ -135,13 +141,16 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
         public static Result<T> Deserialize<T>([NotNull] string json)
         {
+            DebuggingThrowHelper.ThrowIfNull(json);
             try
             {
                 var data = JsonConvert.DeserializeObject<T>(json, Settings);
 
                 return data != null
                     ? Result<T>.Succeed(data)
-                    : Result<T>.Err(GetDeserializedObjectIsNullMessage());
+                    : Result<T>.Err(
+                        JsonThrowHelper.GetDeserializedObjectIsNullMessage()
+                    );
             }
             catch (Exception ex)
             {
@@ -149,37 +158,6 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             }
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogException(Exception ex, Logging.ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogException(ex);
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogErrorSerializeToNull(Logging.ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(GetSerializedStringIsNullMessage());
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static string GetSerializedStringIsNullMessage()
-        {
-            return "Serialized string is `null`.";
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static string GetSerializedStringIsEmptyMessage()
-        {
-            return "Serialized string is empty.";
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static string GetDeserializedObjectIsNullMessage()
-        {
-            return "Deserialized object is null.";
-        }
     }
 }
 

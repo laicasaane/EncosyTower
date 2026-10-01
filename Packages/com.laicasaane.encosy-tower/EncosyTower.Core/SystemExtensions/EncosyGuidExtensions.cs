@@ -152,14 +152,11 @@ namespace EncosyTower.SystemExtensions
 namespace EncosyTower.SystemExtensions
 {
     using System;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using EncosyTower.Common;
     using EncosyTower.Debugging;
     using Unity.Collections.LowLevel.Unsafe;
-    using UnityEngine;
 
     partial class EncosyGuidExtensions
     {
@@ -271,7 +268,11 @@ namespace EncosyTower.SystemExtensions
                 // it given that DateTimeOffset.MaxValue is December 31, 9999. However, we
                 // can't represent timestamps prior to the Unix Epoch since UUIDv7 explicitly
                 // stores a 48-bit unsigned value, so we do need to throw if one is passed in.
-                ThrowIfNegative(unixTimeMilliseconds < 0, unixTimeMilliseconds, nameof(timestamp));
+                ThrowHelper.ThrowIfNegative(
+                      unixTimeMilliseconds < 0
+                    , unixTimeMilliseconds
+                    , nameof(timestamp)
+                );
 
                 return ToVersion7Core((ulong)unixTimeMilliseconds);
             }
@@ -295,11 +296,7 @@ namespace EncosyTower.SystemExtensions
                 return result;
             }
 
-            public bool TryFormat(
-                  Span<char> destination
-                , out int charsWritten
-                , ReadOnlySpan<char> format
-            )
+            public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format)
             {
                 int flags;
 
@@ -311,7 +308,7 @@ namespace EncosyTower.SystemExtensions
                 {
                     if (format.Length != 1)
                     {
-                        ThrowBadGuidFormatSpecification();
+                        ThrowHelper.ThrowBadGuidFormatSpecification();
                     }
 
                     switch (format[0] | 0x20)
@@ -337,7 +334,7 @@ namespace EncosyTower.SystemExtensions
 
                         default:
                             flags = 0;
-                            ThrowBadGuidFormatSpecification();
+                            ThrowHelper.ThrowBadGuidFormatSpecification();
                             break;
                     }
                 }
@@ -346,11 +343,7 @@ namespace EncosyTower.SystemExtensions
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)] // only used from two callers
-            private bool TryFormatCore(
-                  Span<char> destination
-                , out int charsWritten
-                , int flags
-            )
+            private bool TryFormatCore(Span<char> destination, out int charsWritten, int flags)
             {
                 // The low byte of flags contains the required length.
                 if ((byte)flags > destination.Length)
@@ -527,25 +520,6 @@ namespace EncosyTower.SystemExtensions
                 }
             }
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            [HideInCallstack, StackTraceHidden, DoesNotReturn]
-            private static void ThrowBadGuidFormatSpecification()
-                => throw new FormatException(
-                    "Format string can be only \"D\", \"d\", \"N\", \"n\", \"P\", \"p\", \"B\", \"b\", \"X\" or \"x\"."
-                );
-
-            [HideInCallstack, StackTraceHidden]
-            private static void ThrowIfNegative([DoesNotReturnIf(true)] bool check, long value, string paramName)
-            {
-                if (check)
-                {
-                    throw CreateException(paramName, value);
-                }
-
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static ArgumentOutOfRangeException CreateException(string paramName, long value)
-                    => new(paramName, value, $"{paramName} ('{value}') must be a non-negative value.");
-            }
         }
     }
 }

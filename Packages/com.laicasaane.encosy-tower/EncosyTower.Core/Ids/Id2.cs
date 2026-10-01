@@ -11,11 +11,7 @@ namespace EncosyTower.Ids
 
     [Serializable]
     [TypeConverter(typeof(TypeConverter))]
-    public partial struct Id2
-        : IEquatable<Id2>
-        , ITryParse<Id2>
-        , ITryParseSpan<Id2>
-        , ISpanFormattable
+    public partial struct Id2 : IEquatable<Id2>, ITryParse<Id2>, ITryParseSpan<Id2>, ISpanFormattable
     {
         [SerializeField, HideInInspector]
         private Id _x;

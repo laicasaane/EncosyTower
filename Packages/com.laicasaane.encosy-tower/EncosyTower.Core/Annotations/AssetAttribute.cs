@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Annotations
 {
     [AttributeUsage(AttributeTargets.Field)]
@@ -14,6 +16,9 @@ namespace EncosyTower.Annotations
 
         public AssetAttribute([NotNull] string guid, [NotNull] string path, [NotNull] Type mainAssetType)
         {
+            DebuggingThrowHelper.ThrowIfNull(guid);
+            DebuggingThrowHelper.ThrowIfNull(path);
+            DebuggingThrowHelper.ThrowIfNull(mainAssetType);
             Guid = guid;
             Path = path;
             MainAssetType = mainAssetType;

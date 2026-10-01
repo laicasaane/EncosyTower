@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#pragma warning disable IDE1006 // Naming Styles
-
 using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Debugging;
@@ -17,7 +15,7 @@ namespace EncosyTower.Common
         // This is the maximum prime smaller than Array.MaxArrayLength
         public const int MAX_PRIME_ARRAY_LENGTH = 0x7FEFFFFD;
 
-        public const int HashPrime = 101;
+        public const int HASH_PRIME = 101;
 
         // Table of prime numbers to use as hash table sizes.
         // A typical resize algorithm would pick the smallest prime number in this array
@@ -63,10 +61,7 @@ namespace EncosyTower.Common
 
         public static int GetPrime(int min)
         {
-            if (min < 0)
-            {
-                throw CreateArgumentException_PrimeFromNegative();
-            }
+            ThrowHelper.ThrowIfPrimeIsNegative(min >= 0);
 
             var primes = Primes;
 
@@ -81,7 +76,7 @@ namespace EncosyTower.Common
             //compute the hard way.
             for (var i = (min | 1); i < int.MaxValue; i += 2)
             {
-                if (IsPrime(i) && ((i - 1) % HashPrime != 0))
+                if (IsPrime(i) && ((i - 1) % HASH_PRIME != 0))
                     return i;
             }
             return min;
@@ -114,8 +109,5 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint FastMod(uint value, uint divisor, ulong multiplier)
             => (uint)(((multiplier * (ulong)value >> 32) + 1UL) * (ulong)divisor >> 32);
-
-        private static Exception CreateArgumentException_PrimeFromNegative()
-            => new ArgumentException("Cannot get the next prime from a negative number.");
     }
 }

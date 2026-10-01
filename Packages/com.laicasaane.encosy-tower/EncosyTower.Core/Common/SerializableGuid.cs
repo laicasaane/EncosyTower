@@ -199,14 +199,11 @@ namespace EncosyTower.Common
 namespace EncosyTower.Common
 {
     using System;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.CompilerServices;
     using EncosyTower.Collections;
     using EncosyTower.Conversion;
     using EncosyTower.SystemExtensions;
     using Unity.Collections;
-    using UnityEngine;
 
     partial struct SerializableGuid : IToFixedString, IToFixedString<FixedString128Bytes>
     {
@@ -219,7 +216,7 @@ namespace EncosyTower.Common
             }
             else
             {
-                ThrowIfCannotParse(guidString);
+                ThrowHelper.ThrowCannotParse(guidString);
             }
         }
 
@@ -289,12 +286,6 @@ namespace EncosyTower.Common
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
             => ToFixedString().CastTo<TFixedString>();
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden, DoesNotReturn]
-        private static void ThrowIfCannotParse(in FixedString128Bytes guidString)
-        {
-            throw new ArgumentException($"Cannot parse '{guidString}' into a Guid.", nameof(guidString));
-        }
     }
 }
 

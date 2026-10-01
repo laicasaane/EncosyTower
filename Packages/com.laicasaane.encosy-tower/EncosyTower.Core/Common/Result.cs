@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Common
 {
@@ -62,7 +57,7 @@ namespace EncosyTower.Common
 
         static Result()
         {
-            ThrowIfSameType(IsDifferentType());
+            ThrowHelper.ThrowIfResultWithDefaultErrorHasSameType<TValue>(IsDifferentType());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -244,20 +239,6 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(Error<StringOrException>);
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
-        {
-            if (isDifferentType == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new($"{typeof(Result<TValue>)} is not allowed. " +
-                $"Value type must be different from {typeof(Error<StringOrException>)}.");
-        }
     }
 
     public readonly struct Result<TValue, TError> : IResult<TValue, TError>
@@ -269,7 +250,7 @@ namespace EncosyTower.Common
 
         static Result()
         {
-            ThrowIfSameType(IsDifferentType());
+            ThrowHelper.ThrowIfResultValueAndErrorHaveSameType<TValue, TError>(IsDifferentType());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -412,20 +393,6 @@ namespace EncosyTower.Common
         private static bool IsDifferentType()
             => typeof(TValue) != typeof(TError);
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfSameType([DoesNotReturnIf(false)] bool isDifferentType)
-        {
-            if (isDifferentType == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new($"{typeof(Result<TValue, TError>)} is not allowed. " +
-                $"Value type must be different from  error type.");
-        }
     }
 
     public static class ResultExtensions

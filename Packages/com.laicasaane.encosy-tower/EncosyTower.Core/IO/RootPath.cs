@@ -4,10 +4,14 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.IO
 {
     public readonly record struct RootPath([NotNull] string Root) : IIsValid
     {
+        public string Root { get; init; } = GetNotNull(Root, nameof(Root));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator RootPath(string value)
             => new(value ?? string.Empty);
@@ -108,9 +112,7 @@ namespace EncosyTower.IO
         {
             var fullPath = GetFileAbsolutePath(Root);
 
-            return File.Exists(fullPath)
-                ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat)
-                : fullPath;
+            return File.Exists(fullPath) ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat) : fullPath;
         }
 
         /// <summary>
@@ -145,9 +147,7 @@ namespace EncosyTower.IO
         {
             var fullPath = GetFileAbsolutePath(relativePath);
 
-            return File.Exists(fullPath)
-                ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat)
-                : fullPath;
+            return File.Exists(fullPath) ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat) : fullPath;
         }
 
         /// <summary>
@@ -182,9 +182,7 @@ namespace EncosyTower.IO
         {
             var fullPath = GetFileAbsolutePath(relativePath);
 
-            return File.Exists(fullPath)
-                ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat)
-                : fullPath;
+            return File.Exists(fullPath) ? ChooseFormat(Path.GetDirectoryName(fullPath), unixFormat) : fullPath;
         }
 
         /// <summary>
@@ -263,5 +261,12 @@ namespace EncosyTower.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string ChooseFormat(string path, bool unixFormat)
             => unixFormat ? ToUnixPath(path) : path;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string GetNotNull(string value, string paramName)
+        {
+            DebuggingThrowHelper.ThrowIfNull(value, paramName);
+            return value;
+        }
     }
 }

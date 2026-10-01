@@ -4,15 +4,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using EncosyTower.Logging;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Settings
 {
@@ -85,7 +81,7 @@ namespace EncosyTower.Settings
                 }
                 else
                 {
-                    LogWarning_FailedToMoveAsset(path, oldPath);
+                    ThrowHelper.LogWarningFailedToMoveAsset(path, oldPath, s_instance);
                 }
             }
 #endif
@@ -107,15 +103,12 @@ namespace EncosyTower.Settings
                 DestroyImmediate(s_instance);
                 s_instance = null;
 
-                throw CreateInvalidOperationException_ClassNameFileNameMustMatch(type);
+                throw ThrowHelper.CreateInvalidOperationExceptionClassNameFileNameMustMatch(type);
             }
 
             // Create a new settings instance if it was not found.
             // Create the directory as Unity does not do this itself.
-            Directory.CreateDirectory(Path.Combine(
-                  Directory.GetCurrentDirectory()
-                , Path.GetDirectoryName(path)
-            ));
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), Path.GetDirectoryName(path)));
 
             // Create the asset only in the editor.
             AssetDatabase.CreateAsset(s_instance, path);
@@ -158,24 +151,6 @@ namespace EncosyTower.Settings
 #if UNITY_EDITOR
             EditorUtility.SetDirty(this);
 #endif
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogWarning_FailedToMoveAsset(string path, string oldPath)
-        {
-            StaticDevLogger.LogWarningFormat(
-                  $"Failed to move previous settings asset '{oldPath}' to '{path}'. " +
-                  $"A new settings asset will be created."
-                , s_instance
-            );
-        }
-
-        private static Exception CreateInvalidOperationException_ClassNameFileNameMustMatch(Type type)
-        {
-            return new InvalidOperationException(
-                $"Settings-derived class and filename must match: {type.Name}"
-            );
         }
 
         /// <summary>

@@ -137,9 +137,7 @@ namespace EncosyTower.SystemExtensions
                 {
                     var current = _enumerator.Current;
                     var lastCounter = _count - 1;
-                    return _counter < lastCounter
-                        ? current
-                        : new(current.Start, _span.Length);
+                    return _counter < lastCounter ? current : new(current.Start, _span.Length);
                 }
             }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace EncosyTower.Common
@@ -10,7 +11,7 @@ namespace EncosyTower.Common
         /// <param name="self">The string to check for null or empty.</param>
         /// <returns><c>true</c> if the string is not null or empty; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNotEmpty(this string self)
+        public static bool IsNotEmpty([NotNullWhen(true)] this string self)
             => string.IsNullOrEmpty(self) == false;
 
         /// <summary>
@@ -19,7 +20,7 @@ namespace EncosyTower.Common
         /// <param name="self">The string to check for null or empty.</param>
         /// <returns><c>true</c> if the string is null or empty; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsEmpty(this string self)
+        public static bool IsEmpty([NotNullWhen(false)] this string self)
             => string.IsNullOrEmpty(self);
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace EncosyTower.Common
         /// otherwise, <c>false</c>.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsEmptyOrWhiteSpace(this string self)
+        public static bool IsEmptyOrWhiteSpace([NotNullWhen(false)] this string self)
             => string.IsNullOrWhiteSpace(self);
 
         /// <summary>

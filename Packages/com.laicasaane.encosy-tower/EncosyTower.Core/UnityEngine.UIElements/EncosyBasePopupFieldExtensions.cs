@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using UnityEngine.UIElements.Internal;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace UnityEngine.UIElements
 {
     public static class EncosyBasePopupFieldExtensions
@@ -13,6 +15,7 @@ namespace UnityEngine.UIElements
             , Func<AbstractGenericMenu> createMenuCallback
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             BasePopupFieldInternalAccessor.SetCreateMenuCallback(self, createMenuCallback);
         }
 
@@ -22,6 +25,7 @@ namespace UnityEngine.UIElements
             , AbstractGenericMenu genericMenu
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             BasePopupFieldInternalAccessor.SetGenericMenu(self, genericMenu);
         }
     }

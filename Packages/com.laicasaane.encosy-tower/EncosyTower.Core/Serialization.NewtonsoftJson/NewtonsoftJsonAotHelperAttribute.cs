@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Serialization.NewtonsoftJson
 {
@@ -12,6 +13,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
         public NewtonsoftJsonAotHelperAttribute([NotNull] Type baseType)
         {
+            DebuggingThrowHelper.ThrowIfNull(baseType);
             BaseType = baseType;
         }
     }

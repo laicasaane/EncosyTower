@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 using Newtonsoft.Json;
 
 namespace EncosyTower.Serialization.NewtonsoftJson
@@ -48,6 +49,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             , [AllowNull] Exception innerException = null
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(reader);
             StringBuilder builder = CreateStringBuilderWithSpaceAfter(message);
 
             builder.AppendFormat(CultureInfo.InvariantCulture, "Path '{0}'", reader.Path);
@@ -75,6 +77,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
             , [AllowNull] Exception innerException = null
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(writer);
             StringBuilder builder = CreateStringBuilderWithSpaceAfter(message);
 
             builder.AppendFormat(CultureInfo.InvariantCulture, "Path '{0}'.", writer.Path);
@@ -102,12 +105,15 @@ namespace EncosyTower.Serialization.NewtonsoftJson
         [return: MaybeNull]
         public static T ReadViaSerializer<T>([NotNull] this JsonReader reader, [NotNull] JsonSerializer serializer)
         {
+            DebuggingThrowHelper.ThrowIfNull(reader);
+            DebuggingThrowHelper.ThrowIfNull(serializer);
             reader.Read();
             return serializer.Deserialize<T>(reader);
         }
 
         public static float? ReadAsFloat([NotNull] this JsonReader reader)
         {
+            DebuggingThrowHelper.ThrowIfNull(reader);
             // https://github.com/jilleJr/Newtonsoft.Json-for-Unity.Converters/issues/46
 
             var str = reader.ReadAsString();
@@ -128,6 +134,7 @@ namespace EncosyTower.Serialization.NewtonsoftJson
 
         public static byte? ReadAsInt8([NotNull] this JsonReader reader)
         {
+            DebuggingThrowHelper.ThrowIfNull(reader);
             return checked((byte)(reader.ReadAsInt32() ?? 0));
         }
     }

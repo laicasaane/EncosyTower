@@ -1,3 +1,5 @@
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Logging
 {
     using System;
@@ -18,6 +20,7 @@ namespace EncosyTower.Logging
 
         public StringBuilderLogger([NotNull] StringBuilder builder)
         {
+            DebuggingThrowHelper.ThrowIfNull(builder);
             _builder = builder;
         }
 

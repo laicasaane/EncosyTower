@@ -34,6 +34,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Naming.Internals
 {
     internal abstract class JsonSeparatorNamingPolicy : NamingPolicy
@@ -59,6 +61,7 @@ namespace EncosyTower.Naming.Internals
 
         public sealed override string ConvertName([NotNull] string name)
         {
+            DebuggingThrowHelper.ThrowIfNull(name);
             return ConvertNameCore(_separator, _wordCasing, name.AsSpan());
         }
 

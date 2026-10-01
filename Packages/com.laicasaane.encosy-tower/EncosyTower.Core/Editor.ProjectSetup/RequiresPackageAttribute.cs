@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Editor.ProjectSetup
 {
     /// <summary>
@@ -42,6 +44,7 @@ namespace EncosyTower.Editor.ProjectSetup
             , bool isOptional = false
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(packageName);
             Registry = registry;
             PackageName = packageName;
             Version = version ?? string.Empty;

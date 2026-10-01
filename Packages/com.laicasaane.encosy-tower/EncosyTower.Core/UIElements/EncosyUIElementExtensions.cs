@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.UnityExtensions;
 using UnityEngine.UIElements;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.UIElements
 {
     public static class EncosyUIElementExtensions
@@ -14,7 +16,10 @@ namespace EncosyTower.UIElements
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T WithAlignFieldClass<T>([NotNull] this T self)
             where T : VisualElement
-            => WithClass(self, TextField.alignedFieldUssClassName);
+        {
+            DebuggingThrowHelper.ThrowIfNull(self);
+            return WithClass(self, TextField.alignedFieldUssClassName);
+        }
 
         /// <summary>
         /// Adds <paramref name="className"/> to the class list of <paramref name="self"/>
@@ -24,6 +29,8 @@ namespace EncosyTower.UIElements
         public static T WithClass<T>([NotNull] this T self, [NotNull] string className)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
+            DebuggingThrowHelper.ThrowIfNull(className);
             self.AddToClassList(className);
             return self;
         }
@@ -36,6 +43,8 @@ namespace EncosyTower.UIElements
         public static T WithName<T>([NotNull] this T self, [NotNull] string name)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
+            DebuggingThrowHelper.ThrowIfNull(name);
             self.name = name;
             return self;
         }
@@ -47,6 +56,7 @@ namespace EncosyTower.UIElements
         public static T WithCloneTree<T>([NotNull] this T self, VisualTreeAsset asset)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             if (asset.IsValid())
             {
                 asset.CloneTree(self);
@@ -63,6 +73,8 @@ namespace EncosyTower.UIElements
         public static T WithChild<T>([NotNull] this T self, [NotNull] VisualElement child)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
+            DebuggingThrowHelper.ThrowIfNull(child);
             self.Add(child);
             return self;
         }
@@ -75,6 +87,7 @@ namespace EncosyTower.UIElements
         public static T WithDisplay<T>([NotNull] this T self, DisplayStyle display)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             self.style.display = display;
             return self;
         }
@@ -87,6 +100,7 @@ namespace EncosyTower.UIElements
         public static T WithStyleSheet<T>([NotNull] this T self, StyleSheet styleSheet)
             where T : VisualElement
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             if (styleSheet.IsValid())
             {
                 self.styleSheets.Add(styleSheet);

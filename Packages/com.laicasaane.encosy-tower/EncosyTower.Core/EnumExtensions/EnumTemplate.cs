@@ -144,10 +144,7 @@ namespace EncosyTower.EnumExtensions
     /// </example>
     /// <seealso cref="EnumTemplateAttribute"/>
     [AttributeUsage(
-          AttributeTargets.Class
-        | AttributeTargets.Struct
-        | AttributeTargets.Enum
-        | AttributeTargets.Interface
+          AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface
         , AllowMultiple = true
     )]
     public sealed class TypeAsEnumMemberForTemplateAttribute : Attribute

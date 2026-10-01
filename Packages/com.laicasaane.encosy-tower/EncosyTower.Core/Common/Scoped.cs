@@ -12,6 +12,7 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Scoped([NotNull] TValue value)
         {
+            Debugging.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(value);
             Value = value;
         }
 
@@ -29,7 +30,10 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator Scoped<TScope, TValue>([NotNull] TValue value)
-            => new(value);
+        {
+            Debugging.ThrowHelper.ThrowIfNullOrUnityObjectInvalid(value);
+            return new(value);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator TValue(Scoped<TScope, TValue> value)

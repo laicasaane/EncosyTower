@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Common
 {
@@ -125,7 +120,7 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetValueOrThrow()
         {
-            ThrowIfHasNoValue(_hasValue);
+            ThrowHelper.ThrowIfOptionHasNoValue<T>(_hasValue);
             return _value;
         }
 
@@ -189,24 +184,9 @@ namespace EncosyTower.Common
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ValidateNotNull(T value, ref bool result)
         {
-            result = value is UnityEngine.Object unityObject
-                ? (ByteBool)(unityObject == true)
-                : value is not null;
+            result = value is UnityEngine.Object unityObject ? (ByteBool)(unityObject == true) : value is not null;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfHasNoValue([DoesNotReturnIf(false)] bool hasValue)
-        {
-            if (hasValue == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new($"The instance of Option<{typeof(T)}> has no value");
-        }
     }
 
     public static class OptionExtensions

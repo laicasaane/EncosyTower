@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Annotations
 {
     /// <summary>
@@ -24,6 +26,7 @@ namespace EncosyTower.Annotations
         /// <inheritdoc cref="ThisFilePathAttribute" />
         public ThisFilePathAttribute([CallerFilePath][NotNull] string filePath = "")
         {
+            DebuggingThrowHelper.ThrowIfNull(filePath);
             FilePath = filePath;
         }
     }

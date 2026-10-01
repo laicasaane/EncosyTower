@@ -21,6 +21,9 @@ namespace EncosyTower.Encryption
         )
             : base(logger)
         {
+            Debugging.ThrowHelper.ThrowIfNull(password);
+            Debugging.ThrowHelper.ThrowIfNull(saltKey);
+
             using var rfc2898 = new Rfc2898DeriveBytes(
                   password
                 , Encoding.UTF8.GetBytes(saltKey)

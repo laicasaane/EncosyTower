@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using EncosyTower.Core;
 using EncosyTower.UIElements;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Editor.UIElements
 {
     [ApiForEditor]
@@ -23,10 +25,9 @@ namespace EncosyTower.Editor.UIElements
         /// Applies built-in editor style sheets to <see cref="SimpleTableView{TItem}"/>.
         /// </summary>
         [ApiForEditor]
-        public static SimpleTableView<TItem> WithEditorStyleSheets<TItem>(
-            [NotNull] this SimpleTableView<TItem> self
-        )
+        public static SimpleTableView<TItem> WithEditorStyleSheets<TItem>([NotNull] this SimpleTableView<TItem> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             self.WithEditorStyleSheet(THEME_STYLE_SHEET);
             self.WithEditorStyleSheet(STYLE_SHEET_DARK, STYLE_SHEET_LIGHT);
 

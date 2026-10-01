@@ -1,17 +1,16 @@
-using EncosyTower.Core;
-
 namespace EncosyTower.Common
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using EncosyTower.Collections;
 
     public static partial class AutoDisposeManager
     {
-        private static readonly FasterList<WeakReference<IDisposable>> s_references = new();
+        private static readonly List<WeakReference<IDisposable>> s_references = new();
 
         public static void Register([NotNull] IDisposable disposable)
         {
+            Debugging.ThrowHelper.ThrowIfNull(disposable);
 #if !UNITY_EDITOR
             return;
 
@@ -31,6 +30,9 @@ namespace EncosyTower.Common
 
 namespace EncosyTower.Common
 {
+    using EncosyTower.Collections.Extensions;
+    using EncosyTower.Core;
+
     partial class AutoDisposeManager
     {
         [ApiForEditor]

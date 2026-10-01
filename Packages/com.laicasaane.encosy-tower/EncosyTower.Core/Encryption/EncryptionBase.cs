@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using EncosyTower.Initialization;
@@ -17,6 +16,7 @@ namespace EncosyTower.Encryption
 
         protected EncryptionBase([NotNull] ILogger logger)
         {
+            Debugging.ThrowHelper.ThrowIfNull(logger);
             Logger = logger;
         }
 
@@ -26,6 +26,8 @@ namespace EncosyTower.Encryption
 
         protected void Initialize([NotNull] ICryptoTransform encryptor, [NotNull] ICryptoTransform decryptor)
         {
+            Debugging.ThrowHelper.ThrowIfNull(encryptor);
+            Debugging.ThrowHelper.ThrowIfNull(decryptor);
             _encryptor = encryptor;
             _decryptor = decryptor;
         }
@@ -106,15 +108,6 @@ namespace EncosyTower.Encryption
 
         [UnityEngine.HideInCallstack, System.Diagnostics.StackTraceHidden]
         protected static void ThrowIfNotInitialized([DoesNotReturnIf(false)] bool isInitialized)
-        {
-            if (isInitialized == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Encryption is not initialized.");
-        }
+            => ThrowHelper.ThrowIfNotInitialized(isInitialized);
     }
 }
