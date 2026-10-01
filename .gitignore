@@ -111,10 +111,11 @@ crashlytics-build.properties
 [Aa]ssets/[Rr]untime[Tt]ype[Cc]ache/
 [Aa]ssets/[Rr]untime[Tt]ype[Cc]ache.meta
 
-[Aa]ssets/[Ss]amples/
-[Aa]ssets/[Ss]amples.meta
-
 [Aa]ssets/[Ss]ettings/[Ee]ditor/[Uu]ser/
+[Aa]ssets/[Ss]ettings/[Ee]ditor/[Uu]ser.meta
+
+[Aa]ssets/[Ss]ettings/[Pp]ipeline/[Ee]ditor[Pp]ipeline[Mm]anager.asset
+[Aa]ssets/[Ss]ettings/[Pp]ipeline/[Ee]ditor[Pp]ipeline[Mm]anager.asset.meta
 
 [Aa]ssets/[Pp]lugins/com.0x7c13.unityeditor-darkmode
 [Aa]ssets/[Pp]lugins/com.0x7c13.unityeditor-darkmode.meta
@@ -124,6 +125,6 @@ crashlytics-build.properties
 
 [Ee]ncosy[Tt]ower.[Ss]amples.[Pp]ersistence.[Ss]ave[Ff]iles/
 
-# Other generated contents
-.gitnexus
-.playwright-cli
+!Packages/com.laicasaane.encosy-tower/EncosyTower.Editor.CodeGen/Dotnet/Templates~/Workspace/EncosyCodeGen.slnx
+!Packages/com.laicasaane.encosy-tower/EncosyTower.Editor.CodeGen/Dotnet/Templates~/Workspace/Runner/EncosyCodeGenRunner.csproj
+!Packages/com.laicasaane.encosy-tower/EncosyTower.Editor.CodeGen/Dotnet/Templates~/Workspace/Island/Island.csproj
