@@ -7,6 +7,8 @@ using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ListNativeExtensions
@@ -14,16 +16,23 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<T>(this in ListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item) >= 0;
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item) >= 0;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<T>(this in ListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item) >= 0;
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item) >= 0;
+        }
 
         public static bool Remove<T>(this in ListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var i = IndexOf(self, item);
             if (i < 0)
             {
@@ -38,6 +47,7 @@ namespace EncosyTower.Collections.Extensions
         public static bool Remove<T>(this in ListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var i = IndexOf(self, in item);
             if (i < 0)
             {
@@ -51,16 +61,23 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item, 0, self.Count);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item, 0, self.Count);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T> self, T item, int index)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item, index, self.Count - index);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item, index, self.Count - index);
+        }
 
         public static int IndexOf<T>(this in ListNative<T> self, T item, int index, int count)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_Section(self.Count - index >= count);
@@ -79,16 +96,23 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, 0, self.Count);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, 0, self.Count);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T> self, in T item, int index)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, index, self.Count - index);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, index, self.Count - index);
+        }
 
         public static int IndexOf<T>(this in ListNative<T> self, in T item, int index, int count)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_Section(self.Count - index >= count);
@@ -111,7 +135,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
-                => IndexOf(self, in item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, comparer);
+        }
 
         public static int IndexOf<T, TComparer>(
               this in ListNative<T> self
@@ -121,6 +148,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var s = self.AsReadOnlySpan();
             for (var i = 0; i < s.Length; i++)
             {
@@ -141,7 +169,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
@@ -154,6 +185,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_ExceedsList(self.Count - index >= count);
@@ -168,7 +200,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
@@ -181,6 +216,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_ExceedsList(self.Count - index >= count);
@@ -191,7 +227,10 @@ namespace EncosyTower.Collections.Extensions
         public static void Sort<T, TComparer>(this in ListNative<T> self, TComparer comparer)
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Sort(self, 0, self.Count, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            Sort(self, 0, self.Count, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T, TComparer>(
@@ -203,6 +242,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_ExceedsList(self.Count - index >= count);

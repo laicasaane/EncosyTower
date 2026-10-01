@@ -18,7 +18,13 @@ namespace EncosyTower.Tests.Core.Collections
             map.Add(1, 10);
             map.Add(2, 20);
 
-            var view = map.AsNative();
+            SharedArrayMapNative<int, int> view;
+
+            // SAFETY: map remains alive and unmodified while its borrowed native view is consumed.
+            unsafe
+            {
+                view = map.AsNative();
+            }
 
             Assert.IsTrue(view.IsCreated);
             Assert.AreEqual(2, view.Count);
@@ -33,7 +39,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var map = new SharedArrayMap<int, int>(8);
             map.Add(1, 10);
 
-            var view = map.AsNative();
+            SharedArrayMapNative<int, int> view;
+
+            // SAFETY: map remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = map.AsNative();
+            }
             view.Add(2, 20);
 
             Assert.AreEqual(2, view.Count);
@@ -45,7 +57,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void MutableView_AllMembersMutateAndReportOwnerStorage()
         {
             using var map = new SharedArrayMap<int, int>(16);
-            var view = map.AsNative();
+            SharedArrayMapNative<int, int> view;
+
+            // SAFETY: map remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = map.AsNative();
+            }
             var value = 10;
 
             view.Add(1, in value);
@@ -53,8 +71,12 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsTrue(view.IsCreated);
             Assert.GreaterOrEqual(view.Capacity, 16);
             Assert.AreEqual(1, view.Count);
-            Assert.AreEqual(1, view.Values.Length);
-            Assert.AreEqual(10, view.Values[0]);
+            // SAFETY: map remains alive and structurally unchanged while its value slice is consumed.
+            unsafe
+            {
+                Assert.AreEqual(1, view.Values.Length);
+                Assert.AreEqual(10, view.Values[0]);
+            }
             Assert.AreEqual(10, view[1]);
 
             view[1] = 11;
@@ -69,15 +91,25 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsFalse(view.TryAdd(4, 41, out var existingIndex));
             Assert.AreEqual(fourthIndex, existingIndex);
 
-            view.GetOrAdd(5) = 50;
-            view.GetOrAdd(6, out var sixthIndex) = 60;
+            int sixthIndex;
+
+            // SAFETY: map owns the referenced values and no structural mutation occurs between each use.
+            unsafe
+            {
+                view.GetOrAdd(5) = 50;
+                view.GetOrAdd(6, out sixthIndex) = 60;
+            }
 
             Assert.AreEqual(5, sixthIndex);
             Assert.AreEqual(50, map[5]);
             Assert.AreEqual(60, map[6]);
 
-            ref var first = ref view.GetValueByRef(1);
-            first = 12;
+            // SAFETY: map owns the referenced value and is not structurally modified while it is used.
+            unsafe
+            {
+                ref var first = ref view.GetValueByRef(1);
+                first = 12;
+            }
 
             Assert.AreEqual(12, map[1]);
             Assert.IsTrue(view.ContainsKey(2));
@@ -112,8 +144,15 @@ namespace EncosyTower.Tests.Core.Collections
             intersectKeysOwner.Add(2, 20);
             intersectKeysOwner.Add(3, 30);
             intersectKeysOwner.Add(4, 40);
-            var intersected = intersectedOwner.AsNative();
-            var intersectKeys = intersectKeysOwner.AsNative();
+            SharedArrayMapNative<int, int> intersected;
+            SharedArrayMapNative<int, long> intersectKeys;
+
+            // SAFETY: Both owners remain alive while their borrowed native views are consumed.
+            unsafe
+            {
+                intersected = intersectedOwner.AsNative();
+                intersectKeys = intersectKeysOwner.AsNative();
+            }
 
             intersected.Intersect(in intersectKeys);
 
@@ -125,8 +164,15 @@ namespace EncosyTower.Tests.Core.Collections
             using var excludeKeysOwner = new SharedArrayMap<int, long>(8);
             excludeKeysOwner.Add(2, 20);
             excludeKeysOwner.Add(3, 30);
-            var excluded = excludedOwner.AsNative();
-            var excludeKeys = excludeKeysOwner.AsNative();
+            SharedArrayMapNative<int, int> excluded;
+            SharedArrayMapNative<int, long> excludeKeys;
+
+            // SAFETY: Both owners remain alive while their borrowed native views are consumed.
+            unsafe
+            {
+                excluded = excludedOwner.AsNative();
+                excludeKeys = excludeKeysOwner.AsNative();
+            }
 
             excluded.Exclude(in excludeKeys);
 
@@ -137,8 +183,15 @@ namespace EncosyTower.Tests.Core.Collections
             using var unionSourceOwner = new SharedArrayMap<int, int>(8);
             unionSourceOwner.Add(2, 200);
             unionSourceOwner.Add(3, 300);
-            var union = unionOwner.AsNative();
-            var unionSource = unionSourceOwner.AsNative();
+            SharedArrayMapNative<int, int> union;
+            SharedArrayMapNative<int, int> unionSource;
+
+            // SAFETY: Both owners remain alive while their borrowed native views are consumed.
+            unsafe
+            {
+                union = unionOwner.AsNative();
+                unionSource = unionSourceOwner.AsNative();
+            }
 
             union.Union(in unionSource);
 
@@ -154,9 +207,17 @@ namespace EncosyTower.Tests.Core.Collections
             using var map = new SharedArrayMap<int, int>(8);
             map.Add(1, 10);
             map.Add(2, 20);
-            var view = map.AsNative();
-            var direct = view.AsReadOnly();
-            SharedArrayMapNative<int, int>.ReadOnly converted = view;
+            SharedArrayMapNative<int, int> view;
+            SharedArrayMapNative<int, int>.ReadOnly direct;
+            SharedArrayMapNative<int, int>.ReadOnly converted;
+
+            // SAFETY: map remains alive and structurally unchanged while its borrowed aliases are consumed.
+            unsafe
+            {
+                view = map.AsNative();
+                direct = view.AsReadOnly();
+                converted = view;
+            }
 
             Assert.IsTrue(direct.IsCreated);
             Assert.AreEqual(view.Capacity, direct.Capacity);
@@ -178,7 +239,11 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(10, converted[1]);
 
             var version = direct.Version;
-            view.GetValueByRef(1) = 11;
+            // SAFETY: map owns the referenced value and is not structurally modified while it is used.
+            unsafe
+            {
+                view.GetValueByRef(1) = 11;
+            }
 
             Assert.Greater(direct.Version, version);
             Assert.AreEqual(11, direct[1]);
@@ -189,6 +254,10 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var map = new SharedArrayMap<int, int>(8);
             map.Add(7, 70);
+
+            // SAFETY: map and values remain alive and structurally unchanged while all borrowed views are consumed.
+            unsafe
+            {
             var view = map.AsNative();
             var keysFromView = view.Keys;
             var keys = new SharedArrayMapNative<int, int>.KeyEnumerable(in view);
@@ -264,9 +333,7 @@ namespace EncosyTower.Tests.Core.Collections
             readOnlyEnumerator.Reset();
             Assert.IsTrue(readOnlyEnumerator.MoveNext());
             IEnumerator readOnlyInterface = readOnlyEnumerator;
-            Assert.IsInstanceOf<SharedArrayMapNativeReadOnlyKeyValuePair<int, int>>(
-                readOnlyInterface.Current
-            );
+            Assert.IsInstanceOf<SharedArrayMapNativeReadOnlyKeyValuePair<int, int>>(readOnlyInterface.Current);
             readOnlyEnumerator.Dispose();
 
             var readOnlyViewEnumerator = readOnly.GetEnumerator();
@@ -288,6 +355,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsFalse(default(SharedArrayMapNative<int, int>.ReadOnly.KeyEnumerator).IsValid);
             Assert.IsFalse(default(SharedArrayMapNativeReadOnlyKeyValueEnumerator<int, int>).IsValid);
             Assert.IsFalse(default(SharedArrayMapNativeReadOnlyKeyValuePair<int, int>).IsValid);
+            }
         }
 
         [Test]
@@ -295,7 +363,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var map = new SharedArrayMap<int, int>(2);
             map.Add(0, 0);
-            var current = map.AsNative();
+            SharedArrayMapNative<int, int> current;
+
+            // SAFETY: map remains alive while its current borrowed native view is consumed.
+            unsafe
+            {
+                current = map.AsNative();
+            }
 
             current[0] = 10;
 
@@ -306,7 +380,13 @@ namespace EncosyTower.Tests.Core.Collections
                 map.Add(i, i);
             }
 
-            var refreshed = map.AsNative();
+            SharedArrayMapNative<int, int> refreshed;
+
+            // SAFETY: map remains alive while the refreshed borrowed native view is consumed.
+            unsafe
+            {
+                refreshed = map.AsNative();
+            }
             refreshed[63] = 630;
 
             Assert.AreEqual(map.Capacity, refreshed.Capacity);
@@ -318,7 +398,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void FixedCapacityView_CannotGrowOwnerStorage()
         {
             using var map = new SharedArrayMap<int, int>(2);
-            var view = map.AsNative();
+            SharedArrayMapNative<int, int> view;
+
+            // SAFETY: map remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = map.AsNative();
+            }
 
             for (var i = 0; i < view.Capacity; i++)
             {
@@ -339,8 +425,15 @@ namespace EncosyTower.Tests.Core.Collections
         {
             var map = new SharedArrayMap<int, int>(4);
             map.Add(1, 10);
-            var view = map.AsNative();
-            var readOnly = view.AsReadOnly();
+            SharedArrayMapNative<int, int> view;
+            SharedArrayMapNative<int, int>.ReadOnly readOnly;
+
+            // SAFETY: map remains alive until this test deliberately invalidates both borrowed views.
+            unsafe
+            {
+                view = map.AsNative();
+                readOnly = view.AsReadOnly();
+            }
 
             map.Dispose();
 
@@ -361,7 +454,13 @@ namespace EncosyTower.Tests.Core.Collections
             {
                 map.Add(0, 0);
 
-                var staleView = map.AsNative();
+                SharedArrayMapNative<int, int> staleView;
+
+                // SAFETY: The view is intentionally retained across growth to verify safety-handle invalidation.
+                unsafe
+                {
+                    staleView = map.AsNative();
+                }
 
                 for (var i = 1; i < 64; i++)
                 {
@@ -388,11 +487,7 @@ namespace EncosyTower.Tests.Core.Collections
             return map;
         }
 
-        private static void AssertPair(
-              SharedArrayMapNativeKeyValuePair<int, int> pair
-            , int key
-            , int value
-        )
+        private static void AssertPair(SharedArrayMapNativeKeyValuePair<int, int> pair, int key, int value)
         {
             Assert.AreEqual(key, pair.Key);
             Assert.AreEqual(value, pair.Value);
@@ -403,11 +498,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(value, actualValue);
         }
 
-        private static void AssertPair(
-              SharedArrayMapNativeReadOnlyKeyValuePair<int, int> pair
-            , int key
-            , int value
-        )
+        private static void AssertPair(SharedArrayMapNativeReadOnlyKeyValuePair<int, int> pair, int key, int value)
         {
             Assert.IsTrue(pair.IsValid);
             Assert.AreEqual(key, pair.Key);
@@ -423,7 +514,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void ViewAdd_CollisionChurnPastBucketCount_DoesNotThrowAndPreservesContent()
         {
             using var map = new SharedArrayMap<CollidingKey, int>(8);
-            var view = map.AsNative();
+            SharedArrayMapNative<CollidingKey, int> view;
+
+            // SAFETY: map remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = map.AsNative();
+            }
 
             view.Add(new CollidingKey(1), 10);
             view.Add(new CollidingKey(2), 20); // cumulative collision 1

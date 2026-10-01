@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Buffers
 {
@@ -12,6 +12,7 @@ namespace EncosyTower.Buffers
         public static void ShiftLeft<T>(this ref BufferUnsafe<T> self, int index, int count)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowHelper.ThrowIfBufferShiftIndexIsOutOfRange((uint)index < (uint)self.Capacity);
             ThrowHelper.ThrowIfBufferShiftCountIsOutOfRange((uint)count < (uint)self.Capacity);
 
@@ -27,6 +28,7 @@ namespace EncosyTower.Buffers
         public static void ShiftRight<T>(this ref BufferUnsafe<T> self, int index, int count)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowHelper.ThrowIfBufferShiftIndexIsOutOfRange((uint)index < (uint)self.Capacity);
             ThrowHelper.ThrowIfBufferShiftCountIsOutOfRange((uint)count < (uint)self.Capacity);
 
@@ -46,6 +48,8 @@ namespace EncosyTower.Buffers
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+
             // SAFETY: Callers validate source/destination ranges before copying within the live buffer.
             unsafe
             {

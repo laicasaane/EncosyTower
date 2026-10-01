@@ -12,15 +12,19 @@ namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// <safety>The returned native view borrows the shared list allocation and must not outlive the list.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe SharedListNative<TNative> AsNative()
         {
+            CheckRead();
+
             // SAFETY: The returned native view borrows the shared list's live header and safety handle.
             unsafe
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-                return new(_nativeData, _buffer.GetSafetyHandle());
+                var aliasSafety = _safety;
+                AtomicSafetyHandle.UseSecondaryVersion(ref aliasSafety);
+                return new(_nativeData, aliasSafety);
 #else
                 return new(_nativeData);
 #endif
@@ -44,6 +48,7 @@ namespace EncosyTower.Collections
         where T : unmanaged
     {
 #pragma warning disable IDE1006 // Naming Styles
+        /// <safety>The owning managed list must keep this borrowed header alive and stable.</safety>
         [NativeDisableUnsafePtrRestriction]
         internal readonly unsafe SharedListUnsafe<T>* m_Data;
 
@@ -53,6 +58,7 @@ namespace EncosyTower.Collections
 #pragma warning restore IDE1006 // Naming Styles
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        /// <safety>The pointer and safety handle must come from the same live managed owner.</safety>
         internal unsafe SharedListNative(SharedListUnsafe<T>* data, AtomicSafetyHandle safety)
         {
             // SAFETY: The constructor receives a borrowed live header from the owning shared list.
@@ -63,6 +69,7 @@ namespace EncosyTower.Collections
             m_Safety = safety;
         }
 #else
+        /// <safety>The pointer must remain valid for the complete lifetime of this borrowed view.</safety>
         internal unsafe SharedListNative(SharedListUnsafe<T>* data)
         {
             // SAFETY: The constructor receives a borrowed live header from the owning shared list.
@@ -191,8 +198,9 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned reference must not outlive the owner or survive owner mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref T ElementAt(int index)
+        public unsafe ref T ElementAt(int index)
         {
             CheckWrite();
 
@@ -397,55 +405,14 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Enumerator GetEnumerator()
-            => new(AsReadOnly());
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Peek()
+        public unsafe Enumerator GetEnumerator()
         {
-            CheckRead();
-
-            // SAFETY: The read check validates the live header for the returned reference.
+            // SAFETY: The enumerator borrows this checked list view and its owner lifetime.
             unsafe
             {
-                return ref m_Data->Peek();
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Pop()
-        {
-            CheckWrite();
-
-            // SAFETY: The write check validates the live header before removing its final value.
-            unsafe
-            {
-                return ref m_Data->Pop();
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(T item)
-        {
-            CheckWrite();
-
-            // SAFETY: The write check validates the live header before appending through the stack API.
-            unsafe
-            {
-                return m_Data->Push(item);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(in T item)
-        {
-            CheckWrite();
-
-            // SAFETY: The write check validates the live header before appending the referenced value.
-            unsafe
-            {
-                return m_Data->Push(in item);
+                return new(AsReadOnly());
             }
         }
 
@@ -494,8 +461,9 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned span must not outlive the owner or survive owner mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan()
+        public unsafe Span<T> AsSpan()
         {
             CheckWrite();
 
@@ -506,8 +474,9 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned span must not outlive the owner.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<T> AsReadOnlySpan()
+        public unsafe ReadOnlySpan<T> AsReadOnlySpan()
         {
             CheckRead();
 
@@ -518,8 +487,9 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned slice must not outlive the owner or survive owner mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeSlice<T> AsNativeSlice()
+        public unsafe NativeSlice<T> AsNativeSlice()
         {
             CheckWrite();
 
@@ -530,7 +500,8 @@ namespace EncosyTower.Collections
             }
         }
 
-        public Span<T> AddReplicate(int amount)
+        /// <safety>The returned span must not outlive the owner or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicate(int amount)
         {
             CheckWrite();
 
@@ -541,7 +512,8 @@ namespace EncosyTower.Collections
             }
         }
 
-        public Span<T> AddReplicate(T value, int amount)
+        /// <safety>The returned span must not outlive the owner or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicate(T value, int amount)
         {
             CheckWrite();
 
@@ -552,7 +524,8 @@ namespace EncosyTower.Collections
             }
         }
 
-        public Span<T> AddReplicateNoInit(int amount)
+        /// <safety>The returned span must not outlive the owner or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicateNoInit(int amount)
         {
             CheckWrite();
 
@@ -563,8 +536,9 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned alias must not outlive the owner or survive owner resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedListNative<U> Reinterpret<U>()
+        public unsafe SharedListNative<U> Reinterpret<U>()
             where U : unmanaged
         {
             CheckRead();
@@ -581,6 +555,7 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The pointer must reference live bounded storage owned by this view's managed owner.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe NativeArray<U> CreateNativeArray<U>(U* pointer, int length)
             where U : unmanaged
@@ -628,12 +603,26 @@ namespace EncosyTower.Collections
 #endif
         }
 
+        /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => GetEnumerator();
+        unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            // SAFETY: The interface enumerator borrows this checked list view.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
+        /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The interface enumerator borrows this checked list view.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
     }
 }

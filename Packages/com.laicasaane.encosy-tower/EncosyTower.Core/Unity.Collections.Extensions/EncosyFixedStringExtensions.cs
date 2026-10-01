@@ -7,6 +7,8 @@ using System.Text;
 using EncosyTower.Common;
 using Unity.Collections;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     using static EncosyTower.Common.GenericT;
@@ -373,6 +375,7 @@ namespace EncosyTower.Collections
         )
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
+            DebuggingThrowHelper.ThrowIfNull(stringBuilder);
             // SAFETY: The established ownership and safety checks keep the native storage live
             // for this pointer dereference.
             unsafe

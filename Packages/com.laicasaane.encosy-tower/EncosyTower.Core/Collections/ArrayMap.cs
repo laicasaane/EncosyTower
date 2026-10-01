@@ -31,9 +31,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -46,20 +45,20 @@ namespace EncosyTower.Collections
     /// <remarks>
     /// Not thread-safe.
     /// </remarks>
-    [DebuggerTypeProxy(typeof(ArrayMapDebugProxy<,>))]
+    [Serializable, DebuggerTypeProxy(typeof(ArrayMapDebugProxy<,>))]
     public partial class ArrayMap<TKey, TValue> : IDisposable
         , ICollection<ArrayMapKeyValuePair<TKey, TValue>>
         , IReadOnlyCollection<ArrayMapKeyValuePair<TKey, TValue>>
         , IClearable, IIncreaseCapacity, IHasCount, ITryGetValue<TKey, TValue>
     {
-        internal BufferManaged<ArrayMapNode<TKey>> _valuesInfo;
-        internal BufferManaged<TValue> _values;
-        internal BufferManaged<int> _buckets;
+        [NonSerialized] internal BufferManaged<ArrayMapNode<TKey>> _valuesInfo;
+        [NonSerialized] internal BufferManaged<TValue> _values;
+        [NonSerialized] internal BufferManaged<int> _buckets;
 
-        internal ulong _fastModBucketsMultiplier;
-        internal uint _collisions;
-        internal int _freeValueCellIndex;
-        internal int _version;
+        [NonSerialized] internal ulong _fastModBucketsMultiplier;
+        [NonSerialized] internal uint _collisions;
+        [NonSerialized] internal int _freeValueCellIndex;
+        [NonSerialized] internal int _version;
 
         public ArrayMap() : this(0)
         {
@@ -83,6 +82,8 @@ namespace EncosyTower.Collections
 
         public ArrayMap([NotNull] ArrayMap<TKey, TValue> source)
         {
+            DebuggingThrowHelper.ThrowIfNull(source);
+
             var capacity = source.Capacity;
 
             _version = default;
@@ -105,7 +106,7 @@ namespace EncosyTower.Collections
             _fastModBucketsMultiplier = source._fastModBucketsMultiplier;
         }
 
-        public ArrayMap(ReadOnly source) : this(source._map)
+        public ArrayMap(ReadOnly source) : this(GetMap(source))
         {
         }
 
@@ -462,7 +463,10 @@ namespace EncosyTower.Collections
                     }
                     else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        ThrowIfMissingLinkedListNode(itemAfterCurrentOne != -1);
+                        ThrowHelper.ThrowIfMissingLinkedListNode(
+                              itemAfterCurrentOne != -1
+                            , ThrowHelper.CollectionType.ArrayMap
+                        );
                         //update the previous pointer of the item after the one to remove with the
                         //previous pointer of the item to remove
                         _valuesInfo[itemAfterCurrentOne]._previous = node._previous;
@@ -525,7 +529,8 @@ namespace EncosyTower.Collections
 
                 //find the prev element of the last element in the valuesInfo array
                 while (_valuesInfo[linkedListIterationIndex]._previous != -1
-                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex
+                )
                 {
                     linkedListIterationIndex = _valuesInfo[linkedListIterationIndex]._previous;
                 }
@@ -562,10 +567,7 @@ namespace EncosyTower.Collections
         //constant states) because it will be used in multithreaded parallel code
         public bool TryFindIndex(TKey key, out int index)
         {
-            ThrowHelper.ThrowIfBucketsAreUninitialized(
-                _buckets.Capacity > 0,
-                ThrowHelper.CollectionType.ArrayMap
-            );
+            ThrowHelper.ThrowIfBucketsAreUninitialized(_buckets.Capacity > 0, ThrowHelper.CollectionType.ArrayMap);
 
             var hash = key.GetHashCode();
             var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Capacity, _fastModBucketsMultiplier);
@@ -590,22 +592,6 @@ namespace EncosyTower.Collections
             return false;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The linked-list successor is missing.");
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex(TKey key)
         {
@@ -615,6 +601,8 @@ namespace EncosyTower.Collections
 
         public void Intersect<UValue>([NotNull] ArrayMap<TKey, UValue> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+
             var keys = _valuesInfo.AsSpan();
 
             for (var i = Count - 1; i >= 0; i--)
@@ -630,6 +618,8 @@ namespace EncosyTower.Collections
 
         public void Exclude<UValue>([NotNull] ArrayMap<TKey, UValue> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+
             var keys = _valuesInfo.AsSpan();
 
             for (var i = Count - 1; i >= 0; i--)
@@ -645,6 +635,8 @@ namespace EncosyTower.Collections
 
         public void Union([NotNull] ArrayMap<TKey, TValue> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+
             foreach (var other in otherMapKeys)
             {
                 this[other.Key] = other.Value;
@@ -816,24 +808,36 @@ namespace EncosyTower.Collections
             return TryGetValue(item.Key, out var value) && EqualityComparer<TValue>.Default.Equals(value, item.Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICollection<ArrayMapKeyValuePair<TKey, TValue>>.CopyTo(
               ArrayMapKeyValuePair<TKey, TValue>[] array
             , int arrayIndex
         )
         {
-            ThrowNotImplementedException();
-        }
+            DebuggingThrowHelper.ThrowIfNull(array);
+            ThrowHelper.ThrowIfArrayIndexIsOutOfRange((uint)arrayIndex <= (uint)array.Length, nameof(arrayIndex));
+            ThrowHelper.ThrowIfDestinationArrayIsTooSmall(array.Length - arrayIndex >= Count);
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden, DoesNotReturn]
-        private static void ThrowNotImplementedException()
-            => throw new NotImplementedException("This method is not implemented by design.");
+            var enumerator = GetEnumerator();
+
+            while (enumerator.MoveNext())
+            {
+                array[arrayIndex++] = enumerator.Current;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         bool ICollection<ArrayMapKeyValuePair<TKey, TValue>>.Remove(ArrayMapKeyValuePair<TKey, TValue> item)
         {
-            return Remove(item.Key);
+            return TryGetValue(item.Key, out var value)
+                && EqualityComparer<TValue>.Default.Equals(value, item.Value)
+                && Remove(item.Key);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ArrayMap<TKey, TValue> GetMap(ReadOnly source)
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(source);
+            return source._map;
         }
 
         public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
@@ -843,6 +847,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerable([NotNull] ArrayMap<TKey, TValue> map)
             {
+                DebuggingThrowHelper.ThrowIfNull(map);
+
                 _map = map;
             }
 
@@ -875,6 +881,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerator([NotNull] ArrayMap<TKey, TValue> map) : this()
             {
+                DebuggingThrowHelper.ThrowIfNull(map);
+
                 _map = map;
                 _index = -1;
                 _version = map._version;
@@ -935,6 +943,8 @@ namespace EncosyTower.Collections
 
         public ArrayMapKeyValueEnumerator([NotNull] ArrayMap<TKey, TValue> map) : this()
         {
+            DebuggingThrowHelper.ThrowIfNull(map);
+
             _map = map;
             _index = -1;
             _version = map._version;
@@ -996,6 +1006,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ArrayMapKeyValuePair(in TKey key, in BufferManaged<TValue> mapValues, int index)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(mapValues);
+
             _mapValues = mapValues;
             _index = index;
             _key = key;
@@ -1057,6 +1069,8 @@ namespace EncosyTower.Collections
 
         public ArrayMapDebugProxy([NotNull] ArrayMap<TKey, TValue> map)
         {
+            DebuggingThrowHelper.ThrowIfNull(map);
+
             _map = map;
         }
 

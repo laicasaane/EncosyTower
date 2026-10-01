@@ -13,7 +13,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void ContainsAndRemove_FindAndRemoveValues()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var three = 3;
             var seven = 7;
 
@@ -30,7 +36,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void BinarySearch_FullAndRangeReturnExpectedResults()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var comparer = new IntComparer();
             var five = 5;
             var seven = 7;
@@ -39,10 +51,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, SharedListNativeAPI.BinarySearch(in view, in five, comparer));
             Assert.Less(SharedListNativeAPI.BinarySearch(in view, 4, comparer), 0);
             Assert.AreEqual(1, SharedListNativeAPI.BinarySearch(in view, 1, 2, 3, comparer));
-            Assert.Less(
-                  SharedListNativeAPI.BinarySearch(in view, 1, 2, in seven, comparer)
-                , 0
-            );
+            Assert.Less(SharedListNativeAPI.BinarySearch(in view, 1, 2, in seven, comparer), 0);
             Assert.Less(SharedListNativeAPI.BinarySearch(in view, 1, 2, 7, comparer), 0);
         }
 
@@ -50,7 +59,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void IndexOf_OverloadsRespectStartAndCount()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var comparer = new IntComparer();
             var five = 5;
 
@@ -72,8 +87,15 @@ namespace EncosyTower.Tests.Core.Collections
             var comparer = new IntComparer();
             using var full = new SharedList<int>(7, 5, 3, 1);
             using var range = new SharedList<int>(9, 7, 5, 3, 1);
-            var fullView = full.AsNative();
-            var rangeView = range.AsNative();
+            SharedListNative<int> fullView;
+            SharedListNative<int> rangeView;
+
+            // SAFETY: Both owners remain alive while their borrowed native views are consumed.
+            unsafe
+            {
+                fullView = full.AsNative();
+                rangeView = range.AsNative();
+            }
 
             SharedListNativeAPI.Sort(in fullView, comparer);
             SharedListNativeAPI.Sort(in rangeView, 1, 3, comparer);

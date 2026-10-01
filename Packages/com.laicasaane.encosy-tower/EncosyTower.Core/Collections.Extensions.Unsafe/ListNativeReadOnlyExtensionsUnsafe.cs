@@ -2,6 +2,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class ListNativeReadOnlyExtensionsUnsafe
@@ -13,6 +15,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: The caller owns the native list lifetime and the view borrows its buffer.
             unsafe
             {
@@ -28,13 +31,11 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: The caller owns the list lifetime and supplies the unchecked element index.
             unsafe
             {
-                return ref UnsafeUtility.ArrayElementAsRef<T>(
-                      self.m_Data->_buffer.GetUnsafePtr()
-                    , index
-                );
+                return ref UnsafeUtility.ArrayElementAsRef<T>(self.m_Data->_buffer.GetUnsafePtr(), index);
             }
         }
     }

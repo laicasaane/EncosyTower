@@ -14,7 +14,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void Contains_DefaultAndComparerFindExpectedValues()
         {
             using var stack = new SharedStack<int>(new[] { 1, 3, 5 }.AsSpan());
-            var view = stack.AsNative().AsReadOnly();
+            SharedStackNative<int>.ReadOnly view;
+
+            // SAFETY: stack remains alive and unmodified while its borrowed read-only native view is consumed.
+            unsafe
+            {
+                view = stack.AsNative().AsReadOnly();
+            }
             var comparer = new IntComparer();
 
             Assert.IsTrue(SharedStackNativeReadOnlyAPI.Contains(in view, 3));

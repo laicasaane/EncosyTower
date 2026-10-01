@@ -7,6 +7,8 @@ using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct SharedStackNative<T>
@@ -25,6 +27,7 @@ namespace EncosyTower.Collections
             , ITryCopyToSpan<T>
         {
 #pragma warning disable IDE1006 // Naming Styles
+            /// <safety>The managed stack owner must keep this borrowed header alive and stable.</safety>
             [NativeDisableUnsafePtrRestriction]
             internal readonly unsafe SharedStackUnsafe<T>* m_Data;
 
@@ -36,6 +39,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(SharedStackNative<T> source)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(source);
+
                 // SAFETY: The read-only view borrows the live header and copied shared handle.
                 unsafe
                 {
@@ -59,6 +64,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Count
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,6 +78,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,8 +172,9 @@ namespace EncosyTower.Collections
                 }
             }
 
+            /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly Enumerator GetEnumerator()
+            public readonly unsafe Enumerator GetEnumerator()
             {
                 CheckRead();
                 // SAFETY: CheckRead validates the live native header before the read.
@@ -176,13 +184,27 @@ namespace EncosyTower.Collections
                 }
             }
 
+            /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                // SAFETY: The caller accepts the enumerator's borrowed header lifetime.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The caller accepts the enumerator's borrowed header lifetime.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private readonly void CheckRead()

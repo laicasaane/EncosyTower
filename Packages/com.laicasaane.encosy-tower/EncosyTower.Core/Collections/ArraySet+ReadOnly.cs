@@ -6,6 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial class ArraySet<T>
@@ -27,6 +29,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnly([NotNull] ArraySet<T> set)
             {
+                DebuggingThrowHelper.ThrowIfNull(set);
+
                 _set = set;
             }
 

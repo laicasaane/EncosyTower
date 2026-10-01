@@ -6,11 +6,18 @@ namespace EncosyTower.Collections.Unsafe
     internal partial struct SharedStackUnsafe<T>
         where T : unmanaged
     {
+        /// <safety>The owner pins this buffer and refreshes the pointer after relocation.</safety>
         internal unsafe T* _buffer;
         internal int _capacity;
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe int* _count;
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe int* _version;
 
+        /// <safety>
+        /// Every supplied pointer must address live pinned owner storage, capacity must match buffer length, and
+        /// the returned persistent header must have exactly one owner.
+        /// </safety>
         internal static unsafe SharedStackUnsafe<T>* Alloc(
               T* buffer
             , int capacity
@@ -35,6 +42,10 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
+        /// <safety>
+        /// Null is a no-op. Otherwise data must come from the matching allocator, be released once, and have no
+        /// aliases used afterward.
+        /// </safety>
         internal static unsafe void Free(SharedStackUnsafe<T>* data, AllocatorStrategy allocator)
         {
             if (data == null)
@@ -48,18 +59,10 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal int Capacity
-        {
-            get
-            {
-                // SAFETY: The owning collection keeps the native header live while this property reads its state.
-                unsafe
-                {
-                    return _capacity;
-                }
-            }
-        }
-        internal int Count
+        internal int Capacity => _capacity;
+
+        /// <safety>The owner must keep the count pointer live for the complete read.</safety>
+        internal unsafe int Count
         {
             get
             {
@@ -71,39 +74,36 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal void Push(T item)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void Push(T item)
         {
             // SAFETY: The owner pins the buffer and the fixed-capacity check bounds the write.
             unsafe
             {
                 var count = *_count;
-                ThrowHelper.ThrowIfCapacityIsImmutable(
-                    count < _capacity,
-                    ThrowHelper.CollectionType.SharedStackUnsafe
-                );
+                ThrowHelper.ThrowIfCapacityIsImmutable(count < _capacity, ThrowHelper.CollectionType.SharedStackUnsafe);
                 _buffer[count] = item;
                 *_count = count + 1;
                 (*_version)++;
             }
         }
 
-        internal void Push(in T item)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void Push(in T item)
         {
             // SAFETY: The owner pins the buffer and the fixed-capacity check bounds the write.
             unsafe
             {
                 var count = *_count;
-                ThrowHelper.ThrowIfCapacityIsImmutable(
-                    count < _capacity,
-                    ThrowHelper.CollectionType.SharedStackUnsafe
-                );
+                ThrowHelper.ThrowIfCapacityIsImmutable(count < _capacity, ThrowHelper.CollectionType.SharedStackUnsafe);
                 _buffer[count] = item;
                 *_count = count + 1;
                 (*_version)++;
             }
         }
 
-        internal T Pop()
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe T Pop()
         {
             // SAFETY: The count check bounds the returned top element in the pinned buffer.
             unsafe
@@ -115,18 +115,25 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal bool TryPop(out T result)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryPop(out T result)
         {
-            if (Count == 0)
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete attempt.
+            unsafe
             {
-                result = default;
-                return false;
+                if (Count == 0)
+                {
+                    result = default;
+                    return false;
+                }
+
+                result = Pop();
+                return true;
             }
-            result = Pop();
-            return true;
         }
 
-        internal T Peek()
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe T Peek()
         {
             // SAFETY: The count check bounds the top element in the pinned buffer.
             unsafe
@@ -136,18 +143,25 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal bool TryPeek(out T result)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryPeek(out T result)
         {
-            if (Count == 0)
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete attempt.
+            unsafe
             {
-                result = default;
-                return false;
+                if (Count == 0)
+                {
+                    result = default;
+                    return false;
+                }
+
+                result = Peek();
+                return true;
             }
-            result = Peek();
-            return true;
         }
 
-        internal void Clear()
+        /// <safety>The owner must keep count and version pointers live.</safety>
+        internal unsafe void Clear()
         {
             // SAFETY: The owner supplies live scalar pointers for the lifetime of the header.
             unsafe
@@ -157,57 +171,115 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal T[] ToArray()
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe T[] ToArray()
         {
-            var result = new T[Count];
-            CopyTopFirstTo(0, result, result.Length);
-            return result;
-        }
-
-        internal void CopyTo(Span<T> destination)
-            => CopyTo(0, destination);
-
-        internal void CopyTo(Span<T> destination, int length)
-            => CopyTo(0, destination, length);
-
-        internal void CopyTo(int sourceStartIndex, Span<T> destination)
-            => CopyTo(sourceStartIndex, destination, destination.Length);
-
-        internal void CopyTo(int sourceStartIndex, Span<T> destination, int length)
-        {
-            var count = Count;
-            ThrowHelper.ThrowIfSourceStartIndexIsInvalid((uint)sourceStartIndex <= (uint)count);
-            ThrowHelper.ThrowIfSourceLengthIsInvalid((uint)length <= (uint)(count - sourceStartIndex));
-            ThrowHelper.ThrowIfDestinationLengthIsInvalid((uint)length <= (uint)destination.Length);
-            CopyTopFirstTo(sourceStartIndex, destination, length);
-        }
-
-        internal bool TryCopyTo(Span<T> destination)
-            => TryCopyTo(0, destination);
-
-        internal bool TryCopyTo(Span<T> destination, int length)
-            => TryCopyTo(0, destination, length);
-
-        internal bool TryCopyTo(int sourceStartIndex, Span<T> destination)
-            => TryCopyTo(sourceStartIndex, destination, destination.Length);
-
-        internal bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-        {
-            var count = Count;
-            if (
-                (uint)sourceStartIndex > (uint)count
-                || (uint)length > (uint)(count - sourceStartIndex)
-                || (uint)length > (uint)destination.Length
-            )
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
             {
-                return false;
+                var result = new T[Count];
+                CopyTopFirstTo(0, result, result.Length);
+                return result;
             }
-
-            CopyTopFirstTo(sourceStartIndex, destination, length);
-            return true;
         }
 
-        private void CopyTopFirstTo(int sourceStartIndex, Span<T> destination, int length)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void CopyTo(Span<T> destination)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
+            {
+                CopyTo(0, destination);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void CopyTo(Span<T> destination, int length)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
+            {
+                CopyTo(0, destination, length);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void CopyTo(int sourceStartIndex, Span<T> destination)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
+            {
+                CopyTo(sourceStartIndex, destination, destination.Length);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe void CopyTo(int sourceStartIndex, Span<T> destination, int length)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
+            {
+                var count = Count;
+                ThrowHelper.ThrowIfSourceStartIndexIsInvalid((uint)sourceStartIndex <= (uint)count);
+                ThrowHelper.ThrowIfSourceLengthIsInvalid((uint)length <= (uint)(count - sourceStartIndex));
+                ThrowHelper.ThrowIfDestinationLengthIsInvalid((uint)length <= (uint)destination.Length);
+                CopyTopFirstTo(sourceStartIndex, destination, length);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryCopyTo(Span<T> destination)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy attempt.
+            unsafe
+            {
+                return TryCopyTo(0, destination);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryCopyTo(Span<T> destination, int length)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy attempt.
+            unsafe
+            {
+                return TryCopyTo(0, destination, length);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryCopyTo(int sourceStartIndex, Span<T> destination)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy attempt.
+            unsafe
+            {
+                return TryCopyTo(sourceStartIndex, destination, destination.Length);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid stack state.</safety>
+        internal unsafe bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy attempt.
+            unsafe
+            {
+                var count = Count;
+                if (
+                    (uint)sourceStartIndex > (uint)count
+                    || (uint)length > (uint)(count - sourceStartIndex)
+                    || (uint)length > (uint)destination.Length
+                )
+                {
+                    return false;
+                }
+
+                CopyTopFirstTo(sourceStartIndex, destination, length);
+                return true;
+            }
+        }
+
+        /// <safety>The caller must provide a valid range over live stack storage.</safety>
+        private unsafe void CopyTopFirstTo(int sourceStartIndex, Span<T> destination, int length)
         {
             // SAFETY: The caller-validated range bounds each top-first read in the pinned buffer.
             unsafe

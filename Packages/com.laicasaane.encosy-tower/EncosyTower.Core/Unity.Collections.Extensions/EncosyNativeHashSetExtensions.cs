@@ -1,14 +1,9 @@
 #if UNITY_COLLECTIONS
 
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -38,7 +33,7 @@ namespace EncosyTower.Collections
         public static int IncreaseCapacityBy<T>(this NativeParallelHashSet<T> set, int amount)
             where T : unmanaged, IEquatable<T>
         {
-            ThrowIfAmountIsPositive(amount > 0);
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
             return IncreaseCapacityTo(set, set.Capacity + amount);
         }
 
@@ -160,21 +155,6 @@ namespace EncosyTower.Collections
             }
 
             return inputDeps;
-        }
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAmountIsPositive([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Amount must be greater than 0.");
         }
     }
 }

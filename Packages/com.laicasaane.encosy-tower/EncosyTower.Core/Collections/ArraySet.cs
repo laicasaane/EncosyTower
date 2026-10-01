@@ -30,9 +30,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -41,20 +40,20 @@ namespace EncosyTower.Collections
     /// </summary>
     /// <typeparam name="T">The type of elements in the set.</typeparam>
     /// <seealso cref="ArrayMap{TKey, TValue}"/>
-    [DebuggerTypeProxy(typeof(ArraySetDebugProxy<>))]
+    [Serializable, DebuggerTypeProxy(typeof(ArraySetDebugProxy<>))]
     public partial class ArraySet<T> : IDisposable
         , ICollection<T>, IReadOnlyCollection<T>
         , IClearable, IIncreaseCapacity, IHasCount
         , ICopyToSpan<T>, ITryCopyToSpan<T>
     {
-        internal BufferManaged<ArrayMapNode<T>> _valuesInfo;
-        internal BufferManaged<T> _values;
-        internal BufferManaged<int> _buckets;
+        [NonSerialized] internal BufferManaged<ArrayMapNode<T>> _valuesInfo;
+        [NonSerialized] internal BufferManaged<T> _values;
+        [NonSerialized] internal BufferManaged<int> _buckets;
 
-        internal ulong _fastModBucketsMultiplier;
-        internal uint _collisions;
-        internal int _freeValueCellIndex;
-        internal int _version;
+        [NonSerialized] internal ulong _fastModBucketsMultiplier;
+        [NonSerialized] internal uint _collisions;
+        [NonSerialized] internal int _freeValueCellIndex;
+        [NonSerialized] internal int _version;
 
         public ArraySet() : this(0)
         {
@@ -80,6 +79,8 @@ namespace EncosyTower.Collections
 
         public ArraySet([NotNull] ArraySet<T> source)
         {
+            DebuggingThrowHelper.ThrowIfNull(source);
+
             var capacity = source.Capacity;
 
             _version = default;
@@ -102,7 +103,7 @@ namespace EncosyTower.Collections
             _fastModBucketsMultiplier = source._fastModBucketsMultiplier;
         }
 
-        public ArraySet(ReadOnly source) : this(source._set)
+        public ArraySet(ReadOnly source) : this(GetSet(source))
         {
         }
 
@@ -297,7 +298,10 @@ namespace EncosyTower.Collections
                     }
                     else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        ThrowIfMissingLinkedListNode(itemAfterCurrentOne != -1);
+                        ThrowHelper.ThrowIfMissingLinkedListNode(
+                              itemAfterCurrentOne != -1
+                            , ThrowHelper.CollectionType.ArraySet
+                        );
                         //update the previous pointer of the item after the one to remove with the
                         //previous pointer of the item to remove
                         _valuesInfo[itemAfterCurrentOne]._previous = node._previous;
@@ -355,7 +359,8 @@ namespace EncosyTower.Collections
 
                 //find the prev element of the last element in the valuesInfo array
                 while (_valuesInfo[linkedListIterationIndex]._previous != -1
-                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                    && _valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex
+                )
                 {
                     linkedListIterationIndex = _valuesInfo[linkedListIterationIndex]._previous;
                 }
@@ -392,10 +397,7 @@ namespace EncosyTower.Collections
         //constant states) because it will be used in multithreaded parallel code
         private bool TryFindIndex(in T value, out int index)
         {
-            ThrowHelper.ThrowIfBucketsAreUninitialized(
-                _buckets.Capacity > 0,
-                ThrowHelper.CollectionType.ArraySet
-            );
+            ThrowHelper.ThrowIfBucketsAreUninitialized(_buckets.Capacity > 0, ThrowHelper.CollectionType.ArraySet);
 
             var hash = value.GetHashCode();
             var bucketIndex = (int)Reduce((uint)hash, (uint)_buckets.Capacity, _fastModBucketsMultiplier);
@@ -420,24 +422,10 @@ namespace EncosyTower.Collections
             return false;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The linked-list successor is missing.");
-        }
-
         public void Intersect([NotNull] ArraySet<T> otherSet)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherSet);
+
             var items = Items.Span;
 
             for (var i = Count - 1; i >= 0; i--)
@@ -453,6 +441,8 @@ namespace EncosyTower.Collections
 
         public void Exclude([NotNull] ArraySet<T> otherSet)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherSet);
+
             var items = Items.Span;
 
             for (var i = Count - 1; i >= 0; i--)
@@ -468,6 +458,8 @@ namespace EncosyTower.Collections
 
         public void Union([NotNull] ArraySet<T> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+
             foreach (var other in otherMapKeys)
             {
                 Add(other);
@@ -630,6 +622,13 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICollection<T>.Add(T item)
             => Add(item);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ArraySet<T> GetSet(ReadOnly source)
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(source);
+            return source._set;
+        }
     }
 
     public struct ArraySetEnumerator<T> : IEnumerator<T>, IIsValid
@@ -641,6 +640,8 @@ namespace EncosyTower.Collections
 
         public ArraySetEnumerator([NotNull] ArraySet<T> set) : this()
         {
+            DebuggingThrowHelper.ThrowIfNull(set);
+
             _set = set;
             _index = -1;
             _version = set._version;
@@ -698,6 +699,8 @@ namespace EncosyTower.Collections
 
         public ArraySetDebugProxy([NotNull] ArraySet<T> set)
         {
+            DebuggingThrowHelper.ThrowIfNull(set);
+
             _set = set;
         }
 

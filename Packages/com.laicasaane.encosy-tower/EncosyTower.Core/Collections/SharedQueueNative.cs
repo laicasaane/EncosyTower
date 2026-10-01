@@ -23,6 +23,7 @@ namespace EncosyTower.Collections
         where T : unmanaged
     {
 #pragma warning disable IDE1006 // Naming Styles
+        /// <safety>The managed queue owner must keep this borrowed header alive and stable.</safety>
         [NativeDisableUnsafePtrRestriction]
         internal readonly unsafe SharedQueueUnsafe<T>* m_Data;
 
@@ -32,6 +33,7 @@ namespace EncosyTower.Collections
 #pragma warning restore IDE1006 // Naming Styles
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        /// <safety>The pointer and safety handle must come from the same live managed owner.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal unsafe SharedQueueNative(SharedQueueUnsafe<T>* data, AtomicSafetyHandle safety)
         {
@@ -43,6 +45,7 @@ namespace EncosyTower.Collections
             m_Safety = safety;
         }
 #else
+        /// <safety>The pointer must remain valid for the complete lifetime of this borrowed view.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal unsafe SharedQueueNative(SharedQueueUnsafe<T>* data)
         {
@@ -66,6 +69,7 @@ namespace EncosyTower.Collections
                 }
             }
         }
+
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,6 +83,7 @@ namespace EncosyTower.Collections
                 }
             }
         }
+
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -227,12 +232,20 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned alias must not outlive the managed queue owner.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
-            => new(this);
+        public unsafe ReadOnly AsReadOnly()
+        {
+            // SAFETY: The caller accepts the returned view's borrowed header lifetime.
+            unsafe
+            {
+                return new(this);
+            }
+        }
 
+        /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Enumerator GetEnumerator()
+        public unsafe Enumerator GetEnumerator()
         {
             CheckRead();
             // SAFETY: CheckRead validates the live native header before the read.
@@ -242,13 +255,27 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => GetEnumerator();
+        unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed header lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
+        /// <safety>The managed owner must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed header lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckRead()

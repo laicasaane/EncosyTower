@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
@@ -16,6 +18,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Enumerator(ReadOnly list)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
                 _list = list;
                 _index = 0;
                 _version = list._version[0];

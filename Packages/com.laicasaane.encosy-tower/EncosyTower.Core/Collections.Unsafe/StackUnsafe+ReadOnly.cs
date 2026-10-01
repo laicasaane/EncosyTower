@@ -29,12 +29,11 @@ namespace EncosyTower.Collections.Unsafe
                 _version = source._version;
             }
 
-            public readonly bool IsCreated
-                => _buffer.IsCreated;
-            public readonly int Count
-                => _count;
-            public readonly int Capacity
-                => _buffer.Capacity;
+            public readonly bool IsCreated => _buffer.IsCreated;
+
+            public readonly int Count => _count;
+
+            public readonly int Capacity => _buffer.Capacity;
 
             public readonly T Peek()
             {
@@ -101,11 +100,7 @@ namespace EncosyTower.Collections.Unsafe
                 return true;
             }
 
-            private readonly void CopyTopFirstTo(
-                  int sourceStartIndex
-                , Span<T> destination
-                , int length
-            )
+            private readonly void CopyTopFirstTo(int sourceStartIndex, Span<T> destination, int length)
             {
                 var top = _count - 1 - sourceStartIndex;
                 for (var i = 0; i < length; i++)
@@ -151,11 +146,9 @@ namespace EncosyTower.Collections.Unsafe
                 return false;
             }
 
-            public readonly T Current
-                => _current;
+            public readonly T Current => _current;
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

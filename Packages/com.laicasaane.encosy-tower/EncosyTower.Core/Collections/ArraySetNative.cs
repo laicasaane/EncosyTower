@@ -35,6 +35,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -75,10 +77,7 @@ namespace EncosyTower.Collections
 
         public ArraySetNative(ArraySetNative<T> source, AllocatorStrategy allocator) : this()
         {
-            ThrowHelper.ThrowIfNativeSourceCollectionIsNotCreated(
-                source.IsCreated,
-                ThrowHelper.CollectionType.ArraySetNative
-            );
+            DebuggingThrowHelper.ThrowIfNotCreated(source);
 
             // SAFETY: source.IsCreated was checked and the allocation creates an owned deep copy.
             unsafe
@@ -407,6 +406,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Intersect(in ArraySetNative<T> otherSet)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherSet);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherSet.m_Safety);
@@ -421,6 +422,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Exclude(in ArraySetNative<T> otherSet)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherSet);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherSet.m_Safety);
@@ -435,6 +438,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Union(in ArraySetNative<T> otherSet)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherSet);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherSet.m_Safety);
@@ -511,6 +516,8 @@ namespace EncosyTower.Collections
 
         public ArraySetNativeEnumerator(in ArraySetNative<T> set) : this()
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(set);
+
             _set = set;
             _index = -1;
 
@@ -622,6 +629,8 @@ namespace EncosyTower.Collections
 
         public ArraySetNativeDebugProxy(in ArraySetNative<T> set)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(set);
+
             _set = set;
         }
 

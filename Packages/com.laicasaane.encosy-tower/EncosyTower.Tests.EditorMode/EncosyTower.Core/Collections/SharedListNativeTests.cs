@@ -17,7 +17,13 @@ namespace EncosyTower.Tests.Core.Collections
             list.Add(2);
             list.Add(3);
 
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
 
             Assert.IsTrue(view.IsCreated);
             Assert.AreEqual(3, view.Count);
@@ -31,7 +37,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             SharedListNative<int> empty = default;
             using var list = new SharedList<int, int>(new[] { 1, 2 });
-            SharedListNative<int> view = list;
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed implicit native view.
+            unsafe
+            {
+                view = list;
+            }
 
             Assert.IsFalse(empty.IsCreated);
             Assert.IsTrue(view.IsCreated);
@@ -44,7 +56,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void GenericOwnerAsNative_UsesNativeElementTypeAndAliasesOwnerStorage()
         {
             using var list = new SharedList<int, uint>(new[] { 1, 2 });
-            var view = list.AsNative();
+            SharedListNative<uint> view;
+
+            // SAFETY: list remains the live owner of the borrowed native-element view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
 
             Assert.AreEqual(1u, view[0]);
 
@@ -59,7 +77,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var list = new SharedList<int>(8);
             list.Add(1);
 
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             view.Add(2);
             view.Add(3);
 
@@ -70,22 +94,25 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void ValueAndInOverloads_AddInsertAndPushMutateOwner()
+        public void ValueAndInOverloads_AddAndInsertMutateOwner()
         {
             using var list = new SharedList<int>(8);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var two = 2;
             var four = 4;
-            var six = 6;
 
             view.Add(1);
             view.Add(in two);
             view.Insert(2, 3);
             view.Insert(3, in four);
 
-            Assert.AreEqual(4, view.Push(5));
-            Assert.AreEqual(5, view.Push(in six));
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 }, list.ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, list.ToArray());
         }
 
         [Test]
@@ -95,7 +122,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var native = new NativeArray<int>(new[] { 5, 6, 7 }, Allocator.Temp);
             using var sliceOwner = new NativeArray<int>(new[] { 0, 8, 9, 10 }, Allocator.Temp);
             var slice = new NativeSlice<int>(sliceOwner, 1, 3);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
 
             view.AddRange(new[] { 1, 2 });
             view.AddRange(new[] { 3, 4, 99 }, 2);
@@ -117,7 +150,13 @@ namespace EncosyTower.Tests.Core.Collections
             list.Add(1);
             list.Add(2);
 
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             view[1] = 99;
 
             Assert.AreEqual(99, list[1]);
@@ -127,10 +166,16 @@ namespace EncosyTower.Tests.Core.Collections
         public void ElementAtCopyFromAndTryCopyFrom_MutateOwnerOrReturnFalse()
         {
             using var list = new SharedList<int>(new[] { 0, 0, 0, 0, 0, 0 });
-            var view = list.AsNative();
+            SharedListNative<int> view;
 
-            ref var first = ref view.ElementAt(0);
-            first = 1;
+            // SAFETY: list remains the live owner of the borrowed native view and element reference.
+            unsafe
+            {
+                view = list.AsNative();
+
+                ref var first = ref view.ElementAt(0);
+                first = 1;
+            }
             view.CopyFrom(new[] { 2, 3 });
             view.CopyFrom(new[] { 4, 5, 99 }, 2);
             view.CopyFrom(2, new[] { 6, 7 });
@@ -151,7 +196,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void CopyToAndTryCopyTo_SpanAndArrayOverloadsCopyOrReturnFalse()
         {
             using var list = new SharedList<int>(new[] { 1, 2, 3, 4 });
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var array = new int[6];
             var full = new int[4];
             var partial = new int[2];
@@ -187,7 +238,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var sliceOwner = new NativeArray<int>(5, Allocator.Temp);
             var fullSlice = new NativeSlice<int>(sliceOwner, 1, 3);
             var partialSlice = new NativeSlice<int>(sliceOwner, 2, 2);
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = list.AsNative();
+            }
 
             view.CopyTo(full);
             view.CopyTo(1, offset);
@@ -202,117 +259,133 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void RemoveClearStackReplicateAndViewsMutateSharedStorage()
+        public void RemoveClearReplicateAndViewsMutateSharedStorage()
         {
             using var list = new SharedList<int>(12);
-            var view = list.AsNative();
 
-            var defaults = view.AddReplicate(2);
-            var values = view.AddReplicate(7, 3);
-            var noInit = view.AddReplicateNoInit(2);
-            noInit[0] = 8;
-            noInit[1] = 9;
+            // SAFETY: list remains live while each borrowed view is consumed before owner disposal.
+            unsafe
+            {
+                var view = list.AsNative();
 
-            CollectionAssert.AreEqual(new[] { 0, 0 }, defaults.ToArray());
-            CollectionAssert.AreEqual(new[] { 7, 7, 7 }, values.ToArray());
+                var defaults = view.AddReplicate(2);
+                CollectionAssert.AreEqual(new[] { 0, 0 }, defaults.ToArray());
 
-            Assert.AreEqual(9, view.Peek());
-            Assert.AreEqual(9, view.Pop());
+                var values = view.AddReplicate(7, 3);
+                CollectionAssert.AreEqual(new[] { 7, 7, 7 }, values.ToArray());
 
-            view.RemoveAt(0);
-            view.RemoveRange(0, 2);
-            view.RemoveAtSwapBack(0);
+                var noInit = view.AddReplicateNoInit(2);
+                noInit[0] = 8;
+                noInit[1] = 9;
 
-            var span = view.AsSpan();
-            var readOnlySpan = view.AsReadOnlySpan();
-            var slice = view.AsNativeSlice();
-            span[0] = 10;
-            slice[1] = 11;
+                Assert.AreEqual(9, view[^1]);
+                view.RemoveAt(view.Count - 1);
 
-            Assert.AreEqual(10, readOnlySpan[0]);
-            CollectionAssert.AreEqual(new[] { 10, 11 }, list.ToArray());
+                view.RemoveAt(0);
+                view.RemoveRange(0, 2);
+                view.RemoveAtSwapBack(0);
 
-            view.Clear();
+                var span = view.AsSpan();
+                var readOnlySpan = view.AsReadOnlySpan();
+                var slice = view.AsNativeSlice();
+                span[0] = 10;
+                slice[1] = 11;
 
-            Assert.AreEqual(0, list.Count);
+                Assert.AreEqual(10, readOnlySpan[0]);
+                CollectionAssert.AreEqual(new[] { 10, 11 }, list.ToArray());
+
+                view.Clear();
+
+                Assert.AreEqual(0, list.Count);
+            }
         }
 
         [Test]
         public void ReinterpretAndReadOnlySurface_AliasOwnerAndCopyAllRanges()
         {
             using var list = new SharedList<int>(new[] { 1, 2, 3, 4 });
-            var view = list.AsNative();
-            var reinterpreted = view.Reinterpret<uint>();
-            SharedListNative<int>.ReadOnly readOnly = view;
-            ReadOnlySpan<int> implicitSpan = readOnly;
-            var array = new int[6];
-            var full = new int[4];
-            var partial = new int[2];
-            var offset = new int[2];
-            var explicitLength = new int[3];
 
-            reinterpreted[0] = 10u;
+            // SAFETY: list remains live and stable while all native/read-only aliases are used.
+            unsafe
+            {
+                var view = list.AsNative();
+                var reinterpreted = view.Reinterpret<uint>();
+                SharedListNative<int>.ReadOnly readOnly = view;
+                ReadOnlySpan<int> implicitSpan = readOnly;
+                var array = new int[6];
+                var full = new int[4];
+                var partial = new int[2];
+                var offset = new int[2];
+                var explicitLength = new int[3];
 
-            Assert.AreEqual(10, list[0]);
-            Assert.IsTrue(readOnly.IsCreated);
-            Assert.AreEqual(4, readOnly.Count);
-            Assert.GreaterOrEqual(readOnly.Capacity, 4);
-            Assert.IsTrue(readOnly.IsReadOnly);
-            Assert.AreEqual(3, readOnly[2]);
-            CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, implicitSpan.ToArray());
-            CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, readOnly.AsReadOnlySpan().ToArray());
-            CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, readOnly.ToArray());
+                reinterpreted[0] = 10u;
 
-            readOnly.CopyTo(array, 1);
-            readOnly.CopyTo(full);
-            readOnly.CopyTo(partial.AsSpan(), 2);
-            readOnly.CopyTo(1, offset);
-            readOnly.CopyTo(1, explicitLength, 2);
+                Assert.AreEqual(10, list[0]);
+                Assert.IsTrue(readOnly.IsCreated);
+                Assert.AreEqual(4, readOnly.Count);
+                Assert.GreaterOrEqual(readOnly.Capacity, 4);
+                Assert.IsTrue(readOnly.IsReadOnly);
+                Assert.AreEqual(3, readOnly[2]);
+                CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, implicitSpan.ToArray());
+                CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, readOnly.AsReadOnlySpan().ToArray());
+                CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, readOnly.ToArray());
 
-            CollectionAssert.AreEqual(new[] { 0, 10, 2, 3, 4, 0 }, array);
-            CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, full);
-            CollectionAssert.AreEqual(new[] { 10, 2 }, partial);
-            CollectionAssert.AreEqual(new[] { 2, 3 }, offset);
-            CollectionAssert.AreEqual(new[] { 2, 3, 0 }, explicitLength);
+                readOnly.CopyTo(array, 1);
+                readOnly.CopyTo(full);
+                readOnly.CopyTo(partial.AsSpan(), 2);
+                readOnly.CopyTo(1, offset);
+                readOnly.CopyTo(1, explicitLength, 2);
 
-            Assert.IsTrue(readOnly.TryCopyTo(full));
-            Assert.IsTrue(readOnly.TryCopyTo(partial, 2));
-            Assert.IsTrue(readOnly.TryCopyTo(1, offset));
-            Assert.IsTrue(readOnly.TryCopyTo(1, explicitLength, 2));
-            Assert.IsFalse(readOnly.TryCopyTo(3, partial));
+                CollectionAssert.AreEqual(new[] { 0, 10, 2, 3, 4, 0 }, array);
+                CollectionAssert.AreEqual(new[] { 10, 2, 3, 4 }, full);
+                CollectionAssert.AreEqual(new[] { 10, 2 }, partial);
+                CollectionAssert.AreEqual(new[] { 2, 3 }, offset);
+                CollectionAssert.AreEqual(new[] { 2, 3, 0 }, explicitLength);
 
-            var reinterpretedReadOnly = readOnly.Reinterpret<uint>();
-            Assert.AreEqual(10u, reinterpretedReadOnly[0]);
+                Assert.IsTrue(readOnly.TryCopyTo(full));
+                Assert.IsTrue(readOnly.TryCopyTo(partial, 2));
+                Assert.IsTrue(readOnly.TryCopyTo(1, offset));
+                Assert.IsTrue(readOnly.TryCopyTo(1, explicitLength, 2));
+                Assert.IsFalse(readOnly.TryCopyTo(3, partial));
+
+                var reinterpretedReadOnly = readOnly.Reinterpret<uint>();
+                Assert.AreEqual(10u, reinterpretedReadOnly[0]);
+            }
         }
 
         [Test]
         public void OwnerAndReadOnlyEnumerators_ConstructMoveResetAndDisposeDirectly()
         {
             using var list = new SharedList<int>(new[] { 1, 2 });
-            var view = list.AsNative();
-            var ownerEnumerator = view.GetEnumerator();
 
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            Assert.AreEqual(1, ownerEnumerator.Current);
-            ownerEnumerator.Reset();
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            ownerEnumerator.Dispose();
+            // SAFETY: list remains live and unmodified while both borrowed enumerators are consumed.
+            unsafe
+            {
+                var view = list.AsNative();
+                var ownerEnumerator = view.GetEnumerator();
 
-            var readOnly = view.AsReadOnly();
-            var readOnlyEnumerator = readOnly.GetEnumerator();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                Assert.AreEqual(1, ownerEnumerator.Current);
+                ownerEnumerator.Reset();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                ownerEnumerator.Dispose();
 
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            Assert.AreEqual(1, readOnlyEnumerator.Current);
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            Assert.AreEqual(2, readOnlyEnumerator.Current);
-            Assert.IsFalse(readOnlyEnumerator.MoveNext());
-            readOnlyEnumerator.Reset();
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            readOnlyEnumerator.Dispose();
+                var readOnly = view.AsReadOnly();
+                var readOnlyEnumerator = readOnly.GetEnumerator();
 
-            var directEnumerator = new SharedListNative<int>.Enumerator(readOnly);
-            Assert.IsTrue(directEnumerator.MoveNext());
-            directEnumerator.Dispose();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                Assert.AreEqual(1, readOnlyEnumerator.Current);
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                Assert.AreEqual(2, readOnlyEnumerator.Current);
+                Assert.IsFalse(readOnlyEnumerator.MoveNext());
+                readOnlyEnumerator.Reset();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                readOnlyEnumerator.Dispose();
+
+                var directEnumerator = new SharedListNative<int>.Enumerator(readOnly);
+                Assert.IsTrue(directEnumerator.MoveNext());
+                directEnumerator.Dispose();
+            }
         }
 
         [Test]
@@ -320,12 +393,24 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var list = new SharedList<int>(1);
             list.Add(1);
-            var stale = list.AsNative();
+            SharedListNative<int> stale;
+
+            // SAFETY: stale is read only before the owner grows and invalidates it.
+            unsafe
+            {
+                stale = list.AsNative();
+            }
             var staleCapacity = stale.Capacity;
 
             list.IncreaseCapacityBy(4);
 
-            var current = list.AsNative();
+            SharedListNative<int> current;
+
+            // SAFETY: list remains live and stable after growth while the refreshed view is used.
+            unsafe
+            {
+                current = list.AsNative();
+            }
             current.Add(2);
 
             Assert.AreEqual(2, list.Count);
@@ -339,7 +424,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var list = new SharedList<int>(2);
             list.AddRange(new[] { 1, 2 });
-            var view = list.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: list remains live while the fixed-capacity borrowed view is exercised.
+            unsafe
+            {
+                view = list.AsNative();
+            }
             var capacity = list.Capacity;
 
             Assert.Throws<InvalidOperationException>(() => view.Add(3));
@@ -357,7 +448,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var list = new SharedList<int>(2);
             list.Add(1);
 
-            var staleView = list.AsNative();
+            SharedListNative<int> staleView;
+
+            // SAFETY: This test intentionally retains the borrowed view across owner resize.
+            unsafe
+            {
+                staleView = list.AsNative();
+            }
 
             for (var i = 0; i < 64; i++)
             {
@@ -375,12 +472,24 @@ namespace EncosyTower.Tests.Core.Collections
             // throws, unlike BCL List<T>.RemoveRange. Zero-length removes at a valid index
             // are no-ops.
             using var emptyOwner = new SharedList<int>(4);
-            var emptyView = emptyOwner.AsNative();
+            SharedListNative<int> emptyView;
+
+            // SAFETY: emptyOwner remains live while the borrowed view checks the boundary contract.
+            unsafe
+            {
+                emptyView = emptyOwner.AsNative();
+            }
 
             Assert.Throws<InvalidOperationException>(() => emptyView.RemoveRange(0, 0));
 
             using var owner = new SharedList<int>(new[] { 1, 2, 3 });
-            var view = owner.AsNative();
+            SharedListNative<int> view;
+
+            // SAFETY: owner remains live while the borrowed view checks the boundary contract.
+            unsafe
+            {
+                view = owner.AsNative();
+            }
 
             Assert.Throws<InvalidOperationException>(() => view.RemoveRange(3, 0));
 

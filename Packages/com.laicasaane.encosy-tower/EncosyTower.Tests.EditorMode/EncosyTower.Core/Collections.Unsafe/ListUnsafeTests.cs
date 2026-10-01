@@ -197,20 +197,6 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
         }
 
         [Test]
-        public void PeekPopAndPush_UseListTail()
-        {
-            using var list = new ListUnsafe<int>(1, Allocator.Temp);
-            var second = 20;
-
-            Assert.AreEqual(0, list.Push(10));
-            Assert.AreEqual(1, list.Push(in second));
-            Assert.AreEqual(20, list.Peek());
-            Assert.AreEqual(20, list.Pop());
-            Assert.AreEqual(1, list.Count);
-            Assert.AreEqual(10, list.Peek());
-        }
-
-        [Test]
         public void AddReplicateFamilies_ReturnAliasedNewRanges()
         {
             using var list = new ListUnsafe<int>(8, Allocator.Temp);
@@ -329,8 +315,6 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
             Assert.IsFalse(readOnly.TryCopyTo(3, failedDestination, 2));
             CollectionAssert.AreEqual(new[] { 9, 9 }, failedDestination);
             CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, readOnly.ToArray());
-            Assert.AreEqual(4, readOnly.Peek());
-
             list[0] = 10;
             Assert.AreEqual(10, readOnly[0]);
         }
@@ -448,18 +432,6 @@ namespace EncosyTower.Tests.Core.Collections.Unsafe
             Assert.Throws<InvalidOperationException>(() => list.IncreaseCapacityTo(2));
             Assert.Throws<InvalidOperationException>(() => _ = readOnly[3]);
             Assert.Throws<InvalidOperationException>(() => list.Reinterpret<byte>());
-        }
-
-        [Test]
-        [TestRequiresCollectionChecks]
-        public void EmptyOwnerAndReadOnly_PeekAndPopThrow()
-        {
-            using var list = new ListUnsafe<int>(1, Allocator.Temp);
-            var readOnly = list.AsReadOnly();
-
-            Assert.Throws<InvalidOperationException>(() => _ = list.Peek());
-            Assert.Throws<InvalidOperationException>(() => _ = list.Pop());
-            Assert.Throws<InvalidOperationException>(() => _ = readOnly.Peek());
         }
 
         [Test]

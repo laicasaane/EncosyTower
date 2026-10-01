@@ -262,9 +262,7 @@ namespace EncosyTower.Collections
                     , m_Safety
 #endif
                 );
-                new NativeSlice<T>(destination)
-                    .Slice(oldCount, count)
-                    .CopyFrom(items.Slice(0, count));
+                new NativeSlice<T>(destination).Slice(oldCount, count).CopyFrom(items.Slice(0, count));
             }
         }
 
@@ -442,46 +440,6 @@ namespace EncosyTower.Collections
             unsafe
             {
                 m_Data->FastClear();
-            }
-        }
-
-        public ref readonly T Peek()
-        {
-            CheckRead();
-            // SAFETY: CheckRead validates the live native header before the read.
-            unsafe
-            {
-                return ref m_Data->Peek();
-            }
-        }
-
-        public ref readonly T Pop()
-        {
-            CheckWrite();
-            // SAFETY: CheckWrite validates the live native header before the write.
-            unsafe
-            {
-                return ref m_Data->Pop();
-            }
-        }
-
-        public int Push(T item)
-        {
-            CheckResizeWrite();
-            // SAFETY: CheckResizeWrite validates the live native header before the write.
-            unsafe
-            {
-                return m_Data->Push(item);
-            }
-        }
-
-        public int Push(in T item)
-        {
-            CheckResizeWrite();
-            // SAFETY: CheckResizeWrite validates the live native header before the write.
-            unsafe
-            {
-                return m_Data->Push(in item);
             }
         }
 

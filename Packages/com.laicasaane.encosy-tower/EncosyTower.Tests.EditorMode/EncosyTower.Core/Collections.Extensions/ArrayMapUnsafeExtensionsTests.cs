@@ -43,19 +43,9 @@ namespace EncosyTower.Tests.Core.Collections.Extensions
             Assert.AreEqual(1, builder.calls);
 
             var parameter = 40;
-            ref var parameterAdded = ref MapAPI.GetOrAdd(
-                  ref map
-                , 2
-                , ref builder
-                , ref parameter
-            );
+            ref var parameterAdded = ref MapAPI.GetOrAdd(ref map, 2, ref builder, ref parameter);
             parameter = 50;
-            ref var parameterExisting = ref MapAPI.GetOrAdd(
-                  ref map
-                , 2
-                , ref builder
-                , ref parameter
-            );
+            ref var parameterExisting = ref MapAPI.GetOrAdd(ref map, 2, ref builder, ref parameter);
 
             Assert.AreEqual(40, parameterAdded);
             Assert.AreEqual(40, parameterExisting);
@@ -174,20 +164,8 @@ namespace EncosyTower.Tests.Core.Collections.Extensions
             var recycler = new IntRecycler(20);
             var predicate = new IntPredicate(10);
 
-            ref var recycled = ref MapAPI.RecycleOrAdd(
-                  ref plainMap
-                , 2
-                , ref builder
-                , ref recycler
-                , ref predicate
-            );
-            ref var built = ref MapAPI.RecycleOrAdd(
-                  ref plainMap
-                , 3
-                , ref builder
-                , ref recycler
-                , ref predicate
-            );
+            ref var recycled = ref MapAPI.RecycleOrAdd(ref plainMap, 2, ref builder, ref recycler, ref predicate);
+            ref var built = ref MapAPI.RecycleOrAdd(ref plainMap, 3, ref builder, ref recycler, ref predicate);
 
             Assert.AreEqual(20, recycled);
             Assert.AreEqual(30, built);

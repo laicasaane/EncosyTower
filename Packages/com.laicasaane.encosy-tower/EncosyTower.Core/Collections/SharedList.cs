@@ -1,18 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Types;
 using Unity.Collections;
-using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
+    [Serializable]
     public partial class SharedList<T> : SharedList<T, T>
         where T : unmanaged
     {
@@ -57,6 +58,7 @@ namespace EncosyTower.Collections
         }
     }
 
+    [Serializable]
     public partial class SharedList<T, TNative> : IList<T>, IReadOnlyList<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IToArray<T>
         , ICopyFromSpan<T>, ITryCopyFromSpan<T>
@@ -67,84 +69,137 @@ namespace EncosyTower.Collections
         where T : unmanaged
         where TNative : unmanaged
     {
-        internal SharedArray<T, TNative> _buffer;
-        internal SharedReference<int> _count;
-        internal SharedReference<int> _version;
+        [NonSerialized] internal BufferShared<T, TNative> _buffer;
+        [NonSerialized] internal BufferShared<int> _count;
+        [NonSerialized] internal BufferShared<int> _version;
+        /// <safety>Owned by this list; borrowed native views become invalid after resize or disposal.</safety>
+        [NonSerialized] internal unsafe SharedListUnsafe<TNative>* _nativeData;
 
-        // Native views share this live header but copy the buffer's safety handle.
-        // Resize releases that handle, invalidating older checked views; views created
-        // afterward use the refreshed pointer/capacity and the new owner handle.
-        internal unsafe SharedListUnsafe<TNative>* _nativeData;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        [NonSerialized] internal AtomicSafetyHandle _safety;
+#endif
 
         public SharedList()
         {
             _buffer = new(0);
-            _count = new(0);
-            _version = new(0);
+            _count = new(1);
+            _version = new(1);
             InitializeNativeData();
         }
 
         public SharedList(int capacity)
         {
             _buffer = new(capacity);
-            _count = new(0);
-            _version = new(0);
+            _count = new(1);
+            _version = new(1);
             InitializeNativeData();
         }
 
         public SharedList([NotNull] params T[] source)
         {
+            DebuggingThrowHelper.ThrowIfNull(source);
             _buffer = new(source);
-            _count = new(source.Length);
-            _version = new(0);
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Length;
+            }
             InitializeNativeData();
         }
 
         public SharedList(in ArraySegment<T> source)
         {
-            _buffer = new(source);
-            _count = new(source.Count);
-            _version = new(0);
+            _buffer = new(source.ToArray());
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Count;
+            }
             InitializeNativeData();
         }
 
         public SharedList(in ReadOnlySpan<T> source)
         {
-            _buffer = new(source);
-            _count = new(source.Length);
-            _version = new(0);
+            _buffer = new(source.ToArray());
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Length;
+            }
             InitializeNativeData();
         }
 
         public SharedList([NotNull] ICollection<T> source)
         {
-            _buffer = new(source);
-            _count = new(source.Count);
-            _version = new(0);
+            DebuggingThrowHelper.ThrowIfNull(source);
+            var buffer = new T[source.Count];
+            source.CopyTo(buffer, 0);
+            _buffer = new(buffer);
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Count;
+            }
             InitializeNativeData();
         }
 
         public SharedList([NotNull] ICollection<T> source, int extraSize)
         {
-            _buffer = new(source, extraSize);
-            _count = new(source.Count);
-            _version = new(0);
+            DebuggingThrowHelper.ThrowIfNull(source);
+            var buffer = new T[source.Count + extraSize];
+            source.CopyTo(buffer, 0);
+            _buffer = new(buffer);
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Count;
+            }
             InitializeNativeData();
         }
 
         public SharedList(in NativeArray<TNative> source)
         {
-            _buffer = new(source);
-            _count = new(source.Length);
-            _version = new(0);
+            _buffer = new(source.Length);
+            // SAFETY: This constructor owns the destination buffer and consumes the live source synchronously.
+            unsafe
+            {
+                _buffer.AsNativeArray().CopyFrom(source);
+            }
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Length;
+            }
             InitializeNativeData();
         }
 
         public SharedList(in NativeSlice<TNative> source)
         {
-            _buffer = new(source);
-            _count = new(source.Length);
-            _version = new(0);
+            _buffer = new(source.Length);
+            // SAFETY: This constructor owns the destination buffer and consumes the live source synchronously.
+            unsafe
+            {
+                source.CopyTo(_buffer.AsNativeArray());
+            }
+            _count = new(1);
+            _version = new(1);
+            // SAFETY: This constructor exclusively owns the newly allocated count buffer.
+            unsafe
+            {
+                _count[0] = source.Length;
+            }
             InitializeNativeData();
         }
 
@@ -156,46 +211,77 @@ namespace EncosyTower.Collections
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _count.ValueRO;
+            get => CountRO;
         }
 
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer.Length;
+            get
+            {
+                CheckRead();
+                return _buffer.Capacity;
+            }
         }
 
-        public bool IsReadOnly
-            => false;
+        public bool IsReadOnly => false;
 
         public T this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
-                return _buffer.AsReadOnlySpan()[index];
+                ThrowHelper.ThrowIfIndexIsOutOfRange(
+                      (uint)index < (uint)CountRO
+                    , ThrowHelper.CollectionType.SharedListWithNative
+                );
+                // SAFETY: The range check bounds access to this list's live owned buffer.
+                unsafe
+                {
+                    return _buffer.AsReadOnlySpan()[index];
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
-                _version.ValueRW++;
-                _buffer.AsSpan()[index] = value;
+                ThrowHelper.ThrowIfIndexIsOutOfRange(
+                      (uint)index < (uint)CountRO
+                    , ThrowHelper.CollectionType.SharedListWithNative
+                );
+                VersionRW++;
+                // SAFETY: The range and write checks bound access to this list's live owned buffer.
+                unsafe
+                {
+                    _buffer.AsSpan()[index] = value;
+                }
             }
         }
 
+        /// <safety>The returned native view must not outlive the source list or survive resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator SharedListNative<TNative>(SharedList<T, TNative> list)
-            => list.AsNative();
+        public static unsafe implicit operator SharedListNative<TNative>(SharedList<T, TNative> list)
+        {
+            DebuggingThrowHelper.ThrowIfNull(list);
+
+            // SAFETY: The non-null list remains the designated owner of the returned view.
+            // SAFETY: The header was freed first; this list now releases its remaining owned buffers.
+            unsafe
+            {
+                return list.AsNative();
+            }
+        }
 
         public void Dispose()
         {
-            if (_buffer == null)
+            if (_buffer.IsCreated == false)
             {
                 return;
             }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckDeallocateAndThrow(_safety);
+#endif
 
             // SAFETY: The established ownership and safety checks keep the native storage live
             // for this pointer dereference.
@@ -205,13 +291,18 @@ namespace EncosyTower.Collections
                 _nativeData = null;
             }
 
-            _buffer.Dispose();
-            _count.Dispose();
-            _version.Dispose();
+            // SAFETY: The header was freed first; this list now releases its remaining owned buffers.
+            unsafe
+            {
+                _buffer.Dispose();
+                _count.Dispose();
+                _version.Dispose();
+            }
 
-            _buffer = null;
-            _count = null;
-            _version = null;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.Release(_safety);
+            _safety = default;
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -220,15 +311,18 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index)
-            => IndexOf(item, index, _count.ValueRO - index);
+            => IndexOf(item, index, CountRO - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index, int count)
         {
-            ThrowIfIndexIsNegative(index >= 0);
-            ThrowIfCountIsNegative(count >= 0);
-            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
-            return Array.IndexOf(_buffer, item, index, count);
+            ThrowHelper.ThrowIfIndexIsNegative(index >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(
+                  index + count <= CountRO
+                , ThrowHelper.CollectionType.SharedListWithNative
+            );
+            return Array.IndexOf(_buffer.AsManagedArray(), item, index, count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -237,57 +331,71 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index)
-            => IndexOf(in item, index, _count.ValueRO - index);
+            => IndexOf(in item, index, CountRO - index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index, int count)
         {
-            ThrowIfIndexIsNegative(index >= 0);
-            ThrowIfCountIsNegative(count >= 0);
-            ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
-            return Array.IndexOf(_buffer, item, index, count);
+            ThrowHelper.ThrowIfIndexIsNegative(index >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexSectionIsInvalid(
+                  index + count <= CountRO
+                , ThrowHelper.CollectionType.SharedListWithNative
+            );
+            return Array.IndexOf(_buffer.AsManagedArray(), item, index, count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            ref var count = ref _count.ValueRW;
+            ref var count = ref CountRW;
 
-            if (count == _buffer.Length)
+            if (count == _buffer.Capacity)
             {
                 AllocateMore();
             }
 
-            _buffer.AsSpan()[count++] = item;
+            // SAFETY: Capacity is available and count is a bounded index into this owned buffer.
+            unsafe
+            {
+                _buffer.AsSpan()[count++] = item;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            ref var count = ref _count.ValueRW;
+            ref var count = ref CountRW;
 
-            if (count == _buffer.Length)
+            if (count == _buffer.Capacity)
             {
                 AllocateMore();
             }
 
-            _buffer.AsSpan()[count++] = item;
+            // SAFETY: Capacity is available and count is a bounded index into this owned buffer.
+            unsafe
+            {
+                _buffer.AsSpan()[count++] = item;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            ref var count = ref _count.ValueRW;
+            ref var count = ref CountRW;
 
-            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)count, ThrowHelper.CollectionType.SharedListWithNative);
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange(
+                  (uint)index <= (uint)count
+                , ThrowHelper.CollectionType.SharedListWithNative
+            );
 
-            if (count == _buffer.Length)
+            if (count == _buffer.Capacity)
             {
                 AllocateMore();
             }
@@ -296,19 +404,26 @@ namespace EncosyTower.Collections
             Array.Copy(buffer, index, buffer, index + 1, count - index);
             ++count;
 
-            _buffer.AsSpan()[index] = item;
+            // SAFETY: The insertion checks and capacity growth bound the destination index.
+            unsafe
+            {
+                _buffer.AsSpan()[index] = item;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            ref var count = ref _count.ValueRW;
+            ref var count = ref CountRW;
 
-            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange((uint)index <= (uint)count, ThrowHelper.CollectionType.SharedListWithNative);
+            ThrowHelper.ThrowIfInsertionIndexIsOutOfRange(
+                  (uint)index <= (uint)count
+                , ThrowHelper.CollectionType.SharedListWithNative
+            );
 
-            if (count == _buffer.Length)
+            if (count == _buffer.Capacity)
             {
                 AllocateMore();
             }
@@ -317,36 +432,56 @@ namespace EncosyTower.Collections
             Array.Copy(buffer, index, buffer, index + 1, count - index);
             ++count;
 
-            _buffer.AsSpan()[index] = item;
+            // SAFETY: The insertion checks and capacity growth bound the destination index.
+            unsafe
+            {
+                _buffer.AsSpan()[index] = item;
+            }
         }
 
+        /// <safety>The returned reference must not outlive this list or survive resize or mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref T ElementAt(int index)
+        public unsafe ref T ElementAt(int index)
         {
-            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count.ValueRO, ThrowHelper.CollectionType.SharedListWithNative);
-            return ref _buffer.AsSpan()[index];
+            ThrowHelper.ThrowIfIndexIsOutOfRange(
+                  (uint)index < (uint)CountRO
+                , ThrowHelper.CollectionType.SharedListWithNative
+            );
+            // SAFETY: The range check bounds the returned reference to this live owned buffer.
+            unsafe
+            {
+                return ref _buffer.AsSpan()[index];
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange([NotNull] T[] items)
-            => AddRange(items, items.Length);
+        {
+            DebuggingThrowHelper.ThrowIfNull(items);
+            AddRange(items, items.Length);
+        }
 
         public void AddRange([NotNull] T[] items, int count)
         {
-            _version.ValueRW++;
+            DebuggingThrowHelper.ThrowIfNull(items);
+            VersionRW++;
 
             if (count == 0)
             {
                 return;
             }
 
-            if (_buffer.Length - _count.ValueRO < count)
+            if (_buffer.Capacity - CountRO < count)
             {
-                AllocateMore(checked(_count.ValueRO + count));
+                AllocateMore(checked(CountRO + count));
             }
 
-            items.AsSpan()[..count].CopyTo(_buffer.AsSpan().Slice(_count.ValueRO, count));
-            _count.ValueRW += count;
+            // SAFETY: Capacity and count checks bound the synchronous copy into owned storage.
+            unsafe
+            {
+                items.AsSpan()[..count].CopyTo(_buffer.AsSpan().Slice(CountRO, count));
+            }
+            CountRW += count;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -355,38 +490,44 @@ namespace EncosyTower.Collections
 
         public void AddRange(ReadOnlySpan<T> items, int count)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
             if (count == 0)
             {
                 return;
             }
 
-            if (_buffer.Length - _count.ValueRO < count)
+            if (_buffer.Capacity - CountRO < count)
             {
-                AllocateMore(checked(_count.ValueRO + count));
+                AllocateMore(checked(CountRO + count));
             }
 
-            items[..count].CopyTo(_buffer.AsSpan().Slice(_count.ValueRO, count));
-            _count.ValueRW += count;
+            // SAFETY: Capacity and count checks bound the synchronous copy into owned storage.
+            unsafe
+            {
+                items[..count].CopyTo(_buffer.AsSpan().Slice(CountRO, count));
+            }
+            CountRW += count;
         }
 
         public void AddRange([NotNull] IEnumerable<T> collection)
         {
+            DebuggingThrowHelper.ThrowIfNull(collection);
+
             if (collection is ICollection<T> c)
             {
                 var count = c.Count;
 
                 if (count > 0)
                 {
-                    if (_buffer.Length - _count.ValueRO < count)
+                    if (_buffer.Capacity - CountRO < count)
                     {
-                        AllocateMore(checked(_count.ValueRO + count));
+                        AllocateMore(checked(CountRO + count));
                     }
 
-                    c.CopyTo(_buffer.AsManagedArray(), _count.ValueRO);
-                    _count.ValueRW += count;
-                    _version.ValueRW++;
+                    c.CopyTo(_buffer.AsManagedArray(), CountRO);
+                    CountRW += count;
+                    VersionRW++;
                 }
             }
             else
@@ -403,20 +544,20 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(T item)
         {
-            var count = _count.ValueRO;
-            return count > 0 && Array.IndexOf(_buffer, item, 0, count) >= 0;
+            var count = CountRO;
+            return count > 0 && Array.IndexOf(_buffer.AsManagedArray(), item, 0, count) >= 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            _version.ValueRW++;
-            _count.ValueRW = 0;
+            VersionRW++;
+            CountRW = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(T[] destination, int destinationIndex)
-            => CopyTo(destination.AsSpan().Slice(destinationIndex, _count.ValueRO));
+            => CopyTo(destination.AsSpan().Slice(destinationIndex, CountRO));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyFrom(ReadOnlySpan<T> source)
@@ -432,7 +573,13 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
-            => new CopyFromSpan<T>(AsSpan()).CopyFrom(destinationStartIndex, source, length);
+        {
+            // SAFETY: The copy consumes the checked owner-backed span before this method returns.
+            unsafe
+            {
+                new CopyFromSpan<T>(AsSpan()).CopyFrom(destinationStartIndex, source, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyFrom(ReadOnlySpan<T> source)
@@ -448,7 +595,13 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyFrom(int destinationStartIndex, ReadOnlySpan<T> source, int length)
-            => new CopyFromSpan<T>(AsSpan()).TryCopyFrom(destinationStartIndex, source, length);
+        {
+            // SAFETY: The copy consumes the checked owner-backed span before this method returns.
+            unsafe
+            {
+                return new CopyFromSpan<T>(AsSpan()).TryCopyFrom(destinationStartIndex, source, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Span<T> destination)
@@ -464,7 +617,13 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(int sourceStartIndex, Span<T> destination, int length)
-            => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+        {
+            // SAFETY: The copy consumes the checked owner-backed span before this method returns.
+            unsafe
+            {
+                new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(Span<T> destination)
@@ -480,74 +639,65 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-            => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+        {
+            // SAFETY: The copy consumes the checked owner-backed span before this method returns.
+            unsafe
+            {
+                return new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+            }
+        }
 
+        /// <safety>This list must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Enumerator GetEnumerator()
-            => new(AsReadOnly());
+        public unsafe Enumerator GetEnumerator()
+        {
+            // SAFETY: The enumerator borrows this list and preserves version checks.
+            unsafe
+            {
+                return new(AsReadOnly());
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IncreaseCapacityBy(int amount)
-            => IncreaseCapacityTo(_buffer.Length + amount);
+            => IncreaseCapacityTo(_buffer.Capacity + amount);
 
         public int IncreaseCapacityTo(int newCapacity)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            if (newCapacity <= _buffer.Length)
+            if (newCapacity <= _buffer.Capacity)
             {
-                return _buffer.Length;
+                return _buffer.Capacity;
             }
 
             ResizeBuffer(newCapacity);
-            return _buffer.Length;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Peek()
-            => ref _buffer.AsReadOnlySpan()[_count.ValueRO - 1];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Pop()
-        {
-            _version.ValueRW++;
-            --_count.ValueRW;
-            return ref _buffer.AsReadOnlySpan()[_count.ValueRO];
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(T item)
-        {
-            Insert(_count.ValueRO, item);
-            return _count.ValueRO - 1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(in T item)
-        {
-            Insert(_count.ValueRO, item);
-            return _count.ValueRO - 1;
+            return _buffer.Capacity;
         }
 
         public bool Remove(T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
             var index = IndexOf(item);
 
-            if ((uint)index >= (uint)_count.ValueRO)
+            if ((uint)index >= (uint)CountRO)
             {
                 return false;
             }
 
-            if (index < --_count.ValueRW)
+            if (index < --CountRW)
             {
-                Array.Copy(_buffer, index + 1, _buffer, index, _count.ValueRO - index);
+                Array.Copy(_buffer.AsManagedArray(), index + 1, _buffer.AsManagedArray(), index, CountRO - index);
             }
 
             if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
-                _buffer.AsSpan()[_count.ValueRO] = default;
+                // SAFETY: The decremented count identifies the vacated slot in owned storage.
+                unsafe
+                {
+                    _buffer.AsSpan()[CountRO] = default;
+                }
             }
 
             return true;
@@ -555,23 +705,27 @@ namespace EncosyTower.Collections
 
         public bool Remove(in T item)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
             var index = IndexOf(item);
 
-            if ((uint)index >= (uint)_count.ValueRO)
+            if ((uint)index >= (uint)CountRO)
             {
                 return false;
             }
 
-            if (index < --_count.ValueRW)
+            if (index < --CountRW)
             {
-                Array.Copy(_buffer, index + 1, _buffer, index, _count.ValueRO - index);
+                Array.Copy(_buffer.AsManagedArray(), index + 1, _buffer.AsManagedArray(), index, CountRO - index);
             }
 
             if (EncosyTypeExtensions.IsUnmanaged<T>() == false)
             {
-                _buffer.AsSpan()[_count.ValueRO] = default;
+                // SAFETY: The decremented count identifies the vacated slot in owned storage.
+                unsafe
+                {
+                    _buffer.AsSpan()[CountRO] = default;
+                }
             }
 
             return true;
@@ -579,35 +733,35 @@ namespace EncosyTower.Collections
 
         public void RemoveAt(int index)
         {
-            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count.ValueRO);
+            ThrowHelper.ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)CountRO);
 
-            _version.ValueRW++;
+            VersionRW++;
 
-            if (index < --_count.ValueRW)
+            if (index < --CountRW)
             {
                 var buffer = _buffer.AsManagedArray();
-                Array.Copy(buffer, index + 1, buffer, index, _count.ValueRO - index);
+                Array.Copy(buffer, index + 1, buffer, index, CountRO - index);
             }
         }
 
         public void RemoveRange(int startIndex, int length)
         {
-            var count = _count.ValueRO;
+            var count = CountRO;
 
-            ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
+            ThrowHelper.ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
 
             var end = startIndex + length;
 
-            ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
+            ThrowHelper.ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
 
-            _version.ValueRW++;
+            VersionRW++;
 
             if (length < 1)
             {
                 return;
             }
 
-            count = _count.ValueRW -= length;
+            count = CountRW -= length;
 
             var buffer = _buffer.AsManagedArray();
 
@@ -616,102 +770,142 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count.ValueRO);
+            ThrowHelper.ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)CountRO);
 
-            _version.ValueRW++;
+            VersionRW++;
 
-            if (index < --_count.ValueRW)
+            if (index < --CountRW)
             {
-                var buffer = _buffer.AsSpan();
-                buffer[index] = buffer[_count.ValueRO];
+                // SAFETY: Removal checks and updated count bound both source and destination indices.
+                unsafe
+                {
+                    var buffer = _buffer.AsSpan();
+                    buffer[index] = buffer[CountRO];
+                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ToArray()
         {
-            return AsReadOnlySpan().ToArray();
+            // SAFETY: ToArray copies the owner-backed span before this method returns.
+            unsafe
+            {
+                return AsReadOnlySpan().ToArray();
+            }
         }
 
+        /// <safety>The returned span must not outlive this list or survive resize or mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan()
+        public unsafe Span<T> AsSpan()
         {
-            _version.ValueRW++;
-            return _buffer.AsSpan()[.._count.ValueRO];
+            VersionRW++;
+
+            // SAFETY: This list owns the live buffer for the returned mutable span lifetime.
+            unsafe
+            {
+                return _buffer.AsSpan()[..CountRO];
+            }
         }
 
+        /// <safety>The returned span must not outlive this list or survive resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<T> AsReadOnlySpan()
+        public unsafe ReadOnlySpan<T> AsReadOnlySpan()
         {
-            return _buffer.AsReadOnlySpan()[.._count.ValueRO];
+            // SAFETY: This list owns the live buffer for the returned read-only span lifetime.
+            unsafe
+            {
+                return _buffer.AsReadOnlySpan()[..CountRO];
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Trim()
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            if (_count.ValueRO < _buffer.Length)
+            if (CountRO < _buffer.Capacity)
             {
-                ResizeBuffer(_count.ValueRO);
+                ResizeBuffer(CountRO);
             }
         }
 
-        public Span<T> AddReplicate(int amount)
+        /// <safety>The returned span must not outlive this list or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicate(int amount)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            var oldCount = _count.ValueRO;
+            var oldCount = CountRO;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
                 AllocateMore(newCount);
             }
 
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
+            Span<T> buffer;
+
+            // SAFETY: Growth completed and the requested range is bounded by the new capacity.
+            unsafe
+            {
+                buffer = _buffer.AsSpan().Slice(oldCount, amount);
+            }
             buffer.Fill(default);
-            _count.ValueRW = newCount;
+            CountRW = newCount;
 
             return buffer;
         }
 
-        public Span<T> AddReplicate(T value, int amount)
+        /// <safety>The returned span must not outlive this list or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicate(T value, int amount)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            var oldCount = _count.ValueRO;
+            var oldCount = CountRO;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
                 AllocateMore(newCount);
             }
 
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
+            Span<T> buffer;
+
+            // SAFETY: Growth completed and the requested range is bounded by the new capacity.
+            unsafe
+            {
+                buffer = _buffer.AsSpan().Slice(oldCount, amount);
+            }
             buffer.Fill(value);
-            _count.ValueRW = newCount;
+            CountRW = newCount;
 
             return buffer;
         }
 
-        public Span<T> AddReplicateNoInit(int amount)
+        /// <safety>The returned span must not outlive this list or survive another mutation.</safety>
+        public unsafe Span<T> AddReplicateNoInit(int amount)
         {
-            _version.ValueRW++;
+            VersionRW++;
 
-            var oldCount = _count.ValueRO;
+            var oldCount = CountRO;
             var newCount = amount + oldCount;
-            var offset = newCount - _buffer.Length;
+            var offset = newCount - _buffer.Capacity;
 
             if (offset > 0)
             {
                 AllocateMore(newCount);
             }
 
-            var buffer = _buffer.AsSpan().Slice(oldCount, amount);
-            _count.ValueRW = newCount;
+            Span<T> buffer;
+
+            // SAFETY: Growth completed and the requested range is bounded by the new capacity.
+            unsafe
+            {
+                buffer = _buffer.AsSpan().Slice(oldCount, amount);
+            }
+            CountRW = newCount;
 
             return buffer;
         }
@@ -720,7 +914,12 @@ namespace EncosyTower.Collections
         public static SharedList<T, TNative> Prefill(int amount)
         {
             var list = new SharedList<T, TNative>(amount);
-            list.AddReplicate(amount);
+
+            // SAFETY: The new list owns the returned span and does not expose it.
+            unsafe
+            {
+                list.AddReplicate(amount);
+            }
             return list;
         }
 
@@ -728,7 +927,12 @@ namespace EncosyTower.Collections
         public static SharedList<T, TNative> Prefill(T value, int amount)
         {
             var list = new SharedList<T, TNative>(amount);
-            list.AddReplicate(value, amount);
+
+            // SAFETY: The new list owns the returned span and does not expose it.
+            unsafe
+            {
+                list.AddReplicate(value, amount);
+            }
             return list;
         }
 
@@ -742,172 +946,33 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore()
         {
-            var newCapacity = CalcNewCapacity(_buffer.Length + 1);
+            var newCapacity = CalcNewCapacity(_buffer.Capacity + 1);
             ResizeBuffer(newCapacity);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AllocateMore(int newSize)
         {
-            ThrowHelper.ThrowIfNewCapacityIsInvalid(newSize > _buffer.Length);
+            ThrowHelper.ThrowIfNewCapacityIsInvalid(newSize > _buffer.Capacity);
 
             var newCapacity = CalcNewCapacity(newSize);
             ResizeBuffer(newCapacity);
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indices for the SharedList<T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
-        {
-            if (isNonNegative == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is less than 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool isNonNegative)
-        {
-            if (isNonNegative == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("count is less than 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSectionIsInvalid([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index and count do not specify a valid section in the SharedList<T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indices for the SharedList<T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound start index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound length");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
-        {
-            if (exceedsCapacity == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("newSize is not greater than the current capacity");
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InitializeNativeData()
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            _safety = AtomicSafetyHandle.Create();
+            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(_safety, true);
+#endif
+
             // SAFETY: The managed buffer and shared counters remain pinned for the native view lifetime.
             unsafe
             {
                 _nativeData = SharedListUnsafe<TNative>.Alloc(
                       _buffer.GetUnsafeBufferPointer()
-                    , _buffer.Length
+                    , _buffer.Capacity
                     , _count.GetUnsafeBufferPointer()
                     , _version.GetUnsafeBufferPointer()
                     , Allocator.Persistent
@@ -922,7 +987,7 @@ namespace EncosyTower.Collections
             unsafe
             {
                 _nativeData->_buffer = _buffer.GetUnsafeBufferPointer();
-                _nativeData->_capacity = _buffer.Length;
+                _nativeData->_capacity = _buffer.Capacity;
                 _nativeData->_count = _count.GetUnsafeBufferPointer();
                 _nativeData->_version = _version.GetUnsafeBufferPointer();
             }
@@ -931,16 +996,110 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ResizeBuffer(int newCapacity)
         {
-            _buffer.Resize(newCapacity);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+            // SAFETY: This list owns the buffer and invalidated secondary aliases before relocation.
+            unsafe
+            {
+                _buffer.Resize(newCapacity);
+            }
+
             RefreshNativeData();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => GetEnumerator();
+        internal ref readonly int CountRO
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckRead();
+                // SAFETY: The read check validates the owned scalar count buffer.
+                unsafe
+                {
+                    return ref _count[0];
+                }
+            }
+        }
+
+        internal ref int CountRW
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckWrite();
+                // SAFETY: The write check validates the owned scalar count buffer.
+                unsafe
+                {
+                    return ref _count[0];
+                }
+            }
+        }
+
+        internal ref readonly int VersionRO
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckRead();
+                // SAFETY: The read check validates the owned scalar version buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
+
+        internal ref int VersionRW
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                CheckWrite();
+                // SAFETY: The write check validates the owned scalar version buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        private void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(_safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(_safety);
+#endif
+        }
+
+        /// <safety>This list must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            // SAFETY: The interface enumerator borrows this list and preserves version checks.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
+
+        /// <safety>This list must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The interface enumerator borrows this list and preserves version checks.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
     }
 }

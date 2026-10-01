@@ -33,10 +33,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, ListNativeReadOnlyAPI.BinarySearch(in view, 5, comparer));
             Assert.AreEqual(2, ListNativeReadOnlyAPI.BinarySearch(in view, in five, comparer));
             Assert.AreEqual(1, ListNativeReadOnlyAPI.BinarySearch(in view, 1, 2, 3, comparer));
-            Assert.Less(
-                  ListNativeReadOnlyAPI.BinarySearch(in view, 1, 2, in seven, comparer)
-                , 0
-            );
+            Assert.Less(ListNativeReadOnlyAPI.BinarySearch(in view, 1, 2, in seven, comparer), 0);
             Assert.Less(ListNativeReadOnlyAPI.BinarySearch(in view, 4, comparer), 0);
         }
     }

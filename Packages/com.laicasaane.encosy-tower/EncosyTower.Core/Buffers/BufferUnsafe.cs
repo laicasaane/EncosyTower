@@ -1,15 +1,13 @@
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Buffers
 {
@@ -86,11 +84,7 @@ namespace EncosyTower.Buffers
                 ThrowHelper.ThrowIfBufferAlreadyAllocated(IsCreated == false);
 
                 _buffer = newCapacity > 0
-                    ? allocatorStrategy.Allocate(
-                          UnsafeUtility.SizeOf<T>()
-                        , UnsafeUtility.AlignOf<T>()
-                        , newCapacity
-                    )
+                    ? allocatorStrategy.Allocate(UnsafeUtility.SizeOf<T>(), UnsafeUtility.AlignOf<T>(), newCapacity)
                     : null;
 
                 _capacity = newCapacity;
@@ -126,11 +120,7 @@ namespace EncosyTower.Buffers
                 }
 
                 var newBuffer = newCapacity > 0
-                    ? _allocator.Allocate(
-                          UnsafeUtility.SizeOf<T>()
-                        , UnsafeUtility.AlignOf<T>()
-                        , newCapacity
-                    )
+                    ? _allocator.Allocate(UnsafeUtility.SizeOf<T>(), UnsafeUtility.AlignOf<T>(), newCapacity)
                     : null;
 
                 var copyCount = Math.Min(_capacity, newCapacity);
@@ -285,7 +275,7 @@ namespace EncosyTower.Buffers
             // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
-                ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
+                CollectionsThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
                     UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                 );
 
@@ -459,7 +449,7 @@ namespace EncosyTower.Buffers
                 // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
                 unsafe
                 {
-                    ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
+                    CollectionsThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
                         UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                     );
 
@@ -471,28 +461,14 @@ namespace EncosyTower.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(BufferUnsafe<T> buffer)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(buffer);
+
                 // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
                 unsafe
                 {
                     return new ReadOnly(buffer._buffer, buffer._capacity, buffer._allocator);
                 }
             }
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAlreadyDisposed([DoesNotReturnIf(false)] bool isCreated)
-        {
-            if (isCreated == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Cannot dispose an already disposed buffer.");
         }
 
     }

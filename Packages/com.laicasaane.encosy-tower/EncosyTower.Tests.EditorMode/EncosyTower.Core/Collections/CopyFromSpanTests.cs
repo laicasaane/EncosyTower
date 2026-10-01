@@ -16,7 +16,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.AreEqual(4, direct.Length);
             Assert.AreEqual(4, converted.Length);
-            Assert.AreEqual(3, direct.Slice(1).Length);
+            Assert.AreEqual(3, direct[1..].Length);
             Assert.AreEqual(2, direct.Slice(1, 2).Length);
             Assert.AreEqual(3, span[2]);
             Assert.IsTrue(direct.TrySlice(4, out var empty));

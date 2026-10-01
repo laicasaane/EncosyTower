@@ -27,6 +27,9 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Types;
 
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Buffers
 {
     /// <summary>
@@ -37,8 +40,7 @@ namespace EncosyTower.Buffers
     /// and <see cref="BufferUnsafe{T}"/> through the <see cref="IBuffer{T}"/> contract.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public struct BufferManaged<T> : IBuffer<T>, IRefIndexer<T>
-        , IAsMemory<T>, IAsReadOnlyMemory<T>
+    public struct BufferManaged<T> : IBuffer<T>, IRefIndexer<T>, IAsMemory<T>, IAsReadOnlyMemory<T>
     {
         internal T[] _buffer;
 
@@ -71,7 +73,7 @@ namespace EncosyTower.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
+                CollectionsThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
                 return ref _buffer[index];
             }
         }
@@ -227,14 +229,15 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Dispose() { }
 
-        public readonly struct ReadOnly : IReadOnlyBuffer<T>, IRefReadOnlyIndexer<T>
-            , IAsReadOnlyMemory<T>
+        public readonly struct ReadOnly : IReadOnlyBuffer<T>, IRefReadOnlyIndexer<T>, IAsReadOnlyMemory<T>
         {
             internal readonly T[] _buffer;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnly(BufferManaged<T> buffer)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(buffer);
+
                 _buffer = buffer._buffer;
             }
 
@@ -255,7 +258,7 @@ namespace EncosyTower.Buffers
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
+                    CollectionsThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_buffer.Length);
                     return ref _buffer[index];
                 }
             }
@@ -311,7 +314,10 @@ namespace EncosyTower.Buffers
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(BufferManaged<T> buffer)
-                => new(buffer);
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(buffer);
+                return new(buffer);
+            }
         }
     }
 }

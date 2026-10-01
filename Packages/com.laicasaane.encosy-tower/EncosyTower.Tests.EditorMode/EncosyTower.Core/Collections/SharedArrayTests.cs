@@ -61,30 +61,21 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void Resize_DefaultPreservesContentAndChangesLength()
+        public void Length_RemainsFixedWhileManagedAndNativeAliasesMutateElements()
         {
             using var array = new SharedArray<int>(new[] { 1, 2, 3 });
 
-            array.Resize(5);
+            // SAFETY: array remains the live owner while the borrowed native view is used.
+            unsafe
+            {
+                var native = array.AsNative();
 
-            Assert.AreEqual(5, array.Length);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 0, 0 }, array.AsManagedArray());
+                array[0] = 10;
+                native[1] = 20;
 
-            array.Resize(2);
-
-            Assert.AreEqual(2, array.Length);
-            CollectionAssert.AreEqual(new[] { 1, 2 }, array.AsManagedArray());
-        }
-
-        [Test]
-        public void Resize_WithoutCopyClearsContent()
-        {
-            using var array = new SharedArray<int>(new[] { 1, 2, 3 });
-
-            array.Resize(4, false);
-
-            Assert.AreEqual(4, array.Length);
-            CollectionAssert.AreEqual(new[] { 0, 0, 0, 0 }, array.AsManagedArray());
+                Assert.AreEqual(3, array.Length);
+                CollectionAssert.AreEqual(new[] { 10, 20, 3 }, array.AsManagedArray());
+            }
         }
 
         [Test]
@@ -92,25 +83,29 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var array = new SharedArray<int>(new[] { 10, 20, 30 });
 
-            var managed = array.AsManagedArray();
-            var segment = array.AsArraySegment();
-            var span = array.AsSpan();
-            var readOnlySpan = array.AsReadOnlySpan();
-            var memory = array.AsMemory();
-            var readOnlyMemory = array.AsReadOnlyMemory();
-            var nativeArray = array.AsNativeArray();
-            var nativeSlice = array.AsNativeSlice();
+            // SAFETY: array remains the live owner while all borrowed views are inspected.
+            unsafe
+            {
+                var managed = array.AsManagedArray();
+                var segment = array.AsArraySegment();
+                var span = array.AsSpan();
+                var readOnlySpan = array.AsReadOnlySpan();
+                var memory = array.AsMemory();
+                var readOnlyMemory = array.AsReadOnlyMemory();
+                var nativeArray = array.AsNativeArray();
+                var nativeSlice = array.AsNativeSlice();
 
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, managed);
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, segment);
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, span.ToArray());
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, readOnlySpan.ToArray());
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, memory.ToArray());
-            CollectionAssert.AreEqual(new[] { 10, 20, 30 }, readOnlyMemory.ToArray());
-            Assert.AreEqual(3, nativeArray.Length);
-            Assert.AreEqual(20, nativeArray[1]);
-            Assert.AreEqual(3, nativeSlice.Length);
-            Assert.AreEqual(30, nativeSlice[2]);
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, managed);
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, segment);
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, span.ToArray());
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, readOnlySpan.ToArray());
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, memory.ToArray());
+                CollectionAssert.AreEqual(new[] { 10, 20, 30 }, readOnlyMemory.ToArray());
+                Assert.AreEqual(3, nativeArray.Length);
+                Assert.AreEqual(20, nativeArray[1]);
+                Assert.AreEqual(3, nativeSlice.Length);
+                Assert.AreEqual(30, nativeSlice[2]);
+            }
         }
 
         [Test]
@@ -118,34 +113,42 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var array = new SharedArray<int>(new[] { 10, 20, 30 });
 
-            int[] managed = array;
-            ArraySegment<int> segment = array;
-            Span<int> span = array;
-            ReadOnlySpan<int> readOnlySpan = array;
-            Memory<int> memory = array;
-            ReadOnlyMemory<int> readOnlyMemory = array;
-            NativeArray<int> nativeArray = array;
-            NativeSlice<int> nativeSlice = array;
+            // SAFETY: array remains the live owner while all borrowed implicit views are inspected.
+            unsafe
+            {
+                int[] managed = array;
+                ArraySegment<int> segment = array;
+                Span<int> span = array;
+                ReadOnlySpan<int> readOnlySpan = array;
+                Memory<int> memory = array;
+                ReadOnlyMemory<int> readOnlyMemory = array;
+                NativeArray<int> nativeArray = array;
+                NativeSlice<int> nativeSlice = array;
 
-            Assert.AreEqual(20, managed[1]);
-            Assert.AreEqual(20, segment.Array[segment.Offset + 1]);
-            Assert.AreEqual(20, span[1]);
-            Assert.AreEqual(20, readOnlySpan[1]);
-            Assert.AreEqual(20, memory.Span[1]);
-            Assert.AreEqual(20, readOnlyMemory.Span[1]);
-            Assert.AreEqual(20, nativeArray[1]);
-            Assert.AreEqual(20, nativeSlice[1]);
+                Assert.AreEqual(20, managed[1]);
+                Assert.AreEqual(20, segment.Array[segment.Offset + 1]);
+                Assert.AreEqual(20, span[1]);
+                Assert.AreEqual(20, readOnlySpan[1]);
+                Assert.AreEqual(20, memory.Span[1]);
+                Assert.AreEqual(20, readOnlyMemory.Span[1]);
+                Assert.AreEqual(20, nativeArray[1]);
+                Assert.AreEqual(20, nativeSlice[1]);
+            }
         }
 
         [Test]
         public void AsNativeArray_WriteIsVisibleThroughIndexer()
         {
             using var array = new SharedArray<int>(new[] { 1, 2, 3 });
-            var nativeArray = array.AsNativeArray();
+            // SAFETY: array remains the live owner while the borrowed native array is mutated.
+            unsafe
+            {
+                var nativeArray = array.AsNativeArray();
 
-            nativeArray[1] = 99;
+                nativeArray[1] = 99;
 
-            Assert.AreEqual(99, array[1]);
+                Assert.AreEqual(99, array[1]);
+            }
         }
 
         [Test]
@@ -172,9 +175,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var array = new SharedArray<int>(new[] { 1, 2, 3 });
             var values = new List<int>();
 
-            foreach (var value in array)
+            // SAFETY: array remains alive and unmodified for the complete enumeration.
+            unsafe
             {
-                values.Add(value);
+                foreach (var value in array)
+                {
+                    values.Add(value);
+                }
             }
 
             CollectionAssert.AreEqual(new[] { 1, 2, 3 }, values);
@@ -184,12 +191,16 @@ namespace EncosyTower.Tests.Core.Collections
         public void Enumerator_MutationDuringIteration_Throws()
         {
             using var array = new SharedArray<int>(new[] { 1, 2, 3 });
-            var enumerator = array.GetEnumerator();
+            // SAFETY: array remains alive while the enumerator's version guard is exercised.
+            unsafe
+            {
+                var enumerator = array.GetEnumerator();
 
-            Assert.IsTrue(enumerator.MoveNext());
-            array[0] = 10;
+                Assert.IsTrue(enumerator.MoveNext());
+                array[0] = 10;
 
-            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+                Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+            }
         }
 
         [Test]
@@ -203,21 +214,17 @@ namespace EncosyTower.Tests.Core.Collections
 
         [Test]
         [TestRequiresCollectionChecks]
-        public void NativeViewCreatedBeforeResize_ThrowsOnAccess()
+        public void NativeViewCreatedBeforeDispose_ThrowsOnAccessAfterDispose()
         {
             var array = new SharedArray<int>(new[] { 1, 2, 3 });
-
-            try
+            // SAFETY: This test intentionally keeps a borrowed view past owner disposal to verify safety checks.
+            unsafe
             {
-                var staleView = array.AsNativeArray();
+                var staleView = array.AsNative();
 
-                array.Resize(4);
+                array.Dispose();
 
                 Assert.Catch(() => staleView[0] = 99);
-            }
-            finally
-            {
-                array.Dispose();
             }
         }
 
@@ -267,15 +274,19 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(7, interfaceEnumerator.Current);
             direct.Dispose();
 
-            IEnumerable<int> genericEnumerable = array;
-            var genericEnumerator = genericEnumerable.GetEnumerator();
-            Assert.IsTrue(genericEnumerator.MoveNext());
-            genericEnumerator.Dispose();
+            // SAFETY: array remains alive and unmodified while both interface enumerators are consumed.
+            unsafe
+            {
+                IEnumerable<int> genericEnumerable = array;
+                var genericEnumerator = genericEnumerable.GetEnumerator();
+                Assert.IsTrue(genericEnumerator.MoveNext());
+                genericEnumerator.Dispose();
 
-            IEnumerable enumerable = array;
-            var enumerator = enumerable.GetEnumerator();
-            Assert.IsTrue(enumerator.MoveNext());
-            Assert.AreEqual(7, enumerator.Current);
+                IEnumerable enumerable = array;
+                var enumerator = enumerable.GetEnumerator();
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.AreEqual(7, enumerator.Current);
+            }
         }
     }
 }

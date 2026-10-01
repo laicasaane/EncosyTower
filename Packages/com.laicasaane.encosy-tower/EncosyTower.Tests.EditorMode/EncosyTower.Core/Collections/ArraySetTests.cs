@@ -136,10 +136,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Array.Clear(destination, 0, destination.Length);
             set.CopyTo(1, destination.AsSpan(), 2);
-            CollectionAssert.AreEqual(
-                  expected.AsSpan(1, 2).ToArray()
-                , destination.AsSpan(0, 2).ToArray()
-            );
+            CollectionAssert.AreEqual(expected.AsSpan(1, 2).ToArray(), destination.AsSpan(0, 2).ToArray());
 
             Assert.IsTrue(set.TryCopyTo(destination.AsSpan()));
             Assert.IsTrue(set.TryCopyTo(destination.AsSpan(), 2));
@@ -310,10 +307,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Array.Clear(destination, 0, destination.Length);
             direct.CopyTo(1, destination.AsSpan(), 2);
-            CollectionAssert.AreEqual(
-                  expected.AsSpan(1, 2).ToArray()
-                , destination.AsSpan(0, 2).ToArray()
-            );
+            CollectionAssert.AreEqual(expected.AsSpan(1, 2).ToArray(), destination.AsSpan(0, 2).ToArray());
 
             Assert.IsTrue(direct.TryCopyTo(destination.AsSpan()));
             Assert.IsTrue(direct.TryCopyTo(destination.AsSpan(), 2));

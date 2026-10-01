@@ -9,31 +9,48 @@ using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class SharedListNativeExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Contains<T>([NotNull] this in SharedListNative<T> self, T item)
+        public static bool Contains<T>(this in SharedListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
         {
-            var items = self.AsReadOnlySpan();
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            ReadOnlySpan<T> items;
+
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is consumed.
+            unsafe
+            {
+                items = self.AsReadOnlySpan();
+            }
             var length = items.Length;
             return length > 0 && MemoryExtensions.IndexOf(items, item) >= 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Contains<T>([NotNull] this in SharedListNative<T> self, in T item)
+        public static bool Contains<T>(this in SharedListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
         {
-            var items = self.AsReadOnlySpan();
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            ReadOnlySpan<T> items;
+
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is consumed.
+            unsafe
+            {
+                items = self.AsReadOnlySpan();
+            }
             var length = items.Length;
             return length > 0 && MemoryExtensions.IndexOf(items, item) >= 0;
         }
 
-        public static bool Remove<T>([NotNull] this in SharedListNative<T> self, T item)
+        public static bool Remove<T>(this in SharedListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var index = IndexOf(self, item);
 
             if (index < 0)
@@ -45,9 +62,10 @@ namespace EncosyTower.Collections.Extensions
             return true;
         }
 
-        public static bool Remove<T>([NotNull] this in SharedListNative<T> self, in T item)
+        public static bool Remove<T>(this in SharedListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var index = IndexOf(self, in item);
 
             if (index < 0)
@@ -61,20 +79,21 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
-              [NotNull] this in SharedListNative<T> self
+              this in SharedListNative<T> self
             , T item
             , TComparer comparer
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(self, 0, self.Count, item, comparer);
         }
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
-              [NotNull] this in SharedListNative<T> self
+              this in SharedListNative<T> self
             , int index
             , int count
             , T item
@@ -83,6 +102,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self.Count - index >= count);
@@ -93,19 +113,20 @@ namespace EncosyTower.Collections.Extensions
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
-              [NotNull] this in SharedListNative<T> self
+              this in SharedListNative<T> self
             , in T item
             , TComparer comparer
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(self, 0, self.Count, in item, comparer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
-            [NotNull] this in SharedListNative<T> self
+            this in SharedListNative<T> self
             , int index
             , int count
             , in T item
@@ -114,6 +135,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self.Count - index >= count);
@@ -123,74 +145,117 @@ namespace EncosyTower.Collections.Extensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, T item)
-            where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item, 0);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, T item, int index)
-            where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item, index, self.Count - index);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, T item, int index, int count)
+        public static int IndexOf<T>(this in SharedListNative<T> self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item, 0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOf<T>(this in SharedListNative<T> self, T item, int index)
+            where T : unmanaged, IEquatable<T>
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item, index, self.Count - index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOf<T>(this in SharedListNative<T> self, T item, int index, int count)
+            where T : unmanaged, IEquatable<T>
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self.Count);
 
-            var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
+            int result;
+
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is searched.
+            unsafe
+            {
+                result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
+            }
             return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, in T item)
-            where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, 0);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, in T item, int index)
-            where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, index, self.Count - index);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T>([NotNull] this in SharedListNative<T> self, in T item, int index, int count)
+        public static int IndexOf<T>(this in SharedListNative<T> self, in T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, 0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOf<T>(this in SharedListNative<T> self, in T item, int index)
+            where T : unmanaged, IEquatable<T>
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, index, self.Count - index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int IndexOf<T>(this in SharedListNative<T> self, in T item, int index, int count)
+            where T : unmanaged, IEquatable<T>
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self.Count);
 
-            var result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
+            int result;
+
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is searched.
+            unsafe
+            {
+                result = MemoryExtensions.IndexOf(self.AsReadOnlySpan().Slice(index, count), item);
+            }
             return result < 0 ? result : result + index;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int IndexOf<T, TComparer>([NotNull] this in SharedListNative<T> self, T item, TComparer comparer)
+        public static int IndexOf<T, TComparer>(this in SharedListNative<T> self, T item, TComparer comparer)
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
-                => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is searched.
+            unsafe
+            {
+                return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T, TComparer>(
-              [NotNull] this in SharedListNative<T> self
+              this in SharedListNative<T> self
             , in T item
             , TComparer comparer
         )
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
-                => EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            // SAFETY: The native view's owner remains alive and unmodified while the borrowed span is searched.
+            unsafe
+            {
+                return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Sort<T, TComparer>([NotNull] this in SharedListNative<T> self, TComparer comparer)
+        public static void Sort<T, TComparer>(this in SharedListNative<T> self, TComparer comparer)
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Sort(self, 0, self.Count, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            Sort(self, 0, self.Count, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sort<T, TComparer>(
-              [NotNull] this in SharedListNative<T> self
+              this in SharedListNative<T> self
             , int index
             , int count
             , TComparer comparer
@@ -198,6 +263,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfOffsetLengthIsValid(self.Count - index >= count);
@@ -255,10 +321,7 @@ namespace EncosyTower.Collections.Extensions
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException()
-                => new(
-                    "Index and count do not denote a valid range in " +
-                    "SharedListNative<T>."
-                );
+                => new("Index and count do not denote a valid range in SharedListNative<T>.");
         }
 
         [HideInCallstack, StackTraceHidden]
@@ -274,10 +337,7 @@ namespace EncosyTower.Collections.Extensions
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException()
-                => new(
-                    "Index and count do not specify a valid section in " +
-                    "SharedListNative<T>."
-                );
+                => new("Index and count do not specify a valid section in SharedListNative<T>.");
         }
 
         [HideInCallstack, StackTraceHidden]

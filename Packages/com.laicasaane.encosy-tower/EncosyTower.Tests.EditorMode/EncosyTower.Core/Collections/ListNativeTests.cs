@@ -52,7 +52,7 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void ValueAndInOverloads_AddInsertAndPushExpectedValues()
+        public void ValueAndInOverloads_AddAndInsertExpectedValues()
         {
             using var list = new ListNative<int>(4, Allocator.Temp);
             var two = 2;
@@ -64,10 +64,7 @@ namespace EncosyTower.Tests.Core.Collections
             list.Insert(2, three);
             list.Insert(3, in four);
 
-            var five = 5;
-            Assert.AreEqual(4, list.Push(in five));
-
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5 }, list.ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, list.ToArray());
         }
 
         [Test]
@@ -226,19 +223,6 @@ namespace EncosyTower.Tests.Core.Collections
             CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, full.ToArray());
             CollectionAssert.AreEqual(new[] { 2, 3, 0 }, partial.ToArray());
             CollectionAssert.AreEqual(new[] { 0, 2, 3, 4 }, sliceOwner.ToArray());
-        }
-
-        [Test]
-        public void PeekPopAndPush_UseListTail()
-        {
-            using var list = new ListNative<int>(2, Allocator.Temp);
-
-            Assert.AreEqual(0, list.Push(10));
-            Assert.AreEqual(1, list.Push(20));
-            Assert.AreEqual(20, list.Peek());
-            Assert.AreEqual(20, list.Pop());
-            Assert.AreEqual(1, list.Count);
-            Assert.AreEqual(10, list.Peek());
         }
 
         [Test]

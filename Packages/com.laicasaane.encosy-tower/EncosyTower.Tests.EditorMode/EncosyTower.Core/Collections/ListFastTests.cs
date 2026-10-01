@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using NUnit.Framework;
 
@@ -18,8 +19,8 @@ namespace EncosyTower.Tests.Core.Collections
         {
             var empty = new ListFast<int>();
             var source = new List<int> { 1, 2, 3 };
-            var wrapped = new ListFast<int>(source);
-            var same = new ListFast<int>(source);
+            var wrapped = source.AsListFast();
+            var same = source.AsListFast();
             var other = NewList(1, 2, 3);
             ListFast<int> notCreated = default;
             ListFast<int> convertedFromList = source;
@@ -50,7 +51,7 @@ namespace EncosyTower.Tests.Core.Collections
         public void Add_GrowsAndKeepsAllValues()
         {
             const int N = 200;
-            var list = new ListFast<int>(new List<int>(1));
+            var list = new ListFast<int>(1);
             var first = 0;
 
             list.Add(in first);
@@ -327,23 +328,6 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void PeekPopPush_UseStackSemantics()
-        {
-            var list = NewList(1, 2);
-            var three = 3;
-
-            var index = list.Push(in three);
-            var peeked = list.Peek();
-            var popped = list.Pop();
-
-            Assert.AreEqual(2, index);
-            Assert.AreEqual(3, peeked);
-            Assert.AreEqual(3, popped);
-            Assert.AreEqual(2, list.Count);
-            Assert.AreEqual(2, list.Push(4));
-        }
-
-        [Test]
         public void Spans_ReflectListContentAndCount()
         {
             var list = NewList(1, 2, 3);
@@ -361,7 +345,7 @@ namespace EncosyTower.Tests.Core.Collections
         public void CapacityOperations_GrowAndTrimToCount()
         {
             var backing = new List<int>(4) { 1, 2 };
-            var list = new ListFast<int>(backing);
+            var list = backing.AsListFast();
             var initialCapacity = list.Capacity;
 
             list.IncreaseCapacityBy(5);
@@ -468,7 +452,7 @@ namespace EncosyTower.Tests.Core.Collections
         public void ReadOnly_ConstructorsPropertiesConversionsEqualityAndCopiesReflectOwner()
         {
             var backing = new List<int> { 1, 2, 3, 4 };
-            var list = new ListFast<int>(backing);
+            var list = backing.AsListFast();
             var defaultConstructed = new ListFast<int>.ReadOnly();
             var constructed = new ListFast<int>.ReadOnly(list);
             var fromMethod = list.AsReadOnly();
@@ -664,7 +648,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.Throws<InvalidOperationException>(() => empty.RemoveRange(0, 0));
 
-            var list = new ListFast<int>(new List<int> { 1, 2, 3 });
+            var list = new ListFast<int> { 1, 2, 3 };
 
             Assert.Throws<InvalidOperationException>(() => list.RemoveRange(3, 0));
 

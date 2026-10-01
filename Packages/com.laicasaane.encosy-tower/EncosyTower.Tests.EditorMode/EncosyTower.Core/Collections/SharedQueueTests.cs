@@ -142,41 +142,45 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsTrue(queue.TryCopyTo(1, ownerLength, 2));
             Assert.IsFalse(queue.TryCopyTo(3, ownerPartial));
 
-            SharedQueue<int, int>.ReadOnly readOnly = queue;
-            var readOnlyFull = new int[4];
-            var readOnlyPartial = new int[2];
-            var readOnlyOffset = new int[2];
-            var readOnlyLength = new int[3];
+            // SAFETY: queue remains the live owner while both borrowed read-only aliases are exercised.
+            unsafe
+            {
+                SharedQueue<int, int>.ReadOnly readOnly = queue;
+                var readOnlyFull = new int[4];
+                var readOnlyPartial = new int[2];
+                var readOnlyOffset = new int[2];
+                var readOnlyLength = new int[3];
 
-            Assert.IsTrue(readOnly.IsCreated);
-            Assert.AreEqual(4, readOnly.Count);
-            Assert.GreaterOrEqual(readOnly.Capacity, 4);
-            Assert.AreEqual(1, readOnly.Peek());
-            Assert.IsTrue(readOnly.TryPeek(out var peeked));
-            Assert.AreEqual(1, peeked);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, readOnly.ToArray());
+                Assert.IsTrue(readOnly.IsCreated);
+                Assert.AreEqual(4, readOnly.Count);
+                Assert.GreaterOrEqual(readOnly.Capacity, 4);
+                Assert.AreEqual(1, readOnly.Peek());
+                Assert.IsTrue(readOnly.TryPeek(out var peeked));
+                Assert.AreEqual(1, peeked);
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, readOnly.ToArray());
 
-            readOnly.CopyTo(readOnlyFull);
-            readOnly.CopyTo(readOnlyPartial.AsSpan(), 2);
-            readOnly.CopyTo(1, readOnlyOffset);
-            readOnly.CopyTo(1, readOnlyLength, 2);
+                readOnly.CopyTo(readOnlyFull);
+                readOnly.CopyTo(readOnlyPartial.AsSpan(), 2);
+                readOnly.CopyTo(1, readOnlyOffset);
+                readOnly.CopyTo(1, readOnlyLength, 2);
 
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, readOnlyFull);
-            CollectionAssert.AreEqual(new[] { 1, 2 }, readOnlyPartial);
-            CollectionAssert.AreEqual(new[] { 2, 3 }, readOnlyOffset);
-            CollectionAssert.AreEqual(new[] { 2, 3, 0 }, readOnlyLength);
-            Assert.IsTrue(readOnly.TryCopyTo(readOnlyFull));
-            Assert.IsTrue(readOnly.TryCopyTo(readOnlyPartial, 2));
-            Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyOffset));
-            Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyLength, 2));
-            Assert.IsFalse(readOnly.TryCopyTo(3, readOnlyPartial));
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, readOnlyFull);
+                CollectionAssert.AreEqual(new[] { 1, 2 }, readOnlyPartial);
+                CollectionAssert.AreEqual(new[] { 2, 3 }, readOnlyOffset);
+                CollectionAssert.AreEqual(new[] { 2, 3, 0 }, readOnlyLength);
+                Assert.IsTrue(readOnly.TryCopyTo(readOnlyFull));
+                Assert.IsTrue(readOnly.TryCopyTo(readOnlyPartial, 2));
+                Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyOffset));
+                Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyLength, 2));
+                Assert.IsFalse(readOnly.TryCopyTo(3, readOnlyPartial));
 
-            var nativeReadOnly = readOnly.AsNative();
-            Assert.AreEqual(4, nativeReadOnly.Count);
+                var nativeReadOnly = readOnly.AsNative();
+                Assert.AreEqual(4, nativeReadOnly.Count);
 
-            queue.Clear();
-            Assert.IsFalse(readOnly.TryPeek(out peeked));
-            Assert.AreEqual(0, peeked);
+                queue.Clear();
+                Assert.IsFalse(readOnly.TryPeek(out peeked));
+                Assert.AreEqual(0, peeked);
+            }
         }
 
         [Test]
@@ -194,22 +198,26 @@ namespace EncosyTower.Tests.Core.Collections
                 queue.IncreaseCapacityTo(increased + 2);
                 Assert.GreaterOrEqual(queue.Capacity, increased + 2);
 
-                SharedQueueNative<int> native = queue;
-                Assert.AreEqual(2, native.Count);
+                // SAFETY: queue remains alive and unmodified while its aliases and enumerators are used.
+                unsafe
+                {
+                    SharedQueueNative<int> native = queue;
+                    Assert.AreEqual(2, native.Count);
 
-                var ownerEnumerator = queue.GetEnumerator();
-                Assert.IsTrue(ownerEnumerator.MoveNext());
-                Assert.AreEqual(1, ownerEnumerator.Current);
-                ownerEnumerator.Reset();
-                Assert.IsTrue(ownerEnumerator.MoveNext());
-                ownerEnumerator.Dispose();
+                    var ownerEnumerator = queue.GetEnumerator();
+                    Assert.IsTrue(ownerEnumerator.MoveNext());
+                    Assert.AreEqual(1, ownerEnumerator.Current);
+                    ownerEnumerator.Reset();
+                    Assert.IsTrue(ownerEnumerator.MoveNext());
+                    ownerEnumerator.Dispose();
 
-                var readOnlyEnumerator = queue.AsReadOnly().GetEnumerator();
-                Assert.IsTrue(readOnlyEnumerator.MoveNext());
-                Assert.AreEqual(1, readOnlyEnumerator.Current);
-                readOnlyEnumerator.Reset();
-                Assert.IsTrue(readOnlyEnumerator.MoveNext());
-                readOnlyEnumerator.Dispose();
+                    var readOnlyEnumerator = queue.AsReadOnly().GetEnumerator();
+                    Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                    Assert.AreEqual(1, readOnlyEnumerator.Current);
+                    readOnlyEnumerator.Reset();
+                    Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                    readOnlyEnumerator.Dispose();
+                }
             }
             finally
             {

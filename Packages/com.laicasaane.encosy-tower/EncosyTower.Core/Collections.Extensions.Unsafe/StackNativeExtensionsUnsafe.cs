@@ -2,6 +2,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class StackNativeExtensionsUnsafe
@@ -13,6 +15,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native stack lifetime.
             unsafe
             {
@@ -28,13 +31,11 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns lifetime and supplies unchecked storage index.
             unsafe
             {
-                return ref UnsafeUtility.ArrayElementAsRef<T>(
-                      self.m_Data->_buffer.GetUnsafePtr()
-                    , index
-                );
+                return ref UnsafeUtility.ArrayElementAsRef<T>(self.m_Data->_buffer.GetUnsafePtr(), index);
             }
         }
 
@@ -45,6 +46,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native stack lifetime.
             unsafe
             {
@@ -60,13 +62,11 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns lifetime and supplies unchecked storage index.
             unsafe
             {
-                return ref UnsafeUtility.ArrayElementAsRef<T>(
-                      self.m_Data->_buffer.GetUnsafePtr()
-                    , index
-                );
+                return ref UnsafeUtility.ArrayElementAsRef<T>(self.m_Data->_buffer.GetUnsafePtr(), index);
             }
         }
     }

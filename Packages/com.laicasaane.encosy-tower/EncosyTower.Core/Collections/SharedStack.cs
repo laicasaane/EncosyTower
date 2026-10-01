@@ -3,11 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
+    [Serializable]
     public partial class SharedStack<T> : SharedStack<T, T>
         where T : unmanaged
     {
@@ -32,6 +37,7 @@ namespace EncosyTower.Collections
         }
     }
 
+    [Serializable]
     public partial class SharedStack<T, TNative>
         : IReadOnlyCollection<T>
         , IHasCapacity, IIncreaseCapacity
@@ -43,16 +49,20 @@ namespace EncosyTower.Collections
         where T : unmanaged
         where TNative : unmanaged
     {
-        internal SharedArray<T, TNative> _buffer;
-        internal SharedReference<int> _count;
-        internal SharedReference<int> _version;
-        internal unsafe SharedStackUnsafe<TNative>* _nativeData;
+        [NonSerialized] internal BufferShared<T, TNative> _buffer;
+        [NonSerialized] internal BufferShared<int> _count;
+        [NonSerialized] internal BufferShared<int> _version;
+        /// <safety>Owned by this stack; borrowed native views become invalid after resize or disposal.</safety>
+        [NonSerialized] internal unsafe SharedStackUnsafe<TNative>* _nativeData;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        [NonSerialized] internal AtomicSafetyHandle _safety;
+#endif
 
         public SharedStack()
         {
             _buffer = new(0);
-            _count = new(0);
-            _version = new(0);
+            _count = new(1);
+            _version = new(1);
             InitializeNativeData();
         }
 
@@ -60,24 +70,28 @@ namespace EncosyTower.Collections
         {
             ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
             _buffer = new(capacity);
-            _count = new(0);
-            _version = new(0);
+            _count = new(1);
+            _version = new(1);
             InitializeNativeData();
         }
 
         public SharedStack(ReadOnlySpan<T> source)
             : this(source.Length)
         {
-            source.CopyTo(_buffer.AsSpan());
-            _count.ValueRW = source.Length;
+            // SAFETY: This owner keeps its pinned buffer live for the construction copy.
+            unsafe
+            {
+                source.CopyTo(_buffer.AsSpan());
+            }
+            CountRW = source.Length;
             RefreshNativeData();
         }
 
         public SharedStack([NotNull] ICollection<T> source)
-            : this(source.Count)
+            : this(GetCount(source))
         {
             source.CopyTo(_buffer.AsManagedArray(), 0);
-            _count.ValueRW = source.Count;
+            CountRW = source.Count;
             RefreshNativeData();
         }
 
@@ -87,45 +101,61 @@ namespace EncosyTower.Collections
         public bool IsCreated
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer != null;
+            get => _buffer.IsCreated;
         }
 
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _count?.ValueRO ?? 0;
+            get => _buffer.IsCreated ? CountRO : 0;
         }
 
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _buffer?.Length ?? 0;
+            get
+            {
+                if (!_buffer.IsCreated)
+                {
+                    return 0;
+                }
+                CheckRead();
+                return _buffer.Capacity;
+            }
         }
 
         public void Push(T item)
         {
-            _version.ValueRW++;
-            if (_count.ValueRO == Capacity)
+            VersionRW++;
+            if (CountRO == Capacity)
             {
-                AllocateMore(checked(_count.ValueRO + 1));
+                AllocateMore(checked(CountRO + 1));
             }
 
-            var index = _count.ValueRO;
-            _buffer.AsSpan()[index] = item;
-            _count.ValueRW = index + 1;
+            var index = CountRO;
+            // SAFETY: This owner keeps its pinned buffer live and index is within capacity.
+            unsafe
+            {
+                _buffer.AsSpan()[index] = item;
+            }
+            CountRW = index + 1;
         }
 
         public void Push(in T item)
         {
-            _version.ValueRW++;
-            if (_count.ValueRO == Capacity)
+            VersionRW++;
+            if (CountRO == Capacity)
             {
-                AllocateMore(checked(_count.ValueRO + 1));
+                AllocateMore(checked(CountRO + 1));
             }
 
-            var index = _count.ValueRO;
-            _buffer.AsSpan()[index] = item;
-            _count.ValueRW = index + 1;
+            var index = CountRO;
+            // SAFETY: This owner keeps its pinned buffer live and index is within capacity.
+            unsafe
+            {
+                _buffer.AsSpan()[index] = item;
+            }
+            CountRW = index + 1;
         }
 
         public void PushRange(ReadOnlySpan<T> items)
@@ -135,7 +165,7 @@ namespace EncosyTower.Collections
                 return;
             }
 
-            _version.ValueRW++;
+            VersionRW++;
             var old = Count;
             var required = checked(old + items.Length);
 
@@ -144,15 +174,23 @@ namespace EncosyTower.Collections
                 AllocateMore(required);
             }
 
-            items.CopyTo(_buffer.AsSpan()[old..]);
-            _count.ValueRW = required;
+            // SAFETY: Capacity checks bound the append into this owner's live pinned buffer.
+            unsafe
+            {
+                items.CopyTo(_buffer.AsSpan()[old..]);
+            }
+            CountRW = required;
         }
 
         public T Pop()
         {
             ThrowHelper.ThrowIfEmpty(Count > 0, ThrowHelper.CollectionType.SharedStack);
-            _version.ValueRW++;
-            return _buffer.AsReadOnlySpan()[--_count.ValueRW];
+            VersionRW++;
+            // SAFETY: Count validates the top index in this owner's live pinned buffer.
+            unsafe
+            {
+                return _buffer.AsReadOnlySpan()[--CountRW];
+            }
         }
 
         public bool TryPop(out T value)
@@ -169,7 +207,11 @@ namespace EncosyTower.Collections
         public T Peek()
         {
             ThrowHelper.ThrowIfEmpty(Count > 0, ThrowHelper.CollectionType.SharedStack);
-            return _buffer.AsReadOnlySpan()[Count - 1];
+            // SAFETY: Count validates the top index in this owner's live pinned buffer.
+            unsafe
+            {
+                return _buffer.AsReadOnlySpan()[Count - 1];
+            }
         }
 
         public bool TryPeek(out T value)
@@ -185,8 +227,8 @@ namespace EncosyTower.Collections
 
         public void Clear()
         {
-            _count.ValueRW = 0;
-            _version.ValueRW++;
+            CountRW = 0;
+            VersionRW++;
         }
 
         public T[] ToArray()
@@ -247,7 +289,13 @@ namespace EncosyTower.Collections
 
         private void CopyTopFirstTo(int sourceStartIndex, Span<T> destination, int length)
         {
-            var span = _buffer.AsReadOnlySpan();
+            ReadOnlySpan<T> span;
+
+            // SAFETY: This owner keeps its pinned buffer live for the complete bounded copy.
+            unsafe
+            {
+                span = _buffer.AsReadOnlySpan();
+            }
             var top = Count - 1 - sourceStartIndex;
             for (var i = 0; i < length; i++)
             {
@@ -279,68 +327,120 @@ namespace EncosyTower.Collections
             }
         }
 
+        /// <safety>The returned alias must not outlive this stack.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
-            => new(this);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Enumerator GetEnumerator()
-            => new(AsReadOnly());
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => GetEnumerator();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedStackNative<TNative> AsNative()
+        public unsafe ReadOnly AsReadOnly()
         {
-            // SAFETY: The native view borrows the live header and shared buffer safety handle.
+            // SAFETY: The caller accepts the returned view's borrowed owner lifetime.
+            unsafe
+            {
+                return new(this);
+            }
+        }
+
+        /// <safety>This stack must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe Enumerator GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return new(AsReadOnly());
+            }
+        }
+
+        /// <safety>This stack must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
+
+        /// <safety>This stack must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
+
+        /// <safety>The returned native view must not outlive this stack or survive resize.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe SharedStackNative<TNative> AsNative()
+        {
+            CheckRead();
+            // SAFETY: This stack owns the live header and buffers borrowed by the returned view.
             unsafe
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-                return new SharedStackNative<TNative>(_nativeData, _buffer.GetSafetyHandle());
+                var safety = _safety;
+                AtomicSafetyHandle.UseSecondaryVersion(ref safety);
+                return new SharedStackNative<TNative>(_nativeData, safety);
 #else
                 return new SharedStackNative<TNative>(_nativeData);
 #endif
             }
         }
 
+        /// <safety>The returned native view must not outlive the source stack or survive resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator SharedStackNative<TNative>(SharedStack<T, TNative> stack)
-            => stack.AsNative();
+        public static unsafe implicit operator SharedStackNative<TNative>(SharedStack<T, TNative> stack)
+        {
+            DebuggingThrowHelper.ThrowIfNull(stack);
+            // SAFETY: The non-null stack remains the designated owner of the returned view.
+            unsafe
+            {
+                return stack.AsNative();
+            }
+        }
 
         public void Dispose()
         {
-            if (_buffer == null)
+            if (!_buffer.IsCreated)
             {
                 return;
             }
-            // SAFETY: The header is freed before the pinned owner buffers are disposed.
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckDeallocateAndThrow(_safety);
+#endif
+            // SAFETY: This stack owns the header and releases it before every buffer.
             unsafe
             {
                 SharedStackUnsafe<TNative>.Free(_nativeData, Allocator.Persistent);
                 _nativeData = null;
             }
-            _buffer.Dispose();
-            _count.Dispose();
-            _version.Dispose();
-            _buffer = null;
-            _count = null;
-            _version = null;
+            // SAFETY: The header was freed first; this stack now releases its remaining owned buffers.
+            unsafe
+            {
+                _buffer.Dispose();
+                _count.Dispose();
+                _version.Dispose();
+            }
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.Release(_safety);
+            _safety = default;
+#endif
         }
 
         private void InitializeNativeData()
         {
-            // SAFETY: SharedArray and SharedReference keep all supplied pointers valid while the owner lives.
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            _safety = AtomicSafetyHandle.Create();
+            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(_safety, true);
+#endif
+            // SAFETY: This stack owns every pinned buffer passed to its newly allocated header.
             unsafe
             {
                 _nativeData = SharedStackUnsafe<TNative>.Alloc(
                       _buffer.GetUnsafeBufferPointer()
-                    , _buffer.Length
+                    , _buffer.Capacity
                     , _count.GetUnsafeBufferPointer()
                     , _version.GetUnsafeBufferPointer()
                     , Allocator.Persistent
@@ -354,7 +454,7 @@ namespace EncosyTower.Collections
             unsafe
             {
                 _nativeData->_buffer = _buffer.GetUnsafeBufferPointer();
-                _nativeData->_capacity = _buffer.Length;
+                _nativeData->_capacity = _buffer.Capacity;
                 _nativeData->_count = _count.GetUnsafeBufferPointer();
                 _nativeData->_version = _version.GetUnsafeBufferPointer();
             }
@@ -369,8 +469,90 @@ namespace EncosyTower.Collections
 
         private void ResizeBuffer(int capacity)
         {
-            _buffer.Resize(capacity);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+            // SAFETY: This stack owns the buffer and invalidated secondary aliases before relocation.
+            unsafe
+            {
+                _buffer.Resize(capacity);
+            }
             RefreshNativeData();
+        }
+
+        internal ref readonly int CountRO
+        {
+            get
+            {
+                CheckRead();
+                // SAFETY: The read check validates the owned scalar count buffer.
+                unsafe
+                {
+                    return ref _count[0];
+                }
+            }
+        }
+
+        internal ref int CountRW
+        {
+            get
+            {
+                CheckWrite();
+                // SAFETY: The write check validates the owned scalar count buffer.
+                unsafe
+                {
+                    return ref _count[0];
+                }
+            }
+        }
+
+        internal ref readonly int VersionRO
+        {
+            get
+            {
+                CheckRead();
+                // SAFETY: The read check validates the owned scalar version buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
+
+        internal ref int VersionRW
+        {
+            get
+            {
+                CheckWrite();
+                // SAFETY: The write check validates the owned scalar version buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(_safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(_safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetCount([NotNull] ICollection<T> source)
+        {
+            DebuggingThrowHelper.ThrowIfNull(source);
+            return source.Count;
         }
     }
 }

@@ -9,6 +9,8 @@ using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ListProxyExtensions
@@ -21,6 +23,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -45,6 +48,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -70,6 +74,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -95,6 +100,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -119,6 +125,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             self._version++;
 
             var index = IndexOf(ref self, item);
@@ -152,6 +159,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             self._version++;
 
             var index = IndexOf(ref self, in item);
@@ -186,6 +194,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             self._version++;
 
             var index = IndexOf(ref self, item, comparer);
@@ -220,6 +229,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             self._version++;
 
             var index = IndexOf(ref self, in item, comparer);
@@ -255,6 +265,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(ref self, 0, self._count, item, comparer);
         }
 
@@ -270,15 +281,12 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self._count - index >= count);
 
-            var result = MemoryExtensions.BinarySearch(
-                  self.AsReadOnlySpan().Slice(index, count)
-                , item
-                , comparer
-            );
+            var result = MemoryExtensions.BinarySearch(self.AsReadOnlySpan().Slice(index, count), item, comparer);
             return result < 0 ? result : result + index;
         }
 
@@ -292,6 +300,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(ref self, 0, self._count, in item, comparer);
         }
 
@@ -307,15 +316,12 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self._count - index >= count);
 
-            var result = MemoryExtensions.BinarySearch(
-                  self.AsReadOnlySpan().Slice(index, count)
-                , item
-                , comparer
-            );
+            var result = MemoryExtensions.BinarySearch(self.AsReadOnlySpan().Slice(index, count), item, comparer);
             return result < 0 ? result : result + index;
         }
 
@@ -328,6 +334,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, item, 0);
         }
 
@@ -341,6 +348,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, item, index, self._count - index);
         }
 
@@ -355,6 +363,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self._count);
@@ -372,6 +381,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, in item, 0);
         }
 
@@ -385,6 +395,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, in item, index, self._count - index);
         }
 
@@ -399,6 +410,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self._count);
@@ -417,6 +429,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
         }
 
@@ -430,6 +443,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
         }
 
@@ -442,6 +456,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             Sort(ref self, 0, self._count, comparer);
         }
 
@@ -456,6 +471,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfOffsetLengthIsValid(self._count - index >= count);

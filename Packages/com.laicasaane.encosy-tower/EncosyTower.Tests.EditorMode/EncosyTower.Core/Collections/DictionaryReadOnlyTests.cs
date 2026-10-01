@@ -101,9 +101,7 @@ namespace EncosyTower.Tests.Core.Collections
             var source = new Dictionary<int, string> { [1] = "one" };
             var same = new DictionaryReadOnly<int, string>(source);
             var alias = new DictionaryReadOnly<int, string>(source);
-            var other = new DictionaryReadOnly<int, string>(
-                new Dictionary<int, string> { [1] = "one" }
-            );
+            var other = new DictionaryReadOnly<int, string>(new Dictionary<int, string> { [1] = "one" });
 
             Assert.IsTrue(same.Equals(alias));
             Assert.IsTrue(same.Equals(source));

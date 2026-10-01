@@ -35,6 +35,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     /// <summary>
@@ -91,10 +93,7 @@ namespace EncosyTower.Collections
 
         public ArrayMapNative(ArrayMapNative<TKey, TValue> source, AllocatorStrategy allocator) : this()
         {
-            ThrowHelper.ThrowIfNativeSourceCollectionIsNotCreated(
-                source.IsCreated,
-                ThrowHelper.CollectionType.ArrayMapNative
-            );
+            DebuggingThrowHelper.ThrowIfNotCreated(source);
 
             // SAFETY: The established ownership and safety checks keep the native storage live
             // for this pointer dereference.
@@ -579,6 +578,8 @@ namespace EncosyTower.Collections
         public void Intersect<UValue>(in ArrayMapNative<TKey, UValue> otherMapKeys)
             where UValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherMapKeys);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherMapKeys.m_Safety);
@@ -596,6 +597,8 @@ namespace EncosyTower.Collections
         public void Exclude<UValue>(in ArrayMapNative<TKey, UValue> otherMapKeys)
             where UValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherMapKeys);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherMapKeys.m_Safety);
@@ -612,6 +615,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Union(in ArrayMapNative<TKey, TValue> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(otherMapKeys);
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
             AtomicSafetyHandle.CheckReadAndThrow(otherMapKeys.m_Safety);
@@ -687,6 +692,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerable(in ReadOnly map)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(map);
+
                 _map = map;
             }
 
@@ -719,6 +726,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerator(in ReadOnly map) : this()
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(map);
+
                 _map = map;
                 _index = -1;
                 _version = map.UncheckedVersion;
@@ -762,8 +771,7 @@ namespace EncosyTower.Collections
             {
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
         }
 
     }
@@ -780,6 +788,8 @@ namespace EncosyTower.Collections
 
         public ArrayMapNativeKeyValueEnumerator(in ArrayMapNative<TKey, TValue> map) : this()
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(map);
+
             _map = map;
             _index = -1;
 
@@ -993,6 +1003,8 @@ namespace EncosyTower.Collections
 
         public ArrayMapNativeDebugProxy(in ArrayMapNative<TKey, TValue> map)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(map);
+
             _map = map;
         }
 

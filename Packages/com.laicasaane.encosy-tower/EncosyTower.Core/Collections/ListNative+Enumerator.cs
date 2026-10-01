@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using EncosyTower.Collections.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct ListNative<T>
@@ -16,6 +18,8 @@ namespace EncosyTower.Collections
 
             internal unsafe Enumerator(ListUnsafe<T>* data, in ReadOnly list)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+
                 _list = list;
                 // SAFETY: data is the live header retained by the native owner/view.
                 unsafe
@@ -49,11 +53,9 @@ namespace EncosyTower.Collections
                 }
             }
 
-            public readonly T Current
-                => _current;
+            public readonly T Current => _current;
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

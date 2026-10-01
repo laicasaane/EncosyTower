@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class QueueNativeExtensionsUnsafe
@@ -12,6 +14,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {
@@ -26,6 +29,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {
@@ -40,6 +44,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {
@@ -54,6 +59,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {
@@ -68,6 +74,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {
@@ -82,6 +89,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the native queue lifetime.
             unsafe
             {

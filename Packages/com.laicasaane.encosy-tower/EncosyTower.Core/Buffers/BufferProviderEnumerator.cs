@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Buffers
 {
@@ -21,6 +22,8 @@ namespace EncosyTower.Buffers
 
         internal BufferProviderEnumerator([NotNull] TProvider provider)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             _provider = provider;
             _index = 0;
             _version = provider.Version;
@@ -47,7 +50,7 @@ namespace EncosyTower.Buffers
 
         private bool MoveNextRare()
         {
-            ThrowHelper.ThrowIfCollectionWasModified(_version == _provider.Version);
+            CollectionsThrowHelper.ThrowIfCollectionWasModified(_version == _provider.Version);
 
             _index = _provider.Count + 1;
             _current = default;
@@ -62,7 +65,7 @@ namespace EncosyTower.Buffers
 
         public void Reset()
         {
-            ThrowHelper.ThrowIfCollectionWasModified(_version == _provider.Version);
+            CollectionsThrowHelper.ThrowIfCollectionWasModified(_version == _provider.Version);
 
             _index = 0;
             _current = default;
@@ -72,7 +75,9 @@ namespace EncosyTower.Buffers
         {
             get
             {
-                ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(_index != 0 && _index != _provider.Count + 1);
+                CollectionsThrowHelper.ThrowIfEnumeratorOperationIsInvalid(
+                    _index != 0 && _index != _provider.Count + 1
+                );
 
                 return Current;
             }

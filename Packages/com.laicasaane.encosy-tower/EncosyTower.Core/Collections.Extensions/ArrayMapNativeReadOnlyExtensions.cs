@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ArrayMapNativeReadOnlyExtensions
@@ -9,6 +11,9 @@ namespace EncosyTower.Collections.Extensions
         public static ReadOnlySpan<TValue> GetValues<TKey, TValue>(this in ArrayMapNative<TKey, TValue>.ReadOnly self)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-                => self.AsValuesReadOnlySpan();
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return self.AsValuesReadOnlySpan();
+        }
     }
 }

@@ -129,20 +129,8 @@ namespace EncosyTower.Tests.Core.Collections.Extensions
             var recycler = new IntRecycler(20);
             var predicate = new IntPredicate(10);
 
-            ref var recycled = ref MapAPI.RecycleOrAdd(
-                  ref plainMap
-                , 2
-                , ref builder
-                , ref recycler
-                , ref predicate
-            );
-            ref var built = ref MapAPI.RecycleOrAdd(
-                  ref plainMap
-                , 3
-                , ref builder
-                , ref recycler
-                , ref predicate
-            );
+            ref var recycled = ref MapAPI.RecycleOrAdd(ref plainMap, 2, ref builder, ref recycler, ref predicate);
+            ref var built = ref MapAPI.RecycleOrAdd(ref plainMap, 3, ref builder, ref recycler, ref predicate);
 
             Assert.AreEqual(20, recycled);
             Assert.AreEqual(30, built);

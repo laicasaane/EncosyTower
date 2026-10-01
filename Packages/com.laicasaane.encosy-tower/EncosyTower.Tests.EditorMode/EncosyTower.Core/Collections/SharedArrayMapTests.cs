@@ -68,8 +68,12 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var map = new SharedArrayMap<int, int>(8);
 
-            ref var slot = ref map.GetOrAdd(1);
-            slot = 42;
+            // SAFETY: The map owns the referenced value for the duration of this block.
+            unsafe
+            {
+                ref var slot = ref map.GetOrAdd(1);
+                slot = 42;
+            }
 
             Assert.AreEqual(42, map[1]);
         }
@@ -144,23 +148,34 @@ namespace EncosyTower.Tests.Core.Collections
             genericCapacity.Add(1, -1);
 
             using var ownerCopy = new SharedArrayMap<int, int, uint>(genericCapacity);
-            var native = genericCapacity.AsNative();
-            SharedArrayMapNative<int, uint> converted = genericCapacity;
-            using var nativeCopy = new SharedArrayMap<int, int, uint>(in native);
+            SharedArrayMapNative<int, uint> native;
+            SharedArrayMapNative<int, uint> converted;
+            SharedArrayMap<int, int, uint> nativeCopy;
 
-            Assert.AreEqual(0, convenienceDefault.Count);
-            Assert.GreaterOrEqual(convenienceCapacity.Capacity, 4);
-            Assert.AreEqual(0, genericDefault.Count);
-            Assert.GreaterOrEqual(genericCapacity.Capacity, 4);
-            Assert.AreEqual(-1, ownerCopy[1]);
-            Assert.AreEqual(uint.MaxValue, native[1]);
-            Assert.AreEqual(uint.MaxValue, converted[1]);
-            Assert.AreEqual(-1, nativeCopy[1]);
+            // SAFETY: genericCapacity remains alive while its borrowed native views are created and copied.
+            unsafe
+            {
+                native = genericCapacity.AsNative();
+                converted = genericCapacity;
+                nativeCopy = new SharedArrayMap<int, int, uint>(in native);
+            }
 
-            ownerCopy[1] = 10;
-            nativeCopy[1] = 20;
+            using (nativeCopy)
+            {
+                Assert.AreEqual(0, convenienceDefault.Count);
+                Assert.GreaterOrEqual(convenienceCapacity.Capacity, 4);
+                Assert.AreEqual(0, genericDefault.Count);
+                Assert.GreaterOrEqual(genericCapacity.Capacity, 4);
+                Assert.AreEqual(-1, ownerCopy[1]);
+                Assert.AreEqual(uint.MaxValue, native[1]);
+                Assert.AreEqual(uint.MaxValue, converted[1]);
+                Assert.AreEqual(-1, nativeCopy[1]);
 
-            Assert.AreEqual(-1, genericCapacity[1]);
+                ownerCopy[1] = 10;
+                nativeCopy[1] = 20;
+
+                Assert.AreEqual(-1, genericCapacity[1]);
+            }
         }
 
         [Test]
@@ -173,19 +188,29 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsFalse(map.TryAdd(1, 20, out var existingIndex));
             Assert.AreEqual(0, existingIndex);
 
-            map.GetOrAdd(2, out var secondIndex) = 20;
-            Assert.AreEqual(1, secondIndex);
-            map.GetOrAdd(2, out var repeatedIndex) = 21;
-            Assert.AreEqual(secondIndex, repeatedIndex);
+            int secondIndex;
 
-            ref var first = ref map.GetValueByRef(1);
-            first = 11;
+            // SAFETY: The map owns the referenced values and no structural mutation occurs between each use.
+            unsafe
+            {
+                map.GetOrAdd(2, out secondIndex) = 20;
+                Assert.AreEqual(1, secondIndex);
+                map.GetOrAdd(2, out var repeatedIndex) = 21;
+                Assert.AreEqual(secondIndex, repeatedIndex);
+
+                ref var first = ref map.GetValueByRef(1);
+                first = 11;
+            }
 
             Assert.IsTrue(map.TryFindIndex(1, out var foundIndex));
             Assert.AreEqual(firstIndex, foundIndex);
             Assert.IsFalse(map.TryFindIndex(99, out _));
             Assert.AreEqual(secondIndex, map.GetIndex(2));
-            Assert.IsTrue(map.Keys.GetEnumerator().IsValid);
+            // SAFETY: The map remains alive and unmodified while the temporary key enumerator is inspected.
+            unsafe
+            {
+                Assert.IsTrue(map.Keys.GetEnumerator().IsValid);
+            }
             Assert.AreEqual(2, map.Values.Length);
 
             var initialCapacity = map.Capacity;
@@ -255,12 +280,26 @@ namespace EncosyTower.Tests.Core.Collections
             map.Add(1, 10);
             map.Add(2, 20);
 
-            var direct = new SharedArrayMap<int, int, int>.ReadOnly(map);
-            var fromOwner = map.AsReadOnly();
-            SharedArrayMap<int, int, int>.ReadOnly converted = map;
+            SharedArrayMap<int, int, int>.ReadOnly direct;
+            SharedArrayMap<int, int, int>.ReadOnly fromOwner;
+            SharedArrayMap<int, int, int>.ReadOnly converted;
+
+            // SAFETY: map remains alive and unmodified while its read-only aliases are created and consumed.
+            unsafe
+            {
+                direct = new SharedArrayMap<int, int, int>.ReadOnly(map);
+                fromOwner = map.AsReadOnly();
+                converted = map;
+            }
             SharedArrayMap<int, int, int>.ReadOnly nullConverted = null;
             var empty = SharedArrayMap<int, int, int>.ReadOnly.Empty;
-            var native = direct.AsNative();
+            SharedArrayMapNative<int, int>.ReadOnly native;
+
+            // SAFETY: map remains alive and unmodified while the native read-only alias is consumed.
+            unsafe
+            {
+                native = direct.AsNative();
+            }
 
             Assert.IsTrue(direct.IsCreated);
             Assert.AreEqual(map.Capacity, direct.Capacity);
@@ -292,9 +331,16 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var source = new SharedArrayMap<int, int>(4);
             source.Add(1, 10);
-            var sourceEnumerator = source.GetEnumerator();
-            Assert.IsTrue(sourceEnumerator.MoveNext());
-            var pair = sourceEnumerator.Current;
+            SharedArrayMapKeyValuePair<int, int, int> pair;
+
+            // SAFETY: source remains alive and unmodified while its enumerator and borrowed pair are consumed.
+            unsafe
+            {
+                var sourceEnumerator = source.GetEnumerator();
+                Assert.IsTrue(sourceEnumerator.MoveNext());
+                pair = sourceEnumerator.Current;
+                sourceEnumerator.Dispose();
+            }
 
             using var target = new SharedArrayMap<int, int>(4);
             ICollection<SharedArrayMapKeyValuePair<int, int, int>> collection = target;
@@ -305,9 +351,9 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.IsTrue(collection.Contains(pair));
             Assert.AreEqual(1, collection.Count);
-            Assert.Throws<NotImplementedException>(() =>
-                collection.CopyTo(new SharedArrayMapKeyValuePair<int, int, int>[1], 0)
-            );
+            var destination = new SharedArrayMapKeyValuePair<int, int, int>[1];
+            collection.CopyTo(destination, 0);
+            AssertPair(destination[0], 1, 10);
             Assert.IsTrue(collection.Remove(pair));
             Assert.IsFalse(collection.Remove(pair));
 
@@ -330,7 +376,75 @@ namespace EncosyTower.Tests.Core.Collections
             IReadOnlyCollection<SharedArrayMapKeyValuePair<int, int, int>> readOnlyCollection = source;
             Assert.AreEqual(1, readOnlyCollection.Count);
 
-            sourceEnumerator.Dispose();
+        }
+
+        [Test]
+        public void CollectionInterface_PairOperationsRequireMatchingValue()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+            map.Add(1, 0);
+            map.Add(2, 20);
+
+            using var mismatchedMap = new SharedArrayMap<int, int>(1);
+            mismatchedMap.Add(1, 10);
+
+            var matchingPair = GetFirstPair(map);
+            var mismatchedPair = GetFirstPair(mismatchedMap);
+            ICollection<SharedArrayMapKeyValuePair<int, int, int>> collection = map;
+
+            Assert.IsTrue(collection.Contains(matchingPair));
+            Assert.IsFalse(collection.Contains(mismatchedPair));
+            Assert.IsFalse(collection.Remove(mismatchedPair));
+            Assert.AreEqual(0, map[1]);
+            Assert.IsTrue(collection.Remove(matchingPair));
+            Assert.IsFalse(map.ContainsKey(1));
+        }
+
+        [Test]
+        public void CollectionInterface_CopyToPreservesEnumerationOrderAndDestinationSentinels()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+            map.Add(7, 0);
+            map.Add(8, 80);
+
+            ICollection<SharedArrayMapKeyValuePair<int, int, int>> collection = map;
+            var destination = new SharedArrayMapKeyValuePair<int, int, int>[4];
+
+            collection.CopyTo(destination, 1);
+
+            Assert.IsFalse(destination[0].IsValid);
+            AssertPair(destination[1], 7, 0);
+            AssertPair(destination[2], 8, 80);
+            Assert.IsFalse(destination[3].IsValid);
+        }
+
+        [Test]
+        public void CollectionInterface_CopyToValidatesArgumentsAndAllowsEmptyEndIndex()
+        {
+            using var map = new SharedArrayMap<int, int>(1);
+            map.Add(1, 10);
+            ICollection<SharedArrayMapKeyValuePair<int, int, int>> collection = map;
+
+            var nullException = Assert.Throws<ArgumentNullException>(() => collection.CopyTo(null, -1));
+            var negativeException = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                collection.CopyTo(new SharedArrayMapKeyValuePair<int, int, int>[1], -1)
+            );
+            var pastEndException = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                collection.CopyTo(new SharedArrayMapKeyValuePair<int, int, int>[1], 2)
+            );
+
+            Assert.AreEqual("array", nullException.ParamName);
+            Assert.AreEqual("arrayIndex", negativeException.ParamName);
+            Assert.AreEqual("arrayIndex", pastEndException.ParamName);
+            Assert.Throws<ArgumentException>(() =>
+                collection.CopyTo(new SharedArrayMapKeyValuePair<int, int, int>[1], 1)
+            );
+
+            using var emptyMap = new SharedArrayMap<int, int>();
+            ICollection<SharedArrayMapKeyValuePair<int, int, int>> emptyCollection = emptyMap;
+            var emptyDestination = new SharedArrayMapKeyValuePair<int, int, int>[1];
+
+            Assert.DoesNotThrow(() => emptyCollection.CopyTo(emptyDestination, emptyDestination.Length));
         }
 
         [Test]
@@ -339,7 +453,10 @@ namespace EncosyTower.Tests.Core.Collections
             using var map = new SharedArrayMap<int, int, int>(4);
             map.Add(7, 70);
 
-            var keys = new SharedArrayMap<int, int, int>.KeyEnumerable(map);
+            // SAFETY: map remains alive and structurally unchanged while every borrowed view is consumed.
+            unsafe
+            {
+                var keys = new SharedArrayMap<int, int, int>.KeyEnumerable(map);
             Assert.IsTrue(keys.IsValid);
 
             var keyEnumerator = new SharedArrayMap<int, int, int>.KeyEnumerator(map);
@@ -417,9 +534,7 @@ namespace EncosyTower.Tests.Core.Collections
             readOnlyEnumerator.Reset();
             Assert.IsTrue(readOnlyEnumerator.MoveNext());
             IEnumerator readOnlyInterface = readOnlyEnumerator;
-            Assert.IsInstanceOf<SharedArrayMapReadOnlyKeyValuePair<int, int, int>>(
-                readOnlyInterface.Current
-            );
+            Assert.IsInstanceOf<SharedArrayMapReadOnlyKeyValuePair<int, int, int>>(readOnlyInterface.Current);
             readOnlyEnumerator.Dispose();
 
             var viewEnumerator = readOnly.GetEnumerator();
@@ -431,21 +546,28 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsFalse(default(SharedArrayMapKeyValueEnumerator<int, int, int>).IsValid);
             Assert.IsFalse(default(SharedArrayMap<int, int, int>.ReadOnly.KeyEnumerable).IsValid);
             Assert.IsFalse(default(SharedArrayMap<int, int, int>.ReadOnly.KeyEnumerator).IsValid);
-            Assert.IsFalse(default(SharedArrayMapReadOnlyKeyValueEnumerator<int, int, int>).IsValid);
+                Assert.IsFalse(default(SharedArrayMapReadOnlyKeyValueEnumerator<int, int, int>).IsValid);
+            }
         }
 
         [Test]
         public void KeyValuePairs_PublicConstructorsPropertiesValidityAndDeconstructReflectStorage()
         {
-            using var sharedValues = new SharedArray<int>(new[] { 10, 20 });
+            var sharedValues = new[] { 10, 20 };
             using var nativeValues = new NativeArray<int>(new[] { 30, 40 }, Allocator.Temp);
             var key = 7;
             var pair = new SharedArrayMapKeyValuePair<int, int, int>(in key, sharedValues, 1);
-            var readOnlyPair = new SharedArrayMapReadOnlyKeyValuePair<int, int, int>(
-                  in key
-                , nativeValues.AsReadOnly()
-                , 0
-            );
+            SharedArrayMapReadOnlyKeyValuePair<int, int, int> readOnlyPair;
+
+            // SAFETY: nativeValues remains allocated and unmodified while readOnlyPair is consumed.
+            unsafe
+            {
+                readOnlyPair = new SharedArrayMapReadOnlyKeyValuePair<int, int, int>(
+                      in key
+                    , nativeValues.AsReadOnly()
+                    , 0
+                );
+            }
 
             AssertPair(pair, 7, 20);
             AssertPair(readOnlyPair, 7, 30);
@@ -475,6 +597,25 @@ namespace EncosyTower.Tests.Core.Collections
             return map;
         }
 
+        private static SharedArrayMapKeyValuePair<int, int, int> GetFirstPair(SharedArrayMap<int, int> map)
+        {
+            // SAFETY: map remains alive and unmodified while its first borrowed pair is returned.
+            unsafe
+            {
+                var enumerator = map.GetEnumerator();
+
+                try
+                {
+                    Assert.IsTrue(enumerator.MoveNext());
+                    return enumerator.Current;
+                }
+                finally
+                {
+                    enumerator.Dispose();
+                }
+            }
+        }
+
         private static void AssertPair(SharedArrayMapKeyValuePair<int, int, int> pair, int key, int value)
         {
             Assert.IsTrue(pair.IsValid);
@@ -487,11 +628,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(value, actualValue);
         }
 
-        private static void AssertPair(
-              SharedArrayMapReadOnlyKeyValuePair<int, int, int> pair
-            , int key
-            , int value
-        )
+        private static void AssertPair(SharedArrayMapReadOnlyKeyValuePair<int, int, int> pair, int key, int value)
         {
             Assert.IsTrue(pair.IsValid);
             Assert.AreEqual(key, pair.Key);
@@ -526,7 +663,7 @@ namespace EncosyTower.Tests.Core.Collections
             // A recounted counter reflects live chains only: three colliding keys were in
             // the map at recompute time, which is two chain links. The stale-accumulation
             // bug reports 14 here (12 carried over + 2 recounted).
-            Assert.LessOrEqual(map._collisions.ValueRO, (uint)map.Count);
+            Assert.LessOrEqual(map._collisions[0], (uint)map.Count);
         }
     }
 }

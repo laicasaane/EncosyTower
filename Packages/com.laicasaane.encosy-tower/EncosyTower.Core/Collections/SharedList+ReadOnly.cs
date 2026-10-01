@@ -1,24 +1,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
     {
+        /// <safety>The returned view must not outlive this list or survive a resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
-            => new(this);
+        public unsafe ReadOnly AsReadOnly()
+        {
+            // SAFETY: This list owns every allocation borrowed by the returned read-only view.
+            unsafe
+            {
+                return new(this);
+            }
+        }
 
         public readonly partial struct ReadOnly : IReadOnlyList<T>, IToArray<T>, IReadOnlyIndexer<T>
             , IAsReadOnlySpan<T>, ICopyToSpan<T>, ITryCopyToSpan<T>, IHasCapacity, IHasCount, IIsCreated
@@ -29,18 +33,43 @@ namespace EncosyTower.Collections
             internal readonly NativeArray<T>.ReadOnly _buffer;
             internal readonly NativeArray<int>.ReadOnly _count;
             internal readonly NativeArray<int>.ReadOnly _version;
+            /// <safety>The managed list owner must keep this borrowed header alive and stable.</safety>
             internal readonly unsafe SharedListUnsafe<TNative>* _nativeData;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
             internal readonly AtomicSafetyHandle _nativeSafety;
 #endif
 
+            /// <safety>The source list must remain alive and unresized while this view is used.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnly(SharedList<T, TNative> list)
+            public unsafe ReadOnly(SharedList<T, TNative> list)
             {
-                _buffer = list._buffer.AsNativeArray().Reinterpret<T>().AsReadOnly();
-                _count = list._count.AsNativeArray().AsReadOnly();
-                _version = list._version.AsNativeArray().AsReadOnly();
+                DebuggingThrowHelper.ThrowIfNull(list);
+                list.CheckRead();
+
+                NativeArray<T> buffer;
+                NativeArray<int> count;
+                NativeArray<int> version;
+
+                // SAFETY: list owns the pinned buffers and remains the designated lifetime owner.
+                unsafe
+                {
+                    buffer = list._buffer.AsNativeArray().Reinterpret<T>();
+                    count = list._count.AsNativeArray();
+                    version = list._version.AsNativeArray();
+                }
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                var aliasSafety = list._safety;
+                AtomicSafetyHandle.UseSecondaryVersion(ref aliasSafety);
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref buffer, aliasSafety);
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref count, aliasSafety);
+                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref version, aliasSafety);
+#endif
+
+                _buffer = buffer.AsReadOnly();
+                _count = count.AsReadOnly();
+                _version = version.AsReadOnly();
                 // SAFETY: The read-only view borrows the live list header without taking ownership.
                 unsafe
                 {
@@ -48,10 +77,11 @@ namespace EncosyTower.Collections
                 }
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-                _nativeSafety = list._buffer.GetSafetyHandle();
+                _nativeSafety = aliasSafety;
 #endif
             }
 
+            /// <safety>All borrowed arrays and the header must share one live owner lifetime.</safety>
             private unsafe ReadOnly(
                   NativeArray<T>.ReadOnly buffer
                 , NativeArray<int>.ReadOnly count
@@ -100,8 +130,7 @@ namespace EncosyTower.Collections
                 get => _buffer.Length;
             }
 
-            public bool IsReadOnly
-                => true;
+            public bool IsReadOnly => true;
 
             internal int Version
             {
@@ -109,31 +138,68 @@ namespace EncosyTower.Collections
                 get => _version[0];
             }
 
+            /// <safety>This view's owner must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Enumerator GetEnumerator()
-                => new(this);
+            public unsafe Enumerator GetEnumerator()
+            {
+                // SAFETY: The enumerator borrows this view and preserves its version checks.
+                unsafe
+                {
+                    return new(this);
+                }
+            }
 
             public T this[int index]
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    ThrowIfIndexIsOutOfRange((uint)index < (uint)Count);
-                    return _buffer.AsReadOnlySpan()[index];
+                    ThrowHelper.ThrowIfIndexIsOutOfRange(
+                          (uint)index < (uint)Count
+                        , ThrowHelper.CollectionType.SharedListWithNativeReadOnly
+                    );
+                    // SAFETY: The checked index is read before the owner can mutate or dispose the backing buffer.
+                    unsafe
+                    {
+                        return _buffer.AsReadOnlySpan()[index];
+                    }
                 }
             }
 
+            /// <safety>The source list must remain alive and unresized while the alias is used.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(SharedList<T, TNative> list)
-                => list is not null ? list.AsReadOnly() : Empty;
+            public static unsafe implicit operator ReadOnly(SharedList<T, TNative> list)
+            {
+                // SAFETY: A non-null list is the designated owner for the returned alias.
+                unsafe
+                {
+                    return list is not null ? list.AsReadOnly() : Empty;
+                }
+            }
 
+            /// <safety>The span must not outlive the read-only view's owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnlySpan<T>(in ReadOnly list)
-                => list.AsReadOnlySpan();
+            public static unsafe implicit operator ReadOnlySpan<T>(in ReadOnly list)
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
 
+                // SAFETY: The caller accepts the borrowed span lifetime.
+                unsafe
+                {
+                    return list.AsReadOnlySpan();
+                }
+            }
+
+            /// <safety>The returned span must not outlive the read-only view's owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnlySpan<T> AsReadOnlySpan()
-                => _buffer.AsReadOnlySpan()[..Count];
+            public unsafe ReadOnlySpan<T> AsReadOnlySpan()
+            {
+                // SAFETY: The caller accepts the backing owner's lifetime for the returned span.
+                unsafe
+                {
+                    return _buffer.AsReadOnlySpan()[..Count];
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(T[] destination, int destinationIndex)
@@ -153,7 +219,13 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(int sourceStartIndex, Span<T> destination, int length)
-                => new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+            {
+                // SAFETY: The copy consumes the borrowed span before this method returns.
+                unsafe
+                {
+                    new CopyToSpan<T>(AsReadOnlySpan()).CopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(Span<T> destination)
@@ -169,14 +241,27 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-                => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+            {
+                // SAFETY: The copy consumes the borrowed span before this method returns.
+                unsafe
+                {
+                    return new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
+                }
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public T[] ToArray()
-                => AsReadOnlySpan().ToArray();
+            {
+                // SAFETY: ToArray copies the borrowed span before this method returns.
+                unsafe
+                {
+                    return AsReadOnlySpan().ToArray();
+                }
+            }
 
+            /// <safety>The returned alias must not outlive this view's owner or survive owner resize.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SharedList<U, TNative>.ReadOnly Reinterpret<U>()
+            public unsafe SharedList<U, TNative>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
             {
                 // SAFETY: The reinterpreted arrays preserve the original allocation and safety-handle lifetime.
@@ -196,27 +281,25 @@ namespace EncosyTower.Collections
                 }
             }
 
-            [HideInCallstack, StackTraceHidden]
-            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-            [Conditional(UNITY_COLLECTIONS_CHECKS)]
-            private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
+            /// <safety>This view's owner must remain alive and unmodified during enumeration.</safety>
+            unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
             {
-                if (isWithinRange == false)
+                // SAFETY: The interface enumerator borrows this view for its checked lifetime.
+                unsafe
                 {
-                    throw CreateException();
+                    return GetEnumerator();
                 }
-
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static InvalidOperationException CreateException()
-                    => new("index is outside the range of valid indices for the SharedList<T>.ReadOnly");
             }
 
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-                => GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            /// <safety>This view's owner must remain alive and unmodified during enumeration.</safety>
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this view for its checked lifetime.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
         }
     }
 }

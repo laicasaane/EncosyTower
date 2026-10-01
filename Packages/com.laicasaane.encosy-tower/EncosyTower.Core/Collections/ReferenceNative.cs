@@ -9,6 +9,8 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     /// <summary>
@@ -46,10 +48,7 @@ namespace EncosyTower.Collections
 #pragma warning restore IDE1006 // Naming Styles
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReferenceNative(
-              AllocatorStrategy allocator
-            , NativeArrayOptions options = NativeArrayOptions.ClearMemory
-        )
+        public ReferenceNative(AllocatorStrategy allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
         {
             Allocate(new ReferenceUnsafe<T>(allocator, options), allocator, out this);
         }
@@ -60,12 +59,10 @@ namespace EncosyTower.Collections
             Allocate(new ReferenceUnsafe<T>(value, allocator), allocator, out this);
         }
 
-        private static void Allocate(
-              ReferenceUnsafe<T> data
-            , AllocatorStrategy allocator
-            , out ReferenceNative<T> self
-        )
+        private static void Allocate(ReferenceUnsafe<T> data, AllocatorStrategy allocator, out ReferenceNative<T> self)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(data);
+
             self = default;
             self.m_Data = data;
 
@@ -266,6 +263,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(in ReferenceUnsafe<T>.ReadOnly data, ref AtomicSafetyHandle safety)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(data);
+
                 m_Data = data;
                 m_Safety = safety;
 
@@ -282,6 +281,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(in ReferenceUnsafe<T>.ReadOnly data)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(data);
+
                 m_Data = data;
             }
 #endif

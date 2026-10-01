@@ -31,6 +31,9 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 
+using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Buffers
 {
     /// <summary>
@@ -108,7 +111,7 @@ namespace EncosyTower.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)Capacity);
+                CollectionsThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)Capacity);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
@@ -318,7 +321,7 @@ namespace EncosyTower.Buffers
         public readonly BufferNative<U> Reinterpret<U>()
             where U : unmanaged
         {
-            ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
+            CollectionsThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
                 UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
             );
 
@@ -407,8 +410,7 @@ namespace EncosyTower.Buffers
             }
         }
 
-        public readonly struct ReadOnly : IReadOnlyBuffer<T>, IRefReadOnlyIndexer<T>
-            , IAsNativeSliceReadOnly<T>
+        public readonly struct ReadOnly : IReadOnlyBuffer<T>, IRefReadOnlyIndexer<T>, IAsNativeSliceReadOnly<T>
         {
 #pragma warning disable IDE1006 // Naming Styles
             [NativeDisableUnsafePtrRestriction]
@@ -429,6 +431,8 @@ namespace EncosyTower.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnly(BufferNative<T> buffer)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(buffer);
+
                 // SAFETY: The read-only view borrows the live buffer header from its owner.
                 unsafe
                 {
@@ -480,7 +484,7 @@ namespace EncosyTower.Buffers
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get
                 {
-                    ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)Capacity);
+                    CollectionsThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)Capacity);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                     AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
@@ -566,7 +570,7 @@ namespace EncosyTower.Buffers
             public BufferNative<U>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
             {
-                ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
+                CollectionsThrowHelper.ThrowIfTypesNotEqualSize<T, U>(
                     UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                 );
 
@@ -587,6 +591,8 @@ namespace EncosyTower.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(BufferNative<T> buffer)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(buffer);
+
                 // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
                 unsafe
                 {

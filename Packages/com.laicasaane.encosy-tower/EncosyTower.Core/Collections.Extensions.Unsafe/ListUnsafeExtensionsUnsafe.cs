@@ -3,6 +3,8 @@ using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class ListUnsafeExtensionsUnsafe
@@ -12,6 +14,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe BufferUnsafe<T> GetBufferUnsafe<T>(this in ListUnsafe<T> self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the list lifetime.
             unsafe
             {
@@ -24,6 +27,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe ref T GetItemAtUnsafe<T>(this in ListUnsafe<T> self, int index)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: The caller owns the list lifetime and supplies the unchecked element index.
             unsafe
             {

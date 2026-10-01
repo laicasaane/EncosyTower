@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct SharedStackNative<T>
@@ -16,9 +18,11 @@ namespace EncosyTower.Collections
             private int _index;
             private T _current;
 
+            /// <safety>The header must belong to the live owner backing stack for the full enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe Enumerator(SharedStackUnsafe<T>* data, in ReadOnly stack)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(stack);
                 _stack = stack;
                 // SAFETY: data is the live header retained by the borrowed native view.
                 unsafe
@@ -38,10 +42,7 @@ namespace EncosyTower.Collections
                     // SAFETY: The borrowed view keeps the native buffer live while the current item is read.
                     unsafe
                     {
-                        _current = UnsafeUtility.ArrayElementAsRef<T>(
-                              _stack.m_Data->_buffer
-                            , _index--
-                        );
+                        _current = UnsafeUtility.ArrayElementAsRef<T>(_stack.m_Data->_buffer, _index--);
                     }
                     return true;
                 }
@@ -67,8 +68,7 @@ namespace EncosyTower.Collections
                 get => _current;
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct QueueNative<T>
@@ -18,6 +20,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe Enumerator(QueueUnsafe<T>* data, in ReadOnly queue)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(queue);
+
                 _queue = queue;
                 // SAFETY: data is the live header retained by the native owner/view.
                 unsafe
@@ -67,8 +71,7 @@ namespace EncosyTower.Collections
                 get => _current;
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

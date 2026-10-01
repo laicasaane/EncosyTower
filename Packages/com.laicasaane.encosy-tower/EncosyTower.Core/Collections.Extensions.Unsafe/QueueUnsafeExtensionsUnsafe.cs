@@ -2,6 +2,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class QueueUnsafeExtensionsUnsafe
@@ -11,6 +13,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe BufferUnsafe<T> GetBufferUnsafe<T>(this in QueueUnsafe<T> self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {
@@ -23,6 +26,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe int GetHeadUnsafe<T>(this in QueueUnsafe<T> self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {
@@ -35,6 +39,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe int GetTailUnsafe<T>(this in QueueUnsafe<T> self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {
@@ -49,6 +54,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {
@@ -61,6 +67,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe int GetHeadUnsafe<T>(this in QueueUnsafe<T>.ReadOnly self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {
@@ -73,6 +80,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe int GetTailUnsafe<T>(this in QueueUnsafe<T>.ReadOnly self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the queue lifetime.
             unsafe
             {

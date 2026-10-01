@@ -1,16 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Types;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -37,12 +35,16 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ListProxy([NotNull] TProvider provider)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             Provider = provider;
             _isCreated = true;
         }
 
         public ListProxy([NotNull] TProvider provider, int capacity)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             Provider = provider;
             _isCreated = true;
 
@@ -70,8 +72,7 @@ namespace EncosyTower.Collections
             get => _buffer.Capacity;
         }
 
-        public bool IsReadOnly
-            => false;
+        public bool IsReadOnly => false;
 
 #pragma warning disable IDE1006 // Naming Styles
         internal ref TBuffer _buffer
@@ -79,7 +80,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowIfProviderIsNull(Provider != null);
+                ThrowHelper.ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Buffer;
             }
         }
@@ -89,7 +90,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowIfProviderIsNull(Provider != null);
+                ThrowHelper.ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Count;
             }
         }
@@ -99,7 +100,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowIfProviderIsNull(Provider != null);
+                ThrowHelper.ThrowIfProviderIsNull(Provider != null);
                 return ref Provider.Version;
             }
         }
@@ -194,10 +195,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange([NotNull] T[] items)
-            => AddRange(items, items.Length);
+        {
+            DebuggingThrowHelper.ThrowIfNull(items);
+            AddRange(items, items.Length);
+        }
 
         public void AddRange([NotNull] T[] items, int count)
         {
+            DebuggingThrowHelper.ThrowIfNull(items);
+
             _version++;
 
             if (count == 0)
@@ -238,6 +244,8 @@ namespace EncosyTower.Collections
 
         public void AddRange([NotNull] IEnumerable<T> items)
         {
+            DebuggingThrowHelper.ThrowIfNull(items);
+
             switch (items)
             {
                 case IReadOnlyList<T> list:
@@ -363,41 +371,15 @@ namespace EncosyTower.Collections
             return _buffer.Capacity;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Peek()
-            => ref _buffer[_count - 1];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Pop()
-        {
-            _version++;
-            --_count;
-            return ref _buffer[_count];
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(T item)
-        {
-            Insert(_count, item);
-            return _count - 1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(in T item)
-        {
-            Insert(_count, item);
-            return _count - 1;
-        }
-
         public void RemoveRange(int startIndex, int length)
         {
             var count = _count;
 
-            ThrowIfStartIndexIsOutOfRange(startIndex < count);
+            ThrowHelper.ThrowIfStartIndexIsOutOfRange(startIndex < count);
 
             var end = startIndex + length;
 
-            ThrowIfRemovalRangeIsOutOfRange(end <= count);
+            ThrowHelper.ThrowIfRemovalRangeIsOutOfRange(end <= count);
 
             _version++;
 
@@ -424,7 +406,7 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            ThrowIfSwapBackIndexIsOutOfRange(index < _count);
+            ThrowHelper.ThrowIfRemovalIndexIsOutOfRange(index < _count);
 
             _version++;
 
@@ -526,34 +508,30 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ListProxy<TProvider, TBuffer, T> Prefill(
-              [NotNull] TProvider provider
-            , int amount
-        )
+        public static ListProxy<TProvider, TBuffer, T> Prefill([NotNull] TProvider provider, int amount)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ListProxy<TProvider, TBuffer, T> Prefill(
-              [NotNull] TProvider provider
-            , T value
-            , int amount
-        )
+        public static ListProxy<TProvider, TBuffer, T> Prefill([NotNull] TProvider provider, T value, int amount)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicate(value, amount);
             return list;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ListProxy<TProvider, TBuffer, T> PrefillNoInit(
-              [NotNull] TProvider provider
-            , int amount
-        )
+        public static ListProxy<TProvider, TBuffer, T> PrefillNoInit([NotNull] TProvider provider, int amount)
         {
+            DebuggingThrowHelper.ThrowIfNull(provider);
+
             var list = new ListProxy<TProvider, TBuffer, T>(provider, amount);
             list.AddReplicateNoInit(amount);
             return list;
@@ -580,118 +558,6 @@ namespace EncosyTower.Collections
 
             var newCapacity = CalcNewCapacity(newSize);
             _buffer.Resize(newCapacity, true);
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfProviderIsNull([DoesNotReturnIf(false)] bool isInitialized)
-        {
-            if (isInitialized == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("ListProxy<TProvider, TBuffer, T> is not initialized");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indexes for the ListProxy<TProvider, TBuffer, T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound start index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound length");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSwapBackIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool exceedsCapacity)
-        {
-            if (exceedsCapacity == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("newSize is not greater than the current capacity");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

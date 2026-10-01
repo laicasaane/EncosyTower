@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using NUnit.Framework;
 
 using DictionaryAPI = EncosyTower.Collections.Extensions.Unsafe.DictionaryReadOnlyExtensionsUnsafe;
-using FasterListAPI = EncosyTower.Collections.Extensions.Unsafe.FasterListExtensionsUnsafe;
 using HashSetAPI = EncosyTower.Collections.Extensions.Unsafe.HashSetReadOnlyExtensionsUnsafe;
 using ListFastAPI = EncosyTower.Collections.Extensions.Unsafe.ListFastExtensionsUnsafe;
 
@@ -19,7 +19,7 @@ namespace EncosyTower.Tests.Core.Collections.Extensions.Unsafe
             var list = new List<int> { 1 };
             var dictionaryView = new DictionaryReadOnly<int, string>(dictionary);
             var setView = new HashSetReadOnly<int>(set);
-            var listView = new ListFast<int>(list).AsReadOnly();
+            var listView = list.AsListFast().AsReadOnly();
 
             var returnedDictionary = DictionaryAPI.GetDictionaryUnsafe(dictionaryView);
             var returnedSet = HashSetAPI.GetHashSetUnsafe(setView);
@@ -31,14 +31,15 @@ namespace EncosyTower.Tests.Core.Collections.Extensions.Unsafe
         }
 
         [Test]
-        public void FasterListBuffer_AliasesListStorageAndReportsCount()
+        public void ListFastBuffer_AliasesListStorageAndReportsCount()
         {
-            var list = new FasterList<int>(1, 2, 3);
+            var list = new List<int> { 1, 2, 3 };
+            var listFast = list.AsListFast();
 
-            FasterListAPI.GetBufferUnsafe(list, out var buffer, out var count);
+            ListFastAPI.GetBufferUnsafe(listFast, out var buffer, out var count);
             buffer[0] = 99;
 
-            Assert.AreEqual(list.Count, count);
+            Assert.AreEqual(listFast.Count, count);
             Assert.AreEqual(99, list[0]);
         }
     }

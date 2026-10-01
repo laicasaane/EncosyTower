@@ -51,10 +51,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, ListProxyAPI.BinarySearch(ref list, in five, comparer));
             Assert.Less(ListProxyAPI.BinarySearch(ref list, 4, comparer), 0);
             Assert.AreEqual(1, ListProxyAPI.BinarySearch(ref list, 1, 2, 3, comparer));
-            Assert.Less(
-                  ListProxyAPI.BinarySearch(ref list, 1, 2, in seven, comparer)
-                , 0
-            );
+            Assert.Less(ListProxyAPI.BinarySearch(ref list, 1, 2, in seven, comparer), 0);
             Assert.Less(ListProxyAPI.BinarySearch(ref list, 1, 2, 7, comparer), 0);
         }
 
@@ -128,23 +125,11 @@ namespace EncosyTower.Tests.Core.Collections
             var seven = 7;
 
             Assert.AreEqual(2, ListProxyReadOnlyAPI.BinarySearch(ref view, 5, comparer));
-            Assert.AreEqual(
-                  2
-                , ListProxyReadOnlyAPI.BinarySearch(ref view, in five, comparer)
-            );
+            Assert.AreEqual(2, ListProxyReadOnlyAPI.BinarySearch(ref view, in five, comparer));
             Assert.Less(ListProxyReadOnlyAPI.BinarySearch(ref view, 4, comparer), 0);
-            Assert.AreEqual(
-                  1
-                , ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, 3, comparer)
-            );
-            Assert.Less(
-                  ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, in seven, comparer)
-                , 0
-            );
-            Assert.Less(
-                  ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, 7, comparer)
-                , 0
-            );
+            Assert.AreEqual(1, ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, 3, comparer));
+            Assert.Less(ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, in seven, comparer), 0);
+            Assert.Less(ListProxyReadOnlyAPI.BinarySearch(ref view, 1, 2, 7, comparer), 0);
         }
 
         [Test]
@@ -165,10 +150,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, ListProxyReadOnlyAPI.IndexOf(ref view, in five, 2));
             Assert.AreEqual(2, ListProxyReadOnlyAPI.IndexOf(ref view, in five, 1, 2));
             Assert.AreEqual(2, ListProxyReadOnlyAPI.IndexOf(ref view, 5, comparer));
-            Assert.AreEqual(
-                  2
-                , ListProxyReadOnlyAPI.IndexOf(ref view, in five, comparer)
-            );
+            Assert.AreEqual(2, ListProxyReadOnlyAPI.IndexOf(ref view, in five, comparer));
         }
 
         private static ListProxy<BufferProvider<int>, BufferManaged<int>, int> NewList()

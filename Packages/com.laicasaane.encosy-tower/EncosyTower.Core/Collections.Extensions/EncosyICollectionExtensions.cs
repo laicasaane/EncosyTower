@@ -28,7 +28,6 @@ namespace EncosyTower.Collections.Extensions
         /// using the most efficient method available for that type.
         /// <br/>
         /// <list type="bullet">
-        /// <item><see cref="FasterList{T}.IncreaseCapacityBy(int)"/></item>
         /// <item><see cref="List{T}.AsListFast().IncreaseCapacityBy(int)"/></item>
         /// <item><see cref="HashSet{T}.EnsureCapacity(int)"/></item>
         /// <item><see cref="IIncreaseCapacity.IncreaseCapacityBy(int)"/></item>
@@ -39,10 +38,6 @@ namespace EncosyTower.Collections.Extensions
         {
             switch (self)
             {
-                case FasterList<T> fasterList:
-                    fasterList.IncreaseCapacityBy(amount);
-                    return true;
-
                 case List<T> list:
                     list.AsListFast().IncreaseCapacityBy(amount);
                     return true;
@@ -74,7 +69,6 @@ namespace EncosyTower.Collections.Extensions
         /// using the most efficient method available for that type.
         /// <br/>
         /// <list type="bullet">
-        /// <item><see cref="FasterList{T}.IncreaseCapacityTo(int)"/></item>
         /// <item><see cref="List{T}.AsListFast().IncreaseCapacityTo(int)"/></item>
         /// <item><see cref="HashSet{T}.EnsureCapacity(int)"/></item>
         /// <item><see cref="IIncreaseCapacity.IncreaseCapacityTo(int)"/></item>
@@ -85,10 +79,6 @@ namespace EncosyTower.Collections.Extensions
         {
             switch (self)
             {
-                case FasterList<T> fasterList:
-                    fasterList.IncreaseCapacityTo(newCapacity);
-                    return true;
-
                 case List<T> list:
                     list.AsListFast().IncreaseCapacityTo(newCapacity);
                     return true;
@@ -118,7 +108,6 @@ namespace EncosyTower.Collections.Extensions
         /// <br/>
         /// <list type="bullet">
         /// <item><see cref="List{T}.AddRange(IEnumerable{T})"/></item>
-        /// <item><see cref="FasterList{T}.AddRange(IEnumerable{T})"/></item>
         /// </list>
         /// <br/>
         /// For other types of collection, it iterates through the items and adds them one by one.
@@ -130,12 +119,6 @@ namespace EncosyTower.Collections.Extensions
                 case List<T> list:
                 {
                     list.AsListFast().AddRange(items);
-                    return;
-                }
-
-                case FasterList<T> fasterList:
-                {
-                    fasterList.AddRange(items);
                     return;
                 }
 
@@ -165,7 +148,6 @@ namespace EncosyTower.Collections.Extensions
         /// <br/>
         /// <list type="bullet">
         /// <item><see cref="List{T}.AddRange(IEnumerable{T})"/></item>
-        /// <item><see cref="FasterList{T}.AddRange(IEnumerable{T})"/></item>
         /// <item><see cref="HashSet{T}.UnionWith(IEnumerable{T})"/></item>
         /// </list>
         /// <br/>
@@ -183,12 +165,6 @@ namespace EncosyTower.Collections.Extensions
                 case List<T> list:
                 {
                     list.AddRange(items);
-                    return;
-                }
-
-                case FasterList<T> fasterList:
-                {
-                    fasterList.AddRange(items);
                     return;
                 }
 

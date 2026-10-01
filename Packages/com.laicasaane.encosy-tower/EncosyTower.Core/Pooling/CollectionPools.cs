@@ -41,8 +41,6 @@ namespace EncosyTower.Pooling
             => s_pool.Release(toRelease);
     }
 
-    public sealed class FasterListPool<T> : CollectionPool<FasterList<T>, T> { }
-
     public sealed class ArrayMapPool<TKey, TValue>
     {
         internal static readonly ObjectPool<ArrayMap<TKey, TValue>> s_pool

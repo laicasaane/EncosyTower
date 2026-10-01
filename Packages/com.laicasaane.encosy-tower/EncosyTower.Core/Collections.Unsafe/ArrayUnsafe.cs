@@ -27,14 +27,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using UnityEngine;
 using UnityEngine.Internal;
 
 using static EncosyTower.Debugging.ValidationDefines;
@@ -140,10 +138,7 @@ namespace EncosyTower.Collections.Unsafe
         [WriteAccessRequired]
         public void Dispose()
         {
-            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
-                IsCreated,
-                ThrowHelper.CollectionType.ArrayUnsafe
-            );
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(IsCreated, ThrowHelper.CollectionType.ArrayUnsafe);
             ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
                 _allocator.IsValid,
                 ThrowHelper.CollectionType.ArrayUnsafe
@@ -172,10 +167,7 @@ namespace EncosyTower.Collections.Unsafe
                 _allocator.IsValid,
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
-            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
-                IsCreated,
-                ThrowHelper.CollectionType.ArrayUnsafe
-            );
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(IsCreated, ThrowHelper.CollectionType.ArrayUnsafe);
 
             // SAFETY: Reading the pointer field only captures the current allocation for transfer.
             unsafe
@@ -242,7 +234,7 @@ namespace EncosyTower.Collections.Unsafe
         public readonly unsafe ArrayUnsafe<U> Reinterpret<U>()
             where U : unmanaged
         {
-            ThrowIfTypesNotEqualSize<U>(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
+            ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
 
             // SAFETY: Equal-size validation preserves element boundaries and the result borrows this buffer.
             unsafe
@@ -395,8 +387,8 @@ namespace EncosyTower.Collections.Unsafe
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
         private static void CheckAllocateArguments(int length, AllocatorStrategy allocator)
         {
-            ThrowIfAllocatorNotSupported(ShouldDeallocate(allocator));
-            ThrowIfAllocateLengthNegative(length >= 0);
+            ThrowHelper.ThrowIfAllocatorNotSupported(ShouldDeallocate(allocator));
+            ThrowHelper.ThrowIfAllocateLengthNegative(length >= 0);
         }
 
         private static void Allocate(int length, AllocatorStrategy allocator, out ArrayUnsafe<T> array)
@@ -445,61 +437,6 @@ namespace EncosyTower.Collections.Unsafe
                 ThrowHelper.CollectionType.ArrayUnsafe
             );
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAllocatorNotSupported([DoesNotReturnIf(false)] bool isSupported)
-        {
-            if (isSupported == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new(
-                    "Allocator strategy must resolve to Temp, TempJob, Persistent or a valid custom allocator",
-                    "allocator"
-                );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfAllocateLengthNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
-        {
-            if (isZeroOrPositive == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException()
-                => new("length", "Length must be >= 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfTypesNotEqualSize<U>([DoesNotReturnIf(false)] bool areEqual)
-            where U : unmanaged
-        {
-            if (areEqual == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new(
-                    $"size of type '{typeof(U).FullName}' must be equal to " +
-                    $"size of type '{typeof(T).FullName}'"
-                );
-        }
-
         [ExcludeFromDocs]
         public struct Enumerator : IEnumerator<T>
         {
@@ -512,11 +449,9 @@ namespace EncosyTower.Collections.Unsafe
                 _index = -1;
             }
 
-            public readonly T Current
-                => _array[_index];
+            public readonly T Current => _array[_index];
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public readonly void Dispose()
             {
@@ -534,15 +469,14 @@ namespace EncosyTower.Collections.Unsafe
 
         private sealed class UnsafeArrayDebugView
         {
-            private ArrayUnsafe<T> array;
+            private ArrayUnsafe<T> _array;
 
             public UnsafeArrayDebugView(ArrayUnsafe<T> array)
             {
-                this.array = array;
+                _array = array;
             }
 
-            public T[] Items
-                => array.ToArray();
+            public T[] Items => _array.ToArray();
         }
     }
 }

@@ -487,10 +487,12 @@ namespace EncosyTower.Tests.Core.Collections
         {
             ArrayMapNative<int, int> source = default;
 
-            Assert.Throws<InvalidOperationException>(() =>
+            var exception = Assert.Throws<ArgumentException>(() =>
             {
                 using var copy = new ArrayMapNative<int, int>(source, Allocator.Temp);
             });
+
+            Assert.That(exception!.ParamName, Is.EqualTo(nameof(source)));
         }
 
         [Test]

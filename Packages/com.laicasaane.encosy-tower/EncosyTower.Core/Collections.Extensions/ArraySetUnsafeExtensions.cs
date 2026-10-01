@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ArraySetUnsafeExtensions
@@ -10,7 +12,10 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<T> GetItems<T>(this in ArraySetUnsafe<T> self)
             where T : unmanaged, IEquatable<T>
-                => self._values.AsSpan()[..self._freeValueCellIndex];
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return self._values.AsSpan()[..self._freeValueCellIndex];
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref T GetOrAdd<T>(
@@ -20,6 +25,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -40,6 +46,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -71,6 +78,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -112,6 +120,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -139,6 +148,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged, IEquatable<T>
             where TBuilder : IFunc<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -160,6 +170,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged, IEquatable<T>
             where TBuilder : IFuncRef<TParam, T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -194,6 +205,7 @@ namespace EncosyTower.Collections.Extensions
             where TRecyler : IActionRef<T>
             where TShouldBeRecycled : IPredicateRef<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;
@@ -238,6 +250,7 @@ namespace EncosyTower.Collections.Extensions
             where TRecyler : IActionRef<T, TParam>
             where TShouldBeRecycled : IPredicateRef<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.AddValue(value, out var index) == false)
             {
                 self._version++;

@@ -7,6 +7,8 @@ using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct QueueNative<T>
@@ -36,6 +38,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(QueueNative<T> source)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(source);
+
                 // SAFETY: The view borrows the live queue header and owner safety handle.
                 unsafe
                 {
@@ -58,6 +62,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Count
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,6 +76,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,7 +191,10 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(in QueueNative<T> source)
-                => source.AsReadOnly();
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(source);
+                return source.AsReadOnly();
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private readonly void CheckRead()

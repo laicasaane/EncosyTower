@@ -3,6 +3,8 @@ using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class StackUnsafeExtensionsUnsafe
@@ -12,6 +14,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe BufferUnsafe<T> GetBufferUnsafe<T>(this in StackUnsafe<T> self)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the stack lifetime.
             unsafe
             {
@@ -24,6 +27,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe ref T GetItemAtUnsafe<T>(this in StackUnsafe<T> self, int index)
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns lifetime and supplies unchecked storage index.
             unsafe
             {
@@ -38,6 +42,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns the stack lifetime.
             unsafe
             {
@@ -53,6 +58,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         )
             where T : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller owns lifetime and supplies unchecked storage index.
             unsafe
             {

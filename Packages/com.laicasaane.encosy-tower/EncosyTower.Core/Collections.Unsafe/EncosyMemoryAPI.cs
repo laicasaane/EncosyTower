@@ -7,18 +7,11 @@
 // is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
 
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Unsafe
 {
@@ -49,12 +42,7 @@ namespace EncosyTower.Collections.Unsafe
         public struct Unmanaged
         {
             /// <safety>The returned pointer is valid until freed with the matching allocator.</safety>
-            public static unsafe void* Allocate(
-                  long size
-                , int align
-                , long count
-                , AllocatorStrategy allocator
-            )
+            public static unsafe void* Allocate(long size, int align, long count, AllocatorStrategy allocator)
             {
                 // SAFETY: The allocator and unmanaged byte count are supplied by the caller's allocation contract.
                 unsafe
@@ -141,7 +129,7 @@ namespace EncosyTower.Collections.Unsafe
                                 , (int)newCount
                             );
 
-                            ThrowIfFailedToAllocate(newPointer != null);
+                            ThrowHelper.ThrowIfFailedToAllocate(newPointer != null);
 
                             if (oldCount > 0)
                             {
@@ -326,66 +314,8 @@ namespace EncosyTower.Collections.Unsafe
 
         public static void CheckByteCountIsReasonable(long size)
         {
-            ThrowIfByteCountIsNegative(size < 0, size);
-            ThrowIfByteCountExceedsMaximum(size > MAXIMUM_RAM_SIZE_IN_BYTES, size);
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfFailedToAllocate([DoesNotReturnIf(false)] bool success)
-        {
-            if (success == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Failed to allocate.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfByteCountIsNegative(
-            [DoesNotReturnIf(true)] bool isNegative
-          , long size
-        )
-        {
-            if (isNegative)
-            {
-                throw CreateException(size);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(long size)
-            {
-                return new($"Attempted to operate on {size} bytes of memory: negative size.");
-            }
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfByteCountExceedsMaximum(
-            [DoesNotReturnIf(true)] bool exceedsMaximum
-          , long size
-        )
-        {
-            if (exceedsMaximum)
-            {
-                throw CreateException(size);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(long size)
-            {
-                return new($"Attempted to operate on {size} bytes of memory: size too big.");
-            }
+            ThrowHelper.ThrowIfByteCountIsNegative(size < 0, size);
+            ThrowHelper.ThrowIfByteCountExceedsMaximum(size > MAXIMUM_RAM_SIZE_IN_BYTES, size);
         }
     }
 }

@@ -9,6 +9,8 @@ using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ListProxyReadOnlyExtensions
@@ -22,6 +24,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
             return length > 0 && MemoryExtensions.IndexOf(items, item) >= 0;
@@ -36,6 +39,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
             return length > 0 && MemoryExtensions.IndexOf(items, item) >= 0;
@@ -50,6 +54,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -75,6 +80,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var items = self.AsReadOnlySpan();
             var length = items.Length;
 
@@ -101,6 +107,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(ref self, 0, self.Count, item, comparer);
         }
 
@@ -116,15 +123,12 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self.Count - index >= count);
 
-            var result = MemoryExtensions.BinarySearch(
-                  self.AsReadOnlySpan().Slice(index, count)
-                , item
-                , comparer
-            );
+            var result = MemoryExtensions.BinarySearch(self.AsReadOnlySpan().Slice(index, count), item, comparer);
             return result < 0 ? result : result + index;
         }
 
@@ -138,6 +142,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return BinarySearch(ref self, 0, self.Count, in item, comparer);
         }
 
@@ -153,15 +158,12 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfRangeIsWithinList(self.Count - index >= count);
 
-            var result = MemoryExtensions.BinarySearch(
-                  self.AsReadOnlySpan().Slice(index, count)
-                , item
-                , comparer
-            );
+            var result = MemoryExtensions.BinarySearch(self.AsReadOnlySpan().Slice(index, count), item, comparer);
             return result < 0 ? result : result + index;
         }
 
@@ -174,6 +176,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, item, 0);
         }
 
@@ -187,6 +190,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, item, index, self.Count - index);
         }
 
@@ -201,6 +205,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self.Count);
@@ -218,6 +223,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, in item, 0);
         }
 
@@ -231,6 +237,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return IndexOf(ref self, in item, index, self.Count - index);
         }
 
@@ -245,6 +252,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where T : IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfIndexIsNonNegative(index >= 0);
             ThrowIfCountIsNonNegative(count >= 0);
             ThrowIfSectionIsWithinList(index + count <= self.Count);
@@ -263,6 +271,7 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), item, comparer);
         }
 
@@ -276,8 +285,10 @@ namespace EncosyTower.Collections.Extensions
             where TBuffer : IBuffer<T>
             where TComparer : IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             return EncosyMemoryExtensions.IndexOf(self.AsReadOnlySpan(), in item, comparer);
         }
+
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]

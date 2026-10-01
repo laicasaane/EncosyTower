@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.SystemExtensions;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class EncosyDictionaryExtensions
@@ -23,6 +25,7 @@ namespace EncosyTower.Collections.Extensions
             , IEnumerable<KeyValuePair<TKey, TValue>> collection
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(dest);
             if (collection == null)
             {
                 return;
@@ -51,6 +54,7 @@ namespace EncosyTower.Collections.Extensions
             , Func<TKeySrc, TKey> convertKey
         )
         {
+            DebuggingThrowHelper.ThrowIfNull(dest);
             if (collection == null || convertKey == null)
             {
                 return;

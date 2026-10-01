@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using EncosyTower.Collections.Extensions;
 using NUnit.Framework;
 
-using ArrayAPI = EncosyTower.Collections.Extensions.EncosyArrayExtensions;
 using CollectionAPI = EncosyTower.Collections.Extensions.EncosyICollectionExtensions;
 using DictionaryAPI = EncosyTower.Collections.Extensions.EncosyDictionaryExtensions;
 using DisposableAPI = EncosyTower.Collections.Extensions.DisposableCollectionExtensions;
@@ -14,22 +13,6 @@ using UnmanagedAPI = EncosyTower.Collections.Extensions.EncosyICollectionExtensi
 
 namespace EncosyTower.Tests.Core.Collections.Extensions
 {
-    public partial class EncosyArrayExtensionsTests
-    {
-        [Test]
-        public void ConversionAndReadOnlySpan_ExposeSourceValues()
-        {
-            var source = new[] { 1, 2, 3 };
-            var list = ArrayAPI.ToList(source);
-            var fasterList = ArrayAPI.ToFasterList(source);
-            var span = ArrayAPI.AsReadOnlySpan(source);
-
-            CollectionAssert.AreEqual(source, list);
-            CollectionAssert.AreEqual(source, fasterList.ToArray());
-            CollectionAssert.AreEqual(source, span.ToArray());
-        }
-    }
-
     public partial class EncosyListExtensionsTests
     {
         [Test]
@@ -133,9 +116,12 @@ namespace EncosyTower.Tests.Core.Collections.Extensions
 
             Assert.IsTrue(EncosyHashSetExtenions.Overlaps(set, overlapping));
             Assert.IsFalse(EncosyHashSetExtenions.Overlaps(set, separate));
-            Assert.IsFalse(EncosyHashSetExtenions.Overlaps<int>(null, overlapping));
+            var exception = Assert.Throws<ArgumentNullException>(
+                () => EncosyHashSetExtenions.Overlaps<int>(null, overlapping)
+            );
             Assert.AreEqual(3, readOnly.Count);
             Assert.IsTrue(readOnly.Contains(2));
+            Assert.That(exception!.ParamName, Is.EqualTo("a"));
         }
 
         [Test]

@@ -25,10 +25,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -44,8 +45,10 @@ namespace EncosyTower.Collections
             internal readonly ListProxy<TProvider, TBuffer, T> _list;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnly([NotNull] ListProxy<TProvider, TBuffer, T> list)
+            public ReadOnly(ListProxy<TProvider, TBuffer, T> list)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+
                 _list = list;
             }
 
@@ -60,6 +63,7 @@ namespace EncosyTower.Collections
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => _list.Count;
             }
+
             public int Capacity
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,7 +72,10 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(ListProxy<TProvider, TBuffer, T> list)
-                => new(list);
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+                return new(list);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public BufferProviderEnumerator<TProvider, TBuffer, T> GetEnumerator()

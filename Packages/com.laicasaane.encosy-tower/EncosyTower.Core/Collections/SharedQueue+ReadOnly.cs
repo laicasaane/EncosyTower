@@ -4,24 +4,22 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial class SharedQueue<T, TNative>
         where T : unmanaged
         where TNative : unmanaged
     {
-        public readonly struct ReadOnly
-            : IReadOnlyCollection<T>
-            , IHasCapacity
-            , IHasCount
-            , IIsCreated
-            , ITryCopyToSpan<T>
+        public readonly struct ReadOnly : IReadOnlyCollection<T>, IHasCapacity, IHasCount, IIsCreated, ITryCopyToSpan<T>
         {
             internal readonly SharedQueue<T, TNative> _queue;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(SharedQueue<T, TNative> queue)
             {
+                DebuggingThrowHelper.ThrowIfNull(queue);
                 _queue = queue;
             }
 
@@ -87,25 +85,62 @@ namespace EncosyTower.Collections
             public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
                 => _queue.TryCopyTo(sourceStartIndex, destination, length);
 
+            /// <safety>The queue must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly Enumerator GetEnumerator()
-                => new(this);
+            public readonly unsafe Enumerator GetEnumerator()
+            {
+                // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+                unsafe
+                {
+                    return new(this);
+                }
+            }
 
+            /// <safety>The queue must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this queue view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The queue must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this queue view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The returned native alias must not outlive the queue or survive resize.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly SharedQueueNative<TNative>.ReadOnly AsNative()
-                => _queue.AsNative().AsReadOnly();
+            public readonly unsafe SharedQueueNative<TNative>.ReadOnly AsNative()
+            {
+                // SAFETY: The managed queue owns both aliases for the complete borrowed lifetime.
+                unsafe
+                {
+                    return _queue.AsNative().AsReadOnly();
+                }
+            }
 
+            /// <safety>The returned alias must not outlive the source queue.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(SharedQueue<T, TNative> queue)
-                => new(queue);
+            public static unsafe implicit operator ReadOnly(SharedQueue<T, TNative> queue)
+            {
+                DebuggingThrowHelper.ThrowIfNull(queue);
+
+                // SAFETY: The non-null queue remains the designated owner of the returned alias.
+                unsafe
+                {
+                    return new(queue);
+                }
+            }
         }
     }
 }

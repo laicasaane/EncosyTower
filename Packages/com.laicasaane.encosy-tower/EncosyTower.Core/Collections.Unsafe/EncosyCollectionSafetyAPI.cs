@@ -61,7 +61,7 @@ namespace EncosyTower.Collections.Unsafe
         /// Releases a handle right after a dispose job has been scheduled
         /// (the <c>Dispose(JobHandle)</c> pattern). Unlike
         /// <see cref="DisposeSafetyHandle(ref AtomicSafetyHandle)"/> it performs no
-        /// deallocation check — the caller has already validated the handle.
+        /// deallocation check, the caller has already validated the handle.
         /// </summary>
         /// <remarks>
         /// The shared temp handle must never be released directly; swap in a fresh

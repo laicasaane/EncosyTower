@@ -2,15 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Exposed;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Types;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -30,8 +28,55 @@ namespace EncosyTower.Collections
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ListFast([NotNull] List<T> list)
+        public ListFast(int capacity)
         {
+            _list = new(new List<T>(capacity));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ListFast([NotNull] params T[] source)
+        {
+            DebuggingThrowHelper.ThrowIfNull(source);
+            _list = new(new List<T>(source.Length));
+            _count = source.Length;
+            CopyFrom(source);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ListFast(in ArraySegment<T> source)
+        {
+            _list = new(new List<T>(source.Count));
+            _count = source.Count;
+            CopyFrom(source);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ListFast(in ReadOnlySpan<T> source)
+        {
+            _list = new(new List<T>(source.Length));
+            _count = source.Length;
+            CopyFrom(source);
+        }
+
+        public ListFast([NotNull] IEnumerable<T> source)
+        {
+            DebuggingThrowHelper.ThrowIfNull(source);
+
+            if (source is ICollection<T> collection)
+            {
+                _list = new(new List<T>(collection.Count));
+                _count = collection.Count;
+                collection.CopyTo(_list.Items, 0);
+                return;
+            }
+
+            _list = new(new List<T>(source));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ListFast([NotNull] List<T> list)
+        {
+            DebuggingThrowHelper.ThrowIfNull(list);
             _list = new(list);
         }
 
@@ -53,8 +98,7 @@ namespace EncosyTower.Collections
             get => _buffer.Length;
         }
 
-        public bool IsReadOnly
-            => false;
+        public bool IsReadOnly => false;
 
         public List<T> List
         {
@@ -115,14 +159,22 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Exists([NotNull] Predicate<T> match)
-            => FindIndex(match) != -1;
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindIndex(match) != -1;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Exists([NotNull] PredicateIn<T> match)
-            => FindIndex(match) != -1;
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindIndex(match) != -1;
+        }
 
         public Option<T> Find([NotNull] Predicate<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
 
@@ -141,6 +193,8 @@ namespace EncosyTower.Collections
 
         public Option<T> Find([NotNull] PredicateIn<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
 
@@ -160,6 +214,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ListFast<T> FindAll([NotNull] Predicate<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             var result = new ListFast<T>();
             FindAll(match, result);
 
@@ -169,14 +225,19 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ListFast<T> FindAll([NotNull] PredicateIn<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             var result = new ListFast<T>();
             FindAll(match, result);
 
             return result;
         }
 
-        public void FindAll([NotNull] Predicate<T> match, [NotNull] ListFast<T> result)
+        public void FindAll([NotNull] Predicate<T> match, ListFast<T> result)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            DebuggingThrowHelper.ThrowIfNotCreated(result);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
 
@@ -191,8 +252,11 @@ namespace EncosyTower.Collections
             }
         }
 
-        public void FindAll([NotNull] PredicateIn<T> match, [NotNull] ListFast<T> result)
+        public void FindAll([NotNull] PredicateIn<T> match, ListFast<T> result)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            DebuggingThrowHelper.ThrowIfNotCreated(result);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
 
@@ -209,6 +273,9 @@ namespace EncosyTower.Collections
 
         public void FindAll([NotNull] Predicate<T> match, [NotNull] ICollection<T> result)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            DebuggingThrowHelper.ThrowIfNull(result);
+
             if (result is List<T> listResult)
             {
                 FindAll(match, listResult);
@@ -221,6 +288,9 @@ namespace EncosyTower.Collections
 
         public void FindAll([NotNull] PredicateIn<T> match, [NotNull] ICollection<T> result)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            DebuggingThrowHelper.ThrowIfNull(result);
+
             if (result is List<T> listResult)
             {
                 FindAll(match, listResult);
@@ -233,7 +303,10 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex([NotNull] Predicate<T> match)
-            => FindIndex(0, _count, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindIndex(0, _count, match);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex(int startIndex, Predicate<T> match)
@@ -241,8 +314,10 @@ namespace EncosyTower.Collections
 
         public int FindIndex(int startIndex, int count, [NotNull] Predicate<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.ListFast);
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex <= _count - count, ThrowHelper.CollectionType.ListFast);
 
             var items = AsReadOnlySpan();
@@ -263,7 +338,10 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex([NotNull] PredicateIn<T> match)
-            => FindIndex(0, _count, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindIndex(0, _count, match);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindIndex(int startIndex, PredicateIn<T> match)
@@ -271,8 +349,10 @@ namespace EncosyTower.Collections
 
         public int FindIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.ListFast);
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex <= _count - count, ThrowHelper.CollectionType.ListFast);
 
             var items = AsReadOnlySpan();
@@ -293,14 +373,22 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindLastIndex([NotNull] Predicate<T> match)
-            => FindLastIndex(_count - 1, _count, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindLastIndex(_count - 1, _count, match);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindLastIndex(int startIndex, [NotNull] Predicate<T> match)
-            => FindLastIndex(startIndex, startIndex + 1, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindLastIndex(startIndex, startIndex + 1, match);
+        }
 
         public int FindLastIndex(int startIndex, int count, [NotNull] Predicate<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             if (_count == 0)
             {
                 ThrowHelper.ThrowIfFindStartIndexIsOutOfRange(startIndex == -1, ThrowHelper.CollectionType.ListFast);
@@ -310,7 +398,7 @@ namespace EncosyTower.Collections
                 ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.ListFast);
             }
 
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex - count + 1 >= 0, ThrowHelper.CollectionType.ListFast);
 
             var items = AsReadOnlySpan();
@@ -330,14 +418,22 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindLastIndex([NotNull] PredicateIn<T> match)
-            => FindLastIndex(_count - 1, _count, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindLastIndex(_count - 1, _count, match);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int FindLastIndex(int startIndex, [NotNull] PredicateIn<T> match)
-            => FindLastIndex(startIndex, startIndex + 1, match);
+        {
+            DebuggingThrowHelper.ThrowIfNull(match);
+            return FindLastIndex(startIndex, startIndex + 1, match);
+        }
 
         public int FindLastIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
         {
+            DebuggingThrowHelper.ThrowIfNull(match);
+
             if (_count == 0)
             {
                 ThrowHelper.ThrowIfFindStartIndexIsOutOfRange(startIndex == -1, ThrowHelper.CollectionType.ListFast);
@@ -347,7 +443,7 @@ namespace EncosyTower.Collections
                 ThrowHelper.ThrowIfFindStartIndexIsOutOfRange((uint)startIndex < (uint)_count, ThrowHelper.CollectionType.ListFast);
             }
 
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfFindSectionIsInvalid(startIndex - count + 1 >= 0, ThrowHelper.CollectionType.ListFast);
 
             var items = AsReadOnlySpan();
@@ -365,22 +461,6 @@ namespace EncosyTower.Collections
             return -1;
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("count is less than 0");
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
             => IndexOf(item, 0);
@@ -392,8 +472,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item, int index, int count)
         {
-            ThrowIfIndexIsNegative(index >= 0);
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexIsNegative(index >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count, ThrowHelper.CollectionType.ListFast);
             return Array.IndexOf(_buffer, item, index, count);
         }
@@ -409,8 +489,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(in T item, int index, int count)
         {
-            ThrowIfIndexIsNegative(index >= 0);
-            ThrowIfCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfIndexIsNegative(index >= 0);
+            ThrowHelper.ThrowIfCountIsNegative(count >= 0);
             ThrowHelper.ThrowIfIndexSectionIsInvalid(index + count <= _count, ThrowHelper.CollectionType.ListFast);
             return Array.IndexOf(_buffer, item, index, count);
         }
@@ -486,10 +566,15 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange([NotNull] T[] items)
-            => AddRange(items, items.Length);
+        {
+            DebuggingThrowHelper.ThrowIfNull(items);
+            AddRange(items, items.Length);
+        }
 
         public void AddRange([NotNull] T[] items, int count)
         {
+            DebuggingThrowHelper.ThrowIfNull(items);
+
             _version++;
 
             if (count == 0)
@@ -530,6 +615,8 @@ namespace EncosyTower.Collections
 
         public void AddRange([NotNull] IEnumerable<T> collection)
         {
+            DebuggingThrowHelper.ThrowIfNull(collection);
+
             if (collection is ICollection<T> c)
             {
                 var count = c.Count;
@@ -571,6 +658,8 @@ namespace EncosyTower.Collections
 
         public void ForEach([NotNull] Action<T> action)
         {
+            DebuggingThrowHelper.ThrowIfNull(action);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
             var version = _version;
@@ -586,11 +675,13 @@ namespace EncosyTower.Collections
                 action(item);
             }
 
-            ThrowIfCollectionWasModified(version == _version);
+            ThrowHelper.ThrowIfCollectionWasModified(version == _version, ThrowHelper.CollectionType.ListFast);
         }
 
         public void ForEach([NotNull] ActionIn<T> action)
         {
+            DebuggingThrowHelper.ThrowIfNull(action);
+
             var items = AsReadOnlySpan();
             var length = items.Length;
             var version = _version;
@@ -606,11 +697,13 @@ namespace EncosyTower.Collections
                 action(in item);
             }
 
-            ThrowIfCollectionWasModified(version == _version);
+            ThrowHelper.ThrowIfCollectionWasModified(version == _version, ThrowHelper.CollectionType.ListFast);
         }
 
         public void ForEach([NotNull] ActionRef<T> action)
         {
+            DebuggingThrowHelper.ThrowIfNull(action);
+
             var items = AsSpan();
             var length = items.Length;
             var version = _version;
@@ -625,7 +718,7 @@ namespace EncosyTower.Collections
                 action(ref items[i]);
             }
 
-            ThrowIfCollectionWasModified(version == _version);
+            ThrowHelper.ThrowIfCollectionWasModified(version == _version, ThrowHelper.CollectionType.ListFast);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -737,32 +830,6 @@ namespace EncosyTower.Collections
             return _buffer.Length;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Peek()
-            => ref _buffer[_count - 1];
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref readonly T Pop()
-        {
-            _version++;
-            --_count;
-            return ref _buffer[_count];
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(T item)
-        {
-            Insert(_count, item);
-            return _count - 1;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Push(in T item)
-        {
-            Insert(_count, item);
-            return _count - 1;
-        }
-
         public bool Remove(T item)
         {
             _version++;
@@ -813,7 +880,7 @@ namespace EncosyTower.Collections
 
         public void RemoveAt(int index)
         {
-            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
+            ThrowHelper.ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
 
             _version++;
 
@@ -832,11 +899,11 @@ namespace EncosyTower.Collections
         {
             var count = _count;
 
-            ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
+            ThrowHelper.ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
 
             var end = startIndex + length;
 
-            ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
+            ThrowHelper.ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
 
             _version++;
 
@@ -860,7 +927,7 @@ namespace EncosyTower.Collections
 
         public void RemoveAtSwapBack(int index)
         {
-            ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
+            ThrowHelper.ThrowIfRemovalIndexIsOutOfRange((uint)index < (uint)_count);
 
             _version++;
 
@@ -903,6 +970,8 @@ namespace EncosyTower.Collections
 
         public Span<T> AddReplicate(int amount, [NotNull] Func<T> createFunc)
         {
+            DebuggingThrowHelper.ThrowIfNull(createFunc);
+
             _version++;
 
             var oldCount = _count;
@@ -996,7 +1065,10 @@ namespace EncosyTower.Collections
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Sort([NotNull] IComparer<T> comparer)
-            => Sort(0, _count, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNull(comparer);
+            Sort(0, _count, comparer);
+        }
 
         /// <summary>
         /// Sorts the elements in a section of this list. The sort compares the
@@ -1010,9 +1082,11 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Sort(int index, int count, [NotNull] IComparer<T> comparer)
         {
-            ThrowIfSortIndexIsNegative(index >= 0);
-            ThrowIfSortCountIsNegative(count >= 0);
-            ThrowIfSortRangeIsInvalid(_count - index >= count);
+            DebuggingThrowHelper.ThrowIfNull(comparer);
+
+            ThrowHelper.ThrowIfSortIndexIsNegative(index >= 0);
+            ThrowHelper.ThrowIfSortCountIsNegative(count >= 0);
+            ThrowHelper.ThrowIfSortRangeIsInvalid(_count - index >= count);
 
             if (count > 1)
             {
@@ -1025,6 +1099,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Sort([NotNull] Comparison<T> comparison)
         {
+            DebuggingThrowHelper.ThrowIfNull(comparison);
+
             if (_count > 1)
             {
                 Array.Sort(_buffer, 0, _count, Comparer<T>.Create(comparison));
@@ -1035,24 +1111,40 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator List<T>(ListFast<T> list)
-            => list.List;
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(list);
+            return list.List;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ListFast<T>([NotNull] List<T> list)
-            => new(list);
+        {
+            DebuggingThrowHelper.ThrowIfNull(list);
+            return new(list);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(ListFast<T> lhs, ListFast<T> rhs)
-            => ReferenceEquals(lhs.List, rhs.List);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(lhs);
+            DebuggingThrowHelper.ThrowIfNotCreated(rhs);
+            return ReferenceEquals(lhs.List, rhs.List);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(ListFast<T> lhs, ListFast<T> rhs)
-            => ReferenceEquals(lhs.List, rhs.List) == false;
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(lhs);
+            DebuggingThrowHelper.ThrowIfNotCreated(rhs);
+            return ReferenceEquals(lhs.List, rhs.List) == false;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListFast<T> Prefill(int amount, [NotNull] Func<T> createFunc)
         {
-            var list = new ListFast<T>(new List<T>(amount));
+            DebuggingThrowHelper.ThrowIfNull(createFunc);
+
+            var list = new ListFast<T>(amount);
             list.AddReplicate(amount, createFunc);
             return list;
         }
@@ -1060,7 +1152,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListFast<T> Prefill(int amount)
         {
-            var list = new ListFast<T>(new List<T>(amount));
+            var list = new ListFast<T>(amount);
             list.AddReplicate(amount);
             return list;
         }
@@ -1068,7 +1160,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListFast<T> Prefill(T value, int amount)
         {
-            var list = new ListFast<T>(new List<T>(amount));
+            var list = new ListFast<T>(amount);
             list.AddReplicate(value, amount);
             return list;
         }
@@ -1076,7 +1168,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListFast<T> PrefillNoInit(int amount)
         {
-            var list = new ListFast<T>(new List<T>(amount));
+            var list = new ListFast<T>(amount);
             list.AddReplicateNoInit(amount);
             return list;
         }
@@ -1112,182 +1204,6 @@ namespace EncosyTower.Collections
                 Array.Copy(_buffer, newList, _count);
             }
             _buffer = newList;
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is less than 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexSectionIsInvalid([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index and count do not specify a valid section in the ListFast<T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indexes for the ListFast<T>");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfCollectionWasModified([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("An element in the collection has been modified.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound start index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("out of bound length");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSortIndexIsNegative([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("'index' must be non-negative number");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSortCountIsNegative([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("'count' must be non-negative number");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSortRangeIsInvalid([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Invalid offset length");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfNewSizeDoesNotExceedCapacity([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("newSize is not greater than the current capacity");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,7 +14,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void Contains_DefaultAndComparerFindExpectedValues()
         {
             using var stack = new SharedStack<int>(new[] { 1, 3, 5 }.AsSpan());
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
             var comparer = new IntComparer();
 
             Assert.IsTrue(SharedStackNativeAPI.Contains(in view, 3));

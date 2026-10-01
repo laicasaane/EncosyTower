@@ -32,12 +32,11 @@ namespace EncosyTower.Collections.Unsafe
                 _version = source._version;
             }
 
-            public readonly bool IsCreated
-                => _buffer.IsCreated;
-            public readonly int Count
-                => _count;
-            public readonly int Capacity
-                => _buffer.Capacity;
+            public readonly bool IsCreated => _buffer.IsCreated;
+
+            public readonly int Count => _count;
+
+            public readonly int Capacity => _buffer.Capacity;
 
             public readonly ref readonly T this[int index]
             {
@@ -79,20 +78,10 @@ namespace EncosyTower.Collections.Unsafe
                 => TryCopyTo(sourceStartIndex, destination, destination.Length);
 
             public readonly bool TryCopyTo(int sourceStartIndex, Span<T> destination, int length)
-                => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(
-                      sourceStartIndex
-                    , destination
-                    , length
-                );
+                => new CopyToSpan<T>(AsReadOnlySpan()).TryCopyTo(sourceStartIndex, destination, length);
 
             public readonly T[] ToArray()
                 => AsReadOnlySpan().ToArray();
-
-            public readonly ref readonly T Peek()
-            {
-                ThrowHelper.ThrowIfEmpty(_count > 0, ThrowHelper.CollectionType.ListUnsafe);
-                return ref _buffer[_count - 1];
-            }
 
             public readonly Enumerator GetEnumerator()
                 => new(this);
@@ -138,11 +127,9 @@ namespace EncosyTower.Collections.Unsafe
                 return false;
             }
 
-            public readonly T Current
-                => _current;
+            public readonly T Current => _current;
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

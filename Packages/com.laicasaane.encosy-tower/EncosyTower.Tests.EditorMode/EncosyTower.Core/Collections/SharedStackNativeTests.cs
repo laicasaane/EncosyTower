@@ -12,7 +12,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var stack = new SharedStack<int>(8);
             stack.Push(1);
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
 
             stack.Push(2);
 
@@ -25,7 +31,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             SharedStackNative<int> empty = default;
             using var stack = new SharedStack<int, int>(8);
-            SharedStackNative<int> view = stack;
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains the live owner of the borrowed implicit native view.
+            unsafe
+            {
+                view = stack;
+            }
             var two = 2;
 
             view.Push(1);
@@ -51,7 +63,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void CopyToAndTryCopyTo_NativeAndReadOnlyOverloadsUseTopFirstOrder()
         {
             using var stack = new SharedStack<int>(new[] { 1, 2, 3, 4 }.AsSpan());
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
             var full = new int[4];
             var partial = new int[2];
             var offset = new int[2];
@@ -73,7 +91,13 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsTrue(view.TryCopyTo(1, explicitLength, 2));
             Assert.IsFalse(view.TryCopyTo(3, partial));
 
-            var readOnly = view.AsReadOnly();
+            SharedStackNative<int>.ReadOnly readOnly;
+
+            // SAFETY: stack remains the live owner of the borrowed read-only alias.
+            unsafe
+            {
+                readOnly = view.AsReadOnly();
+            }
             var readOnlyFull = new int[4];
             var readOnlyPartial = new int[2];
             var readOnlyOffset = new int[2];
@@ -111,28 +135,39 @@ namespace EncosyTower.Tests.Core.Collections
         public void NativeAndReadOnlyEnumerators_MoveResetAndDisposeDirectly()
         {
             using var stack = new SharedStack<int>(new[] { 1, 2 }.AsSpan());
-            var view = stack.AsNative();
-            var ownerEnumerator = view.GetEnumerator();
 
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            Assert.AreEqual(2, ownerEnumerator.Current);
-            ownerEnumerator.Reset();
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            ownerEnumerator.Dispose();
+            // SAFETY: stack remains live and unmodified while both borrowed enumerators are consumed.
+            unsafe
+            {
+                var view = stack.AsNative();
+                var ownerEnumerator = view.GetEnumerator();
 
-            var readOnlyEnumerator = view.AsReadOnly().GetEnumerator();
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            Assert.AreEqual(2, readOnlyEnumerator.Current);
-            readOnlyEnumerator.Reset();
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            readOnlyEnumerator.Dispose();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                Assert.AreEqual(2, ownerEnumerator.Current);
+                ownerEnumerator.Reset();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                ownerEnumerator.Dispose();
+
+                var readOnlyEnumerator = view.AsReadOnly().GetEnumerator();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                Assert.AreEqual(2, readOnlyEnumerator.Current);
+                readOnlyEnumerator.Reset();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                readOnlyEnumerator.Dispose();
+            }
         }
 
         [Test]
         public void Clear_ResetsSharedCountAndAllowsReuse()
         {
             using var stack = new SharedStack<int>(new[] { 1, 2 }.AsSpan());
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains the live owner of the borrowed native view.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
 
             view.Clear();
             view.Push(3);
@@ -147,7 +182,13 @@ namespace EncosyTower.Tests.Core.Collections
             using var stack = new SharedStack<int>(2);
             stack.Push(1);
             stack.Push(2);
-            var staleView = stack.AsNative();
+            SharedStackNative<int> staleView;
+
+            // SAFETY: This test intentionally retains the borrowed view across owner growth.
+            unsafe
+            {
+                staleView = stack.AsNative();
+            }
 
             stack.Push(3);
 
@@ -159,7 +200,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             using var stack = new SharedStack<int>(2);
             stack.PushRange(new[] { 1, 2, 3 });
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains live and stable after growth while the refreshed view is used.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
 
             view.Push(4);
 
@@ -171,7 +218,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void FullView_PushThrowsBecauseCapacityIsImmutable()
         {
             using var stack = new SharedStack<int>(new[] { 1, 2 }.AsSpan());
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: stack remains live while the fixed-capacity borrowed view is exercised.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
 
             Assert.Throws<InvalidOperationException>(() => view.Push(3));
         }
@@ -182,7 +235,13 @@ namespace EncosyTower.Tests.Core.Collections
         {
             var stack = new SharedStack<int>(4);
             stack.Push(1);
-            var view = stack.AsNative();
+            SharedStackNative<int> view;
+
+            // SAFETY: This test intentionally retains the borrowed view across owner disposal.
+            unsafe
+            {
+                view = stack.AsNative();
+            }
 
             stack.Dispose();
 

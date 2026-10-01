@@ -23,25 +23,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.CompilerServices.Exposed;
-using System.Runtime.InteropServices;
+using EncosyTower.Buffers;
 using EncosyTower.Common;
+using EncosyTower.Collections.Unsafe;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
-    /// <summary>
-    /// An array usable as both a NativeArray and managed array
-    /// </summary>
-    /// <typeparam name="T">The type of the array element</typeparam>
-    public class SharedArray<T> : SharedArray<T, T>
+    [Serializable]
+    public partial class SharedArray<T> : SharedArray<T, T>
         where T : unmanaged
     {
         public SharedArray(int size) : base(size)
@@ -69,46 +65,37 @@ namespace EncosyTower.Collections
         }
     }
 
-    /// <summary>
-    /// An array usable as both a native and managed array
-    /// </summary>
-    /// <typeparam name="T">The element type in the managed representation.</typeparam>
-    /// <typeparam name="TNative">The element type in the NativeArray representation. Must be
-    /// the same size as <typeparamref name="T"/>.</typeparam>
-    public class SharedArray<T, TNative> : IDisposable, IClearable, IResizable, IEnumerable<T>, IIndexer<T>
+    [Serializable]
+    public partial class SharedArray<T, TNative> : IDisposable, IClearable, IEnumerable<T>, IIndexer<T>
         , IAsSpan<T>, IAsReadOnlySpan<T>, IAsMemory<T>, IAsReadOnlyMemory<T>
         , IAsNativeArray<TNative>, IAsNativeSlice<TNative>, IHasLength
         where T : unmanaged
         where TNative : unmanaged
     {
-#pragma warning disable IDE1006 // Naming Styles
-        private GCHandle _gcHandle;
+        [NonSerialized] internal BufferShared<T, TNative> _buffer;
+        [NonSerialized] internal int _version;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-        private AtomicSafetyHandle m_Safety;
+        [NonSerialized] private AtomicSafetyHandle _safety;
 #endif
-
-        internal T[] _managed;
-        internal NativeArray<TNative> _native;
-        internal int _version;
-#pragma warning restore IDE1006 // Naming Styles
 
         protected SharedArray()
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
             Initialize(Array.Empty<T>());
         }
 
         public SharedArray(int size)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
-            ThrowIfSizeNegative(size >= 0);
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
+            ThrowHelper.ThrowIfSizeNegative(size >= 0);
             Initialize(size == 0 ? Array.Empty<T>() : new T[size]);
         }
 
         public SharedArray([NotNull] T[] source)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            DebuggingThrowHelper.ThrowIfNull(source);
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
             Initialize(source);
         }
 
@@ -122,51 +109,69 @@ namespace EncosyTower.Collections
 
         public SharedArray(in NativeArray<TNative> source)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
 
             var managed = new T[source.Length];
             Initialize(managed);
-            AsNativeArray().CopyFrom(source);
+
+            // SAFETY: This owner keeps its fixed pinned storage live for the complete construction copy.
+            unsafe
+            {
+                AsNativeArray().CopyFrom(source);
+            }
         }
 
         public SharedArray(in NativeSlice<TNative> source)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
 
             var managed = new T[source.Length];
             Initialize(managed);
-            source.CopyTo(AsNativeArray());
+
+            // SAFETY: This owner keeps its fixed pinned storage live for the complete construction copy.
+            unsafe
+            {
+                source.CopyTo(AsNativeArray());
+            }
         }
 
         public SharedArray([NotNull] ICollection<T> source)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            DebuggingThrowHelper.ThrowIfNull(source);
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
 
             var managed = new T[source.Count];
             source.CopyTo(managed, 0);
-
             Initialize(managed);
         }
 
         public SharedArray([NotNull] ICollection<T> source, int extraSize)
         {
-            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(AreTypesEqualSize());
+            DebuggingThrowHelper.ThrowIfNull(source);
+            ThrowHelper.ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(UnsafeAPI.AreTypesEqualSize<T, TNative>());
 
             var managed = new T[source.Count + extraSize];
             source.CopyTo(managed, 0);
-
             Initialize(managed);
         }
 
         ~SharedArray()
         {
-            Dispose();
+            // SAFETY: Finalization owns the remaining buffer and no managed caller can use this instance afterward.
+            unsafe
+            {
+                Dispose();
+            }
         }
 
         public int Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _managed.Length;
+            get
+            {
+                CheckRead();
+                return _buffer.Capacity;
+            }
         }
 
         public T this[int index]
@@ -174,140 +179,172 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowIfIndexIsOutOfRange((uint)index < (uint)_managed.Length);
-                return _managed[index];
+                CheckRead();
+                ThrowHelper.ThrowIfIndexIsOutOfRange(
+                      (uint)index < (uint)_buffer.Capacity
+                    , ThrowHelper.CollectionType.SharedArray
+                );
+                // SAFETY: This owner keeps fixed pinned storage live; the index check bounds the read.
+                unsafe
+                {
+                    return _buffer[index];
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                ThrowIfIndexIsOutOfRange((uint)index < (uint)_managed.Length);
+                CheckWrite();
+                ThrowHelper.ThrowIfIndexIsOutOfRange(
+                      (uint)index < (uint)_buffer.Capacity
+                    , ThrowHelper.CollectionType.SharedArray
+                );
                 _version++;
-                _managed[index] = value;
+
+                // SAFETY: This owner keeps fixed pinned storage live; the index check bounds the write.
+                unsafe
+                {
+                    _buffer[index] = value;
+                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator T[]([NotNull] SharedArray<T, TNative> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             return self.AsManagedArray();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ArraySegment<T>([NotNull] SharedArray<T, TNative> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             return self.AsArraySegment();
         }
 
+        /// <safety>The returned span must not be used after array disposal.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator Span<T>([NotNull] SharedArray<T, TNative> self)
+        public static unsafe implicit operator Span<T>([NotNull] SharedArray<T, TNative> self)
         {
-            return self.AsSpan();
+            DebuggingThrowHelper.ThrowIfNull(self);
+
+            // SAFETY: The caller accepts the borrowed span lifetime returned by AsSpan.
+            unsafe
+            {
+                return self.AsSpan();
+            }
         }
 
+        /// <safety>The returned span must not be used after array disposal.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator ReadOnlySpan<T>([NotNull] SharedArray<T, TNative> self)
+        public static unsafe implicit operator ReadOnlySpan<T>([NotNull] SharedArray<T, TNative> self)
         {
-            return self.AsReadOnlySpan();
+            DebuggingThrowHelper.ThrowIfNull(self);
+
+            // SAFETY: The caller accepts the borrowed span lifetime returned by AsReadOnlySpan.
+            unsafe
+            {
+                return self.AsReadOnlySpan();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator Memory<T>([NotNull] SharedArray<T, TNative> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             return self.AsMemory();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ReadOnlyMemory<T>([NotNull] SharedArray<T, TNative> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
             return self.AsReadOnlyMemory();
         }
 
+        /// <safety>The returned alias must not be disposed or used after array disposal.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator NativeArray<TNative>([NotNull] SharedArray<T, TNative> self)
+        public static unsafe implicit operator NativeArray<TNative>([NotNull] SharedArray<T, TNative> self)
         {
-            return self.AsNativeArray();
+            DebuggingThrowHelper.ThrowIfNull(self);
+
+            // SAFETY: The caller accepts the borrowed alias lifetime returned by AsNativeArray.
+            unsafe
+            {
+                return self.AsNativeArray();
+            }
         }
 
+        /// <safety>The returned alias must not be used after array disposal.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator NativeSlice<TNative>([NotNull] SharedArray<T, TNative> self)
+        public static unsafe implicit operator NativeSlice<TNative>([NotNull] SharedArray<T, TNative> self)
         {
-            return self.AsNativeSlice();
+            DebuggingThrowHelper.ThrowIfNull(self);
+
+            // SAFETY: The caller accepts the borrowed alias lifetime returned by AsNativeSlice.
+            unsafe
+            {
+                return self.AsNativeSlice();
+            }
         }
 
-        /// <summary>
-        /// Allows taking pointer of SharedArray in 'fixed' statements
-        /// </summary>
-        /// <returns></returns>
-        public ref T GetPinnableReference()
+        /// <safety>The returned view must not be used after array disposal.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe implicit operator SharedArrayNative<TNative>([NotNull] SharedArray<T, TNative> self)
         {
+            DebuggingThrowHelper.ThrowIfNull(self);
+
+            // SAFETY: The caller accepts the borrowed view lifetime returned by AsNative.
+            unsafe
+            {
+                return self.AsNative();
+            }
+        }
+
+        /// <safety>The array must remain alive while the returned reference is used.</safety>
+        public unsafe ref T GetPinnableReference()
+        {
+            CheckWrite();
             _version++;
 
-            if (_managed.Length > 0)
+            // SAFETY: This owner keeps fixed pinned storage live; Capacity determines whether element zero exists.
+            unsafe
             {
-                return ref _managed[0];
+                if (_buffer.Capacity > 0)
+                {
+                    return ref _buffer[0];
+                }
+
+                return ref UnsafeExposed.NullRef<T>();
             }
-
-            return ref UnsafeExposed.NullRef<T>();
-        }
-
-        /// <summary>
-        /// Resize and keep the content.
-        /// </summary>
-        /// <param name="newSize"></param>
-        public void Resize(int newSize)
-            => Resize(newSize, true);
-
-        public void Resize(int newSize, bool copyContent)
-        {
-            _version++;
-
-            ThrowIfSizeNegative(newSize >= 0);
-
-            if (newSize == _managed.Length)
-            {
-                return;
-            }
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
-            AtomicSafetyHandle.Release(m_Safety);
-#endif
-
-            if (_gcHandle.IsAllocated)
-            {
-                _gcHandle.Free();
-            }
-
-            if (copyContent)
-            {
-                Array.Resize(ref _managed, newSize);
-            }
-            else
-            {
-                _managed = new T[newSize];
-            }
-
-            Initialize();
         }
 
         public void Clear()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
+            CheckWrite();
 
-            Array.Clear(_managed, 0, _managed.Length);
+            // SAFETY: This owner keeps fixed pinned storage live and CheckWrite validates exclusive access.
+            unsafe
+            {
+                _buffer.Clear();
+            }
         }
 
-        public Enumerator GetEnumerator()
+        /// <safety>The array must remain alive and unchanged while the returned enumerator is used.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe Enumerator GetEnumerator()
         {
-            return new(this);
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return new(this);
+            }
         }
 
         public void Dispose()
         {
-            if (_managed == null)
+            if (_buffer.IsCreated == false)
             {
                 return;
             }
@@ -315,196 +352,238 @@ namespace EncosyTower.Collections
             _version++;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
-            AtomicSafetyHandle.Release(m_Safety);
+            AtomicSafetyHandle.CheckDeallocateAndThrow(_safety);
 #endif
 
-            if (_gcHandle.IsAllocated)
+            // SAFETY: This class owns the live pin and has passed its deallocation checks.
+            unsafe
             {
-                _gcHandle.Free();
+                _buffer.Dispose();
             }
 
-            _managed = null;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.Release(_safety);
+            _safety = default;
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] AsManagedArray()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
-
-            return _managed;
+            CheckWrite();
+            return _buffer.AsManagedArray();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ArraySegment<T> AsArraySegment()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
-
-            return _managed;
+            CheckWrite();
+            return _buffer.AsArraySegment();
         }
 
+        /// <safety>The array must remain alive while the returned span is used.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<T> AsSpan()
+        public unsafe Span<T> AsSpan()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
+            CheckWrite();
 
-            return _managed.AsSpan();
+            // SAFETY: This owner keeps fixed pinned storage live and CheckWrite validates access.
+            unsafe
+            {
+                return _buffer.AsSpan();
+            }
         }
 
+        /// <safety>The array must remain alive while the returned span is used.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<T> AsReadOnlySpan()
+        public unsafe ReadOnlySpan<T> AsReadOnlySpan()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
-#endif
+            CheckRead();
 
-            return _managed.AsSpan();
+            // SAFETY: This owner keeps fixed pinned storage live and CheckRead validates access.
+            unsafe
+            {
+                return _buffer.AsReadOnlySpan();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Memory<T> AsMemory()
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckWriteAndThrow(m_Safety);
-#endif
-
-            return _managed.AsMemory();
+            CheckWrite();
+            return _buffer.AsMemory();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlyMemory<T> AsReadOnlyMemory()
         {
+            CheckRead();
+            return _buffer.AsReadOnlyMemory();
+        }
+
+        /// <safety>The returned alias must not be disposed or used after array disposal.</safety>
+        public unsafe NativeArray<TNative> AsNativeArray()
+        {
+            CheckNativeAliasAccess();
+
+            NativeArray<TNative> alias;
+
+            // SAFETY: This owner keeps fixed pinned storage live for the returned borrowed alias.
+            unsafe
+            {
+                alias = _buffer.AsNativeArray();
+            }
+
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-            AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+            var aliasSafety = _safety;
+            AtomicSafetyHandle.UseSecondaryVersion(ref aliasSafety);
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref alias, aliasSafety);
+#endif
+            return alias;
+        }
+
+        /// <safety>The returned slice must not outlive this array owner.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe NativeSlice<TNative> AsNativeSlice()
+        {
+            // SAFETY: The caller accepts the borrowed alias lifetime returned by AsNativeArray.
+            unsafe
+            {
+                return new(AsNativeArray());
+            }
+        }
+
+        /// <safety>The returned view must not be used after array disposal.</safety>
+        public unsafe SharedArrayNative<TNative> AsNative()
+        {
+            CheckNativeAliasAccess();
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            var aliasSafety = _safety;
+            AtomicSafetyHandle.UseSecondaryVersion(ref aliasSafety);
 #endif
 
-            return _managed.AsMemory();
+            // SAFETY: Owner keeps the pinned buffer live for the returned fixed-length borrowed view.
+            unsafe
+            {
+                return new SharedArrayNative<TNative>(
+                      _buffer.GetUnsafeBufferPointer()
+                    , _buffer.Capacity
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                    , aliasSafety
+#endif
+                );
+            }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeArray<TNative> AsNativeArray()
-        {
-            return _native;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NativeSlice<TNative> AsNativeSlice()
-        {
-            return _native.Slice();
-        }
-
-        /// <summary>
-        /// Raw pointer into the pinned managed buffer, for the shared native view family.
-        /// </summary>
+        /// <safety>The returned pointer must not outlive this array owner.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal unsafe TNative* GetUnsafeBufferPointer()
         {
-            // SAFETY: The shared array pins its managed storage for the lifetime of the native alias.
+            CheckWrite();
+
+            // SAFETY: This owner keeps fixed pinned storage live for the returned pointer.
             unsafe
             {
-                return (TNative*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(_native);
+                return _buffer.GetUnsafeBufferPointer();
             }
-        }
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-        /// <summary>
-        /// The single representative safety handle, reused by the shared native view family.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal AtomicSafetyHandle GetSafetyHandle()
-            => m_Safety;
-#endif
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static bool AreTypesEqualSize()
-        {
-            return UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<TNative>();
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        protected static void ThrowIfSizeNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
-        {
-            if (isZeroOrPositive == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("size must be equal or greater than 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool isWithinRange)
-        {
-            if (isWithinRange == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("index is outside the range of valid indices for the SharedArray<T>");
         }
 
         internal void Initialize(T[] managed)
         {
             _version++;
-            _managed = managed;
-            Initialize();
-        }
-
-        private void Initialize()
-        {
-            // Unity's default garbage collector doesn't move objects around, so pinning the array in memory
-            // should not even be necessary. Better to be safe, though
-            _gcHandle = GCHandle.Alloc(_managed, GCHandleType.Pinned);
-            CreateNativeAlias();
-
-            void CreateNativeAlias()
-            {
-                // this is the trick to making a NativeArray view of a managed array (or any pointer)
-                // SAFETY: _managed is pinned by _gcHandle for the complete duration of this fixed scope.
-                unsafe
-                {
-                    fixed (void* ptr = _managed)
-                    {
-                        _native = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<TNative>(
-                            ptr, _managed.Length, Allocator.None
-                        );
-                    }
-                }
+            var buffer = new BufferShared<T, TNative>(managed);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-                m_Safety = AtomicSafetyHandle.Create();
-                NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref _native, m_Safety);
+            var safety = default(AtomicSafetyHandle);
 #endif
+
+            try
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                safety = AtomicSafetyHandle.Create();
+                AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(safety, true);
+#endif
+                _buffer = buffer;
+                buffer = default;
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                _safety = safety;
+                safety = default;
+#endif
+            }
+            finally
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                if (AtomicSafetyHandle.IsDefaultValue(safety) == false)
+                {
+                    AtomicSafetyHandle.Release(safety);
+                }
+#endif
+                // SAFETY: buffer is the only owner of any unpublished pin remaining after the transaction.
+                unsafe
+                {
+                    buffer.Dispose();
+                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-            => GetEnumerator();
+        private void CheckRead()
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(_buffer);
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(_safety);
+#endif
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => GetEnumerator();
+        private void CheckWrite()
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(_buffer);
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(_safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckNativeAliasAccess()
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(_buffer);
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckGetSecondaryDataPointerAndThrow(_safety);
+#endif
+        }
+
+        /// <safety>This array must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
+
+        /// <safety>This array must remain alive and unmodified during enumeration.</safety>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The caller accepts the enumerator's borrowed owner lifetime.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
         public struct Enumerator : IEnumerator<T>
         {
             private readonly SharedArray<T, TNative> _sharedArray;
+            private readonly T[] _managed;
             private readonly int _version;
             private readonly int _length;
             private int _index;
@@ -512,16 +591,13 @@ namespace EncosyTower.Collections
 
             public Enumerator([NotNull] SharedArray<T, TNative> sharedArray)
             {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
-                // Unlike the other safety checks, only check if it's safe to read.
-                // Enumerating an array of structs gives the user copies of each element, since structs pass by value.
-                // This means that the source memory can't be modified while enumerating.
-                AtomicSafetyHandle.CheckReadAndThrow(sharedArray.m_Safety);
-#endif
+                DebuggingThrowHelper.ThrowIfNull(sharedArray);
+                sharedArray.CheckRead();
 
                 _sharedArray = sharedArray;
+                _managed = sharedArray._buffer.AsManagedArray();
                 _version = sharedArray._version;
-                _length = sharedArray.Length;
+                _length = sharedArray._buffer.Capacity;
                 _index = -1;
                 _current = Option.None;
             }
@@ -534,13 +610,10 @@ namespace EncosyTower.Collections
 
             public bool MoveNext()
             {
-                var sharedArray = _sharedArray;
-                var array = sharedArray._managed;
-
-                if (_version == sharedArray._version && ((uint)(_index + 1) < (uint)_length))
+                if (_version == _sharedArray._version && (uint)(_index + 1) < (uint)_length)
                 {
                     _index++;
-                    _current = array[_index];
+                    _current = _managed[_index];
                     return true;
                 }
 
@@ -549,7 +622,10 @@ namespace EncosyTower.Collections
 
             private bool MoveNextRare()
             {
-                ThrowIfEnumFailedVersion(_version == _sharedArray._version);
+                ThrowHelper.ThrowIfCollectionWasModified(
+                      _version == _sharedArray._version
+                    , ThrowHelper.CollectionType.SharedArray
+                );
 
                 _index = _length + 1;
                 _current = Option.None;
@@ -558,7 +634,10 @@ namespace EncosyTower.Collections
 
             void IEnumerator.Reset()
             {
-                ThrowIfEnumFailedVersion(_version == _sharedArray._version);
+                ThrowHelper.ThrowIfCollectionWasModified(
+                      _version == _sharedArray._version
+                    , ThrowHelper.CollectionType.SharedArray
+                );
 
                 _index = -1;
                 _current = Option.None;
@@ -568,7 +647,10 @@ namespace EncosyTower.Collections
             {
                 get
                 {
-                    ThrowIfEnumOpCantHappen((uint)_index < (uint)_length);
+                    ThrowHelper.ThrowIfEnumeratorOperationIsInvalid(
+                          (uint)_index < (uint)_length
+                        , ThrowHelper.CollectionType.SharedArray
+                    );
 
                     return Current;
                 }
@@ -576,38 +658,6 @@ namespace EncosyTower.Collections
 
             public readonly void Dispose()
             {
-            }
-
-            [HideInCallstack, StackTraceHidden]
-            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-            [Conditional(UNITY_COLLECTIONS_CHECKS)]
-            private static void ThrowIfEnumFailedVersion([DoesNotReturnIf(false)] bool validVersion)
-            {
-                if (validVersion == false)
-                {
-                    throw CreateException();
-                }
-
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static InvalidOperationException CreateException()
-                    => new("SharedArray was modified during enumeration.");
-            }
-
-            [HideInCallstack, StackTraceHidden]
-            [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-            [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-            [Conditional(UNITY_COLLECTIONS_CHECKS)]
-            private static void ThrowIfEnumOpCantHappen([DoesNotReturnIf(false)] bool validIndex)
-            {
-                if (validIndex == false)
-                {
-                    throw CreateException();
-                }
-
-                [MethodImpl(MethodImplOptions.NoInlining)]
-                static InvalidOperationException CreateException()
-                    => new("Invalid enumerator state: enumeration cannot proceed.");
             }
         }
     }

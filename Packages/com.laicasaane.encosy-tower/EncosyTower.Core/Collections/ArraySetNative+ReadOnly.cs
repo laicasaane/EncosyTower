@@ -7,6 +7,8 @@ using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial struct ArraySetNative<T>
@@ -36,6 +38,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(ArraySetNative<T> set)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(set);
+
                 // SAFETY: The read-only wrapper copies the validated source set's owned native header pointer.
                 unsafe
                 {
@@ -253,6 +257,8 @@ namespace EncosyTower.Collections
 
         public ArraySetNativeReadOnlyEnumerator(in ArraySetNative<T>.ReadOnly set) : this()
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(set);
+
             _set = set;
             _index = -1;
             _version = set.UncheckedVersion;

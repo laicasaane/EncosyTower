@@ -2,6 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions.Unsafe
 {
     public static class ArraySetNativeExtensionsUnsafe
@@ -11,6 +13,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe BufferUnsafe<ArrayMapNode<T>> GetNodesUnsafe<T>(this in ArraySetNative<T> self)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: The caller owns the set lifetime and this view borrows its values-info buffer.
             unsafe
             {
@@ -23,6 +26,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe BufferUnsafe<T> GetItemsUnsafe<T>(this in ArraySetNative<T> self)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: The caller owns the set lifetime and this view borrows its values buffer.
             unsafe
             {
@@ -35,6 +39,7 @@ namespace EncosyTower.Collections.Extensions.Unsafe
         public static unsafe ref T GetItemAtUnsafe<T>(this in ArraySetNative<T> self, int index)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             // SAFETY: Caller supplies an index within the live values buffer and keeps the set alive.
             unsafe
             {

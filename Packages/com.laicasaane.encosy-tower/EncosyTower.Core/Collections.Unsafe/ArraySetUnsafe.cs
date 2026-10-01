@@ -22,28 +22,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_COLLECTIONS_RUNTIME_CHECKS || ENABLE_UNITY_COLLECTIONS_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Unsafe
 {
@@ -58,35 +46,7 @@ namespace EncosyTower.Collections.Unsafe
     {
         static ArraySetUnsafe()
         {
-            NoBurstCheck();
-        }
-
-#if UNITY_BURST
-        [Unity.Burst.BurstDiscard]
-#endif
-        static void NoBurstCheck()
-        {
-#if __ENCOSY_VALIDATION__
-            try
-            {
-                var type = typeof(T);
-                var method = type.GetMethod(
-                      "GetHashCode"
-                    , BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
-                );
-
-                if (method == null)
-                {
-                    StaticDevLogger.LogWarning(
-                          type.Name
-                        + " does not implement GetHashCode and will potentially cause unwanted allocations (boxing)"
-                    );
-                }
-            }
-            catch
-            {
-            }
-#endif
+            ThrowHelper.LogWarningIfHashCodeIsNotImplemented<T>();
         }
 
         internal BufferUnsafe<ArrayMapNode<T>> _valuesInfo;
@@ -426,7 +386,10 @@ namespace EncosyTower.Collections.Unsafe
                     }
                     else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        ThrowIfMissingLinkedListNode(itemAfterCurrentOne != -1);
+                        ThrowHelper.ThrowIfMissingLinkedListNode(
+                              itemAfterCurrentOne != -1
+                            , ThrowHelper.CollectionType.ArraySetUnsafe
+                        );
                         //update the previous pointer of the item after the one to remove with the
                         //previous pointer of the item to remove
                         _valuesInfo[itemAfterCurrentOne]._previous = node._previous;
@@ -484,7 +447,8 @@ namespace EncosyTower.Collections.Unsafe
 
                 //find the prev element of the last element in the valuesInfo array
                 while (_valuesInfo[linkedListIterationIndex]._previous != -1
-                    && _valuesInfo[linkedListIterationIndex]._previous != lasTCellIndex)
+                    && _valuesInfo[linkedListIterationIndex]._previous != lasTCellIndex
+                )
                 {
                     linkedListIterationIndex = _valuesInfo[linkedListIterationIndex]._previous;
                 }
@@ -548,22 +512,6 @@ namespace EncosyTower.Collections.Unsafe
 
             index = 0;
             return false;
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid)
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The linked-list successor is missing.");
         }
 
         public void Intersect(in ArraySetUnsafe<T> otherSet)

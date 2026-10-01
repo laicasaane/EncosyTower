@@ -7,6 +7,8 @@ using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial struct ArrayMapNative<TKey, TValue>
@@ -36,6 +38,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal ReadOnly(ArrayMapNative<TKey, TValue> map)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(map);
+
                 // SAFETY: The read-only wrapper copies the validated source map's owned native header pointer.
                 unsafe
                 {
@@ -295,6 +299,8 @@ namespace EncosyTower.Collections
 
         public ArrayMapNativeReadOnlyKeyValueEnumerator(in ArrayMapNative<TKey, TValue>.ReadOnly map) : this()
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(map);
+
             _map = map;
             _index = -1;
             _version = map.UncheckedVersion;

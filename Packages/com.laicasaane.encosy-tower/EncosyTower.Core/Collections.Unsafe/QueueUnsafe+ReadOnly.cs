@@ -33,12 +33,11 @@ namespace EncosyTower.Collections.Unsafe
                 _version = source._version;
             }
 
-            public readonly bool IsCreated
-                => _buffer.IsCreated;
-            public readonly int Count
-                => _count;
-            public readonly int Capacity
-                => _buffer.Capacity;
+            public readonly bool IsCreated => _buffer.IsCreated;
+
+            public readonly int Count => _count;
+
+            public readonly int Capacity => _buffer.Capacity;
 
             public readonly T Peek()
             {
@@ -126,7 +125,7 @@ namespace EncosyTower.Collections.Unsafe
                 _buffer.AsReadOnlySpan().Slice(start, first).CopyTo(destination);
                 if (length > first)
                 {
-                    _buffer.AsReadOnlySpan().Slice(0, length - first).CopyTo(destination[first..]);
+                    _buffer.AsReadOnlySpan()[..(length - first)].CopyTo(destination[first..]);
                 }
             }
 
@@ -174,11 +173,9 @@ namespace EncosyTower.Collections.Unsafe
                 return false;
             }
 
-            public readonly T Current
-                => _current;
+            public readonly T Current => _current;
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

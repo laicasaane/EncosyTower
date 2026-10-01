@@ -399,10 +399,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Array.Clear(destination, 0, destination.Length);
             readOnly.CopyTo(1, destination.AsSpan(), 2);
-            CollectionAssert.AreEqual(
-                  expected.AsSpan(1, 2).ToArray()
-                , destination.AsSpan(0, 2).ToArray()
-            );
+            CollectionAssert.AreEqual(expected.AsSpan(1, 2).ToArray(), destination.AsSpan(0, 2).ToArray());
 
             Assert.IsTrue(readOnly.TryCopyTo(destination.AsSpan()));
             Assert.IsTrue(readOnly.TryCopyTo(destination.AsSpan(), 2));

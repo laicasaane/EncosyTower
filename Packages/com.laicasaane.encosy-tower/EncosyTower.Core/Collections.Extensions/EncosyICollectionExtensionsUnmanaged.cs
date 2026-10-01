@@ -18,7 +18,6 @@ namespace EncosyTower.Collections.Extensions
         /// <list type="bullet">
         /// <item><see cref="ListFast{T}.AddRange(IEnumerable{T})"/></item>
         /// <item><see cref="SharedList{T, T}.AddRange(IEnumerable{T})"/></item>
-        /// <item><see cref="FasterList{T}.AddRange(IEnumerable{T})"/></item>
         /// </list>
         /// <br/>
         /// For other types of collection, it iterates through the items and adds them one by one.
@@ -42,12 +41,6 @@ namespace EncosyTower.Collections.Extensions
                 case SharedList<T> sharedList:
                 {
                     sharedList.AddRange(items);
-                    return;
-                }
-
-                case FasterList<T> fasterList:
-                {
-                    fasterList.AddRange(items);
                     return;
                 }
 
@@ -79,7 +72,6 @@ namespace EncosyTower.Collections.Extensions
         /// <list type="bullet">
         /// <item><see cref="List{T}.AddRange(IEnumerable{T})"/></item>
         /// <item><see cref="SharedList{T, T}.AddRange(IEnumerable{T})"/></item>
-        /// <item><see cref="FasterList{T}.AddRange(IEnumerable{T})"/></item>
         /// <item><see cref="HashSet{T}.UnionWith(IEnumerable{T})"/></item>
         /// </list>
         /// <br/>
@@ -104,12 +96,6 @@ namespace EncosyTower.Collections.Extensions
                 case SharedList<T> sharedList:
                 {
                     sharedList.AddRange(items);
-                    return;
-                }
-
-                case FasterList<T> fasterList:
-                {
-                    fasterList.AddRange(items);
                     return;
                 }
 

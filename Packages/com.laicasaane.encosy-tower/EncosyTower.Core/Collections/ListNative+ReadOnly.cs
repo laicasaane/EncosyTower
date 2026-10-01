@@ -6,6 +6,8 @@ using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct ListNative<T>
@@ -35,6 +37,8 @@ namespace EncosyTower.Collections
 
             internal ReadOnly(ListNative<T> source)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(source);
+
                 // SAFETY: The read-only view borrows the live header and owner handle.
                 unsafe
                 {
@@ -56,6 +60,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Count
             {
                 get
@@ -68,6 +73,7 @@ namespace EncosyTower.Collections
                     }
                 }
             }
+
             public readonly int Capacity
             {
                 get
@@ -168,7 +174,10 @@ namespace EncosyTower.Collections
                 => GetEnumerator();
 
             public static implicit operator ReadOnly(in ListNative<T> source)
-                => source.AsReadOnly();
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(source);
+                return source.AsReadOnly();
+            }
 
             private readonly void CheckRead()
             {

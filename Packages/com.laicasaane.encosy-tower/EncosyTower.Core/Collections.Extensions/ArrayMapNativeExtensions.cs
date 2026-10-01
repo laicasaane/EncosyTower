@@ -2,6 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ArrayMapNativeExtensions
@@ -10,7 +12,10 @@ namespace EncosyTower.Collections.Extensions
         public static Span<TValue> GetValues<TKey, TValue>(this in ArrayMapNative<TKey, TValue> self)
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
-                => self.AsValuesSpan();
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return self.AsValuesSpan();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ref TValue GetOrAdd<TKey, TValue>(
@@ -21,6 +26,7 @@ namespace EncosyTower.Collections.Extensions
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -44,6 +50,7 @@ namespace EncosyTower.Collections.Extensions
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -78,6 +85,7 @@ namespace EncosyTower.Collections.Extensions
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -123,6 +131,7 @@ namespace EncosyTower.Collections.Extensions
             where TKey : unmanaged, IEquatable<TKey>
             where TValue : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -153,6 +162,7 @@ namespace EncosyTower.Collections.Extensions
             where TValue : unmanaged
             where TBuilder : IFunc<TValue>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -177,6 +187,7 @@ namespace EncosyTower.Collections.Extensions
             where TValue : unmanaged
             where TBuilder : IFuncRef<TParam, TValue>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -214,6 +225,7 @@ namespace EncosyTower.Collections.Extensions
             where TRecyler : IActionRef<TValue>
             where TShouldBeRecycled : IPredicateRef<TValue>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();
@@ -262,6 +274,7 @@ namespace EncosyTower.Collections.Extensions
             where TRecyler : IActionRef<TValue, TParam>
             where TShouldBeRecycled : IPredicateRef<TValue>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             if (self.TryFindIndex(key, out var index))
             {
                 self.BumpVersion();

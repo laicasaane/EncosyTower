@@ -14,7 +14,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void Contains_DefaultAndComparerFindExpectedValues()
         {
             using var queue = new SharedQueue<int>(new[] { 1, 3, 5 }.AsSpan());
-            var view = queue.AsNative();
+            SharedQueueNative<int> view;
+
+            // SAFETY: queue remains alive while its borrowed native view is consumed.
+            unsafe
+            {
+                view = queue.AsNative();
+            }
             var comparer = new IntComparer();
 
             Assert.IsTrue(SharedQueueNativeAPI.Contains(in view, 3));

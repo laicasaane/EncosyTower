@@ -1,13 +1,11 @@
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
-using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
@@ -30,10 +28,7 @@ namespace EncosyTower.Collections.Unsafe
         private AllocatorStrategy _allocator;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReferenceUnsafe(
-              AllocatorStrategy allocator
-            , NativeArrayOptions options = NativeArrayOptions.ClearMemory
-        )
+        public ReferenceUnsafe(AllocatorStrategy allocator, NativeArrayOptions options = NativeArrayOptions.ClearMemory)
         {
             Allocate(allocator, out this);
 
@@ -129,7 +124,7 @@ namespace EncosyTower.Collections.Unsafe
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowIfIndexOutOfRange(index);
+                ThrowHelper.ThrowIfReferenceUnsafeIndexIsOutOfRange(index);
                 // SAFETY: The index is validated and callers must keep this allocation alive.
                 unsafe
                 {
@@ -141,7 +136,7 @@ namespace EncosyTower.Collections.Unsafe
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                ThrowIfIndexOutOfRange(index);
+                ThrowHelper.ThrowIfReferenceUnsafeIndexIsOutOfRange(index);
                 // SAFETY: The index is validated and callers must keep this allocation alive.
                 unsafe
                 {
@@ -161,10 +156,7 @@ namespace EncosyTower.Collections.Unsafe
         [WriteAccessRequired]
         public void Dispose()
         {
-            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
-                IsCreated,
-                ThrowHelper.CollectionType.ReferenceUnsafe
-            );
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(IsCreated, ThrowHelper.CollectionType.ReferenceUnsafe);
             ThrowHelper.ThrowIfUnsafeCollectionAllocatorIsInvalid(
                 _allocator.IsValid,
                 ThrowHelper.CollectionType.ReferenceUnsafe
@@ -193,10 +185,7 @@ namespace EncosyTower.Collections.Unsafe
                 _allocator.IsValid,
                 ThrowHelper.CollectionType.ReferenceUnsafe
             );
-            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(
-                IsCreated,
-                ThrowHelper.CollectionType.ReferenceUnsafe
-            );
+            ThrowHelper.ThrowIfUnsafeCollectionIsDisposed(IsCreated, ThrowHelper.CollectionType.ReferenceUnsafe);
 
             if (ShouldDeallocate(_allocator))
             {
@@ -361,8 +350,8 @@ namespace EncosyTower.Collections.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Copy(ReferenceUnsafe<T> dst, ReferenceUnsafe<T> src)
         {
-            ThrowIfSourceNotCreated(src.IsCreated);
-            ThrowIfDestinationNotCreated(dst.IsCreated);
+            ThrowHelper.ThrowIfReferenceUnsafeSourceIsNotCreated(src.IsCreated);
+            ThrowHelper.ThrowIfReferenceUnsafeDestinationIsNotCreated(dst.IsCreated);
 
             // SAFETY: Both source and destination creation states are validated before copying exactly one T.
             unsafe
@@ -463,54 +452,6 @@ namespace EncosyTower.Collections.Unsafe
 #endif
 
             return allocator.ToAllocator() > Allocator.None;
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSourceNotCreated([DoesNotReturnIf(false)] bool isCreated)
-        {
-            if (isCreated == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The source UnsafeReference is not created.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfDestinationNotCreated([DoesNotReturnIf(false)] bool isCreated)
-        {
-            if (isCreated == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("The destination UnsafeReference is not created.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexOutOfRange(int index)
-        {
-            if (index != 0)
-            {
-                throw CreateException(index);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static IndexOutOfRangeException CreateException(int index)
-                => new($"Index {index} is out of range of the UnsafeReference which only contains 1 element.");
         }
 
         /// <summary>

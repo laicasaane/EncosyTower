@@ -177,11 +177,7 @@ namespace Unity.Collections.LowLevel.Unsafe
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfIndexIsOutOfRange(
-            [DoesNotReturnIf(true)] bool outOfRange
-          , int index
-          , int capacity
-        )
+        private static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(true)] bool outOfRange, int index, int capacity)
         {
             if (outOfRange)
             {

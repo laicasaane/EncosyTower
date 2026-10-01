@@ -96,6 +96,7 @@ namespace EncosyTower.Collections
                 }
             }
         }
+
         public readonly int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,6 +110,7 @@ namespace EncosyTower.Collections
                 }
             }
         }
+
         public readonly int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

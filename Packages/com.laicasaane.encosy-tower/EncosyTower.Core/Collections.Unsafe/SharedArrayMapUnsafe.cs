@@ -1,14 +1,9 @@
 // https://github.com/sebas77/Svelto.Common/blob/master/DataStructures/Dictionaries/SveltoDictionary.cs
 
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Buffers;
 using EncosyTower.Common;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections.Unsafe
 {
@@ -16,18 +11,29 @@ namespace EncosyTower.Collections.Unsafe
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
     {
+        /// <safety>The owner pins this values-info buffer and refreshes the pointer after relocation.</safety>
         internal unsafe ArrayMapNode<TKey>* _valuesInfo;
         internal int _valuesInfoCapacity;
+        /// <safety>The owner pins this values buffer and refreshes the pointer after relocation.</safety>
         internal unsafe TValue* _values;
         internal int _valuesCapacity;
+        /// <safety>The owner pins this buckets buffer and refreshes the pointer after relocation.</safety>
         internal unsafe int* _buckets;
         internal int _bucketsCapacity;
 
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe ulong* _fastModBucketsMultiplier;
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe uint* _collisions;
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe int* _freeValueCellIndex;
+        /// <safety>The owner keeps this borrowed scalar live until header disposal.</safety>
         internal unsafe int* _version;
 
+        /// <safety>
+        /// Every supplied pointer must address live pinned storage owned by one map, capacities must match their
+        /// buffers, and the returned persistent header must have exactly one owner.
+        /// </safety>
         internal static unsafe SharedArrayMapUnsafe<TKey, TValue>* Alloc(
               ArrayMapNode<TKey>* valuesInfo
             , int valuesInfoCapacity
@@ -62,10 +68,11 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal static unsafe void Free(
-              SharedArrayMapUnsafe<TKey, TValue>* data
-            , AllocatorStrategy allocator
-        )
+        /// <safety>
+        /// Null is a no-op. Otherwise data must come from the matching allocator, be released once, and have no
+        /// aliases used afterward.
+        /// </safety>
+        internal static unsafe void Free(SharedArrayMapUnsafe<TKey, TValue>* data, AllocatorStrategy allocator)
         {
             if (data == null)
             {
@@ -79,13 +86,12 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal int Capacity
-            => _valuesCapacity;
+        internal int Capacity => _valuesCapacity;
 
-        internal int BucketCapacity
-            => _bucketsCapacity;
+        internal int BucketCapacity => _bucketsCapacity;
 
-        internal int Count
+        /// <safety>The owner must keep the count pointer live for the complete read.</safety>
+        internal unsafe int Count
         {
             get
             {
@@ -97,7 +103,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal int Version
+        /// <safety>The owner must keep the version pointer live for the complete read.</safety>
+        internal unsafe int Version
         {
             get
             {
@@ -109,61 +116,110 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        internal TKey KeyAt(int index)
-            => GetValuesInfoSpan()[index].key;
-
-        internal ref readonly TValue ValueAt(int index)
-            => ref GetValuesSpan()[index];
-
-        internal TValue this[TKey key]
+        /// <safety>The owner must keep values-info storage live and index must be valid.</safety>
+        internal unsafe TKey KeyAt(int index)
         {
-            get => GetValuesSpan()[GetIndex(key)];
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the indexed read.
+            unsafe
+            {
+                return GetValuesInfoSpan()[index].key;
+            }
+        }
+
+        /// <safety>The owner must remain live while the returned reference is used and index must be valid.</safety>
+        internal unsafe ref readonly TValue ValueAt(int index)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the returned reference.
+            unsafe
+            {
+                return ref GetValuesSpan()[index];
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe TValue this[TKey key]
+        {
+            get
+            {
+                // SAFETY: The caller accepts this header's borrowed-pointer contract for the indexed read.
+                unsafe
+                {
+                    return GetValuesSpan()[GetIndex(key)];
+                }
+            }
             set
             {
-                AddValue(key, out var index);
-                GetValuesSpan()[index] = value;
+                // SAFETY: The caller accepts this header's borrowed-pointer contract for the map update.
+                unsafe
+                {
+                    AddValue(key, out var index);
+                    GetValuesSpan()[index] = value;
+                }
             }
         }
 
-        internal void Add(TKey key, in TValue value)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe void Add(TKey key, in TValue value)
         {
-            var itemAdded = AddValue(key, out var index);
-            ThrowHelper.ThrowIfKeyIsPresent(itemAdded);
-
-            if (itemAdded)
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the map update.
+            unsafe
             {
-                GetValuesSpan()[index] = value;
+                var itemAdded = AddValue(key, out var index);
+                ThrowHelper.ThrowIfKeyIsPresent(itemAdded);
+
+                if (itemAdded)
+                {
+                    GetValuesSpan()[index] = value;
+                }
             }
         }
 
-        internal bool TryAdd(TKey key, in TValue value)
-            => TryAdd(key, in value, out _);
-
-        internal bool TryAdd(TKey key, in TValue value, out int index)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool TryAdd(TKey key, in TValue value)
         {
-            var itemAdded = AddValue(key, out index);
-
-            if (itemAdded)
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the map update.
+            unsafe
             {
-                GetValuesSpan()[index] = value;
+                return TryAdd(key, in value, out _);
             }
-
-            return itemAdded;
         }
 
-        internal void Clear()
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool TryAdd(TKey key, in TValue value, out int index)
         {
-            if (Count == 0)
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the map update.
+            unsafe
             {
-                return;
-            }
+                var itemAdded = AddValue(key, out index);
 
-            IncrementVersion();
-            SetCount(0);
-            GetBucketsSpan().Clear();
+                if (itemAdded)
+                {
+                    GetValuesSpan()[index] = value;
+                }
+
+                return itemAdded;
+            }
         }
 
-        internal void CopyTo(
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe void Clear()
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete clear.
+            unsafe
+            {
+                if (Count == 0)
+                {
+                    return;
+                }
+
+                IncrementVersion();
+                SetCount(0);
+                GetBucketsSpan().Clear();
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live for the complete copy.</safety>
+        internal unsafe void CopyTo(
               Span<ArrayMapNode<TKey>> valuesInfo
             , Span<TValue> values
             , Span<int> buckets
@@ -172,208 +228,258 @@ namespace EncosyTower.Collections.Unsafe
             , out ulong fastModBucketsMultiplier
         )
         {
-            GetValuesInfoSpan().CopyTo(valuesInfo);
-            GetValuesSpan().CopyTo(values);
-            GetBucketsSpan().CopyTo(buckets);
-            count = Count;
-            collisions = (uint)GetCollisions();
-            fastModBucketsMultiplier = GetFastModBucketsMultiplier();
-        }
-
-        internal bool ContainsKey(TKey key)
-            => TryFindIndex(key, out _);
-
-        internal bool TryGetValue(TKey key, out TValue result)
-        {
-            if (TryFindIndex(key, out var findIndex))
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the complete copy.
+            unsafe
             {
-                result = GetValuesSpan()[findIndex];
-                return true;
+                GetValuesInfoSpan().CopyTo(valuesInfo);
+                GetValuesSpan().CopyTo(values);
+                GetBucketsSpan().CopyTo(buckets);
+                count = Count;
+                collisions = (uint)GetCollisions();
+                fastModBucketsMultiplier = GetFastModBucketsMultiplier();
             }
-
-            result = default;
-            return false;
         }
 
-        internal ref TValue GetOrAdd(TKey key)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool ContainsKey(TKey key)
         {
-            var values = GetValuesSpan();
-
-            if (TryFindIndex(key, out var findIndex))
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the lookup.
+            unsafe
             {
-                IncrementVersion();
-                return ref values[findIndex];
+                return TryFindIndex(key, out _);
             }
-
-            AddValue(key, out findIndex);
-            values[findIndex] = default;
-            return ref values[findIndex];
         }
 
-        internal ref TValue GetOrAdd(TKey key, out int index)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool TryGetValue(TKey key, out TValue result)
         {
-            var values = GetValuesSpan();
-
-            if (TryFindIndex(key, out index))
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the lookup.
+            unsafe
             {
-                IncrementVersion();
-                return ref values[index];
-            }
-
-            AddValue(key, out index);
-            return ref values[index];
-        }
-
-        internal ref TValue GetValueByRef(TKey key)
-        {
-            var found = TryFindIndex(key, out var findIndex);
-            ThrowHelper.ThrowIfKeyIsNotFound(found);
-
-            IncrementVersion();
-            return ref GetValuesSpan()[findIndex];
-        }
-
-        internal bool Remove(TKey key)
-            => Remove(key, out _, out _);
-
-        internal bool Remove(TKey key, out int index, out TValue value)
-        {
-            var buckets = GetBucketsSpan();
-            var valuesInfo = GetValuesInfoSpan();
-            var values = GetValuesSpan();
-            var fastModBucketsMultiplier = GetFastModBucketsMultiplier();
-
-            var hash = key.GetHashCode();
-            var bucketIndex = (int)Reduce(
-                  (uint)hash
-                , (uint)buckets.Length
-                , fastModBucketsMultiplier
-            );
-            var indexToValueToRemove = buckets[bucketIndex] - 1;
-            var itemAfterCurrentOne = -1;
-
-            while (indexToValueToRemove != -1)
-            {
-                ref var node = ref valuesInfo[indexToValueToRemove];
-
-                if (node._hashcode == hash && key.Equals(node.key))
+                if (TryFindIndex(key, out var findIndex))
                 {
-                    if (buckets[bucketIndex] - 1 == indexToValueToRemove)
-                    {
-                        buckets[bucketIndex] = node._previous + 1;
-                    }
-                    else
-                    {
-                        ThrowIfNextNodeIsMissing(itemAfterCurrentOne != -1);
-                        valuesInfo[itemAfterCurrentOne]._previous = node._previous;
-                    }
-
-                    break;
-                }
-
-                itemAfterCurrentOne = indexToValueToRemove;
-                indexToValueToRemove = node._previous;
-            }
-
-            if (indexToValueToRemove == -1)
-            {
-                index = default;
-                value = default;
-                return false;
-            }
-
-            IncrementVersion();
-            index = indexToValueToRemove;
-
-            var lastValueCellIndex = Count - 1;
-            SetCount(lastValueCellIndex);
-            value = values[indexToValueToRemove];
-
-            if (indexToValueToRemove != lastValueCellIndex)
-            {
-                ref var nodeToMove = ref valuesInfo[lastValueCellIndex];
-                var movingBucketIndex = (int)Reduce(
-                      (uint)nodeToMove._hashcode
-                    , (uint)buckets.Length
-                    , fastModBucketsMultiplier
-                );
-                var linkedListIterationIndex = buckets[movingBucketIndex] - 1;
-
-                if (linkedListIterationIndex == lastValueCellIndex)
-                {
-                    buckets[movingBucketIndex] = indexToValueToRemove + 1;
-                }
-
-                while (valuesInfo[linkedListIterationIndex]._previous != -1
-                    && valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
-                {
-                    linkedListIterationIndex = valuesInfo[linkedListIterationIndex]._previous;
-                }
-
-                if (valuesInfo[linkedListIterationIndex]._previous != -1)
-                {
-                    valuesInfo[linkedListIterationIndex]._previous = indexToValueToRemove;
-                }
-
-                valuesInfo[indexToValueToRemove] = nodeToMove;
-                values[indexToValueToRemove] = values[lastValueCellIndex];
-            }
-
-            return true;
-        }
-
-        internal bool TryFindIndex(TKey key, out int findIndex)
-        {
-            var buckets = GetBucketsSpan();
-            var valuesInfo = GetValuesInfoSpan();
-
-            ThrowHelper.ThrowIfBucketsAreUninitialized(
-                  buckets.Length > 0
-                , ThrowHelper.CollectionType.SharedArrayMapUnsafe
-            );
-
-            var hash = key.GetHashCode();
-            var bucketIndex = (int)Reduce(
-                  (uint)hash
-                , (uint)buckets.Length
-                , GetFastModBucketsMultiplier()
-            );
-            var valueIndex = buckets[bucketIndex] - 1;
-
-            while (valueIndex != -1)
-            {
-                ref readonly var node = ref valuesInfo[valueIndex];
-
-                if (node._hashcode == hash && key.Equals(node.key))
-                {
-                    findIndex = valueIndex;
+                    result = GetValuesSpan()[findIndex];
                     return true;
                 }
 
-                valueIndex = node._previous;
+                result = default;
+                return false;
             }
-
-            findIndex = 0;
-            return false;
         }
 
-        internal int GetIndex(TKey key)
+        /// <safety>The owner must remain live while the returned reference is used.</safety>
+        internal unsafe ref TValue GetOrAdd(TKey key)
         {
-            var found = TryFindIndex(key, out var findIndex);
-            ThrowHelper.ThrowIfKeyIsNotFound(found);
-            return findIndex;
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the returned reference.
+            unsafe
+            {
+                var values = GetValuesSpan();
+
+                if (TryFindIndex(key, out var findIndex))
+                {
+                    IncrementVersion();
+                    return ref values[findIndex];
+                }
+
+                AddValue(key, out findIndex);
+                values[findIndex] = default;
+                return ref values[findIndex];
+            }
         }
 
+        /// <safety>The owner must remain live while the returned reference is used.</safety>
+        internal unsafe ref TValue GetOrAdd(TKey key, out int index)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the returned reference.
+            unsafe
+            {
+                var values = GetValuesSpan();
+
+                if (TryFindIndex(key, out index))
+                {
+                    IncrementVersion();
+                    return ref values[index];
+                }
+
+                AddValue(key, out index);
+                return ref values[index];
+            }
+        }
+
+        /// <safety>The owner must remain live while the returned reference is used.</safety>
+        internal unsafe ref TValue GetValueByRef(TKey key)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the returned reference.
+            unsafe
+            {
+                var found = TryFindIndex(key, out var findIndex);
+                ThrowHelper.ThrowIfKeyIsNotFound(found);
+
+                IncrementVersion();
+                return ref GetValuesSpan()[findIndex];
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool Remove(TKey key)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the removal.
+            unsafe
+            {
+                return Remove(key, out _, out _);
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool Remove(TKey key, out int index, out TValue value)
+        {
+            // SAFETY: The caller keeps all borrowed map storage live for the complete removal.
+            unsafe
+            {
+                var buckets = GetBucketsSpan();
+                var valuesInfo = GetValuesInfoSpan();
+                var values = GetValuesSpan();
+                var fastModBucketsMultiplier = GetFastModBucketsMultiplier();
+
+                var hash = key.GetHashCode();
+                var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, fastModBucketsMultiplier);
+                var indexToValueToRemove = buckets[bucketIndex] - 1;
+                var itemAfterCurrentOne = -1;
+
+                while (indexToValueToRemove != -1)
+                {
+                    ref var node = ref valuesInfo[indexToValueToRemove];
+
+                    if (node._hashcode == hash && key.Equals(node.key))
+                    {
+                        if (buckets[bucketIndex] - 1 == indexToValueToRemove)
+                        {
+                            buckets[bucketIndex] = node._previous + 1;
+                        }
+                        else
+                        {
+                            ThrowHelper.ThrowIfMissingLinkedListNode(
+                                  itemAfterCurrentOne != -1
+                                , ThrowHelper.CollectionType.SharedArrayMapUnsafe
+                            );
+                            valuesInfo[itemAfterCurrentOne]._previous = node._previous;
+                        }
+
+                        break;
+                    }
+
+                    itemAfterCurrentOne = indexToValueToRemove;
+                    indexToValueToRemove = node._previous;
+                }
+
+                if (indexToValueToRemove == -1)
+                {
+                    index = default;
+                    value = default;
+                    return false;
+                }
+
+                IncrementVersion();
+                index = indexToValueToRemove;
+
+                var lastValueCellIndex = Count - 1;
+                SetCount(lastValueCellIndex);
+                value = values[indexToValueToRemove];
+
+                if (indexToValueToRemove != lastValueCellIndex)
+                {
+                    ref var nodeToMove = ref valuesInfo[lastValueCellIndex];
+                    var movingBucketIndex = (int)Reduce(
+                          (uint)nodeToMove._hashcode
+                        , (uint)buckets.Length
+                        , fastModBucketsMultiplier
+                    );
+                    var linkedListIterationIndex = buckets[movingBucketIndex] - 1;
+
+                    if (linkedListIterationIndex == lastValueCellIndex)
+                    {
+                        buckets[movingBucketIndex] = indexToValueToRemove + 1;
+                    }
+
+                    while (valuesInfo[linkedListIterationIndex]._previous != -1
+                        && valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex
+                    )
+                    {
+                        linkedListIterationIndex = valuesInfo[linkedListIterationIndex]._previous;
+                    }
+
+                    if (valuesInfo[linkedListIterationIndex]._previous != -1)
+                    {
+                        valuesInfo[linkedListIterationIndex]._previous = indexToValueToRemove;
+                    }
+
+                    valuesInfo[indexToValueToRemove] = nodeToMove;
+                    values[indexToValueToRemove] = values[lastValueCellIndex];
+                }
+
+                return true;
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe bool TryFindIndex(TKey key, out int findIndex)
+        {
+            // SAFETY: The caller keeps all borrowed map storage live for the complete lookup.
+            unsafe
+            {
+                var buckets = GetBucketsSpan();
+                var valuesInfo = GetValuesInfoSpan();
+
+                ThrowHelper.ThrowIfBucketsAreUninitialized(
+                      buckets.Length > 0
+                    , ThrowHelper.CollectionType.SharedArrayMapUnsafe
+                );
+
+                var hash = key.GetHashCode();
+                var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, GetFastModBucketsMultiplier());
+                var valueIndex = buckets[bucketIndex] - 1;
+
+                while (valueIndex != -1)
+                {
+                    ref readonly var node = ref valuesInfo[valueIndex];
+
+                    if (node._hashcode == hash && key.Equals(node.key))
+                    {
+                        findIndex = valueIndex;
+                        return true;
+                    }
+
+                    valueIndex = node._previous;
+                }
+
+                findIndex = 0;
+                return false;
+            }
+        }
+
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        internal unsafe int GetIndex(TKey key)
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the lookup.
+            unsafe
+            {
+                var found = TryFindIndex(key, out var findIndex);
+                ThrowHelper.ThrowIfKeyIsNotFound(found);
+                return findIndex;
+            }
+        }
+
+        /// <safety>Both map headers and all borrowed storage must remain live for the complete operation.</safety>
         internal unsafe void Intersect<UValue>(SharedArrayMapUnsafe<TKey, UValue>* otherMapKeys)
             where UValue : unmanaged
         {
-            for (var i = Count - 1; i >= 0; i--)
+            // SAFETY: The caller supplies two live borrowed headers with valid map state.
+            unsafe
             {
-                var key = GetValuesInfoSpan()[i].key;
-
-                // SAFETY: The caller supplies a live borrowed header for the other map.
-                unsafe
+                for (var i = Count - 1; i >= 0; i--)
                 {
+                    var key = GetValuesInfoSpan()[i].key;
+
                     if (otherMapKeys->ContainsKey(key) == false)
                     {
                         Remove(key);
@@ -382,16 +488,17 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
+        /// <safety>Both map headers and all borrowed storage must remain live for the complete operation.</safety>
         internal unsafe void Exclude<UValue>(SharedArrayMapUnsafe<TKey, UValue>* otherMapKeys)
             where UValue : unmanaged
         {
-            for (var i = Count - 1; i >= 0; i--)
+            // SAFETY: The caller supplies two live borrowed headers with valid map state.
+            unsafe
             {
-                var key = GetValuesInfoSpan()[i].key;
-
-                // SAFETY: The caller supplies a live borrowed header for the other map.
-                unsafe
+                for (var i = Count - 1; i >= 0; i--)
                 {
+                    var key = GetValuesInfoSpan()[i].key;
+
                     if (otherMapKeys->ContainsKey(key))
                     {
                         Remove(key);
@@ -400,6 +507,7 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
+        /// <safety>Both map headers and all borrowed storage must remain live for the complete operation.</safety>
         internal unsafe void Union(SharedArrayMapUnsafe<TKey, TValue>* otherMap)
         {
             // SAFETY: The caller supplies a live borrowed header whose occupied range is contiguous.
@@ -413,108 +521,120 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private bool AddValue(TKey key, out int indexSet)
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        private unsafe bool AddValue(TKey key, out int indexSet)
         {
-            var valuesInfo = GetValuesInfoSpan();
-            var buckets = GetBucketsSpan();
-            var count = Count;
-            var collisions = GetCollisions();
-            var hash = key.GetHashCode();
-            var bucketIndex = (int)Reduce(
-                  (uint)hash
-                , (uint)buckets.Length
-                , GetFastModBucketsMultiplier()
-            );
-            var valueIndex = buckets[bucketIndex] - 1;
-
-            if (valueIndex == -1)
+            // SAFETY: The caller keeps all borrowed map storage live for the complete insertion.
+            unsafe
             {
-                ResizeIfNeeded();
-                valuesInfo[count] = new ArrayMapNode<TKey>(key, hash);
-            }
-            else
-            {
-                var currentValueIndex = valueIndex;
+                var valuesInfo = GetValuesInfoSpan();
+                var buckets = GetBucketsSpan();
+                var count = Count;
+                var collisions = GetCollisions();
+                var hash = key.GetHashCode();
+                var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, GetFastModBucketsMultiplier());
+                var valueIndex = buckets[bucketIndex] - 1;
 
-                do
+                if (valueIndex == -1)
                 {
-                    ref var node = ref valuesInfo[currentValueIndex];
-
-                    if (node._hashcode == hash && key.Equals(node.key))
-                    {
-                        indexSet = currentValueIndex;
-                        return false;
-                    }
-
-                    currentValueIndex = node._previous;
-                } while (currentValueIndex != -1);
-
-                ResizeIfNeeded();
-                collisions++;
-                valuesInfo[count] = new ArrayMapNode<TKey>(key, hash, valueIndex);
-            }
-
-            IncrementVersion();
-            buckets[bucketIndex] = count + 1;
-            indexSet = count;
-            SetCount(count + 1);
-            SetCollisions(collisions);
-
-            if (collisions > buckets.Length)
-            {
-                RecomputeBuckets();
-            }
-
-            return true;
-        }
-
-        private void RecomputeBuckets()
-        {
-            var valuesInfo = GetValuesInfoSpan();
-            var buckets = GetBucketsSpan();
-            buckets.Clear();
-
-            var collisions = 0;
-            var bucketsCapacity = (uint)buckets.Length;
-            var fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier(bucketsCapacity);
-            SetFastModBucketsMultiplier(fastModBucketsMultiplier);
-
-            var count = Count;
-
-            for (var newValueIndex = 0; newValueIndex < count; ++newValueIndex)
-            {
-                ref var valueInfoNode = ref valuesInfo[newValueIndex];
-                var bucketIndex = (int)Reduce(
-                      (uint)valueInfoNode._hashcode
-                    , bucketsCapacity
-                    , fastModBucketsMultiplier
-                );
-                var existingValueIndex = buckets[bucketIndex] - 1;
-                buckets[bucketIndex] = newValueIndex + 1;
-
-                if (existingValueIndex == -1)
-                {
-                    valueInfoNode._previous = -1;
+                    ResizeIfNeeded();
+                    valuesInfo[count] = new ArrayMapNode<TKey>(key, hash);
                 }
                 else
                 {
+                    var currentValueIndex = valueIndex;
+
+                    do
+                    {
+                        ref var node = ref valuesInfo[currentValueIndex];
+
+                        if (node._hashcode == hash && key.Equals(node.key))
+                        {
+                            indexSet = currentValueIndex;
+                            return false;
+                        }
+
+                        currentValueIndex = node._previous;
+                    } while (currentValueIndex != -1);
+
+                    ResizeIfNeeded();
                     collisions++;
-                    valueInfoNode._previous = existingValueIndex;
+                    valuesInfo[count] = new ArrayMapNode<TKey>(key, hash, valueIndex);
                 }
+
+                IncrementVersion();
+                buckets[bucketIndex] = count + 1;
+                indexSet = count;
+                SetCount(count + 1);
+                SetCollisions(collisions);
+
+                if (collisions > buckets.Length)
+                {
+                    RecomputeBuckets();
+                }
+
+                return true;
             }
-
-            SetCollisions(collisions);
         }
 
-        private void ResizeIfNeeded()
+        /// <safety>The owner must keep every borrowed pointer live and provide valid map state.</safety>
+        private unsafe void RecomputeBuckets()
         {
-            ThrowHelper.ThrowIfCapacityIsImmutable(
-                  Count != _valuesCapacity
-                , ThrowHelper.CollectionType.SharedArrayMapUnsafe
-            );
+            // SAFETY: The caller keeps all borrowed map storage live for the complete bucket rebuild.
+            unsafe
+            {
+                var valuesInfo = GetValuesInfoSpan();
+                var buckets = GetBucketsSpan();
+                buckets.Clear();
+
+                var collisions = 0;
+                var bucketsCapacity = (uint)buckets.Length;
+                var fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier(bucketsCapacity);
+                SetFastModBucketsMultiplier(fastModBucketsMultiplier);
+
+                var count = Count;
+
+                for (var newValueIndex = 0; newValueIndex < count; ++newValueIndex)
+                {
+                    ref var valueInfoNode = ref valuesInfo[newValueIndex];
+                    var bucketIndex = (int)Reduce(
+                          (uint)valueInfoNode._hashcode
+                        , bucketsCapacity
+                        , fastModBucketsMultiplier
+                    );
+                    var existingValueIndex = buckets[bucketIndex] - 1;
+                    buckets[bucketIndex] = newValueIndex + 1;
+
+                    if (existingValueIndex == -1)
+                    {
+                        valueInfoNode._previous = -1;
+                    }
+                    else
+                    {
+                        collisions++;
+                        valueInfoNode._previous = existingValueIndex;
+                    }
+                }
+
+                SetCollisions(collisions);
+            }
         }
 
-        private Span<ArrayMapNode<TKey>> GetValuesInfoSpan()
+        /// <safety>The owner must keep the count pointer live for the complete capacity check.</safety>
+        private unsafe void ResizeIfNeeded()
+        {
+            // SAFETY: The caller accepts this header's borrowed-pointer contract for the count read.
+            unsafe
+            {
+                ThrowHelper.ThrowIfCapacityIsImmutable(
+                      Count != _valuesCapacity
+                    , ThrowHelper.CollectionType.SharedArrayMapUnsafe
+                );
+            }
+        }
+
+        /// <safety>The owner must keep values-info storage live and unchanged while the span is used.</safety>
+        private unsafe Span<ArrayMapNode<TKey>> GetValuesInfoSpan()
         {
             // SAFETY: The owner pins a values-info buffer matching the recorded capacity.
             unsafe
@@ -523,7 +643,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private Span<TValue> GetValuesSpan()
+        /// <safety>The owner must keep values storage live and unchanged while the span is used.</safety>
+        private unsafe Span<TValue> GetValuesSpan()
         {
             // SAFETY: The owner pins a values buffer matching the recorded capacity.
             unsafe
@@ -532,7 +653,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private Span<int> GetBucketsSpan()
+        /// <safety>The owner must keep bucket storage live and unchanged while the span is used.</safety>
+        private unsafe Span<int> GetBucketsSpan()
         {
             // SAFETY: The owner pins a bucket buffer matching the recorded capacity.
             unsafe
@@ -541,7 +663,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private ulong GetFastModBucketsMultiplier()
+        /// <safety>The owner must keep the multiplier pointer live for the complete read.</safety>
+        private unsafe ulong GetFastModBucketsMultiplier()
         {
             // SAFETY: The owner keeps the multiplier storage live while the header is borrowed.
             unsafe
@@ -550,7 +673,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private void SetFastModBucketsMultiplier(ulong value)
+        /// <safety>The owner must keep the multiplier pointer live for the complete write.</safety>
+        private unsafe void SetFastModBucketsMultiplier(ulong value)
         {
             // SAFETY: The owner keeps the multiplier storage live while the header is borrowed.
             unsafe
@@ -559,7 +683,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private int GetCollisions()
+        /// <safety>The owner must keep the collision pointer live for the complete read.</safety>
+        private unsafe int GetCollisions()
         {
             // SAFETY: The owner keeps the collision storage live while the header is borrowed.
             unsafe
@@ -568,7 +693,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private void SetCollisions(int value)
+        /// <safety>The owner must keep the collision pointer live for the complete write.</safety>
+        private unsafe void SetCollisions(int value)
         {
             // SAFETY: The owner keeps the collision storage live while the header is borrowed.
             unsafe
@@ -577,7 +703,8 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private void SetCount(int count)
+        /// <safety>The owner must keep the count pointer live for the complete write.</safety>
+        private unsafe void SetCount(int count)
         {
             // SAFETY: The owner keeps the count storage live while the header is borrowed.
             unsafe
@@ -586,29 +713,14 @@ namespace EncosyTower.Collections.Unsafe
             }
         }
 
-        private void IncrementVersion()
+        /// <safety>The owner must keep the version pointer live for the complete update.</safety>
+        private unsafe void IncrementVersion()
         {
             // SAFETY: The owner keeps the version storage live while the header is borrowed.
             unsafe
             {
                 (*_version)++;
             }
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfNextNodeIsMissing([DoesNotReturnIf(false)] bool hasNextNode)
-        {
-            if (hasNextNode == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("This should never happen");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

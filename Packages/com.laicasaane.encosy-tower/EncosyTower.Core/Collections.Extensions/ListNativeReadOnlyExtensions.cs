@@ -7,6 +7,8 @@ using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class ListNativeReadOnlyExtensions
@@ -14,6 +16,7 @@ namespace EncosyTower.Collections.Extensions
         public static bool Contains<T>(this in ListNative<T>.ReadOnly self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var s = self.AsReadOnlySpan();
             for (var i = 0; i < s.Length; i++)
             {
@@ -29,11 +32,15 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains<T>(this in ListNative<T>.ReadOnly self, in T item)
             where T : unmanaged, IEquatable<T>
-                => Contains(self, item);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Contains(self, item);
+        }
 
         public static int IndexOf<T>(this in ListNative<T>.ReadOnly self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var s = self.AsReadOnlySpan();
             for (var i = 0; i < s.Length; i++)
             {
@@ -49,7 +56,10 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T>.ReadOnly self, T item, int index)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, item, index, self.Count - index);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, item, index, self.Count - index);
+        }
 
         public static int IndexOf<T>(
               this in ListNative<T>.ReadOnly self
@@ -59,6 +69,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_Section(self.Count - index >= count);
@@ -77,12 +88,18 @@ namespace EncosyTower.Collections.Extensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T>.ReadOnly self, in T item)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, 0, self.Count);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, 0, self.Count);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int IndexOf<T>(this in ListNative<T>.ReadOnly self, in T item, int index)
             where T : unmanaged, IEquatable<T>
-                => IndexOf(self, in item, index, self.Count - index);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return IndexOf(self, in item, index, self.Count - index);
+        }
 
         public static int IndexOf<T>(
               this in ListNative<T>.ReadOnly self
@@ -92,6 +109,7 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowIfRangeIsInvalid_Index(index >= 0);
             ThrowIfRangeIsInvalid_Count(count >= 0);
             ThrowIfRangeIsInvalid_Section(self.Count - index >= count);
@@ -115,6 +133,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var s = self.AsReadOnlySpan();
             for (var i = 0; i < s.Length; i++)
             {
@@ -135,6 +154,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             var s = self.AsReadOnlySpan();
             for (var i = 0; i < s.Length; i++)
             {
@@ -155,7 +175,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
@@ -167,7 +190,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), index, count, item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), index, count, item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
@@ -177,7 +203,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), item, comparer);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BinarySearch<T, TComparer>(
@@ -189,7 +218,10 @@ namespace EncosyTower.Collections.Extensions
         )
             where T : unmanaged
             where TComparer : unmanaged, IComparer<T>
-                => Array.BinarySearch(self.ToArray(), index, count, item, comparer);
+        {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
+            return Array.BinarySearch(self.ToArray(), index, count, item, comparer);
+        }
 
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]

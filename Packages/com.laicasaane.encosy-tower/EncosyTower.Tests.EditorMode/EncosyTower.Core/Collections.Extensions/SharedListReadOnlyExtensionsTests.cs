@@ -13,7 +13,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void Contains_OverloadsFindExpectedValues()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsReadOnly();
+            SharedList<int>.ReadOnly view;
+
+            // SAFETY: list remains alive and unmodified while its borrowed read-only view is consumed.
+            unsafe
+            {
+                view = list.AsReadOnly();
+            }
             var comparer = new IntComparer();
             var three = 3;
 
@@ -29,7 +35,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void BinarySearch_FullAndRangeReturnExpectedResults()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsReadOnly();
+            SharedList<int>.ReadOnly view;
+
+            // SAFETY: list remains alive and unmodified while its borrowed read-only view is consumed.
+            unsafe
+            {
+                view = list.AsReadOnly();
+            }
             var comparer = new IntComparer();
             var five = 5;
             var seven = 7;
@@ -38,10 +50,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, SharedListReadOnlyAPI.BinarySearch(view, in five, comparer));
             Assert.Less(SharedListReadOnlyAPI.BinarySearch(view, 4, comparer), 0);
             Assert.AreEqual(1, SharedListReadOnlyAPI.BinarySearch(view, 1, 2, 3, comparer));
-            Assert.Less(
-                  SharedListReadOnlyAPI.BinarySearch(view, 1, 2, in seven, comparer)
-                , 0
-            );
+            Assert.Less(SharedListReadOnlyAPI.BinarySearch(view, 1, 2, in seven, comparer), 0);
             Assert.Less(SharedListReadOnlyAPI.BinarySearch(view, 1, 2, 7, comparer), 0);
         }
 
@@ -49,7 +58,13 @@ namespace EncosyTower.Tests.Core.Collections
         public void IndexOf_OverloadsRespectStartAndCount()
         {
             using var list = new SharedList<int>(1, 3, 5, 7);
-            var view = list.AsReadOnly();
+            SharedList<int>.ReadOnly view;
+
+            // SAFETY: list remains alive and unmodified while its borrowed read-only view is consumed.
+            unsafe
+            {
+                view = list.AsReadOnly();
+            }
             var comparer = new IntComparer();
             var five = 5;
 

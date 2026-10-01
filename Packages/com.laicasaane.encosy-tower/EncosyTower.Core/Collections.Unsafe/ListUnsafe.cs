@@ -80,10 +80,7 @@ namespace EncosyTower.Collections.Unsafe
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ThrowHelper.ThrowIfIndexIsOutOfRange(
-                      (uint)index < (uint)_count
-                    , ThrowHelper.CollectionType.ListUnsafe
-                );
+                ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListUnsafe);
                 return ref _buffer[index];
             }
         }
@@ -238,10 +235,7 @@ namespace EncosyTower.Collections.Unsafe
 
         public void RemoveAt(int index)
         {
-            ThrowHelper.ThrowIfIndexIsOutOfRange(
-                  (uint)index < (uint)_count
-                , ThrowHelper.CollectionType.ListUnsafe
-            );
+            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListUnsafe);
             Move(index + 1, index, _count - index - 1);
             _count--;
             _version++;
@@ -263,41 +257,13 @@ namespace EncosyTower.Collections.Unsafe
 
         public void RemoveAtSwapBack(int index)
         {
-            ThrowHelper.ThrowIfIndexIsOutOfRange(
-                  (uint)index < (uint)_count
-                , ThrowHelper.CollectionType.ListUnsafe
-            );
+            ThrowHelper.ThrowIfIndexIsOutOfRange((uint)index < (uint)_count, ThrowHelper.CollectionType.ListUnsafe);
             _count--;
             if (index != _count)
             {
                 _buffer.AsSpan()[index] = _buffer.AsReadOnlySpan()[_count];
             }
             _version++;
-        }
-
-        public readonly ref readonly T Peek()
-        {
-            ThrowHelper.ThrowIfEmpty(_count > 0, ThrowHelper.CollectionType.ListUnsafe);
-            return ref _buffer.AsReadOnlySpan()[_count - 1];
-        }
-
-        public ref readonly T Pop()
-        {
-            ThrowHelper.ThrowIfEmpty(_count > 0, ThrowHelper.CollectionType.ListUnsafe);
-            _version++;
-            return ref _buffer.AsReadOnlySpan()[--_count];
-        }
-
-        public int Push(T item)
-        {
-            Add(item);
-            return _count - 1;
-        }
-
-        public int Push(in T item)
-        {
-            Add(in item);
-            return _count - 1;
         }
 
         public Span<T> AddReplicate(int amount)
@@ -394,9 +360,7 @@ namespace EncosyTower.Collections.Unsafe
         public ListUnsafe<U> Reinterpret<U>()
             where U : unmanaged
         {
-            ThrowHelper.ThrowIfTypesHaveDifferentSize(
-                UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
-            );
+            ThrowHelper.ThrowIfTypesHaveDifferentSize(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
             return new ListUnsafe<U>
             {
                 _buffer = _buffer.Reinterpret<U>(),
@@ -470,10 +434,7 @@ namespace EncosyTower.Collections.Unsafe
         }
 
         /// <safety>The returned header owns a copy of source and must be freed exactly once with Free.</safety>
-        internal static unsafe ListUnsafe<T>* Alloc(
-              ReadOnlySpan<T> source
-            , AllocatorStrategy allocator
-        )
+        internal static unsafe ListUnsafe<T>* Alloc(ReadOnlySpan<T> source, AllocatorStrategy allocator)
         {
             // SAFETY: The allocator returns storage for one ListUnsafe header and the header owns its buffer.
             unsafe

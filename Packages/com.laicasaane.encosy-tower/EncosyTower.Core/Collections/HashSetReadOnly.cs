@@ -5,6 +5,8 @@ using System.Collections.Generic.Exposed;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public readonly struct HashSetReadOnly<T> : IReadOnlyCollection<T>
@@ -22,6 +24,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HashSetReadOnly([NotNull] HashSet<T> set)
         {
+            DebuggingThrowHelper.ThrowIfNull(set);
+
             _set = new(set);
         }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct StackNative<T>
@@ -18,6 +20,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe Enumerator(StackUnsafe<T>* data, in ReadOnly stack)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(stack);
+
                 _stack = stack;
                 // SAFETY: data is the live header retained by the native owner/view.
                 unsafe
@@ -61,8 +65,7 @@ namespace EncosyTower.Collections
                 get => _current;
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

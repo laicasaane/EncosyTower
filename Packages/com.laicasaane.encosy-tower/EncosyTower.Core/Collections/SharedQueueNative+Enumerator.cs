@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections.Unsafe;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public partial struct SharedQueueNative<T>
@@ -16,9 +18,11 @@ namespace EncosyTower.Collections
             private int _index;
             private T _current;
 
+            /// <safety>The header must belong to the live owner backing queue for the full enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe Enumerator(SharedQueueUnsafe<T>* data, in ReadOnly queue)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(queue);
                 _queue = queue;
                 // SAFETY: data is the live header retained by the borrowed native view.
                 unsafe
@@ -44,10 +48,7 @@ namespace EncosyTower.Collections
                             index -= _queue.Capacity;
                         }
 
-                        _current = UnsafeUtility.ArrayElementAsRef<T>(
-                              _queue.m_Data->_buffer
-                            , index
-                        );
+                        _current = UnsafeUtility.ArrayElementAsRef<T>(_queue.m_Data->_buffer, index);
                     }
                     return true;
                 }
@@ -73,8 +74,7 @@ namespace EncosyTower.Collections
                 get => _current;
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public void Reset()
             {

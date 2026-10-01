@@ -208,24 +208,6 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void PeekPopPush_UseStackSemantics()
-        {
-            var list = NewList();
-            list.AddRange(new[] { 1, 2 });
-            var three = 3;
-
-            var index = list.Push(in three);
-            var peeked = list.Peek();
-            var popped = list.Pop();
-
-            Assert.AreEqual(2, index);
-            Assert.AreEqual(3, peeked);
-            Assert.AreEqual(3, popped);
-            Assert.AreEqual(2, list.Count);
-            Assert.AreEqual(2, list.Push(4));
-        }
-
-        [Test]
         public void RemoveRange_ShiftsRemainingValuesLeft()
         {
             var list = NewList();
@@ -423,14 +405,11 @@ namespace EncosyTower.Tests.Core.Collections
         public void Prefill_FactoriesCreateExpectedContent()
         {
             var defaultProvider = new BufferProvider<int>();
-            var defaults = ListProxy<BufferProvider<int>, BufferManaged<int>, int>
-                .Prefill(defaultProvider, 3);
+            var defaults = ListProxy<BufferProvider<int>, BufferManaged<int>, int>.Prefill(defaultProvider, 3);
             var valueProvider = new BufferProvider<int>();
-            var values = ListProxy<BufferProvider<int>, BufferManaged<int>, int>
-                .Prefill(valueProvider, 5, 3);
+            var values = ListProxy<BufferProvider<int>, BufferManaged<int>, int>.Prefill(valueProvider, 5, 3);
             var noInitProvider = new BufferProvider<int>();
-            var noInit = ListProxy<BufferProvider<int>, BufferManaged<int>, int>
-                .PrefillNoInit(noInitProvider, 3);
+            var noInit = ListProxy<BufferProvider<int>, BufferManaged<int>, int>.PrefillNoInit(noInitProvider, 3);
 
             CollectionAssert.AreEqual(new[] { 0, 0, 0 }, defaults.ToArray());
             CollectionAssert.AreEqual(new[] { 5, 5, 5 }, values.ToArray());

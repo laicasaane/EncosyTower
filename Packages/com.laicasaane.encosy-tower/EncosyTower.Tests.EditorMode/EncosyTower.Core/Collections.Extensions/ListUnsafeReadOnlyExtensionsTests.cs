@@ -52,10 +52,7 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(2, ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, 5, comparer));
             Assert.AreEqual(2, ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, in five, comparer));
             Assert.AreEqual(2, ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, 1, 2, 5, comparer));
-            Assert.Less(
-                  ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, 0, 2, in seven, comparer)
-                , 0
-            );
+            Assert.Less(ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, 0, 2, in seven, comparer), 0);
             Assert.Less(ListUnsafeReadOnlyAPI.BinarySearch(in readOnly, 4, comparer), 0);
         }
 

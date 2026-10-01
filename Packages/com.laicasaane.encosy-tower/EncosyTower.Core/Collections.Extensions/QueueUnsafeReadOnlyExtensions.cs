@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using EncosyTower.Collections.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class QueueUnsafeReadOnlyExtensions
@@ -9,6 +11,7 @@ namespace EncosyTower.Collections.Extensions
         public static bool Contains<T>(this in QueueUnsafe<T>.ReadOnly self, T item)
             where T : unmanaged, IEquatable<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             foreach (var x in self)
             {
                 if (x.Equals(item))
@@ -28,6 +31,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             foreach (var x in self)
             {
                 if (comparer.Equals(x, item))

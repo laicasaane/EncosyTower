@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -17,15 +16,15 @@ namespace EncosyTower.Collections.Extensions
             => list == null || list.Count < 1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<T> AsSpan<T>([NotNull] this List<T> list)
-            => CollectionsMarshal.AsSpan(list);
+        public static Span<T> AsSpan<T>(this List<T> list)
+            => list == null ? default : CollectionsMarshal.AsSpan(list);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<T> AsReadOnlySpan<T>([NotNull] this List<T> list)
-            => CollectionsMarshal.AsSpan(list);
+        public static ReadOnlySpan<T> AsReadOnlySpan<T>(this List<T> list)
+            => list == null ? default : CollectionsMarshal.AsSpan(list);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ListFast<T> AsListFast<T>([NotNull] this List<T> list)
+        public static ListFast<T> AsListFast<T>(this List<T> list)
             => list;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

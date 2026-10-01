@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections.Extensions
 {
     public static class SharedQueueReadOnlyExtensions
@@ -12,6 +14,7 @@ namespace EncosyTower.Collections.Extensions
             where T : unmanaged, IEquatable<T>
             where TNative : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             foreach (var x in self)
             {
                 if (x.Equals(item))
@@ -32,6 +35,7 @@ namespace EncosyTower.Collections.Extensions
             where TNative : unmanaged
             where TComparer : unmanaged, IEqualityComparer<T>
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             foreach (var x in self)
             {
                 if (comparer.Equals(x, item))

@@ -291,10 +291,7 @@ namespace EncosyTower.Collections.Unsafe
         }
 
         /// <safety>The returned header owns a copy of source and must be freed exactly once with Free.</safety>
-        internal static unsafe StackUnsafe<T>* Alloc(
-              ReadOnlySpan<T> source
-            , AllocatorStrategy allocator
-        )
+        internal static unsafe StackUnsafe<T>* Alloc(ReadOnlySpan<T> source, AllocatorStrategy allocator)
         {
             // SAFETY: The allocator returns storage for one StackUnsafe header and its owned buffer.
             unsafe

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EncosyTower.Collections.Unsafe;
@@ -10,9 +9,6 @@ using EncosyTower.Common;
 using Unity.Collections;
 using Unity.Collections.Internals;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Collections
 {
@@ -117,16 +113,16 @@ namespace EncosyTower.Collections
                 var accessor = new NativeSliceAccessor<T>(slice);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceStartIsNegative(start >= 0, start);
-                ThrowIfSliceLengthIsNegative(length >= 0, length);
-                ThrowIfSliceRangeExceedsLength(
+                ThrowHelper.ThrowIfSliceStartIsNegative(start >= 0, start);
+                ThrowHelper.ThrowIfSliceLengthIsNegative(length >= 0, length);
+                ThrowHelper.ThrowIfSliceRangeExceedsLength(
                       IsSliceRangeWithinLength(slice.Length, start, length)
                     , slice.Length
                     , start
                     , length
                     , nameof(slice)
                 );
-                ThrowIfSliceOnRestrictedRange(
+                ThrowHelper.ThrowIfSliceOnRestrictedRange(
                       IsSliceRangeUnrestricted(
                           accessor.MinIndex, accessor.MaxIndex, accessor.Length, start, length
                       )
@@ -164,16 +160,16 @@ namespace EncosyTower.Collections
             unsafe
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceStartIsNegative(start >= 0, start);
-                ThrowIfSliceLengthIsNegative(length >= 0, length);
-                ThrowIfSliceRangeExceedsLength(
+                ThrowHelper.ThrowIfSliceStartIsNegative(start >= 0, start);
+                ThrowHelper.ThrowIfSliceLengthIsNegative(length >= 0, length);
+                ThrowHelper.ThrowIfSliceRangeExceedsLength(
                       IsSliceRangeWithinLength(slice.Length, start, length)
                     , slice.Length
                     , start
                     , length
                     , nameof(slice)
                 );
-                ThrowIfSliceOnRestrictedRange(
+                ThrowHelper.ThrowIfSliceOnRestrictedRange(
                       IsSliceRangeUnrestricted(
                           slice._minIndex, slice._maxIndex, slice.Length, start, length
                       )
@@ -213,22 +209,22 @@ namespace EncosyTower.Collections
                 var accessor = new NativeArrayAccessor<T>(array);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceStartIsNegative(start >= 0, start);
-                ThrowIfSliceLengthIsNegative(length >= 0, length);
-                ThrowIfSliceRangeExceedsLength(
+                ThrowHelper.ThrowIfSliceStartIsNegative(start >= 0, start);
+                ThrowHelper.ThrowIfSliceLengthIsNegative(length >= 0, length);
+                ThrowHelper.ThrowIfSliceRangeExceedsLength(
                       IsSliceRangeWithinLength(array.Length, start, length)
                     , array.Length
                     , start
                     , length
                     , nameof(array)
                 );
-                ThrowIfSliceOnRestrictedRange(
+                ThrowHelper.ThrowIfSliceOnRestrictedRange(
                       IsSliceRangeUnrestricted(
                           accessor.MinIndex, accessor.MaxIndex, accessor.Length, start, length
                       )
                     , nameof(array)
                 );
-                ThrowIfSliceIntegerOverflow(IsSliceRangeWithoutOverflow(start, length));
+                ThrowHelper.ThrowIfSliceIntegerOverflow(IsSliceRangeWithoutOverflow(start, length));
 #endif
 
                 _stride = UnsafeUtility.SizeOf<T>();
@@ -264,20 +260,20 @@ namespace EncosyTower.Collections
                 var accessor = new NativeArrayReadOnlyAccessor<T>(array);
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceStartIsNegative(start >= 0, start);
-                ThrowIfSliceLengthIsNegative(length >= 0, length);
-                ThrowIfSliceRangeExceedsLength(
+                ThrowHelper.ThrowIfSliceStartIsNegative(start >= 0, start);
+                ThrowHelper.ThrowIfSliceLengthIsNegative(length >= 0, length);
+                ThrowHelper.ThrowIfSliceRangeExceedsLength(
                       IsSliceRangeWithinLength(array.Length, start, length)
                     , array.Length
                     , start
                     , length
                     , nameof(array)
                 );
-                ThrowIfSliceOnRestrictedRange(
+                ThrowHelper.ThrowIfSliceOnRestrictedRange(
                       IsReadOnlyArraySliceRangeUnrestricted(accessor.Length, start, length)
                     , nameof(array)
                 );
-                ThrowIfSliceIntegerOverflow(IsSliceRangeWithoutOverflow(start, length));
+                ThrowHelper.ThrowIfSliceIntegerOverflow(IsSliceRangeWithoutOverflow(start, length));
 #endif
 
                 _stride = UnsafeUtility.SizeOf<T>();
@@ -327,9 +323,9 @@ namespace EncosyTower.Collections
                 outputSlice._length = (_length * _stride) / sizeofU;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceConvertStrideMismatch(IsSliceConvertStrideValid());
-                ThrowIfSliceConvertOnRestrictedRange(IsSliceConvertRangeUnrestricted());
-                ThrowIfSliceConvertSizeMismatch(IsSliceConvertSizeValid(sizeofU));
+                ThrowHelper.ThrowIfSliceConvertStrideMismatch(IsSliceConvertStrideValid());
+                ThrowHelper.ThrowIfSliceConvertOnRestrictedRange(IsSliceConvertRangeUnrestricted());
+                ThrowHelper.ThrowIfSliceConvertSizeMismatch(IsSliceConvertSizeValid(sizeofU));
 
                 outputSlice._minIndex = 0;
                 outputSlice._maxIndex = outputSlice._length - 1;
@@ -352,8 +348,8 @@ namespace EncosyTower.Collections
                 outputSlice._length = _length;
 
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
-                ThrowIfSliceWithStrideOffsetIsOutOfRange(offset >= 0);
-                ThrowIfSliceWithStrideOffsetAndSizeExceeded(
+                ThrowHelper.ThrowIfSliceWithStrideOffsetIsOutOfRange(offset >= 0);
+                ThrowHelper.ThrowIfSliceWithStrideOffsetAndSizeExceeded(
                     IsSliceWithStrideOffsetAndSizeValid<U>(offset)
                 );
 
@@ -375,7 +371,7 @@ namespace EncosyTower.Collections
 
         public readonly void CopyTo(NativeArray<T> array)
         {
-            ThrowIfArrayLengthMismatch(Length == array.Length, array.Length, Length);
+            ThrowHelper.ThrowIfArrayLengthMismatch(Length == array.Length, array.Length, Length);
 
             // SAFETY: Length equality and the slice's read safety handle bound both copy ranges.
             unsafe
@@ -394,7 +390,7 @@ namespace EncosyTower.Collections
 
         public readonly void CopyTo(T[] array)
         {
-            ThrowIfArrayLengthMismatch(Length == array.Length, array.Length, Length);
+            ThrowHelper.ThrowIfArrayLengthMismatch(Length == array.Length, array.Length, Length);
 
             GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             IntPtr addr = handle.AddrOfPinnedObject();
@@ -521,221 +517,6 @@ namespace EncosyTower.Collections
             => offset + UnsafeUtility.SizeOf<U>() <= UnsafeUtility.SizeOf<T>();
 #endif
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfArrayLengthMismatch(
-              [DoesNotReturnIf(false)] bool valid
-            , int arrayLength
-            , int length
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(arrayLength, length);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException(int arrayLength, int length)
-                => new($"array.Length ({arrayLength}) does not match the Length of this instance ({length}).", "array");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceWithStrideOffsetAndSizeExceeded(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("SliceWithStride sizeof(U) + offset must be <= sizeof(T)", "offset");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceWithStrideOffsetIsOutOfRange(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException()
-                => new("offset", "SliceWithStride offset must be >= 0");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceConvertSizeMismatch(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("SliceConvert requires that Length * sizeof(T) is a multiple of sizeof(U).");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceConvertOnRestrictedRange(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("SliceConvert may not be used on a restricted range array");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceConvertStrideMismatch(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("SliceConvert requires that stride matches the size of the source type");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceOnRestrictedRange(
-              [DoesNotReturnIf(false)] bool valid
-            , string paramName
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(paramName);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException(string paramName)
-                => new($"Slice may not be used on a restricted range {paramName}", paramName);
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceRangeExceedsLength(
-              [DoesNotReturnIf(false)] bool valid
-            , int sourceLength
-            , int start
-            , int length
-            , string paramName
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(sourceLength, start, length, paramName);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException(
-                  int sourceLength
-                , int start
-                , int length
-                , string paramName
-            )
-                => new(
-                    $"Slice start + length ({start + length}) range must be <= " +
-                    $"{paramName}.Length ({sourceLength})"
-                );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceLengthIsNegative(
-              [DoesNotReturnIf(false)] bool valid
-            , int length
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(length);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException(int length)
-                => new("length", $"Slice length {length} < 0.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceStartIsNegative(
-              [DoesNotReturnIf(false)] bool valid
-            , int start
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(start);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentOutOfRangeException CreateException(int start)
-                => new("start", $"Slice start {start} < 0.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfSliceIntegerOverflow(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static ArgumentException CreateException()
-                => new("Slice start + length ({start + length}) causes an integer overflow");
-        }
-
         public struct Enumerator : IEnumerator<T>, IEnumerator, IDisposable
         {
             private readonly NativeSliceReadOnly<T> _slice;
@@ -748,11 +529,9 @@ namespace EncosyTower.Collections
                 _index = -1;
             }
 
-            public readonly T Current
-                => _slice[_index];
+            public readonly T Current => _slice[_index];
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
 
             public bool MoveNext()
             {
@@ -776,8 +555,7 @@ namespace EncosyTower.Collections
     {
         private NativeSliceReadOnly<T> _slice;
 
-        public T[] Items
-            => _slice.ToArray();
+        public T[] Items => _slice.ToArray();
 
         public NativeSliceReadOnlyDebugView(NativeSliceReadOnly<T> slice)
         {

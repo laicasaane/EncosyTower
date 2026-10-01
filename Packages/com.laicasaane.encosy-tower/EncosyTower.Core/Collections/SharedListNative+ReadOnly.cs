@@ -7,15 +7,17 @@ using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections.LowLevel.Unsafe;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial class SharedList<T, TNative>
     {
         partial struct ReadOnly
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             /// <safety>The returned native view borrows the shared list allocation and must not
             /// outlive the list.</safety>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public unsafe SharedListNative<TNative>.ReadOnly AsNative()
             {
                 // SAFETY: The returned native view borrows the shared list's live header and safety handle.
@@ -33,8 +35,9 @@ namespace EncosyTower.Collections
 
     partial struct SharedListNative<T>
     {
+        /// <safety>The returned alias must not outlive the managed owner of this native view.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnly AsReadOnly()
+        public unsafe ReadOnly AsReadOnly()
         {
             // SAFETY: The returned view borrows this shared list's live header and safety handle.
             unsafe
@@ -56,6 +59,7 @@ namespace EncosyTower.Collections
             , IHasCapacity, IHasCount, IIsCreated
         {
 #pragma warning disable IDE1006 // Naming Styles
+            /// <safety>The managed list owner must keep this borrowed header alive and stable.</safety>
             [NativeDisableUnsafePtrRestriction]
             internal readonly unsafe SharedListUnsafe<T>* m_Data;
 
@@ -64,6 +68,7 @@ namespace EncosyTower.Collections
 #endif
 #pragma warning restore IDE1006 // Naming Styles
 
+            /// <safety>The pointer and safety handle must come from the same live owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal unsafe ReadOnly(
                   SharedListUnsafe<T>* data
@@ -126,8 +131,7 @@ namespace EncosyTower.Collections
                 }
             }
 
-            public bool IsReadOnly
-                => true;
+            public bool IsReadOnly => true;
 
             internal int Version
             {
@@ -144,9 +148,16 @@ namespace EncosyTower.Collections
                 }
             }
 
+            /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Enumerator GetEnumerator()
-                => new(this);
+            public unsafe Enumerator GetEnumerator()
+            {
+                // SAFETY: The enumerator borrows this checked read-only view.
+                unsafe
+                {
+                    return new(this);
+                }
+            }
 
             public T this[int index]
             {
@@ -163,16 +174,35 @@ namespace EncosyTower.Collections
                 }
             }
 
+            /// <safety>The returned alias must not outlive the managed owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnly(in SharedListNative<T> list)
-                => list.AsReadOnly();
+            public static unsafe implicit operator ReadOnly(in SharedListNative<T> list)
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static implicit operator ReadOnlySpan<T>(in ReadOnly list)
-                => list.AsReadOnlySpan();
+                // SAFETY: The caller accepts the owner lifetime inherited by the alias.
+                unsafe
+                {
+                    return list.AsReadOnly();
+                }
+            }
 
+            /// <safety>The returned span must not outlive the managed owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ReadOnlySpan<T> AsReadOnlySpan()
+            public static unsafe implicit operator ReadOnlySpan<T>(in ReadOnly list)
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+
+                // SAFETY: The caller accepts the borrowed span lifetime.
+                unsafe
+                {
+                    return list.AsReadOnlySpan();
+                }
+            }
+
+            /// <safety>The returned span must not outlive the managed owner.</safety>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public unsafe ReadOnlySpan<T> AsReadOnlySpan()
             {
                 CheckRead();
 
@@ -247,14 +277,13 @@ namespace EncosyTower.Collections
                 }
             }
 
+            /// <safety>The returned alias must not outlive the managed owner.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SharedListNative<U>.ReadOnly Reinterpret<U>()
+            public unsafe SharedListNative<U>.ReadOnly Reinterpret<U>()
                 where U : unmanaged
             {
                 CheckRead();
-                ThrowHelper.ThrowIfTypesHaveDifferentSize(
-                    UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
-                );
+                ThrowHelper.ThrowIfTypesHaveDifferentSize(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
 
                 // SAFETY: Equal-size validation preserves the shared header layout and the result borrows this view.
                 unsafe
@@ -275,11 +304,25 @@ namespace EncosyTower.Collections
 #endif
             }
 
-            IEnumerator<T> IEnumerable<T>.GetEnumerator()
-                => GetEnumerator();
+            /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
+            unsafe IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this checked read-only view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            /// <safety>The owner must remain alive and unmodified during enumeration.</safety>
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this checked read-only view.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
         }
     }
 }

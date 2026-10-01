@@ -137,41 +137,45 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.IsTrue(stack.TryCopyTo(1, ownerLength, 2));
             Assert.IsFalse(stack.TryCopyTo(3, ownerPartial));
 
-            SharedStack<int, int>.ReadOnly readOnly = stack;
-            var readOnlyFull = new int[4];
-            var readOnlyPartial = new int[2];
-            var readOnlyOffset = new int[2];
-            var readOnlyLength = new int[3];
+            // SAFETY: stack remains the live owner while both borrowed read-only aliases are exercised.
+            unsafe
+            {
+                SharedStack<int, int>.ReadOnly readOnly = stack;
+                var readOnlyFull = new int[4];
+                var readOnlyPartial = new int[2];
+                var readOnlyOffset = new int[2];
+                var readOnlyLength = new int[3];
 
-            Assert.IsTrue(readOnly.IsCreated);
-            Assert.AreEqual(4, readOnly.Count);
-            Assert.GreaterOrEqual(readOnly.Capacity, 4);
-            Assert.AreEqual(4, readOnly.Peek());
-            Assert.IsTrue(readOnly.TryPeek(out var peeked));
-            Assert.AreEqual(4, peeked);
-            CollectionAssert.AreEqual(new[] { 4, 3, 2, 1 }, readOnly.ToArray());
+                Assert.IsTrue(readOnly.IsCreated);
+                Assert.AreEqual(4, readOnly.Count);
+                Assert.GreaterOrEqual(readOnly.Capacity, 4);
+                Assert.AreEqual(4, readOnly.Peek());
+                Assert.IsTrue(readOnly.TryPeek(out var peeked));
+                Assert.AreEqual(4, peeked);
+                CollectionAssert.AreEqual(new[] { 4, 3, 2, 1 }, readOnly.ToArray());
 
-            readOnly.CopyTo(readOnlyFull);
-            readOnly.CopyTo(readOnlyPartial.AsSpan(), 2);
-            readOnly.CopyTo(1, readOnlyOffset);
-            readOnly.CopyTo(1, readOnlyLength, 2);
+                readOnly.CopyTo(readOnlyFull);
+                readOnly.CopyTo(readOnlyPartial.AsSpan(), 2);
+                readOnly.CopyTo(1, readOnlyOffset);
+                readOnly.CopyTo(1, readOnlyLength, 2);
 
-            CollectionAssert.AreEqual(new[] { 4, 3, 2, 1 }, readOnlyFull);
-            CollectionAssert.AreEqual(new[] { 4, 3 }, readOnlyPartial);
-            CollectionAssert.AreEqual(new[] { 3, 2 }, readOnlyOffset);
-            CollectionAssert.AreEqual(new[] { 3, 2, 0 }, readOnlyLength);
-            Assert.IsTrue(readOnly.TryCopyTo(readOnlyFull));
-            Assert.IsTrue(readOnly.TryCopyTo(readOnlyPartial, 2));
-            Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyOffset));
-            Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyLength, 2));
-            Assert.IsFalse(readOnly.TryCopyTo(3, readOnlyPartial));
+                CollectionAssert.AreEqual(new[] { 4, 3, 2, 1 }, readOnlyFull);
+                CollectionAssert.AreEqual(new[] { 4, 3 }, readOnlyPartial);
+                CollectionAssert.AreEqual(new[] { 3, 2 }, readOnlyOffset);
+                CollectionAssert.AreEqual(new[] { 3, 2, 0 }, readOnlyLength);
+                Assert.IsTrue(readOnly.TryCopyTo(readOnlyFull));
+                Assert.IsTrue(readOnly.TryCopyTo(readOnlyPartial, 2));
+                Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyOffset));
+                Assert.IsTrue(readOnly.TryCopyTo(1, readOnlyLength, 2));
+                Assert.IsFalse(readOnly.TryCopyTo(3, readOnlyPartial));
 
-            var nativeReadOnly = readOnly.AsNative();
-            Assert.AreEqual(4, nativeReadOnly.Count);
+                var nativeReadOnly = readOnly.AsNative();
+                Assert.AreEqual(4, nativeReadOnly.Count);
 
-            stack.Clear();
-            Assert.IsFalse(readOnly.TryPeek(out peeked));
-            Assert.AreEqual(0, peeked);
+                stack.Clear();
+                Assert.IsFalse(readOnly.TryPeek(out peeked));
+                Assert.AreEqual(0, peeked);
+            }
         }
 
         [Test]
@@ -189,22 +193,26 @@ namespace EncosyTower.Tests.Core.Collections
                 stack.IncreaseCapacityTo(increased + 2);
                 Assert.GreaterOrEqual(stack.Capacity, increased + 2);
 
-                SharedStackNative<int> native = stack;
-                Assert.AreEqual(2, native.Count);
+                // SAFETY: stack remains alive and unmodified while its aliases and enumerators are used.
+                unsafe
+                {
+                    SharedStackNative<int> native = stack;
+                    Assert.AreEqual(2, native.Count);
 
-                var ownerEnumerator = stack.GetEnumerator();
-                Assert.IsTrue(ownerEnumerator.MoveNext());
-                Assert.AreEqual(2, ownerEnumerator.Current);
-                ownerEnumerator.Reset();
-                Assert.IsTrue(ownerEnumerator.MoveNext());
-                ownerEnumerator.Dispose();
+                    var ownerEnumerator = stack.GetEnumerator();
+                    Assert.IsTrue(ownerEnumerator.MoveNext());
+                    Assert.AreEqual(2, ownerEnumerator.Current);
+                    ownerEnumerator.Reset();
+                    Assert.IsTrue(ownerEnumerator.MoveNext());
+                    ownerEnumerator.Dispose();
 
-                var readOnlyEnumerator = stack.AsReadOnly().GetEnumerator();
-                Assert.IsTrue(readOnlyEnumerator.MoveNext());
-                Assert.AreEqual(2, readOnlyEnumerator.Current);
-                readOnlyEnumerator.Reset();
-                Assert.IsTrue(readOnlyEnumerator.MoveNext());
-                readOnlyEnumerator.Dispose();
+                    var readOnlyEnumerator = stack.AsReadOnly().GetEnumerator();
+                    Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                    Assert.AreEqual(2, readOnlyEnumerator.Current);
+                    readOnlyEnumerator.Reset();
+                    Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                    readOnlyEnumerator.Dispose();
+                }
             }
             finally
             {

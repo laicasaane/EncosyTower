@@ -6,12 +6,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Buffers;
 using EncosyTower.Collections.Unsafe;
 using EncosyTower.Common;
 using Unity.Collections;
-using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Collections
 {
@@ -27,7 +28,7 @@ namespace EncosyTower.Collections
     /// <remarks>
     /// Not thread-safe.
     /// </remarks>
-    [DebuggerTypeProxy(typeof(SharedArrayMapDebugProxy<,>))]
+    [Serializable, DebuggerTypeProxy(typeof(SharedArrayMapDebugProxy<,>))]
     public partial class SharedArrayMap<TKey, TValue> : SharedArrayMap<TKey, TValue, TValue>
         where TKey : unmanaged, IEquatable<TKey>
         where TValue : unmanaged
@@ -60,7 +61,7 @@ namespace EncosyTower.Collections
     /// The value type on the <see cref="SharedArrayMapNative{TKey, TValue}"/> side.
     /// Must be the same size as <typeparamref name="TValue"/>.
     /// </typeparam>
-    [DebuggerTypeProxy(typeof(SharedArrayMapDebugProxy<,,>))]
+    [Serializable, DebuggerTypeProxy(typeof(SharedArrayMapDebugProxy<,,>))]
     public partial class SharedArrayMap<TKey, TValue, TValueNative> : IDisposable
         , ICollection<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>
         , IReadOnlyCollection<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>
@@ -69,19 +70,23 @@ namespace EncosyTower.Collections
         where TValue : unmanaged
         where TValueNative : unmanaged
     {
-        internal SharedArray<ArrayMapNode<TKey>> _valuesInfo;
-        internal SharedArray<TValue, TValueNative> _values;
-        internal SharedArray<int> _buckets;
+        [NonSerialized] internal BufferShared<ArrayMapNode<TKey>> _valuesInfo;
+        [NonSerialized] internal BufferShared<TValue, TValueNative> _values;
+        [NonSerialized] internal BufferShared<int> _buckets;
 
-        internal SharedReference<ulong> _fastModBucketsMultiplier;
-        internal SharedReference<uint> _collisions;
-        internal SharedReference<int> _freeValueCellIndex;
-        internal SharedReference<int> _version;
+        [NonSerialized] internal BufferShared<ulong> _fastModBucketsMultiplier;
+        [NonSerialized] internal BufferShared<uint> _collisions;
+        [NonSerialized] internal BufferShared<int> _freeValueCellIndex;
+        [NonSerialized] internal BufferShared<int> _version;
 
         // Native views share this live header but copy the values array's safety handle.
         // Resizing values releases that handle, invalidating older checked views; later
         // views use refreshed pointers/capacities and the new representative handle.
-        internal unsafe SharedArrayMapUnsafe<TKey, TValueNative>* _nativeData;
+        /// <safety>Owned by this map; borrowed native views become invalid after resize or disposal.</safety>
+        [NonSerialized] internal unsafe SharedArrayMapUnsafe<TKey, TValueNative>* _nativeData;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+        [NonSerialized] internal AtomicSafetyHandle _safety;
+#endif
 
         public SharedArrayMap() : this(0)
         {
@@ -92,14 +97,18 @@ namespace EncosyTower.Collections
             _valuesInfo = new(capacity);
             _values = new(capacity);
             _buckets = new(HashHelpers.GetPrime(capacity));
-            _freeValueCellIndex = new(0);
-            _version = new(0);
-            _collisions = new(0);
-            _fastModBucketsMultiplier = new(0);
+            _freeValueCellIndex = new(1);
+            _version = new(1);
+            _collisions = new(1);
+            _fastModBucketsMultiplier = new(1);
 
             if (capacity > 0)
             {
-                _fastModBucketsMultiplier.ValueRW = HashHelpers.GetFastModMultiplier((uint)_buckets.Length);
+                // SAFETY: This constructor exclusively owns the initialized scalar buffer.
+                unsafe
+                {
+                    _fastModBucketsMultiplier[0] = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
+                }
             }
 
             InitializeNativeData();
@@ -107,33 +116,36 @@ namespace EncosyTower.Collections
 
         public SharedArrayMap([NotNull] SharedArrayMap<TKey, TValue, TValueNative> source)
         {
+            DebuggingThrowHelper.ThrowIfNull(source);
+            source.CheckRead();
             var capacity = source.Capacity;
-            var bucketCapacity = source._buckets.Length;
+            var bucketCapacity = source._buckets.Capacity;
 
             _valuesInfo = new(capacity);
             _values = new(capacity);
             _buckets = new(bucketCapacity);
-            _freeValueCellIndex = new(0);
-            _version = new(0);
-            _collisions = new(0);
-            _fastModBucketsMultiplier = new(0);
+            _freeValueCellIndex = new(1);
+            _version = new(1);
+            _collisions = new(1);
+            _fastModBucketsMultiplier = new(1);
 
-            source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
-            source._values.AsSpan().CopyTo(_values.AsSpan());
-            source._buckets.AsSpan().CopyTo(_buckets.AsSpan());
+            // SAFETY: source passed its read check and this constructor exclusively owns each destination buffer.
+            unsafe
+            {
+                source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
+                source._values.AsSpan().CopyTo(_values.AsSpan());
+                source._buckets.AsSpan().CopyTo(_buckets.AsSpan());
 
-            _freeValueCellIndex.ValueRW = source._freeValueCellIndex.ValueRO;
-            _collisions.ValueRW = source._collisions.ValueRO;
-            _fastModBucketsMultiplier.ValueRW = source._fastModBucketsMultiplier.ValueRO;
+                _freeValueCellIndex[0] = source.FreeValueCellIndexRO;
+                _collisions[0] = source.CollisionsRO;
+                _fastModBucketsMultiplier[0] = source.FastModBucketsMultiplierRO;
+            }
             InitializeNativeData();
         }
 
         public SharedArrayMap(in SharedArrayMapNative<TKey, TValueNative> source)
         {
-            ThrowHelper.ThrowIfNativeSourceCollectionIsNotCreated(
-                source.IsCreated,
-                ThrowHelper.CollectionType.SharedArrayMapNative
-            );
+            DebuggingThrowHelper.ThrowIfNotCreated(source);
 
             var capacity = source.Capacity;
             var bucketCapacity = source.BucketCapacity;
@@ -141,41 +153,74 @@ namespace EncosyTower.Collections
             _valuesInfo = new(capacity);
             _values = new(capacity);
             _buckets = new(bucketCapacity);
-            _freeValueCellIndex = new(0);
-            _version = new(0);
-            _collisions = new(0);
-            _fastModBucketsMultiplier = new(0);
+            _freeValueCellIndex = new(1);
+            _version = new(1);
+            _collisions = new(1);
+            _fastModBucketsMultiplier = new(1);
 
-            source.CopyTo(
-                  _valuesInfo.AsSpan()
-                , _values.AsNativeArray().AsSpan()
-                , _buckets.AsSpan()
-                , out var count
-                , out var collisions
-                , out var fastModBucketsMultiplier
-            );
+            int count;
+            uint collisions;
+            ulong fastModBucketsMultiplier;
 
-            _freeValueCellIndex.ValueRW = count;
-            _collisions.ValueRW = collisions;
-            _fastModBucketsMultiplier.ValueRW = fastModBucketsMultiplier;
+            // SAFETY: source is live and this constructor owns all destination buffers for the synchronous copy.
+            unsafe
+            {
+                source.CopyTo(
+                      _valuesInfo.AsSpan()
+                    , _values.AsNativeArray().AsSpan()
+                    , _buckets.AsSpan()
+                    , out count
+                    , out collisions
+                    , out fastModBucketsMultiplier
+                );
+
+                _freeValueCellIndex[0] = count;
+                _collisions[0] = collisions;
+                _fastModBucketsMultiplier[0] = fastModBucketsMultiplier;
+            }
             InitializeNativeData();
         }
 
         ~SharedArrayMap()
         {
-            Dispose();
+            // SAFETY: Finalization releases only storage still owned by this map.
+            unsafe
+            {
+                Dispose();
+            }
+        }
+
+        public bool IsCreated
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _values.IsCreated;
         }
 
         public int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _values.Length;
+            get
+            {
+                if (!_values.IsCreated)
+                {
+                    return 0;
+                }
+                CheckRead();
+                return _values.Capacity;
+            }
         }
 
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _freeValueCellIndex.ValueRO;
+            get
+            {
+                if (!_values.IsCreated)
+                {
+                    return 0;
+                }
+                return FreeValueCellIndexRO;
+            }
         }
 
         public KeyEnumerable Keys
@@ -187,7 +232,7 @@ namespace EncosyTower.Collections
         public ReadOnlyMemory<TValue> Values
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _values.AsArraySegment().Slice(0, _freeValueCellIndex.ValueRO);
+            get { CheckRead(); return _values.AsArraySegment().Slice(0, FreeValueCellIndexRO); }
         }
 
         bool ICollection<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>.IsReadOnly
@@ -201,7 +246,11 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return _values.AsReadOnlySpan()[GetIndex(key)];
+                // SAFETY: GetIndex completes the owner read check before the bounded access.
+                unsafe
+                {
+                    return _values.AsReadOnlySpan()[GetIndex(key)];
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -209,56 +258,72 @@ namespace EncosyTower.Collections
             {
                 AddValue(key, out var index);
 
-                _values.AsSpan()[index] = value;
+                // SAFETY: AddValue completes the owner write checks and returns a valid index.
+                unsafe
+                {
+                    _values.AsSpan()[index] = value;
+                }
             }
         }
 
+        /// <safety>The returned native view must not outlive the managed map or survive resize.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator SharedArrayMapNative<TKey, TValueNative>(
+        public static unsafe implicit operator SharedArrayMapNative<TKey, TValueNative>(
             [NotNull] SharedArrayMap<TKey, TValue, TValueNative> map
         )
-            => map.AsNative();
+        {
+            DebuggingThrowHelper.ThrowIfNull(map);
+            // SAFETY: The non-null map is the designated owner of the returned borrowed view.
+            unsafe
+            {
+                return map.AsNative();
+            }
+        }
 
         public void Dispose()
         {
-            if (_valuesInfo == null)
+            if (!_valuesInfo.IsCreated)
             {
                 return;
             }
 
-            // SAFETY: The established ownership and safety checks keep the native storage live
-            // for this pointer dereference.
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckDeallocateAndThrow(_safety);
+#endif
+            // SAFETY: This map owns the live header and releases it before every owned buffer.
             unsafe
             {
                 SharedArrayMapUnsafe<TKey, TValueNative>.Free(_nativeData, Allocator.Persistent);
                 _nativeData = null;
+
+                _valuesInfo.Dispose();
+                _values.Dispose();
+                _buckets.Dispose();
+
+                _freeValueCellIndex.Dispose();
+                _collisions.Dispose();
+                _fastModBucketsMultiplier.Dispose();
+                _version.Dispose();
             }
-
-            _valuesInfo.Dispose();
-            _values.Dispose();
-            _buckets.Dispose();
-
-            _freeValueCellIndex.Dispose();
-            _collisions.Dispose();
-            _fastModBucketsMultiplier.Dispose();
-            _version.Dispose();
-
-            _valuesInfo = null;
-            _values = null;
-            _buckets = null;
-
-            _freeValueCellIndex = null;
-            _collisions = null;
-            _fastModBucketsMultiplier = null;
-            _version = null;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.Release(_safety);
+            _safety = default;
+#endif
         }
 
         /// <remarks>
         /// The map must not be modified while it is being enumerated.
         /// </remarks>
+        /// <safety>This map must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedArrayMapKeyValueEnumerator<TKey, TValue, TValueNative> GetEnumerator()
-            => new(this);
+        public unsafe SharedArrayMapKeyValueEnumerator<TKey, TValue, TValueNative> GetEnumerator()
+        {
+            // SAFETY: The enumerator borrows this owner and preserves version checks.
+            unsafe
+            {
+                return new(this);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(TKey key, in TValue value)
@@ -269,7 +334,11 @@ namespace EncosyTower.Collections
 
             if (itemAdded)
             {
-                _values.AsSpan()[index] = value;
+                // SAFETY: AddValue validated the owner and returned a bounded writable index.
+                unsafe
+                {
+                    _values.AsSpan()[index] = value;
+                }
             }
         }
 
@@ -280,7 +349,11 @@ namespace EncosyTower.Collections
 
             if (itemAdded)
             {
-                _values.AsSpan()[index] = value;
+                // SAFETY: AddValue validated the owner and returned a bounded writable index.
+                unsafe
+                {
+                    _values.AsSpan()[index] = value;
+                }
             }
 
             return itemAdded;
@@ -293,7 +366,11 @@ namespace EncosyTower.Collections
 
             if (itemAdded)
             {
-                _values.AsSpan()[index] = value;
+                // SAFETY: AddValue validated the owner and returned a bounded writable index.
+                unsafe
+                {
+                    _values.AsSpan()[index] = value;
+                }
             }
 
             return itemAdded;
@@ -302,18 +379,22 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            ref var freeValueCellIndex = ref _freeValueCellIndex.ValueRW;
+            ref var freeValueCellIndex = ref FreeValueCellIndexRW;
 
             if (freeValueCellIndex == 0)
             {
                 return;
             }
 
-            _version.ValueRW++;
+            VersionRW++;
             freeValueCellIndex = 0;
 
             // Buckets cannot be FastCleared because it's important that the values are reset to 0
-            _buckets.Clear();
+            // SAFETY: This map owns the bucket buffer and the write check completed above.
+            unsafe
+            {
+                _buckets.Clear();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -327,7 +408,11 @@ namespace EncosyTower.Collections
         {
             if (TryFindIndex(key, out var findIndex))
             {
-                result = _values.AsReadOnlySpan()[findIndex];
+                // SAFETY: TryFindIndex completed the read check and returned a bounded index.
+                unsafe
+                {
+                    result = _values.AsReadOnlySpan()[findIndex];
+                }
                 return true;
             }
 
@@ -335,71 +420,100 @@ namespace EncosyTower.Collections
             return false;
         }
 
+        /// <safety>The returned reference must not outlive this map or survive resize or mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref TValue GetOrAdd(TKey key)
+        public unsafe ref TValue GetOrAdd(TKey key)
         {
-            var values = _values.AsSpan();
+            CheckWrite();
 
-            if (TryFindIndex(key, out var findIndex))
+            // SAFETY: The write check validates owned storage; returned references inherit this map's lifetime.
+            unsafe
             {
-                _version.ValueRW++;
+                var values = _values.AsSpan();
+
+                if (TryFindIndex(key, out var findIndex))
+                {
+                    VersionRW++;
+                    return ref values[findIndex];
+                }
+
+                AddValue(key, out findIndex);
+                values = _values.AsSpan();
+
+                values[findIndex] = default;
+
                 return ref values[findIndex];
             }
-
-            AddValue(key, out findIndex);
-
-            values[findIndex] = default;
-
-            return ref values[findIndex];
         }
 
+        /// <safety>The returned reference must not outlive this map or survive resize or mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref TValue GetOrAdd(TKey key, out int index)
+        public unsafe ref TValue GetOrAdd(TKey key, out int index)
         {
-            var values = _values.AsSpan();
+            CheckWrite();
 
-            if (TryFindIndex(key, out index))
+            // SAFETY: The write check validates owned storage; returned references inherit this map's lifetime.
+            unsafe
             {
-                _version.ValueRW++;
+                var values = _values.AsSpan();
+
+                if (TryFindIndex(key, out index))
+                {
+                    VersionRW++;
+                    return ref values[index];
+                }
+
+                AddValue(key, out index);
+                values = _values.AsSpan();
+
                 return ref values[index];
             }
-
-            AddValue(key, out index);
-
-            return ref values[index];
         }
 
+        /// <safety>The returned reference must not outlive this map or survive resize or mutation.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref TValue GetValueByRef(TKey key)
+        public unsafe ref TValue GetValueByRef(TKey key)
         {
             var found = TryFindIndex(key, out var findIndex);
 
             // Burst is not able to vectorise code if throw is found, regardless if it's actually ever thrown
             ThrowHelper.ThrowIfKeyIsNotFound(found);
 
-            _version.ValueRW++;
-            return ref _values.AsSpan()[findIndex];
+            VersionRW++;
+
+            // SAFETY: The key lookup bounds the index and the returned reference inherits this map's lifetime.
+            unsafe
+            {
+                return ref _values.AsSpan()[findIndex];
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int EnsureCapacity(int size)
         {
-            if (_values.Length < size)
+            if (_values.Capacity < size)
             {
                 var expandPrime = HashHelpers.ExpandPrime(size);
 
-                _version.ValueRW++;
-                _values.Resize(expandPrime, true);
-                _valuesInfo.Resize(expandPrime);
+                VersionRW++;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+                // SAFETY: This map owns both buffers and bumped the secondary safety version before relocation.
+                unsafe
+                {
+                    _values.Resize(expandPrime, true);
+                    _valuesInfo.Resize(expandPrime);
+                }
                 RefreshNativeData();
             }
 
-            return _values.Length;
+            return _values.Capacity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IncreaseCapacityBy(int amount)
-            => EnsureCapacity(_values.Length + amount);
+            => EnsureCapacity(_values.Capacity + amount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IncreaseCapacityTo(int size)
@@ -413,6 +527,11 @@ namespace EncosyTower.Collections
 
         public bool Remove(TKey key, out int index, out TValue value)
         {
+            CheckWrite();
+
+            // SAFETY: The write check validates every owned buffer used by this synchronous removal algorithm.
+            unsafe
+            {
             var buckets = _buckets.AsSpan();
             var valuesInfo = _valuesInfo.AsSpan();
             var values = _values.AsSpan();
@@ -449,7 +568,10 @@ namespace EncosyTower.Collections
                     }
                     else // The previous pointer must be updated when the removed element is not the last one.
                     {
-                        ThrowIfNextNodeIsMissing(itemAfterCurrentOne != -1);
+                        ThrowHelper.ThrowIfMissingLinkedListNode(
+                              itemAfterCurrentOne != -1
+                            , ThrowHelper.CollectionType.SharedArrayMap
+                        );
                         //update the previous pointer of the item after the one to remove with the
                         //previous pointer of the item to remove
                         valuesInfo[itemAfterCurrentOne]._previous = node._previous;
@@ -471,7 +593,7 @@ namespace EncosyTower.Collections
                 return false; //not found!
             }
 
-            _version.ValueRW++;
+            VersionRW++;
             index = indexToValueToRemove; // The out parameter exposes the index of the element to remove.
 
             freeValueCellIndex--; //one less value to iterate
@@ -513,7 +635,8 @@ namespace EncosyTower.Collections
 
                 //find the prev element of the last element in the valuesInfo array
                 while (valuesInfo[linkedListIterationIndex]._previous != -1
-                    && valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex)
+                    && valuesInfo[linkedListIterationIndex]._previous != lastValueCellIndex
+                )
                 {
                     linkedListIterationIndex = valuesInfo[linkedListIterationIndex]._previous;
                 }
@@ -530,6 +653,7 @@ namespace EncosyTower.Collections
             }
 
             return true;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -537,9 +661,21 @@ namespace EncosyTower.Collections
         {
             var count = Count;
 
-            _version.ValueRW++;
-            _values.Resize(count);
-            _valuesInfo.Resize(count);
+            if (count == _values.Capacity)
+            {
+                return;
+            }
+
+            VersionRW++;
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+            // SAFETY: This map owns both buffers and bumped the secondary safety version before relocation.
+            unsafe
+            {
+                _values.Resize(count);
+                _valuesInfo.Resize(count);
+            }
             RefreshNativeData();
         }
 
@@ -551,14 +687,16 @@ namespace EncosyTower.Collections
         //constant states) because it will be used in multithreaded parallel code
         public bool TryFindIndex(TKey key, out int findIndex)
         {
+            CheckRead();
+
+            // SAFETY: The read check validates all owned buffers for this bounded lookup.
+            unsafe
+            {
             var buckets = _buckets.AsReadOnlySpan();
             var valuesInfo = _valuesInfo.AsReadOnlySpan();
             var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsReadOnlySpan()[0];
 
-            ThrowHelper.ThrowIfBucketsAreUninitialized(
-                buckets.Length > 0,
-                ThrowHelper.CollectionType.SharedArrayMap
-            );
+            ThrowHelper.ThrowIfBucketsAreUninitialized(buckets.Length > 0, ThrowHelper.CollectionType.SharedArrayMap);
 
             var hash = key.GetHashCode();
             var bucketIndex = (int)Reduce((uint)hash, (uint)buckets.Length, fastModBucketsMultiplier);
@@ -581,6 +719,7 @@ namespace EncosyTower.Collections
 
             findIndex = 0;
             return false;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -598,6 +737,12 @@ namespace EncosyTower.Collections
             where UValue : unmanaged
             where UValueNative : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+            CheckWrite();
+
+            // SAFETY: The write check validates this map's key buffer for the synchronous set operation.
+            unsafe
+            {
             var keys = _valuesInfo.AsSpan();
 
             for (var i = Count - 1; i >= 0; i--)
@@ -609,12 +754,19 @@ namespace EncosyTower.Collections
                     Remove(tKey);
                 }
             }
+            }
         }
 
         public void Exclude<UValue, UValueNative>([NotNull] SharedArrayMap<TKey, UValue, UValueNative> otherMapKeys)
             where UValue : unmanaged
             where UValueNative : unmanaged
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+            CheckWrite();
+
+            // SAFETY: The write check validates this map's key buffer for the synchronous set operation.
+            unsafe
+            {
             var keys = _valuesInfo.AsSpan();
 
             for (var i = Count - 1; i >= 0; i--)
@@ -626,10 +778,13 @@ namespace EncosyTower.Collections
                     Remove(tKey);
                 }
             }
+            }
         }
 
         public void Union([NotNull] SharedArrayMap<TKey, TValue, TValueNative> otherMapKeys)
         {
+            DebuggingThrowHelper.ThrowIfNull(otherMapKeys);
+
             foreach (var other in otherMapKeys)
             {
                 this[other.Key] = other.Value;
@@ -638,6 +793,11 @@ namespace EncosyTower.Collections
 
         private bool AddValue(TKey key, out int indexSet)
         {
+            CheckWrite();
+
+            // SAFETY: The write check validates every owned buffer used by this synchronous insertion algorithm.
+            unsafe
+            {
             var valuesInfo = _valuesInfo.AsSpan();
             var buckets = _buckets.AsSpan();
             var fastModBucketsMultiplier = _fastModBucketsMultiplier.AsReadOnlySpan()[0];
@@ -694,7 +854,7 @@ namespace EncosyTower.Collections
                 // Therefore, the bucket always points to the last value added.
             }
 
-            _version.ValueRW++;
+            VersionRW++;
 
             //item with this bucketIndex will point to the last value created
             // TODO: If the original node is assumed to be the one in the bucket,
@@ -718,11 +878,18 @@ namespace EncosyTower.Collections
             }
 
             return true;
+            }
         }
 
         private void RecomputeBuckets(int newSize)
         {
             // More space is needed to reduce collisions.
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+            // SAFETY: This map owns the bucket and scalar buffers and bumped the secondary version before resize.
+            unsafe
+            {
             _buckets.Resize(newSize, false);
             RefreshNativeData();
 
@@ -774,22 +941,36 @@ namespace EncosyTower.Collections
                     valueInfoNode._previous = existingValueIndex;
                 }
             }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool ResizeIfNeeded()
         {
-            var freeValueCellIndex = _freeValueCellIndex.AsReadOnlySpan()[0];
+            int freeValueCellIndex;
 
-            if (freeValueCellIndex != _values.Length)
+            // SAFETY: This map owns the scalar count buffer for the duration of the read.
+            unsafe
+            {
+                freeValueCellIndex = _freeValueCellIndex.AsReadOnlySpan()[0];
+            }
+
+            if (freeValueCellIndex != _values.Capacity)
             {
                 return false;
             }
 
             var expandPrime = HashHelpers.ExpandPrime(freeValueCellIndex);
 
-            _values.Resize(expandPrime, true);
-            _valuesInfo.Resize(expandPrime);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndBumpSecondaryVersion(_safety);
+#endif
+            // SAFETY: This map owns both buffers and bumped the secondary version before relocation.
+            unsafe
+            {
+                _values.Resize(expandPrime, true);
+                _valuesInfo.Resize(expandPrime);
+            }
             RefreshNativeData();
 
             return true;
@@ -798,16 +979,20 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InitializeNativeData()
         {
-            // SAFETY: The managed buffers and shared counters remain pinned for the native view lifetime.
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            _safety = AtomicSafetyHandle.Create();
+            AtomicSafetyHandle.SetBumpSecondaryVersionOnScheduleWrite(_safety, true);
+#endif
+            // SAFETY: This map owns every pinned buffer passed to its newly allocated native header.
             unsafe
             {
                 _nativeData = SharedArrayMapUnsafe<TKey, TValueNative>.Alloc(
                       _valuesInfo.GetUnsafeBufferPointer()
-                    , _valuesInfo.Length
+                    , _valuesInfo.Capacity
                     , _values.GetUnsafeBufferPointer()
-                    , _values.Length
+                    , _values.Capacity
                     , _buckets.GetUnsafeBufferPointer()
-                    , _buckets.Length
+                    , _buckets.Capacity
                     , _fastModBucketsMultiplier.GetUnsafeBufferPointer()
                     , _collisions.GetUnsafeBufferPointer()
                     , _freeValueCellIndex.GetUnsafeBufferPointer()
@@ -824,16 +1009,116 @@ namespace EncosyTower.Collections
             unsafe
             {
                 _nativeData->_valuesInfo = _valuesInfo.GetUnsafeBufferPointer();
-                _nativeData->_valuesInfoCapacity = _valuesInfo.Length;
+                _nativeData->_valuesInfoCapacity = _valuesInfo.Capacity;
                 _nativeData->_values = _values.GetUnsafeBufferPointer();
-                _nativeData->_valuesCapacity = _values.Length;
+                _nativeData->_valuesCapacity = _values.Capacity;
                 _nativeData->_buckets = _buckets.GetUnsafeBufferPointer();
-                _nativeData->_bucketsCapacity = _buckets.Length;
+                _nativeData->_bucketsCapacity = _buckets.Capacity;
                 _nativeData->_fastModBucketsMultiplier = _fastModBucketsMultiplier.GetUnsafeBufferPointer();
                 _nativeData->_collisions = _collisions.GetUnsafeBufferPointer();
                 _nativeData->_freeValueCellIndex = _freeValueCellIndex.GetUnsafeBufferPointer();
                 _nativeData->_version = _version.GetUnsafeBufferPointer();
             }
+        }
+
+        internal ref readonly ulong FastModBucketsMultiplierRO
+        {
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _fastModBucketsMultiplier[0];
+                }
+            }
+        }
+
+        internal ref readonly uint CollisionsRO
+        {
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _collisions[0];
+                }
+            }
+        }
+
+        internal ref readonly int FreeValueCellIndexRO
+        {
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _freeValueCellIndex[0];
+                }
+            }
+        }
+
+        internal ref int FreeValueCellIndexRW
+        {
+            get
+            {
+                CheckWrite();
+
+                // SAFETY: The write check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _freeValueCellIndex[0];
+                }
+            }
+        }
+
+        internal ref readonly int VersionRO
+        {
+            get
+            {
+                CheckRead();
+
+                // SAFETY: The read check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
+
+        internal ref int VersionRW
+        {
+            get
+            {
+                CheckWrite();
+
+                // SAFETY: The write check validates the owned scalar buffer.
+                unsafe
+                {
+                    return ref _version[0];
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void CheckRead()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckReadAndThrow(_safety);
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckWrite()
+        {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            AtomicSafetyHandle.CheckWriteAndThrow(_safety);
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -849,14 +1134,28 @@ namespace EncosyTower.Collections
             return hashcode;
         }
 
+        /// <safety>This map must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>
+        unsafe IEnumerator<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>
             IEnumerable<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>.GetEnumerator()
-            => new SharedArrayMapKeyValueEnumerator<TKey, TValue, TValueNative>(this);
+        {
+            // SAFETY: The interface enumerator borrows this map and preserves version checks.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
+        /// <safety>This map must remain alive and unmodified during enumeration.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerator IEnumerable.GetEnumerator()
-            => new SharedArrayMapKeyValueEnumerator<TKey, TValue, TValueNative>(this);
+        unsafe IEnumerator IEnumerable.GetEnumerator()
+        {
+            // SAFETY: The interface enumerator borrows this map and preserves version checks.
+            unsafe
+            {
+                return GetEnumerator();
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICollection<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>.Add(
@@ -871,16 +1170,29 @@ namespace EncosyTower.Collections
             SharedArrayMapKeyValuePair<TKey, TValue, TValueNative> item
         )
         {
-            return ContainsKey(item.Key);
+            return TryGetValue(item.Key, out var value)
+                && EqualityComparer<TValue>.Default.Equals(value, item.Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICollection<SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>>.CopyTo(
               SharedArrayMapKeyValuePair<TKey, TValue, TValueNative>[] array
             , int arrayIndex
         )
         {
-            ThrowNotImplementedException();
+            DebuggingThrowHelper.ThrowIfNull(array);
+            ThrowHelper.ThrowIfArrayIndexIsOutOfRange((uint)arrayIndex <= (uint)array.Length, nameof(arrayIndex));
+            ThrowHelper.ThrowIfDestinationArrayIsTooSmall(array.Length - arrayIndex >= Count);
+
+            // SAFETY: The enumerator is consumed synchronously while this map cannot be modified here.
+            unsafe
+            {
+                var enumerator = GetEnumerator();
+
+                while (enumerator.MoveNext())
+                {
+                    array[arrayIndex++] = enumerator.Current;
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -888,7 +1200,9 @@ namespace EncosyTower.Collections
             SharedArrayMapKeyValuePair<TKey, TValue, TValueNative> item
         )
         {
-            return Remove(item.Key);
+            return TryGetValue(item.Key, out var value)
+                && EqualityComparer<TValue>.Default.Equals(value, item.Value)
+                && Remove(item.Key);
         }
 
         public readonly struct KeyEnumerable : IEnumerable<TKey>, IIsValid
@@ -898,6 +1212,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerable([NotNull] SharedArrayMap<TKey, TValue, TValueNative> map)
             {
+                DebuggingThrowHelper.ThrowIfNull(map);
                 _map = map;
             }
 
@@ -907,17 +1222,38 @@ namespace EncosyTower.Collections
                 get => _map != null;
             }
 
+            /// <safety>The map must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public KeyEnumerator GetEnumerator()
-                => new(_map);
+            public unsafe KeyEnumerator GetEnumerator()
+            {
+                // SAFETY: The key enumerator borrows this map and preserves version checks.
+                unsafe
+                {
+                    return new(_map);
+                }
+            }
 
+            /// <safety>The map must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator<TKey> IEnumerable<TKey>.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator<TKey> IEnumerable<TKey>.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this map.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
 
+            /// <safety>The map must remain alive and unmodified during enumeration.</safety>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
+            unsafe IEnumerator IEnumerable.GetEnumerator()
+            {
+                // SAFETY: The interface enumerator borrows this map.
+                unsafe
+                {
+                    return GetEnumerator();
+                }
+            }
         }
 
         public struct KeyEnumerator : IEnumerator<TKey>, IIsValid
@@ -930,9 +1266,10 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public KeyEnumerator([NotNull] SharedArrayMap<TKey, TValue, TValueNative> map) : this()
             {
+                DebuggingThrowHelper.ThrowIfNull(map);
                 _map = map;
                 _index = -1;
-                _version = map._version.ValueRO;
+                _version = map.VersionRO;
             }
 
             public readonly bool IsValid
@@ -944,14 +1281,23 @@ namespace EncosyTower.Collections
             public readonly TKey Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _map._valuesInfo.AsReadOnlySpan()[_index].key;
+                get
+                {
+                    _map.CheckRead();
+
+                    // SAFETY: The read and version checks validate the bounded values-info access.
+                    unsafe
+                    {
+                        return _map._valuesInfo.AsReadOnlySpan()[_index].key;
+                    }
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
-                ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map._version.ValueRO);
+                ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.VersionRO);
 
                 if (_index < _map.Count - 1)
                 {
@@ -973,30 +1319,8 @@ namespace EncosyTower.Collections
             {
             }
 
-            readonly object IEnumerator.Current
-                => Current;
+            readonly object IEnumerator.Current => Current;
         }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        private static void ThrowIfNextNodeIsMissing([DoesNotReturnIf(false)] bool hasNextNode)
-        {
-            if (hasNextNode == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("This should never happen");
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden, DoesNotReturn]
-        private static void ThrowNotImplementedException()
-            => throw new NotImplementedException("This method is not implemented by design.");
 
     }
 
@@ -1013,9 +1337,10 @@ namespace EncosyTower.Collections
 
         public SharedArrayMapKeyValueEnumerator([NotNull] SharedArrayMap<TKey, TValue, TValueNative> map) : this()
         {
+            DebuggingThrowHelper.ThrowIfNull(map);
             _map = map;
             _index = -1;
-            _version = map._version.ValueRO;
+            _version = map.VersionRO;
         }
 
         public readonly bool IsValid
@@ -1028,7 +1353,7 @@ namespace EncosyTower.Collections
         public bool MoveNext()
         {
             ThrowHelper.ThrowIfEnumeratorIsInvalid(IsValid);
-            ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map._version.ValueRO);
+            ThrowHelper.ThrowIfMapIsBeingIterated(_version == _map.VersionRO);
 
             if (_index >= _map.Count - 1)
             {
@@ -1042,7 +1367,20 @@ namespace EncosyTower.Collections
         public readonly SharedArrayMapKeyValuePair<TKey, TValue, TValueNative> Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(_map._valuesInfo.AsReadOnlySpan()[_index].key, _map._values, _index);
+            get
+            {
+                _map.CheckRead();
+
+                // SAFETY: The read and version checks bound access; the pair stores the managed array owner.
+                unsafe
+                {
+                    return new(
+                          _map._valuesInfo.AsReadOnlySpan()[_index].key
+                        , _map._values.AsManagedArray()
+                        , _index
+                    );
+                }
+            }
         }
 
         readonly object IEnumerator.Current
@@ -1070,13 +1408,14 @@ namespace EncosyTower.Collections
         where TValue : unmanaged
         where TValueNative : unmanaged
     {
-        private readonly SharedArray<TValue, TValueNative> _mapValues;
+        private readonly TValue[] _mapValues;
         private readonly TKey _key;
         private readonly int _index;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedArrayMapKeyValuePair(in TKey key, [NotNull] SharedArray<TValue, TValueNative> mapValues, int index)
+        public SharedArrayMapKeyValuePair(in TKey key, [NotNull] TValue[] mapValues, int index)
         {
+            DebuggingThrowHelper.ThrowIfNull(mapValues);
             _mapValues = mapValues;
             _index = index;
             _key = key;
@@ -1097,7 +1436,7 @@ namespace EncosyTower.Collections
         public readonly ref readonly TValue Value
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref _mapValues.AsReadOnlySpan()[_index];
+            get => ref _mapValues[_index];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1143,6 +1482,7 @@ namespace EncosyTower.Collections
 
         public SharedArrayMapDebugProxy([NotNull] SharedArrayMap<TKey, TValue> map)
         {
+            DebuggingThrowHelper.ThrowIfNull(map);
             _map = map;
         }
 
@@ -1181,6 +1521,7 @@ namespace EncosyTower.Collections
 
         public SharedArrayMapDebugProxy([NotNull] SharedArrayMap<TKey, TValue, TValueNative> map)
         {
+            DebuggingThrowHelper.ThrowIfNull(map);
             _map = map;
         }
 

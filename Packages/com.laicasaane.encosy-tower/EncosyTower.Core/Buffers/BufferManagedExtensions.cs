@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-using ThrowHelper = EncosyTower.Collections.ThrowHelper;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Buffers
 {
@@ -10,6 +10,7 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ShiftLeft<T>(this BufferManaged<T> self, int index, int count)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowHelper.ThrowIfBufferShiftIndexIsOutOfRange((uint)index < (uint)self.Capacity);
             ThrowHelper.ThrowIfBufferShiftCountIsOutOfRange((uint)count < (uint)self.Capacity);
 
@@ -24,6 +25,7 @@ namespace EncosyTower.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ShiftRight<T>(this BufferManaged<T> self, int index, int count)
         {
+            DebuggingThrowHelper.ThrowIfNotCreated(self);
             ThrowHelper.ThrowIfBufferShiftIndexIsOutOfRange((uint)index < (uint)self.Capacity);
             ThrowHelper.ThrowIfBufferShiftCountIsOutOfRange((uint)count < (uint)self.Capacity);
 

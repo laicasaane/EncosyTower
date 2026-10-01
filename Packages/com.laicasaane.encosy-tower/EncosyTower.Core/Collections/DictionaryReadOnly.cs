@@ -4,6 +4,8 @@ using System.Collections.Generic.Exposed;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     public readonly struct DictionaryReadOnly<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
@@ -21,6 +23,8 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DictionaryReadOnly([NotNull] Dictionary<TKey, TValue> dictionary)
         {
+            DebuggingThrowHelper.ThrowIfNull(dictionary);
+
             _dictionary = new(dictionary);
         }
 

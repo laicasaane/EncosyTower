@@ -6,6 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial class ArrayMap<TKey, TValue>
@@ -29,6 +31,8 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnly([NotNull] ArrayMap<TKey, TValue> map)
             {
+                DebuggingThrowHelper.ThrowIfNull(map);
+
                 _map = map;
             }
 

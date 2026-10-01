@@ -4,7 +4,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generic.Exposed;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace EncosyTower.Collections
@@ -16,7 +15,7 @@ namespace EncosyTower.Collections
         private readonly int _version;
         private T _current;
 
-        internal ListFastEnumerator([NotNull] ListExposed<T> list)
+        internal ListFastEnumerator(ListExposed<T> list)
         {
             _list = list;
             _index = 0;

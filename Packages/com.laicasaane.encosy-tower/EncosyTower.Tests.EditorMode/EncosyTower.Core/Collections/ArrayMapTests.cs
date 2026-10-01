@@ -227,12 +227,7 @@ namespace EncosyTower.Tests.Core.Collections
                 , ref int state
             ) => value.Value = state;
 
-            ref var recycled = ref map.RecycleOrAdd<ReusableValue, int>(
-                  2
-                , builder
-                , recycler
-                , ref parameter
-            );
+            ref var recycled = ref map.RecycleOrAdd<ReusableValue, int>(2, builder, recycler, ref parameter);
 
             Assert.AreSame(original, recycled);
             Assert.AreEqual(30, recycled.Value);
@@ -400,6 +395,75 @@ namespace EncosyTower.Tests.Core.Collections
                     map.Add(pair.Key + 10, pair.Value);
                 }
             });
+        }
+
+        [Test]
+        public void CollectionInterface_PairOperationsRequireMatchingValue()
+        {
+            using var map = new ArrayMap<int, int>(4);
+            map.Add(1, 0);
+            map.Add(2, 20);
+
+            using var mismatchedMap = new ArrayMap<int, int>(1);
+            mismatchedMap.Add(1, 10);
+
+            var matchingPair = GetFirstPair(map);
+            var mismatchedPair = GetFirstPair(mismatchedMap);
+            ICollection<ArrayMapKeyValuePair<int, int>> collection = map;
+
+            Assert.IsTrue(collection.Contains(matchingPair));
+            Assert.IsFalse(collection.Contains(mismatchedPair));
+            Assert.IsFalse(collection.Remove(mismatchedPair));
+            Assert.AreEqual(0, map[1]);
+            Assert.IsTrue(collection.Remove(matchingPair));
+            Assert.IsFalse(map.ContainsKey(1));
+        }
+
+        [Test]
+        public void CollectionInterface_CopyToPreservesEnumerationOrderAndDestinationSentinels()
+        {
+            using var map = new ArrayMap<int, int>(4);
+            map.Add(7, 0);
+            map.Add(8, 80);
+
+            ICollection<ArrayMapKeyValuePair<int, int>> collection = map;
+            var destination = new ArrayMapKeyValuePair<int, int>[4];
+
+            collection.CopyTo(destination, 1);
+
+            Assert.IsFalse(destination[0].IsValid);
+            AssertPair(destination[1], 7, 0);
+            AssertPair(destination[2], 8, 80);
+            Assert.IsFalse(destination[3].IsValid);
+        }
+
+        [Test]
+        public void CollectionInterface_CopyToValidatesArgumentsAndAllowsEmptyEndIndex()
+        {
+            using var map = new ArrayMap<int, int>(1);
+            map.Add(1, 10);
+            ICollection<ArrayMapKeyValuePair<int, int>> collection = map;
+
+            var nullException = Assert.Throws<ArgumentNullException>(() => collection.CopyTo(null, -1));
+            var negativeException = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                collection.CopyTo(new ArrayMapKeyValuePair<int, int>[1], -1)
+            );
+            var pastEndException = Assert.Throws<ArgumentOutOfRangeException>(() =>
+                collection.CopyTo(new ArrayMapKeyValuePair<int, int>[1], 2)
+            );
+
+            Assert.AreEqual("array", nullException.ParamName);
+            Assert.AreEqual("arrayIndex", negativeException.ParamName);
+            Assert.AreEqual("arrayIndex", pastEndException.ParamName);
+            Assert.Throws<ArgumentException>(() =>
+                collection.CopyTo(new ArrayMapKeyValuePair<int, int>[1], 1)
+            );
+
+            using var emptyMap = new ArrayMap<int, int>();
+            ICollection<ArrayMapKeyValuePair<int, int>> emptyCollection = emptyMap;
+            var emptyDestination = new ArrayMapKeyValuePair<int, int>[1];
+
+            Assert.DoesNotThrow(() => emptyCollection.CopyTo(emptyDestination, emptyDestination.Length));
         }
 
         [Test]
@@ -572,6 +636,21 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.AreEqual(key, actualKey);
             Assert.AreEqual(value, actualValue);
+        }
+
+        private static ArrayMapKeyValuePair<int, int> GetFirstPair(ArrayMap<int, int> map)
+        {
+            var enumerator = map.GetEnumerator();
+
+            try
+            {
+                Assert.IsTrue(enumerator.MoveNext());
+                return enumerator.Current;
+            }
+            finally
+            {
+                enumerator.Dispose();
+            }
         }
 
         private interface IReusableValue

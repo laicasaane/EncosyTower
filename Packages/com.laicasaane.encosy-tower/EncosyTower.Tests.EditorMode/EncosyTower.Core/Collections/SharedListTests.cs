@@ -97,22 +97,19 @@ namespace EncosyTower.Tests.Core.Collections
         }
 
         [Test]
-        public void ValueAndInOverloads_AddInsertAndPushExpectedValues()
+        public void ValueAndInOverloads_AddAndInsertExpectedValues()
         {
             using var list = new SharedList<int, int>(4);
             var two = 2;
             var four = 4;
-            var six = 6;
 
             list.Add(1);
             list.Add(in two);
             list.Insert(2, 3);
             list.Insert(3, in four);
 
-            Assert.AreEqual(4, list.Push(5));
-            Assert.AreEqual(5, list.Push(in six));
             Assert.IsFalse(list.IsReadOnly);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 }, list.ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, list.ToArray());
         }
 
         [Test]
@@ -256,8 +253,12 @@ namespace EncosyTower.Tests.Core.Collections
             using var list = new SharedList<int>(8);
             list.Add(5);
 
-            ref var slot = ref list.ElementAt(0);
-            slot = 55;
+            // SAFETY: list remains live and stable while the borrowed element reference is used.
+            unsafe
+            {
+                ref var slot = ref list.ElementAt(0);
+                slot = 55;
+            }
 
             Assert.AreEqual(55, list[0]);
         }
@@ -336,15 +337,19 @@ namespace EncosyTower.Tests.Core.Collections
             list.Add(2);
             list.Add(3);
 
-            var span = list.AsSpan();
+            // SAFETY: list remains live and unmodified while the borrowed span is inspected.
+            unsafe
+            {
+                var span = list.AsSpan();
 
-            Assert.AreEqual(3, span.Length);
-            Assert.AreEqual(1, span[0]);
-            Assert.AreEqual(3, span[2]);
+                Assert.AreEqual(3, span.Length);
+                Assert.AreEqual(1, span[0]);
+                Assert.AreEqual(3, span[2]);
+            }
         }
 
         [Test]
-        public void CapacityStackReplicateViewsAndFactoriesExposeExpectedValues()
+        public void CapacityReplicateViewsAndFactoriesExposeExpectedValues()
         {
             using var list = new SharedList<int, int>(4);
             list.AddRange(new[] { 1, 2 });
@@ -357,22 +362,31 @@ namespace EncosyTower.Tests.Core.Collections
             list.IncreaseCapacityTo(increasedCapacity + 3);
             Assert.GreaterOrEqual(list.Capacity, increasedCapacity + 3);
 
-            var defaults = list.AddReplicate(2);
-            var values = list.AddReplicate(7, 2);
-            var noInit = list.AddReplicateNoInit(1);
-            noInit[0] = 8;
+            // SAFETY: Each borrowed span/reference is consumed before the next list mutation.
+            unsafe
+            {
+                var defaults = list.AddReplicate(2);
+                CollectionAssert.AreEqual(new[] { 0, 0 }, defaults.ToArray());
 
-            CollectionAssert.AreEqual(new[] { 0, 0 }, defaults.ToArray());
-            CollectionAssert.AreEqual(new[] { 7, 7 }, values.ToArray());
-            Assert.AreEqual(8, list.Peek());
-            Assert.AreEqual(8, list.Pop());
+                var values = list.AddReplicate(7, 2);
+                CollectionAssert.AreEqual(new[] { 7, 7 }, values.ToArray());
+
+                var noInit = list.AddReplicateNoInit(1);
+                noInit[0] = 8;
+                Assert.AreEqual(8, list[^1]);
+                list.RemoveAt(list.Count - 1);
+            }
             Assert.AreEqual(6, list.Count);
 
-            var readOnlySpan = list.AsReadOnlySpan();
-            var writableSpan = list.AsSpan();
-            writableSpan[0] = 10;
+            // SAFETY: list remains live and unmodified while both borrowed spans are used.
+            unsafe
+            {
+                var readOnlySpan = list.AsReadOnlySpan();
+                var writableSpan = list.AsSpan();
+                writableSpan[0] = 10;
 
-            Assert.AreEqual(10, readOnlySpan[0]);
+                Assert.AreEqual(10, readOnlySpan[0]);
+            }
 
             list.Trim();
 
@@ -389,67 +403,72 @@ namespace EncosyTower.Tests.Core.Collections
         public void ReadOnly_ConstructorConversionsCopiesViewsAndEnumeratorsExposeOwnerValues()
         {
             using var list = new SharedList<int, int>(new[] { 1, 2, 3, 4 });
-            var direct = new SharedList<int, int>.ReadOnly(list);
-            SharedList<int, int>.ReadOnly implicitReadOnly = list;
-            ReadOnlySpan<int> implicitSpan = implicitReadOnly;
-            var empty = SharedList<int, int>.ReadOnly.Empty;
-            var array = new int[6];
-            var full = new int[4];
-            var partial = new int[2];
-            var offset = new int[2];
-            var explicitLength = new int[3];
 
-            Assert.IsTrue(direct.IsCreated);
-            Assert.AreEqual(4, direct.Count);
-            Assert.GreaterOrEqual(direct.Capacity, 4);
-            Assert.IsTrue(direct.IsReadOnly);
-            Assert.AreEqual(3, direct[2]);
-            Assert.AreEqual(0, empty.Count);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, implicitSpan.ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, direct.AsReadOnlySpan().ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, direct.ToArray());
+            // SAFETY: list remains alive and unmodified while all borrowed aliases and enumerators are used.
+            unsafe
+            {
+                var direct = new SharedList<int, int>.ReadOnly(list);
+                SharedList<int, int>.ReadOnly implicitReadOnly = list;
+                ReadOnlySpan<int> implicitSpan = implicitReadOnly;
+                var empty = SharedList<int, int>.ReadOnly.Empty;
+                var array = new int[6];
+                var full = new int[4];
+                var partial = new int[2];
+                var offset = new int[2];
+                var explicitLength = new int[3];
 
-            direct.CopyTo(array, 1);
-            direct.CopyTo(full);
-            direct.CopyTo(partial.AsSpan(), 2);
-            direct.CopyTo(1, offset);
-            direct.CopyTo(1, explicitLength, 2);
+                Assert.IsTrue(direct.IsCreated);
+                Assert.AreEqual(4, direct.Count);
+                Assert.GreaterOrEqual(direct.Capacity, 4);
+                Assert.IsTrue(direct.IsReadOnly);
+                Assert.AreEqual(3, direct[2]);
+                Assert.AreEqual(0, empty.Count);
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, implicitSpan.ToArray());
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, direct.AsReadOnlySpan().ToArray());
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, direct.ToArray());
 
-            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 0 }, array);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, full);
-            CollectionAssert.AreEqual(new[] { 1, 2 }, partial);
-            CollectionAssert.AreEqual(new[] { 2, 3 }, offset);
-            CollectionAssert.AreEqual(new[] { 2, 3, 0 }, explicitLength);
+                direct.CopyTo(array, 1);
+                direct.CopyTo(full);
+                direct.CopyTo(partial.AsSpan(), 2);
+                direct.CopyTo(1, offset);
+                direct.CopyTo(1, explicitLength, 2);
 
-            Assert.IsTrue(direct.TryCopyTo(full));
-            Assert.IsTrue(direct.TryCopyTo(partial, 2));
-            Assert.IsTrue(direct.TryCopyTo(1, offset));
-            Assert.IsTrue(direct.TryCopyTo(1, explicitLength, 2));
-            Assert.IsFalse(direct.TryCopyTo(3, partial));
+                CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 0 }, array);
+                CollectionAssert.AreEqual(new[] { 1, 2, 3, 4 }, full);
+                CollectionAssert.AreEqual(new[] { 1, 2 }, partial);
+                CollectionAssert.AreEqual(new[] { 2, 3 }, offset);
+                CollectionAssert.AreEqual(new[] { 2, 3, 0 }, explicitLength);
 
-            var reinterpreted = direct.Reinterpret<uint>();
-            var nativeReadOnly = direct.AsNative();
+                Assert.IsTrue(direct.TryCopyTo(full));
+                Assert.IsTrue(direct.TryCopyTo(partial, 2));
+                Assert.IsTrue(direct.TryCopyTo(1, offset));
+                Assert.IsTrue(direct.TryCopyTo(1, explicitLength, 2));
+                Assert.IsFalse(direct.TryCopyTo(3, partial));
 
-            Assert.AreEqual(1u, reinterpreted[0]);
-            Assert.AreEqual(4, nativeReadOnly.Count);
+                var reinterpreted = direct.Reinterpret<uint>();
+                var nativeReadOnly = direct.AsNative();
 
-            var ownerEnumerator = list.GetEnumerator();
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            Assert.AreEqual(1, ownerEnumerator.Current);
-            ownerEnumerator.Reset();
-            Assert.IsTrue(ownerEnumerator.MoveNext());
-            ownerEnumerator.Dispose();
+                Assert.AreEqual(1u, reinterpreted[0]);
+                Assert.AreEqual(4, nativeReadOnly.Count);
 
-            var readOnlyEnumerator = direct.GetEnumerator();
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            Assert.AreEqual(1, readOnlyEnumerator.Current);
-            readOnlyEnumerator.Reset();
-            Assert.IsTrue(readOnlyEnumerator.MoveNext());
-            readOnlyEnumerator.Dispose();
+                var ownerEnumerator = list.GetEnumerator();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                Assert.AreEqual(1, ownerEnumerator.Current);
+                ownerEnumerator.Reset();
+                Assert.IsTrue(ownerEnumerator.MoveNext());
+                ownerEnumerator.Dispose();
 
-            var directEnumerator = new SharedList<int, int>.Enumerator(direct);
-            Assert.IsTrue(directEnumerator.MoveNext());
-            directEnumerator.Dispose();
+                var readOnlyEnumerator = direct.GetEnumerator();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                Assert.AreEqual(1, readOnlyEnumerator.Current);
+                readOnlyEnumerator.Reset();
+                Assert.IsTrue(readOnlyEnumerator.MoveNext());
+                readOnlyEnumerator.Dispose();
+
+                var directEnumerator = new SharedList<int, int>.Enumerator(direct);
+                Assert.IsTrue(directEnumerator.MoveNext());
+                directEnumerator.Dispose();
+            }
         }
 
         [Test]
@@ -457,15 +476,20 @@ namespace EncosyTower.Tests.Core.Collections
         public void Dispose_InvalidatesExistingReadOnlyAndNativeViews()
         {
             var list = new SharedList<int, int>(new[] { 1, 2 });
-            var readOnly = list.AsReadOnly();
-            SharedListNative<int> native = list;
 
-            list.Dispose();
+            // SAFETY: This test intentionally retains borrowed aliases across owner disposal to verify checks.
+            unsafe
+            {
+                var readOnly = list.AsReadOnly();
+                SharedListNative<int> native = list;
 
-            Assert.IsTrue(readOnly.IsCreated);
-            Assert.Catch(() => _ = readOnly.Count);
-            Assert.Catch(() => _ = native.Count);
-            Assert.DoesNotThrow(() => list.Dispose());
+                list.Dispose();
+
+                Assert.IsTrue(readOnly.IsCreated);
+                Assert.Catch(() => _ = readOnly.Count);
+                Assert.Catch(() => _ = native.Count);
+                Assert.DoesNotThrow(() => list.Dispose());
+            }
         }
 
         [Test]

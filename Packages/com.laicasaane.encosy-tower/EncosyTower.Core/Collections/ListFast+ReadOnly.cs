@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Collections
 {
     partial struct ListFast<T>
@@ -29,6 +31,7 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ReadOnly(ListFast<T> list)
             {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
                 _list = list;
             }
 
@@ -56,12 +59,14 @@ namespace EncosyTower.Collections
                 get => _list.Capacity;
             }
 
-            public bool IsReadOnly
-                => true;
+            public bool IsReadOnly => true;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(ListFast<T> list)
-                => list.IsCreated ? new(list) : Empty;
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+                return new(list);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnly(List<T> list)
@@ -69,7 +74,10 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static implicit operator ReadOnlySpan<T>(in ReadOnly list)
-                => list.AsReadOnlySpan();
+            {
+                DebuggingThrowHelper.ThrowIfNotCreated(list);
+                return list.AsReadOnlySpan();
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ListFastEnumerator<T> GetEnumerator()
@@ -144,51 +152,91 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool Exists([NotNull] Predicate<T> match)
-                => _list.Exists(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.Exists(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool Exists([NotNull] PredicateIn<T> match)
-                => _list.Exists(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.Exists(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Option<T> Find([NotNull] Predicate<T> match)
-                => _list.Find(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.Find(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Option<T> Find([NotNull] PredicateIn<T> match)
-                => _list.Find(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.Find(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ListFast<T> FindAll([NotNull] Predicate<T> match)
-                => _list.FindAll(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindAll(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ListFast<T> FindAll([NotNull] PredicateIn<T> match)
-                => _list.FindAll(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindAll(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void FindAll([NotNull] Predicate<T> match, ListFast<T> result)
-                => _list.FindAll(match, result);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                DebuggingThrowHelper.ThrowIfNotCreated(result);
+                _list.FindAll(match, result);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void FindAll([NotNull] PredicateIn<T> match, ListFast<T> result)
-                => _list.FindAll(match, result);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                DebuggingThrowHelper.ThrowIfNotCreated(result);
+                _list.FindAll(match, result);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void FindAll([NotNull] Predicate<T> match, [NotNull] ICollection<T> result)
-                => _list.FindAll(match, result);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                DebuggingThrowHelper.ThrowIfNull(result);
+                _list.FindAll(match, result);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void FindAll([NotNull] PredicateIn<T> match, [NotNull] ICollection<T> result)
-                => _list.FindAll(match, result);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                DebuggingThrowHelper.ThrowIfNull(result);
+                _list.FindAll(match, result);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindIndex(int startIndex, int count, [NotNull] Predicate<T> match)
-                => _list.FindIndex(startIndex, count, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindIndex(startIndex, count, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
-                => _list.FindIndex(startIndex, count, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindIndex(startIndex, count, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindIndex(int startIndex, Predicate<T> match)
@@ -200,47 +248,80 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindIndex([NotNull] Predicate<T> match)
-                => _list.FindIndex(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindIndex(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindIndex([NotNull] PredicateIn<T> match)
-                => _list.FindIndex(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindIndex(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex(int startIndex, int count, [NotNull] Predicate<T> match)
-                => _list.FindLastIndex(startIndex, count, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(startIndex, count, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex(int startIndex, int count, [NotNull] PredicateIn<T> match)
-                => _list.FindLastIndex(startIndex, count, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(startIndex, count, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex(int startIndex, [NotNull] Predicate<T> match)
-                => _list.FindLastIndex(startIndex, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(startIndex, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex(int startIndex, [NotNull] PredicateIn<T> match)
-                => _list.FindLastIndex(startIndex, match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(startIndex, match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex([NotNull] Predicate<T> match)
-                => _list.FindLastIndex(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int FindLastIndex([NotNull] PredicateIn<T> match)
-                => _list.FindLastIndex(match);
+            {
+                DebuggingThrowHelper.ThrowIfNull(match);
+                return _list.FindLastIndex(match);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ForEach([NotNull] Action<T> action)
-                => _list.ForEach(action);
+            {
+                DebuggingThrowHelper.ThrowIfNull(action);
+                _list.ForEach(action);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ForEach([NotNull] ActionIn<T> action)
-                => _list.ForEach(action);
+            {
+                DebuggingThrowHelper.ThrowIfNull(action);
+                _list.ForEach(action);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ForEach([NotNull] ActionRef<T> action)
-                => _list.ForEach(action);
+            {
+                DebuggingThrowHelper.ThrowIfNull(action);
+                _list.ForEach(action);
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int IndexOf(in T item)

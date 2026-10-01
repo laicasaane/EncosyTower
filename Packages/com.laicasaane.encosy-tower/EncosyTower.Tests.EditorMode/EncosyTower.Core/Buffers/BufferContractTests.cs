@@ -41,6 +41,33 @@ namespace EncosyTower.Tests.Core.Buffers
         }
 
         [Test]
+        public void BufferShared_ImplementsMutableAndReadOnlyBufferContracts()
+        {
+            var buffer = default(BufferShared<int>);
+
+            ExerciseBuffer(ref buffer);
+
+            var owner = new BufferShared<int>(new[] { 1, 2, 3, 4 });
+
+            try
+            {
+                // SAFETY: owner remains live while the borrowed read-only contract is exercised.
+                unsafe
+                {
+                    ExerciseReadOnlyBuffer(owner.AsReadOnly());
+                }
+            }
+            finally
+            {
+                // SAFETY: owner is the designated buffer owner and no borrower survives this test.
+                unsafe
+                {
+                    owner.Dispose();
+                }
+            }
+        }
+
+        [Test]
         public void IBufferProvider_DispatchesRefPropertiesThroughExactConstraint()
         {
             var provider = new BufferProvider<int>();

@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using EncosyTower.Logging;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
@@ -14,7 +16,7 @@ using static EncosyTower.Debugging.ValidationDefines;
 namespace EncosyTower.Collections
 {
     /// <summary>
-    /// Provides exception helpers for collection and buffer validation.
+    /// Provides specialized collection validation and generated-code exception factories.
     /// </summary>
     /// <remarks>
     /// Conditional guards use the collection symbols declared by
@@ -22,7 +24,7 @@ namespace EncosyTower.Collections
     /// </remarks>
     public static class ThrowHelper
     {
-        public enum CollectionType
+        internal enum CollectionType
         {
             Unknown = 0,
             ArrayMap,
@@ -34,7 +36,6 @@ namespace EncosyTower.Collections
             ArraySetUnsafe,
             ArraySetUnsafeReadOnly,
             ArrayUnsafe,
-            FasterList,
             ListFast,
             ListNative,
             ListNativeReadOnly,
@@ -61,10 +62,14 @@ namespace EncosyTower.Collections
             SharedStackUnsafe,
             QueueUnsafe,
             StackUnsafe,
+            SharedArraySet,
+            SharedArrayNative,
+            SharedArrayReadOnly,
+            SharedArrayNativeReadOnly,
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static string GetCollectionTypeName(CollectionType type)
+        internal static string GetCollectionTypeName(CollectionType type)
             => type switch {
                 CollectionType.ArrayMap => "ArrayMap<TKey, TValue>",
                 CollectionType.ArrayMapNative => "ArrayMapNative<TKey, TValue>",
@@ -75,7 +80,6 @@ namespace EncosyTower.Collections
                 CollectionType.ArraySetUnsafe => "ArraySetUnsafe<T>",
                 CollectionType.ArraySetUnsafeReadOnly => "ArraySetUnsafe<T>.ReadOnly",
                 CollectionType.ArrayUnsafe => "ArrayUnsafe<T>",
-                CollectionType.FasterList => "FasterList<T>",
                 CollectionType.ListFast => "ListFast<T>",
                 CollectionType.ListNative => "ListNative<T>",
                 CollectionType.ListNativeReadOnly => "ListNative<T>.ReadOnly",
@@ -85,11 +89,15 @@ namespace EncosyTower.Collections
                 CollectionType.ListUnsafeReadOnly => "ListUnsafe<T>.ReadOnly",
                 CollectionType.ReferenceUnsafe => "ReferenceUnsafe<T>",
                 CollectionType.SharedArray => "SharedArray<T, TNative>",
+                CollectionType.SharedArrayNative => "SharedArrayNative<T>",
+                CollectionType.SharedArrayReadOnly => "SharedArray<T, TNative>.ReadOnly",
+                CollectionType.SharedArrayNativeReadOnly => "SharedArrayNative<T>.ReadOnly",
                 CollectionType.SharedArrayMap => "SharedArrayMap<TKey, TValue, TValueNative>",
                 CollectionType.SharedArrayMapReadOnly => "SharedArrayMap<TKey, TValue, TValueNative>.ReadOnly",
                 CollectionType.SharedArrayMapNative => "SharedArrayMapNative<TKey, TValue>",
                 CollectionType.SharedArrayMapNativeReadOnly => "SharedArrayMapNative<TKey, TValue>.ReadOnly",
                 CollectionType.SharedArrayMapUnsafe => "SharedArrayMapUnsafe<TKey, TValue>",
+                CollectionType.SharedArraySet => "SharedArraySet<T>",
                 CollectionType.SharedList => "SharedList<T>",
                 CollectionType.SharedListWithNative => "SharedList<T, TNative>",
                 CollectionType.SharedListWithNativeReadOnly => "SharedList<T, TNative>.ReadOnly",
@@ -109,9 +117,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfInvalidAllocatorStrategy(
-            [DoesNotReturnIf(false)] bool valid
-        )
+        internal static void ThrowIfTypesNotEqualSize<T, U>([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -120,131 +126,14 @@ namespace EncosyTower.Collections
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             static InvalidOperationException CreateException()
-                => new(
-                    "Allocator strategy must be either Unity.Collections.Allocator " +
-                    "or Unity.Collections.AllocatorManager.AllocatorHandle"
-                );
+                => new($"size of type '{typeof(U).FullName}' must be equal to size of type '{typeof(T).FullName}'");
         }
 
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfBufferAlreadyAllocated(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Cannot allocate an already allocated buffer.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfResizeUninitializedBuffer(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Cannot resize an uninitialized buffer.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfTypesNotEqualSize<T, U>(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new(
-                    $"size of type '{typeof(U).FullName}' must be equal to " +
-                    $"size of type '{typeof(T).FullName}'"
-                );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfBufferShiftIndexIsOutOfRange(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Out of bounds index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfBufferShiftCountIsOutOfRange(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Out of bounds count");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfBufferShiftCountIsBelowIndex(
-            [DoesNotReturnIf(false)] bool valid
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("Count is lesser than index");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfBucketsAreUninitialized(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfBucketsAreUninitialized([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -264,7 +153,7 @@ namespace EncosyTower.Collections
         }
 
         [HideInCallstack, StackTraceHidden]
-        public static void ThrowIfSourceCollectionIsNotCreated(
+        internal static void ThrowIfSourceCollectionIsNotCreated(
               [DoesNotReturnIf(false)] bool valid
             , CollectionType type
         )
@@ -288,7 +177,7 @@ namespace EncosyTower.Collections
         }
 
         [HideInCallstack, StackTraceHidden]
-        public static void ThrowIfNativeSourceCollectionIsNotCreated(
+        internal static void ThrowIfNativeSourceCollectionIsNotCreated(
               [DoesNotReturnIf(false)] bool valid
             , CollectionType type
         )
@@ -310,10 +199,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfCapacityIsImmutable(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfCapacityIsImmutable([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -326,10 +212,7 @@ namespace EncosyTower.Collections
         }
 
         [HideInCallstack, StackTraceHidden]
-        public static void ThrowIfUnsafeCollectionIsDisposed(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfUnsafeCollectionIsDisposed([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -342,7 +225,7 @@ namespace EncosyTower.Collections
         }
 
         [HideInCallstack, StackTraceHidden]
-        public static void ThrowIfUnsafeCollectionAllocatorIsInvalid(
+        internal static void ThrowIfUnsafeCollectionAllocatorIsInvalid(
               [DoesNotReturnIf(false)] bool valid
             , CollectionType type
         )
@@ -364,7 +247,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfUnsafeCollectionTypeIsManaged<T>(
+        internal static void ThrowIfUnsafeCollectionTypeIsManaged<T>(
               [DoesNotReturnIf(false)] bool valid
             , CollectionType type
         )
@@ -386,7 +269,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(
+        internal static void ThrowIfNativeAliasTypesHaveDifferentSize<T, TNative>(
             [DoesNotReturnIf(false)] bool valid
         )
             where T : unmanaged
@@ -410,7 +293,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfAllocatorIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfAllocatorIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -426,7 +309,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfCapacityIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfCapacityIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -442,7 +325,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfCapacityBelowCount([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfCapacityBelowCount([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -458,7 +341,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfSourceStartIndexIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSourceStartIndexIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -474,7 +357,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfSourceLengthIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSourceLengthIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -490,7 +373,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfSourceCountIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSourceCountIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -506,7 +389,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfDestinationLengthIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfDestinationLengthIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -522,7 +405,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfIndexIsNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -538,7 +421,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfCountIsNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -554,7 +437,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfArgumentIndexIsNegative([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfArgumentIndexIsNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -570,7 +453,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfArgumentCountIsNegative([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfArgumentCountIsNegative([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -586,7 +469,107 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfIndexIsNonNegative(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.SharedArrayReadOnly => "Index is less than 0.",
+                    CollectionType.SharedArrayNativeReadOnly => "Index is less than 0.",
+                    _ => "Index must be non-negative.",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfCountIsNonNegative(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.SharedArrayReadOnly => "Count is less than 0.",
+                    CollectionType.SharedArrayNativeReadOnly => "Count is less than 0.",
+                    _ => "Count must be non-negative.",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfRangeIsWithinArray(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new($"Index and count do not denote a valid range in {GetCollectionTypeName(type)}.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSectionIsWithinArray(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new($"Index and count do not specify a valid section in {GetCollectionTypeName(type)}.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfOffsetLengthIsValid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Offset and length do not specify a valid range.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfRemovalIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -602,7 +585,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfRemovalRangeIsOutOfRange([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -618,7 +601,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -634,7 +617,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfNewCapacityIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfNewCapacityIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -650,7 +633,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfAmountIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfAmountIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -666,7 +649,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfTypesHaveDifferentSize([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfTypesHaveDifferentSize([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -682,10 +665,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfEmpty(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfEmpty([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -710,10 +690,28 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfIndexIsOutOfRange(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid, CollectionType type)
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.SharedArray => "index is outside the range of valid indices for the SharedArray<T>",
+                    CollectionType.SharedListWithNativeReadOnly =>
+                        "index is outside the range of valid indices for the SharedList<T>.ReadOnly",
+                    _ => $"index is outside the range of valid indexes for the {GetCollectionTypeName(type)}",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfInsertionIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -729,29 +727,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfInsertionIndexIsOutOfRange(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
-        {
-            if (valid == false)
-            {
-                throw CreateException(type);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException(CollectionType type)
-                => new($"index is outside the range of valid indexes for the {GetCollectionTypeName(type)}");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
-        [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfIndexSectionIsInvalid(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfIndexSectionIsInvalid([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -767,10 +743,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfFindStartIndexIsOutOfRange(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfFindStartIndexIsOutOfRange([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -786,10 +759,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfFindSectionIsInvalid(
-              [DoesNotReturnIf(false)] bool valid
-            , CollectionType type
-        )
+        internal static void ThrowIfFindSectionIsInvalid([DoesNotReturnIf(false)] bool valid, CollectionType type)
         {
             if (valid == false)
             {
@@ -805,7 +775,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfNotUnmanagedType<T>([DoesNotReturnIf(false)] bool isUnmanaged)
+        internal static void ThrowIfNotUnmanagedType<T>([DoesNotReturnIf(false)] bool isUnmanaged)
         {
             if (isUnmanaged == false)
             {
@@ -821,7 +791,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfIndexOutOfRangeException([DoesNotReturnIf(false)] bool withinRange)
+        internal static void ThrowIfIndexOutOfRangeException([DoesNotReturnIf(false)] bool withinRange)
         {
             if (withinRange == false)
             {
@@ -837,7 +807,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowArgumentOutOfRangeException_IfNegative(int value, string paramName)
+        internal static void ThrowArgumentOutOfRangeException_IfNegative(int value, string paramName)
         {
             if (value < 0)
             {
@@ -853,7 +823,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowArgumentOutOfRangeException_IfNegativeZero(int value, string paramName)
+        internal static void ThrowArgumentOutOfRangeException_IfNegativeZero(int value, string paramName)
         {
             if (value <= 0)
             {
@@ -865,15 +835,53 @@ namespace EncosyTower.Collections
                 => new(paramName, "The value must be positive and non-zero.");
         }
 
-        [StackTraceHidden, HideInCallstack, DoesNotReturn]
-        public static void ThrowArgumentException_ArrayPlusOffTooSmall()
-            => throw EncosyTower.Debugging.ThrowHelper.CreateArgumentException_ArrayPlusOffTooSmall();
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfArrayIndexIsOutOfRange(
+              [DoesNotReturnIf(false)] bool valid
+            , string paramName
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(paramName);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException(string paramName)
+                => new(paramName);
+        }
 
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowInvalidOperationException_ReadOnlyCollectionNotCreated(
+        internal static void ThrowIfDestinationArrayIsTooSmall([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException()
+                => Debugging.ThrowHelper.CreateArgumentException_ArrayPlusOffTooSmall();
+        }
+
+        [StackTraceHidden, HideInCallstack, DoesNotReturn]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowArgumentException_ArrayPlusOffTooSmall()
+            => throw Debugging.ThrowHelper.CreateArgumentException_ArrayPlusOffTooSmall();
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowInvalidOperationException_ReadOnlyCollectionNotCreated(
             [DoesNotReturnIf(false)] bool isCreated
         )
         {
@@ -891,7 +899,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfCollectionWasModified([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfCollectionWasModified([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -907,7 +915,30 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfEnumeratorOperationIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfCollectionWasModified(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.ListFast => "An element in the collection has been modified.",
+                    CollectionType.SharedArray => "SharedArray was modified during enumeration.",
+                    _ => "Collection was modified after the enumerator was instantiated.",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfEnumeratorOperationIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -923,7 +954,29 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfEnumeratorIsInvalid([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfEnumeratorOperationIsInvalid(
+              [DoesNotReturnIf(false)] bool valid
+            , CollectionType type
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.SharedArray => "Invalid enumerator state: enumeration cannot proceed.",
+                    _ => "Enumeration has either not started or has already finished.",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfEnumeratorIsInvalid([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -939,7 +992,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfKeyIsPresent([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfKeyIsPresent([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -955,7 +1008,35 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfMapIsBeingIterated([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSerializedItemIsDuplicate(
+              bool valid
+            , CollectionType collectionType
+            , int serializedIndex
+        )
+        {
+            if (valid == false)
+            {
+                ReportWarning(collectionType, serializedIndex);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void ReportWarning(
+                  CollectionType collectionType
+                , int serializedIndex
+            )
+            {
+                StaticLogger.LogWarning(
+                    $"Duplicate item at serialized index {serializedIndex} was ignored while deserializing "
+                    + $"{GetCollectionTypeName(collectionType)}. The first occurrence was kept."
+                );
+            }
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfMapIsBeingIterated([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -971,7 +1052,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfSetIsBeingIterated([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSetIsBeingIterated([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -987,7 +1068,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfSetCountExceedsStartingCount([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfSetCountExceedsStartingCount([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -1003,7 +1084,7 @@ namespace EncosyTower.Collections
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]
-        public static void ThrowIfKeyIsNotFound([DoesNotReturnIf(false)] bool valid)
+        internal static void ThrowIfKeyIsNotFound([DoesNotReturnIf(false)] bool valid)
         {
             if (valid == false)
             {
@@ -1013,6 +1094,523 @@ namespace EncosyTower.Collections
             [MethodImpl(MethodImplOptions.NoInlining)]
             static KeyNotFoundException CreateException()
                 => new("Key not found");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfMissingLinkedListNode([DoesNotReturnIf(false)] bool valid, CollectionType type)
+        {
+            if (valid == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(CollectionType type)
+                => new(type switch {
+                    CollectionType.ArrayMap => "The linked-list successor is missing.",
+                    CollectionType.ArrayMapUnsafe => "The linked-list successor is missing.",
+                    CollectionType.ArraySet => "The linked-list successor is missing.",
+                    CollectionType.ArraySetUnsafe => "The linked-list successor is missing.",
+                    CollectionType.SharedArrayMap => "This should never happen",
+                    CollectionType.SharedArrayMapUnsafe => "This should never happen",
+                    _ => "The linked-list successor is missing.",
+                });
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfIndexesAreDifferent([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Indexes must be different.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfDepthLimitIsNonNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Depth limit must be non-negative.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfKeysMeetPartitionThreshold([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Key count must meet the introsort partition threshold.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSortIndexIsNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("'index' must be non-negative number");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSortCountIsNegative([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("'count' must be non-negative number");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSortRangeIsInvalid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Invalid offset length");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfProviderIsNull([DoesNotReturnIf(false)] bool isInitialized)
+        {
+            if (isInitialized == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("ListProxy<TProvider, TBuffer, T> is not initialized");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfArrayLengthMismatch(
+              [DoesNotReturnIf(false)] bool valid
+            , int arrayLength
+            , int length
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(arrayLength, length);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException(int arrayLength, int length)
+                => new($"array.Length ({arrayLength}) does not match the Length of this instance ({length}).", "array");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceWithStrideOffsetAndSizeExceeded([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException()
+                => new("SliceWithStride sizeof(U) + offset must be <= sizeof(T)", "offset");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceWithStrideOffsetIsOutOfRange([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException()
+                => new("offset", "SliceWithStride offset must be >= 0");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceConvertSizeMismatch([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("SliceConvert requires that Length * sizeof(T) is a multiple of sizeof(U).");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceConvertOnRestrictedRange([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("SliceConvert may not be used on a restricted range array");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceConvertStrideMismatch([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("SliceConvert requires that stride matches the size of the source type");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceOnRestrictedRange(
+              [DoesNotReturnIf(false)] bool valid
+            , string paramName
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(paramName);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException(string paramName)
+                => new($"Slice may not be used on a restricted range {paramName}", paramName);
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceRangeExceedsLength(
+              [DoesNotReturnIf(false)] bool valid
+            , int sourceLength
+            , int start
+            , int length
+            , string paramName
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(sourceLength, start, length, paramName);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException(
+                  int sourceLength
+                , int start
+                , int length
+                , string paramName
+            )
+                => new(
+                    $"Slice start + length ({start + length}) range must be <= " +
+                    $"{paramName}.Length ({sourceLength})"
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceLengthIsNegative(
+              [DoesNotReturnIf(false)] bool valid
+            , int length
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(length);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException(int length)
+                => new("length", $"Slice length {length} < 0.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceStartIsNegative(
+              [DoesNotReturnIf(false)] bool valid
+            , int start
+        )
+        {
+            if (valid == false)
+            {
+                throw CreateException(start);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException(int start)
+                => new("start", $"Slice start {start} < 0.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceIntegerOverflow([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException()
+                => new("Slice start + length ({start + length}) causes an integer overflow");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSizeNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
+        {
+            if (isZeroOrPositive == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("size must be equal or greater than 0");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfFailedToAllocate([DoesNotReturnIf(false)] bool success)
+        {
+            if (success == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Failed to allocate.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfByteCountIsNegative([DoesNotReturnIf(true)] bool isNegative, long size)
+        {
+            if (isNegative)
+            {
+                throw CreateException(size);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(long size)
+                => new($"Attempted to operate on {size} bytes of memory: negative size.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfByteCountExceedsMaximum([DoesNotReturnIf(true)] bool exceedsMaximum, long size)
+        {
+            if (exceedsMaximum)
+            {
+                throw CreateException(size);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(long size)
+                => new($"Attempted to operate on {size} bytes of memory: size too big.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfAllocatorNotSupported([DoesNotReturnIf(false)] bool isSupported)
+        {
+            if (isSupported == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentException CreateException()
+                => new(
+                    "Allocator strategy must resolve to Temp, TempJob, Persistent or a valid custom allocator",
+                    "allocator"
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfAllocateLengthNegative([DoesNotReturnIf(false)] bool isZeroOrPositive)
+        {
+            if (isZeroOrPositive == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentOutOfRangeException CreateException()
+                => new("length", "Length must be >= 0");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfReferenceUnsafeSourceIsNotCreated([DoesNotReturnIf(false)] bool isCreated)
+        {
+            if (isCreated == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("The source UnsafeReference is not created.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfReferenceUnsafeDestinationIsNotCreated([DoesNotReturnIf(false)] bool isCreated)
+        {
+            if (isCreated == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("The destination UnsafeReference is not created.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfReferenceUnsafeIndexIsOutOfRange(int index)
+        {
+            if (index != 0)
+            {
+                throw CreateException(index);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static IndexOutOfRangeException CreateException(int index)
+                => new($"Index {index} is out of range of the UnsafeReference which only contains 1 element.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+#if UNITY_BURST
+        [Unity.Burst.BurstDiscard]
+#endif
+        internal static void LogWarningIfHashCodeIsNotImplemented<T>()
+        {
+            try
+            {
+                var type = typeof(T);
+                var method = type.GetMethod(
+                      "GetHashCode"
+                    , BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+                );
+
+                if (method == null)
+                {
+                    StaticDevLogger.LogWarning(
+                          type.Name
+                        + " does not implement GetHashCode and will potentially cause unwanted allocations (boxing)"
+                    );
+                }
+            }
+            catch
+            {
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1029,10 +1627,14 @@ namespace EncosyTower.Collections
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static ArgumentException CreateArgumentException_SourceStartIndex_Length()
-            => new("The number of elements from 'sourceStartIndex' to the end of the collection is lesser than 'length'.");
+            => new(
+                "The number of elements from 'sourceStartIndex' to the end of the collection "
+                + "is lesser than 'length'."
+            );
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static ArgumentException CreateArgumentException_DestinationTooShort()
             => new("The destination span is too short to copy the requested number of elements.");
+
     }
 }
