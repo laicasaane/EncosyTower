@@ -1,4 +1,4 @@
-using EncosyTower.SourceGen.Analyzers.Mvvm.ObservableProperties;
+using EncosyTower.Mvvm.Analyzers.ObservableProperties;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

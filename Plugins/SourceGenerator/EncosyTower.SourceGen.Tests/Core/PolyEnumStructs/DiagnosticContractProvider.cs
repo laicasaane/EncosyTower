@@ -1,0 +1,139 @@
+using EncosyTower.SourceGen.Tests.Diagnostics;
+
+namespace EncosyTower.SourceGen.Tests.Core.PolyEnumStructs;
+
+internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
+{
+    public string FeaturePath => "Core/PolyEnumStructs";
+
+    public IReadOnlyList<Type> ComponentTypes { get; } = new[] {
+        typeof(global::EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer),
+    };
+
+    public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = new[] {
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer"
+            , "SG_POLY_ENUM_STRUCT_0002"
+            , "No case structs declared in [PolyEnumStruct]"
+            , "\"{0}\" has no case structs. At least one nested struct (other than the implicit Undefined case) " +
+              "must " +
+              "be declared."
+            , "PolyEnumStructGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "A [PolyEnumStruct] type must contain at least one nested case struct."
+            , ""
+            , Array.Empty<string>()
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0006"
+            , "Poly-enum container must be non-generic"
+            , "Container \"{0}\" for \"{1}\" must be non-generic, including its containing types."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0007"
+            , "Poly-enum container must be in the target assembly"
+            , "Container \"{0}\" must be declared in the same assembly as \"{1}\"."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0008"
+            , "Poly-enum container cannot contain generated types"
+            , "Container \"{0}\" cannot contain generated PolyEnum types."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0009"
+            , "Poly-enum type parameters do not map uniquely"
+            , "Type parameters on \"{0}\" do not map uniquely to \"{1}\"."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0010"
+            , "Poly-enum type parameter constraints differ"
+            , "Type parameter constraints on \"{0}\" must match \"{1}\"."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0011"
+            , "Poly-enum case omits an interface dependency"
+            , "Case \"{0}\" must include type parameter \"{1}\" required by IEnumCase."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0012"
+            , "Poly-enum interface must move to the container"
+            , "Move IEnumCase for \"{0}\" into its non-generic PolyEnum container."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0013"
+            , "Poly-enum interface omits a member dependency"
+            , "IEnumCase \"{0}\" must include type parameter \"{1}\" required by common member \"{2}\"."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0014"
+            , "Poly-enum interface member is duplicated"
+            , "Member \"{0}\" is already declared by non-generic IEnumCase."
+        ),
+        Error(
+              "SG_POLY_ENUM_STRUCT_0015"
+            , "Poly-enum has multiple undefined cases"
+            , "PolyEnum \"{0}\" has more than one authored undefined case."
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer"
+            , "SG_POLY_ENUM_STRUCT_0005"
+            , "Generic [PolyEnumStruct] enum extensions require a container"
+            , "\"{0}\" is directly generic. Set Container to an explicit non-generic partial type when " +
+              "WithEnumExtensions is enabled."
+            , "PolyEnumStructGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "A directly generic [PolyEnumStruct] type must provide a valid explicit non-generic Container when " +
+              "WithEnumExtensions is enabled."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer"
+            , "SG_POLY_ENUM_STRUCT_0003"
+            , "Generic method in IEnumCase interface is not supported"
+            , "Method \"{0}\" declared on IEnumCase is generic. Generic methods in IEnumCase are not supported and " +
+              "will be ignored by the generator."
+            , "PolyEnumStructGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "Generic methods declared inside the nested IEnumCase interface are not supported and will be " +
+              "dropped " +
+              "by the generator."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer"
+            , "SG_POLY_ENUM_STRUCT_0004"
+            , "Generic method on case struct is not supported"
+            , "Method \"{0}\" on case struct \"{1}\" is generic. Generic methods on case structs are not supported " +
+              "and will be ignored by the generator."
+            , "PolyEnumStructGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "Generic methods declared on case structs nested inside a [PolyEnumStruct] type are not supported " +
+              "and " +
+              "will be dropped by the generator."
+            , ""
+            , Array.Empty<string>()
+        ),
+    };
+
+    public IReadOnlyList<SuppressionDescriptorContract> Suppressions => Array.Empty<SuppressionDescriptorContract>();
+
+    private static DiagnosticDescriptorContract Error(string id, string title, string message)
+        => new(
+              "EncosyTower.Core.Analyzers.PolyEnumStructs.PolyEnumStructAnalyzer"
+            , id
+            , title
+            , message
+            , "PolyEnumStructGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , title
+            , ""
+            , Array.Empty<string>()
+        );
+}

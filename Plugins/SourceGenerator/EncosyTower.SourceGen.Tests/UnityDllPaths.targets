@@ -1,9 +1,9 @@
 <Project>
 
     <!--
-        GenerateUnityDllPaths / DeleteUnityDllPaths
-        ============================================
-        Generates Helpers/UnityDllPaths.g.cs before every build, then deletes it afterwards.
+        GenerateUnityDllPaths
+        =====================
+        Generates UnityDllPaths.g.cs in the intermediate output directory before compilation.
 
         The file implements the partial methods declared in Helpers/UnityDllPaths.cs:
           - InitAll                       -> populates UnityDllPaths.All (all required DLL full paths)
@@ -16,10 +16,12 @@
           - $(UnityScriptAssembliesPath) e.g. D:\Projects\...\Library\ScriptAssemblies
     -->
 
-    <Target Name="GenerateUnityDllPaths" BeforeTargets="BeforeBuild">
+    <Target Name="GenerateUnityDllPaths" BeforeTargets="CoreCompile">
         <PropertyGroup>
-            <_UnityDllPathsFile>$(MSBuildProjectDirectory)/Helpers/UnityDllPaths.g.cs</_UnityDllPathsFile>
+            <_UnityDllPathsFile>$(IntermediateOutputPath)UnityDllPaths.g.cs</_UnityDllPathsFile>
         </PropertyGroup>
+
+        <MakeDir Directories="$(IntermediateOutputPath)" />
 
         <!-- Verify that the resolved root paths actually exist on disk -->
         <Error Condition="!Exists('$(UnityModulesPath)')"
@@ -39,12 +41,14 @@
             <_UnityDll Include="$(UnityScriptAssembliesPath)/Unity.TextMeshPro.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/Latios.Core.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/Latios.Psyshock.dll" />
-            <_UnityDll Include="$(UnityScriptAssembliesPath)/Latios.Transforms.dll" />
-            <_UnityDll Include="$(UnityScriptAssembliesPath)/UniTask.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Core.dll" />
+            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Mvvm.dll" />
+            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Processing.dll" />
+            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Data.dll" />
+            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Entities.dll" />
+            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Persistence.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Databases.Authoring.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Entities.Stats.dll" />
-            <_UnityDll Include="$(UnityScriptAssembliesPath)/EncosyTower.Mvvm.dll" />
             <_UnityDll Include="$(UnityScriptAssembliesPath)/BakingSheet.dll" />
         </ItemGroup>
 
@@ -81,10 +85,11 @@
         </ItemGroup>
 
         <WriteLinesToFile File="$(_UnityDllPathsFile)" Lines="@(_UnityDllPathsLines)" Overwrite="true" Encoding="UTF-8" />
-    </Target>
 
-    <Target Name="DeleteUnityDllPaths" AfterTargets="AfterBuild">
-        <Delete Files="$(MSBuildProjectDirectory)/Helpers/UnityDllPaths.g.cs" />
+        <ItemGroup>
+            <Compile Include="$(_UnityDllPathsFile)" />
+            <FileWrites Include="$(_UnityDllPathsFile)" />
+        </ItemGroup>
     </Target>
 
 </Project>

@@ -1,4 +1,4 @@
-using EncosyTower.SourceGen.Analyzers.Mvvm.MonoBinders;
+using EncosyTower.Mvvm.Analyzers.MonoBinders;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

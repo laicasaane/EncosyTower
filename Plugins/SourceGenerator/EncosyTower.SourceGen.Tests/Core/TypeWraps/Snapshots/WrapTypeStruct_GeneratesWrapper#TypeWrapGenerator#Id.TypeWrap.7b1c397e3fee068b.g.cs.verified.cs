@@ -1,0 +1,344 @@
+#pragma warning disable 0219
+
+using EncosyTower.TypeWraps;
+
+#pragma warning disable CS0105 // Using directive appeared previously in this namespace
+
+using g__S = global::System;
+using g__SCDC = global::System.CodeDom.Compiler;
+using g__SCM = System.ComponentModel;
+using g__SC = global::System.Collections;
+using g__SCG = global::System.Collections.Generic;
+using g__SD = global::System.Diagnostics;
+using g__SDCA = global::System.Diagnostics.CodeAnalysis;
+using g__SG = global::System.Globalization;
+using g__SRCS = global::System.Runtime.CompilerServices;
+using g__SRIS = global::System.Runtime.InteropServices;
+using g__ET = global::EncosyTower.Common;
+using g__ETTW = global::EncosyTower.TypeWraps;
+
+#pragma warning restore CS0105 // Using directive appeared previously in this namespace
+
+
+namespace TestProject
+{
+
+
+
+#pragma warning disable
+
+    [g__SCM.TypeConverter(typeof(global::TestProject.Id.IdTypeConverter))]
+    [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+    partial struct Id : g__ETTW.IWrap<int>
+        , g__S.IEquatable<global::TestProject.Id>
+        , g__S.IEquatable<int>
+        , g__S.IComparable
+        , g__S.IComparable<global::TestProject.Id>
+        , g__S.IComparable<int>
+    {
+        public int value;
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public Id(int value) : this()
+        {
+            this.value = value;
+        }
+
+        public static readonly global::TestProject.Id MaxValue = new global::TestProject.Id(int.MaxValue);
+
+        public static readonly global::TestProject.Id MinValue = new global::TestProject.Id(int.MinValue);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly int CompareTo(int value)
+            => this.value.CompareTo(value);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly bool Equals(int obj)
+            => this.value.Equals(obj);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly global::System.TypeCode GetTypeCode()
+            => this.value.GetTypeCode();
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static int Parse(global::System.ReadOnlySpan<char> s, global::System.Globalization.NumberStyles style, global::System.IFormatProvider provider)
+            => int.Parse(s, style, provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static int Parse(string s)
+            => int.Parse(s);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static int Parse(string s, global::System.Globalization.NumberStyles style)
+            => int.Parse(s, style);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static int Parse(string s, global::System.Globalization.NumberStyles style, global::System.IFormatProvider provider)
+            => int.Parse(s, style, provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static int Parse(string s, global::System.IFormatProvider provider)
+            => int.Parse(s, provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly string ToString(global::System.IFormatProvider provider)
+            => this.value.ToString(provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly string ToString(string format)
+            => this.value.ToString(format);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly string ToString(string format, global::System.IFormatProvider provider)
+            => this.value.ToString(format, provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly bool TryFormat(global::System.Span<char> destination, out int charsWritten, global::System.ReadOnlySpan<char> format, global::System.IFormatProvider provider)
+            => this.value.TryFormat(destination, out charsWritten, format, provider);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool TryParse(global::System.ReadOnlySpan<char> s, global::System.Globalization.NumberStyles style, global::System.IFormatProvider provider, out int result)
+            => int.TryParse(s, style, provider, out result);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool TryParse(global::System.ReadOnlySpan<char> s, out int result)
+            => int.TryParse(s, out result);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool TryParse([global::System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] string s, global::System.Globalization.NumberStyles style, global::System.IFormatProvider provider, out int result)
+            => int.TryParse(s, style, provider, out result);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool TryParse([global::System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] string s, out int result)
+            => int.TryParse(s, out result);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly int CompareTo(global::TestProject.Id other)
+            => this.value.CompareTo(other.value);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly int CompareTo(object obj)
+            => obj switch
+            {
+                Id other => CompareTo(other),
+                int other => this.value.CompareTo(other),
+                _ => 1,
+            };
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly bool Equals(global::TestProject.Id other)
+            => this.value == other.value;
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly override bool Equals(object obj)
+            => obj switch
+            {
+                Id other => Equals(other),
+                int other => this.value.Equals(other),
+                _ => false,
+            };
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly override int GetHashCode()
+            => this.value.GetHashCode();
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public readonly override string ToString()
+            => this.value.ToString();
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static implicit operator global::TestProject.Id(int value)
+            => new global::TestProject.Id(value);
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static implicit operator int(global::TestProject.Id value)
+            => value.value;
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator +(global::TestProject.Id value)
+        {
+            return new global::TestProject.Id((int)(+(value.value)));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator -(global::TestProject.Id value)
+        {
+            return new global::TestProject.Id((int)(-(value.value)));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator ~(global::TestProject.Id value)
+        {
+            return new global::TestProject.Id((int)(~(value.value)));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator ++(global::TestProject.Id value)
+        {
+            var tempValue = value.value;
+            tempValue ++;
+            return new global::TestProject.Id((int)(tempValue));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator --(global::TestProject.Id value)
+        {
+            var tempValue = value.value;
+            tempValue --;
+            return new global::TestProject.Id((int)(tempValue));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator +(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value + right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator -(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value - right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator *(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value * right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator /(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value / right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator %(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value % right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator &(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value & right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator |(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value | right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator ^(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return new global::TestProject.Id((int)(left.value ^ right.value));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator <<(global::TestProject.Id left, int right)
+        {
+            return new global::TestProject.Id((int)(left.value << right));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static global::TestProject.Id operator >>(global::TestProject.Id left, int right)
+        {
+            return new global::TestProject.Id((int)(left.value >> right));
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value == right.value;
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value != right.value;
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator >(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value > right.value;
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator <(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value < right.value;
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator >=(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value >= right.value;
+        }
+
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+        public static bool operator <=(global::TestProject.Id left, global::TestProject.Id right)
+        {
+            return left.value <= right.value;
+        }
+
+        [g__SCDC.GeneratedCode(GENERATOR, "0.1.7-preview.3")][g__SDCA.ExcludeFromCodeCoverage]
+        private sealed class IdTypeConverter : g__SCM.TypeConverter
+        {
+            private static readonly g__S.Type s_wrapperType = typeof(global::TestProject.Id);
+            private static readonly g__S.Type s_underlyingType = typeof(int);
+
+            [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+            public override bool CanConvertFrom(g__SCM.ITypeDescriptorContext context, g__S.Type sourceType)
+            {
+                if (sourceType == s_wrapperType || sourceType == s_underlyingType) return true;
+                return base.CanConvertFrom(context, sourceType);
+            }
+
+            [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+            public override bool CanConvertTo(g__SCM.ITypeDescriptorContext context, g__S.Type destinationType)
+            {
+                if (destinationType == s_wrapperType || destinationType == s_underlyingType) return true;
+                return base.CanConvertTo(context, destinationType);
+            }
+
+            [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+            public override object ConvertFrom(g__SCM.ITypeDescriptorContext context, g__SG.CultureInfo culture, object value)
+            {
+                if (value != null)
+                {
+                    var t = value.GetType();
+                    if (t == typeof(global::TestProject.Id)) return (global::TestProject.Id)value;
+                    if (t == typeof(int)) return new global::TestProject.Id((int)value);
+                }
+                return base.ConvertFrom(context, culture, value);
+            }
+
+            [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
+            public override object ConvertTo(g__SCM.ITypeDescriptorContext context, g__SG.CultureInfo culture, object value, g__S.Type destinationType)
+            {
+                if (value is global::TestProject.Id wrappedValue)
+                {
+                    if (destinationType == s_wrapperType) return wrappedValue;
+                    if (destinationType == s_underlyingType) return wrappedValue.value;
+                }
+                return base.ConvertTo(context, culture, value, destinationType);
+            }
+        }
+
+    }
+#region INTERNALS
+#endregion ======
+
+    partial struct Id // Internals
+    {
+        private const string GENERATOR = "EncosyTower.Core.Generators.TypeWraps.TypeWrapGenerator";
+
+    }
+
+
+
+}
+

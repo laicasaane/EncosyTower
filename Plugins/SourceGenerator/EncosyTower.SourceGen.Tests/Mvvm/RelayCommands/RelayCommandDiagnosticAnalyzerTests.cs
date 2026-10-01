@@ -1,4 +1,4 @@
-using EncosyTower.SourceGen.Analyzers.Mvvm.RelayCommands;
+using EncosyTower.Mvvm.Analyzers.RelayCommands;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

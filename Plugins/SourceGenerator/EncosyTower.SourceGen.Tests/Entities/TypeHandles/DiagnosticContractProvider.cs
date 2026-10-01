@@ -1,0 +1,103 @@
+using EncosyTower.SourceGen.Tests.Diagnostics;
+
+namespace EncosyTower.SourceGen.Tests.Entities.TypeHandles;
+
+internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
+{
+    public string FeaturePath => "Entities/TypeHandles";
+
+    public IReadOnlyList<Type> ComponentTypes { get; } = new[] {
+        typeof(global::EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer),
+    };
+
+    public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = new[] {
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0001"
+            , "Generic container is not supported"
+            , "Struct \"{0}\" must not be generic to use [TypeHandle]"
+            , "TypeHandles"
+            , DiagnosticSeverity.Error
+            , true
+            , "Generic container is not supported."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0002"
+            , "Not a typeof expression"
+            , "The first argument must be a 'typeof' expression"
+            , "TypeHandles"
+            , DiagnosticSeverity.Error
+            , true
+            , "Not a typeof expression."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0003"
+            , "Open generic type is not supported"
+            , "The type \"{0}\" must not be open generic"
+            , "TypeHandles"
+            , DiagnosticSeverity.Error
+            , true
+            , "Open generic type is not supported."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0004"
+            , "Managed type is not supported"
+            , "The type \"{0}\" must be unmanaged"
+            , "TypeHandles"
+            , DiagnosticSeverity.Error
+            , true
+            , "Managed type is not supported."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0005"
+            , "Missing ECS marker interface"
+            , "The type \"{0}\" must implement IComponentData, IBufferElementData, or ISharedComponentData"
+            , "TypeHandles"
+            , DiagnosticSeverity.Error
+            , true
+            , "Missing ECS marker interface."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0006"
+            , "Duplicate [TypeHandle] entry"
+            , "The type \"{0}\" is already declared via another [TypeHandle] attribute on this struct; the " +
+              "duplicate " +
+              "is ignored"
+            , "TypeHandles"
+            , DiagnosticSeverity.Warning
+            , true
+            , "Duplicate [TypeHandle] entry."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Entities.Analyzers.Entities.TypeHandles.TypeHandleDiagnosticAnalyzer"
+            , "SG_TYPE_HANDLES_0007"
+            , "isReadOnly is ignored for shared components"
+            , "The 'isReadOnly' argument is ignored for ISharedComponentData type \"{0}\""
+            , "TypeHandles"
+            , DiagnosticSeverity.Warning
+            , true
+            , "isReadOnly is ignored for shared components."
+            , ""
+            , Array.Empty<string>()
+        ),
+    };
+
+    public IReadOnlyList<SuppressionDescriptorContract> Suppressions => Array.Empty<SuppressionDescriptorContract>();
+}

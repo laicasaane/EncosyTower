@@ -1,7 +1,4 @@
-using EncosyTower.SourceGen.Analyzers.Data;
-using Microsoft.CodeAnalysis.CSharp.Testing;
-using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using EncosyTower.Data.Analyzers.Data;
 
 namespace EncosyTower.SourceGen.Tests.Data;
 
@@ -14,41 +11,22 @@ public class DataDiagnosticAnalyzerTests
         => $"{STUB_ATTRIBUTES}\nnamespace TestProject\n{{\n{body}\n}}\n";
 
     private static Task RunAsync(string body, params DiagnosticResult[] expected)
-    {
-        var test = new CSharpAnalyzerTest<DataDiagnosticAnalyzer, DefaultVerifier>
-        {
-            TestCode = Wrap(body),
-        };
-
-        foreach (var diag in expected)
-        {
-            test.ExpectedDiagnostics.Add(diag);
-        }
-
-        return test.RunAsync();
-    }
+        => AnalyzerTestHelper.VerifyAsync<DataDiagnosticAnalyzer>(
+              Wrap(body)
+            , expected
+            , runtimeReferences: Array.Empty<MetadataReference>()
+        );
 
     [TestMethod]
     public Task EmptyInput_DoesNotThrow()
-    {
-        var test = new CSharpAnalyzerTest<DataDiagnosticAnalyzer, DefaultVerifier>
-        {
-            TestCode = "",
-        };
-
-        return test.RunAsync();
-    }
+        => AnalyzerTestHelper.VerifyAsync<DataDiagnosticAnalyzer>("");
 
     [TestMethod]
     public Task AttributeStubOnly_NoDiagnostics()
-    {
-        var test = new CSharpAnalyzerTest<DataDiagnosticAnalyzer, DefaultVerifier>
-        {
-            TestCode = STUB_ATTRIBUTES,
-        };
-
-        return test.RunAsync();
-    }
+        => AnalyzerTestHelper.VerifyAsync<DataDiagnosticAnalyzer>(
+              STUB_ATTRIBUTES
+            , runtimeReferences: Array.Empty<MetadataReference>()
+        );
 
     [TestMethod]
     public Task ImmutableMinimal_NoDiagnostics()
@@ -172,5 +150,41 @@ public class DataDiagnosticAnalyzerTests
             , new DiagnosticResult(DataDiagnosticAnalyzer.CollectionIsNotApplicableForProperty)
                 .WithLocation(0)
                 .WithArguments("", "Id")
+        );
+
+    [TestMethod]
+    public Task ReadOnlyCollectionIdProperties_ReportCollectionIsNotApplicableForProperty()
+        => RunAsync(
+              """
+                  [EncosyTower.Data.Data]
+                  public partial class Foo
+                  {
+                      [EncosyTower.Data.DataProperty]
+                      public EncosyTower.Collections.ListFast<int>.ReadOnly {|#0:Id|} { get; private set; }
+                  }
+
+                  [EncosyTower.Data.Data]
+                  public partial class Bar
+                  {
+                      [EncosyTower.Data.DataProperty]
+                      public EncosyTower.Collections.HashSetReadOnly<int> {|#1:Id|} { get; private set; }
+                  }
+
+                  [EncosyTower.Data.Data]
+                  public partial class Baz
+                  {
+                      [EncosyTower.Data.DataProperty]
+                      public EncosyTower.Collections.DictionaryReadOnly<int, string> {|#2:Id|} { get; private set; }
+                  }
+              """
+            , new DiagnosticResult(DataDiagnosticAnalyzer.CollectionIsNotApplicableForProperty)
+                .WithLocation(0)
+                .WithArguments("ReadOnly", "Id")
+            , new DiagnosticResult(DataDiagnosticAnalyzer.CollectionIsNotApplicableForProperty)
+                .WithLocation(1)
+                .WithArguments("HashSetReadOnly", "Id")
+            , new DiagnosticResult(DataDiagnosticAnalyzer.CollectionIsNotApplicableForProperty)
+                .WithLocation(2)
+                .WithArguments("DictionaryReadOnly", "Id")
         );
 }

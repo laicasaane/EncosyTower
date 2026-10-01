@@ -1,0 +1,77 @@
+using EncosyTower.SourceGen.Tests.Diagnostics;
+
+namespace EncosyTower.SourceGen.Tests.Core.UnionIds;
+
+internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
+{
+    public string FeaturePath => "Core/UnionIds";
+
+    public IReadOnlyList<Type> ComponentTypes { get; } = new[] {
+        typeof(global::EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer),
+    };
+
+    public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = new[] {
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer"
+            , "SG_UNION_ID_0001"
+            , "A kind of the same name will be ignored"
+            , "Kind \"{0}\" has already been defined by another type \"{1}\""
+            , "UnionIdGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "A kind of the same name will be ignored"
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer"
+            , "SG_UNION_ID_0002"
+            , "First parameter must be an unmanaged type"
+            , "First parameter must be an unmanaged type"
+            , "UnionIdGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "First parameter must be an unmanaged type"
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer"
+            , "SG_UNION_ID_0003"
+            , "Cannot use the id type as a kind of itself"
+            , "Cannot use \"{0}\" as a kind of itself"
+            , "UnionIdGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "Cannot use the id type as a kind of itself"
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer"
+            , "SG_UNION_ID_0004"
+            , "Type has already been declared"
+            , "Type \"{0}\" has already been declared"
+            , "UnionIdGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "Type has already been declared"
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.UnionIds.UnionIdAnalyzer"
+            , "SG_UNION_ID_0005"
+            , "The size of a type is equal to or larger than 16 bytes"
+            , "The size of \"{0}\" is equal to or larger than 16 bytes"
+            , "UnionIdGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "The size of a type must be smaller than 16 bytes"
+            , ""
+            , Array.Empty<string>()
+        ),
+    };
+
+    public IReadOnlyList<SuppressionDescriptorContract> Suppressions => Array.Empty<SuppressionDescriptorContract>();
+}

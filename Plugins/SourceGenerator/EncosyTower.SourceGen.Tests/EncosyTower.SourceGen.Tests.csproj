@@ -9,12 +9,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Remove="**/Snapshots/**/*.verified.cs;**/Snapshots/**/*.received.cs" />
+        <Compile Remove="Helpers/UnityDllPaths.g.cs" />
+        <None Include="**/Snapshots/**/*.verified.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
         <PackageReference Include="MSTest.TestAdapter" Version="3.7.3" />
         <PackageReference Include="MSTest.TestFramework" Version="3.7.3" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.SourceGenerators.Testing" Version="1.1.3" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.3" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.3" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="Unity3D" Version="3.1.1" />
@@ -23,8 +30,18 @@
     <ItemGroup>
         <ProjectReference Include="../EncosyTower.SourceGen.Common/EncosyTower.SourceGen.Common.csproj" />
         <ProjectReference Include="../EncosyTower.SourceGen.Helpers/EncosyTower.SourceGen.Helpers.csproj" />
-        <ProjectReference Include="../EncosyTower.SourceGen.Generators/EncosyTower.SourceGen.Generators.csproj" />
-        <ProjectReference Include="../EncosyTower.SourceGen.Analyzers/EncosyTower.SourceGen.Analyzers.csproj" ReferenceOutputAssembly="true" OutputItemType="" />
+        <ProjectReference Include="../EncosyTower.Core.Generators/EncosyTower.Core.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Data.Generators/EncosyTower.Data.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Data.CodeRefactors/EncosyTower.Data.CodeRefactors.csproj" ReferenceOutputAssembly="true" OutputItemType="" />
+        <ProjectReference Include="../EncosyTower.Databases.Authoring.Generators/EncosyTower.Databases.Authoring.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Entities.Generators/EncosyTower.Entities.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Entities.CodeRefactors/EncosyTower.Entities.CodeRefactors.csproj" ReferenceOutputAssembly="true" OutputItemType="" />
+        <ProjectReference Include="../EncosyTower.Entities.Stats.Generators/EncosyTower.Entities.Stats.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Mvvm.Generators/EncosyTower.Mvvm.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Mvvm.CodeRefactors/EncosyTower.Mvvm.CodeRefactors.csproj" ReferenceOutputAssembly="true" OutputItemType="" />
+        <ProjectReference Include="../EncosyTower.Persistence.Generators/EncosyTower.Persistence.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.Processing.Generators/EncosyTower.Processing.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.PubSub.Generators/EncosyTower.PubSub.Generators.csproj" />
     </ItemGroup>
 
     <Import Project="UnityDllPaths.targets" />

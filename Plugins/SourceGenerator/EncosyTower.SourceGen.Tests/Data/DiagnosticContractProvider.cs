@@ -1,0 +1,112 @@
+using EncosyTower.SourceGen.Tests.Diagnostics;
+
+namespace EncosyTower.SourceGen.Tests.Data;
+
+internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
+{
+    public string FeaturePath => "Data";
+
+    public IReadOnlyList<Type> ComponentTypes { get; } = new[] {
+        typeof(global::EncosyTower.Data.Analyzers.Data.DataDiagnosticAnalyzer),
+        typeof(global::EncosyTower.Data.Analyzers.Data.DataFieldAttributeWithTargetsDiagnosticSuppressor),
+        typeof(global::EncosyTower.Data.Analyzers.Data.DataPropertyAttributeWithTargetsDiagnosticSuppressor),
+        typeof(global::EncosyTower.Data.CodeRefactors.DataDiagnosticAnalyzer),
+    };
+
+    public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = new[] {
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataDiagnosticAnalyzer"
+            , "SG_DATA_0001"
+            , "Cannot decorate immutable data with [DataFieldPolicy] attribute"
+            , "\"{0}\" is immutable thus cannot be decorated with [DataFieldPolicy] attribute (are you missing " +
+              "[DataMutable] attribute?)"
+            , "DataGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "The data type must already decorated with [DataMutable] to be able have [DataFieldPolicy]."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataDiagnosticAnalyzer"
+            , "SG_DATA_0002"
+            , "Fields of immutable data must be private"
+            , "\"{0}\" is immutable thus its fields must be private (are you missing [DataMutable] attribute?)"
+            , "DataGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "The data type must already decorated with [DataMutable] to be able have non-private fields."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataDiagnosticAnalyzer"
+            , "SG_DATA_0003"
+            , "Only private setter or init-only setter is allowed because the type is either immutable or " +
+              "decorated " +
+              "with [DataMutable(withoutPropertySetter: true)]"
+            , "Only private setter or init-only setter is allowed because \"{0}\" is either immutable or decorated " +
+              "with [DataMutable(withoutPropertySetter: true)]"
+            , "DataGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "Use private setter, or init-only setter, or decorate the type with " +
+              "[DataMutable(withoutPropertySetter: false)]."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataDiagnosticAnalyzer"
+            , "SG_DATA_0004"
+            , "Collection type is not applicable for the property"
+            , "Type \"{0}\" is a collection thus it is not applicable for the \"{1}\" property"
+            , "DataGenerator"
+            , DiagnosticSeverity.Warning
+            , true
+            , "Collection type is not applicable for the property."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.CodeRefactors.DataDiagnosticAnalyzer"
+            , "SG_DATA_0010"
+            , "Field can be replaced by a property"
+            , "Field name '{0}' can be replaced by a property"
+            , "DataDiagnosticAnalyzer"
+            , DiagnosticSeverity.Hidden
+            , true
+            , "Field can be replaced by a property."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Data.CodeRefactors.DataDiagnosticAnalyzer"
+            , "SG_DATA_0011"
+            , "Property can be replaced by a field"
+            , "Property name '{0}' can be replaced by a field"
+            , "DataDiagnosticAnalyzer"
+            , DiagnosticSeverity.Hidden
+            , true
+            , "Property can be replaced by a field."
+            , ""
+            , Array.Empty<string>()
+        ),
+    };
+
+    public IReadOnlyList<SuppressionDescriptorContract> Suppressions { get; } = new[] {
+        new SuppressionDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataFieldAttributeWithTargetsDiagnosticSuppressor"
+            , "SG_DATA_SUPPRESS_0001"
+            , "CS0657"
+            , "Fields using [SerializeField] can use [property:] attribute lists to forward "
+              + "attributes to the generated properties"
+        ),
+        new SuppressionDescriptorContract(
+              "EncosyTower.Data.Analyzers.Data.DataPropertyAttributeWithTargetsDiagnosticSuppressor"
+            , "SG_DATA_SUPPRESS_0002"
+            , "CS0657"
+            , "Properties using [DataProperty] can use [field:] attribute lists to forward "
+              + "attributes to the generated fields"
+        ),
+    };
+}

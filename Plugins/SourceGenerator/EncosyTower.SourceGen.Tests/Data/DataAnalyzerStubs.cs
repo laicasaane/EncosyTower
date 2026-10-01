@@ -3,27 +3,6 @@ namespace EncosyTower.SourceGen.Tests.Data;
 internal static class DataAnalyzerStubs
 {
     public const string ATTRIBUTES = """
-        namespace EncosyTower.Databases
-        {
-            [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-            public sealed class DataTableAssetAttribute : System.Attribute { }
-
-            public abstract class DataTableAsset<TDataId, TData> { }
-
-            public abstract class DataTableAsset<TDataId, TData, TConvertedId> { }
-        }
-
-        namespace EncosyTower.Serialization.NewtonsoftJson
-        {
-            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
-            public sealed class NewtonsoftJsonAotHelperAttribute : System.Attribute
-            {
-                public NewtonsoftJsonAotHelperAttribute() { }
-                public NewtonsoftJsonAotHelperAttribute(System.Type baseType) { }
-                public System.Type BaseType { get; }
-            }
-        }
-
         namespace EncosyTower.Data
         {
             [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
@@ -66,18 +45,6 @@ internal static class DataAnalyzerStubs
                 public System.Type FieldType { get; }
             }
 
-            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
-            public sealed class DataWithoutIdAttribute : System.Attribute { }
-        }
-
-        namespace EncosyTower.Data.Authoring
-        {
-            [System.AttributeUsage(System.AttributeTargets.Property | System.AttributeTargets.Field, AllowMultiple = false)]
-            public sealed class DataAuthoringConverterAttribute : System.Attribute
-            {
-                public DataAuthoringConverterAttribute(System.Type type) { }
-                public System.Type Type { get; }
-            }
         }
 
         namespace UnityEngine
@@ -86,23 +53,17 @@ internal static class DataAnalyzerStubs
             public sealed class SerializeField : System.Attribute { }
         }
 
-        namespace EncosyTower.Persistences
+        namespace EncosyTower.Collections
         {
-            public interface IPersist { }
-
-            public interface IPersistAccessor { }
-
-            public abstract class PersistStoreBase<TData> where TData : IPersist { }
-
-            [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-            public sealed class PersistenceAttribute : System.Attribute { }
-
-            [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-            public sealed class PersistAccessorAttribute : System.Attribute
+            public struct ListFast<T>
             {
-                public PersistAccessorAttribute(System.Type persistenceType) { }
-                public System.Type PersistenceType { get; }
+                public readonly struct ReadOnly { }
             }
+
+            public readonly struct HashSetReadOnly<T> { }
+
+            public readonly struct DictionaryReadOnly<TKey, TValue> { }
         }
+
         """;
 }
