@@ -8,6 +8,8 @@ using EncosyTower.IO;
 using EncosyTower.Logging;
 using UnityEditor;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Databases.Settings
 {
     partial class DatabaseCollectionSettings
@@ -22,6 +24,8 @@ namespace EncosyTower.Databases.Settings
                 , bool continueOnCapturedContext
             )
             {
+                DebuggingThrowHelper.ThrowIfNull(reporter);
+
                 var rootPath = new RootPath(EditorAPI.ProjectPath);
                 var validationResult = Validate(rootPath);
 

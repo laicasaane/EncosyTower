@@ -1,5 +1,4 @@
 using Cathei.BakingSheet;
-using EncosyTower.Data.Authoring;
 using EncosyTower.Databases.Authoring;
 
 namespace EncosyTower.Databases.Settings
@@ -14,14 +13,11 @@ namespace EncosyTower.Databases.Settings
 
             protected override ISheetImporter GetImporter(string inputFolderPath)
             {
-                var convertingCtx = DataConvertingContext.Default;
-
                 return new DatabaseCsvSheetConverter(
                       inputFolderPath
                     , extension
                     , fileSystem: null
-                    , splitHeader
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                     , includeSubFolders
                     , includeCommentedFiles
                 );

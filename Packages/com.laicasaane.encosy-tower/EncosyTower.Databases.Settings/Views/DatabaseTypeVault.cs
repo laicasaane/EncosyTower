@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using EncosyTower.Databases.Authoring;
 using UnityEditor;
 using UnityEngine;
@@ -12,12 +14,12 @@ namespace EncosyTower.Databases.Settings.Views
     internal static class DatabaseTypeVault
     {
         public static readonly ArrayMap<Type, int> TypeToIndexMap = new();
-        public static readonly FasterList<DatabaseRecord> Records = new();
+        public static readonly List<DatabaseRecord> Records = new();
 
         public static void Initialize()
         {
             var map = TypeToIndexMap;
-            var records = Records;
+            var records = Records.AsListFast();
 
             map.Clear();
             records.Clear();
@@ -31,9 +33,7 @@ namespace EncosyTower.Databases.Settings.Views
 
             foreach (var authoringType in authoringTypes)
             {
-                if (authoringType.IsAbstract
-                    || authoringType.ContainsGenericParameters
-                )
+                if (authoringType.IsAbstract || authoringType.ContainsGenericParameters)
                 {
                     continue;
                 }

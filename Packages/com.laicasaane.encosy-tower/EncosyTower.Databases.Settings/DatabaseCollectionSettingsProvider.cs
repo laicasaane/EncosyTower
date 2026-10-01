@@ -30,16 +30,9 @@ namespace EncosyTower.Databases.Settings
         private static void OpenSettings()
             => DatabaseCollectionSettings.Instance.OpenSettingsWindow();
 
-        private static void Create(
-              ScriptableObjectSettingsProvider provider
-            , VisualElement root
-        )
+        private static void Create(ScriptableObjectSettingsProvider provider, VisualElement root)
         {
-            s_instance = new DatabaseCollectionSettingsEditor(
-                  provider.Settings
-                , provider.SerializedSettings
-                , root
-            );
+            s_instance = new DatabaseCollectionSettingsEditor(provider.Settings, provider.SerializedSettings, root);
         }
 
         private static void Update()

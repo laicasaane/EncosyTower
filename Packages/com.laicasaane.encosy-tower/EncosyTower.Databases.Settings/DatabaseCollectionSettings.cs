@@ -9,10 +9,10 @@ namespace EncosyTower.Databases.Settings
     [Settings(SettingsUsage.EditorProject, "Encosy Tower/Database Collection")]
     public sealed partial class DatabaseCollectionSettings : Settings<DatabaseCollectionSettings>
     {
-        public const DataSourceFlags ALL_SOURCES
-                = DataSourceFlags.GoogleSheet
-                | DataSourceFlags.Csv
-                | DataSourceFlags.Excel;
+        public const DataSourceFlags ALL_SOURCES =
+              DataSourceFlags.GoogleSheet
+            | DataSourceFlags.Csv
+            | DataSourceFlags.Excel;
 
         [SerializeField] internal List<DatabaseSettings> _databases = new();
 
@@ -41,7 +41,7 @@ namespace EncosyTower.Databases.Settings
             public bool enabled = false;
             public bool cleanOutputFolder = true;
             public bool alwaysDownloadAll = false;
-            public int emptyRowStreakThreshold = 5;
+            public int emptyRowAllowance = 5;
         }
 
         [Serializable]
@@ -51,7 +51,7 @@ namespace EncosyTower.Databases.Settings
             public string outputRelativeFolderPath = string.Empty;
             public bool enabled = false;
             public bool liveConversion = true;
-            public int emptyRowStreakThreshold = 5;
+            public int emptyRowAllowance = 5;
             public bool includeSubFolders = true;
             public bool includeCommentedFiles = false;
 
@@ -68,7 +68,6 @@ namespace EncosyTower.Databases.Settings
         [Serializable]
         internal sealed partial class LocalCsvFolderSettings : LocalFolderSettings
         {
-            public bool splitHeader = false;
             public string extension = "csv";
         }
 

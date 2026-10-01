@@ -35,7 +35,7 @@ namespace EncosyTower.Databases.Settings.Views
         private readonly EnumField _outputFileTypeEnum;
         private readonly Toggle _cleanOutputFolderToggle;
         private readonly Toggle _alwaysDownloadAllToggle;
-        private readonly IntegerField _emptyRowStreakThresholdField;
+        private readonly IntegerField _emptyRowAllowanceField;
         private readonly Button _downloadButton;
 
         private bool _credentialFileValid;
@@ -72,24 +72,14 @@ namespace EncosyTower.Databases.Settings.Views
             _apiKeyFileHelp = new(resources.GoogleSheet.ApiKeyMissing, HelpType.Error);
             Add(_apiKeyFileHelp.WithDisplay(DisplayStyle.None));
 
-            _apiKeyFileText = CreatePathField(
-                  "API Key File"
-                , BrowseApiKeyFile
-                , PathType.File
-                , out _apiKeyFileSubInfo
-            );
+            _apiKeyFileText = CreatePathField("API Key File", BrowseApiKeyFile, PathType.File, out _apiKeyFileSubInfo);
 
             Add(new VisualSeparator());
 
             Add(_tokenSeparator = new VisualSeparator());
             Add((_tokenFolderHelp = new()).WithDisplay(DisplayStyle.None));
 
-            _tokenFolderText = CreatePathField(
-                  "Auth Token Folder"
-                , BrowseFolder
-                , PathType.Folder
-                , out _tokenSubInfo
-            );
+            _tokenFolderText = CreatePathField("Auth Token Folder", BrowseFolder, PathType.Folder, out _tokenSubInfo);
 
             SetDisplayToTokenControls(DisplayStyle.None);
 
@@ -99,20 +89,12 @@ namespace EncosyTower.Databases.Settings.Views
             _spreadsheetIdHelp = new(resources.GoogleSheet.SpreadSheetIdInvalid, HelpType.Error);
             Add(_spreadsheetIdHelp.WithDisplay(DisplayStyle.None));
 
-            InitSpreadSheetIdField(
-                  _spreadsheetIdText = new("Spread Sheet Id")
-                , OpenSpreadSheetUrl
-            );
+            InitSpreadSheetIdField(_spreadsheetIdText = new("Spread Sheet Id"), OpenSpreadSheetUrl);
 
             Add(new VisualSeparator());
             Add((_outputFolderHelp = new()).WithDisplay(DisplayStyle.None));
 
-            _outputFolderText = CreatePathField(
-                  "Output Folder"
-                , BrowseFolder
-                , PathType.Folder
-                , out _
-            );
+            _outputFolderText = CreatePathField("Output Folder", BrowseFolder, PathType.Folder, out _);
 
             Add(new VisualSeparator());
 
@@ -125,16 +107,14 @@ namespace EncosyTower.Databases.Settings.Views
             _alwaysDownloadAllToggle = new("Always Download All?");
             Add(_alwaysDownloadAllToggle.WithAlignFieldClass());
 
-            _emptyRowStreakThresholdField = new("Empty Row Streak Threshold") {
+            _emptyRowAllowanceField = new("Empty Row Allowance") {
                 tooltip = "The maximum number of continuous empty rows allowed before file is considered ended."
             };
-            Add(_emptyRowStreakThresholdField.WithAlignFieldClass());
+            Add(_emptyRowAllowanceField.WithAlignFieldClass());
 
             Add(new VisualSeparator());
 
-            Add(_downloadButton = new(DownloadButton_OnClicked) {
-                enabledSelf = false,
-            });
+            Add(_downloadButton = new(DownloadButton_OnClicked) { enabledSelf = false, });
 
             _downloadButton.AddToClassList("convert-button");
             _downloadButton.AddToClassList("function-button");
@@ -189,7 +169,7 @@ namespace EncosyTower.Databases.Settings.Views
 
             _cleanOutputFolderToggle.WithBindProperty(context.GetCleanOutputFolderProperty());
             _alwaysDownloadAllToggle.WithBindProperty(context.GetAlwaysDownloadAllProperty());
-            _emptyRowStreakThresholdField.WithBindProperty(context.GetEmptyRowStreakThresholdProperty());
+            _emptyRowAllowanceField.WithBindProperty(context.GetEmptyRowAllowanceProperty());
 
             {
                 var prop = context.GetOutputFileTypeProperty();
@@ -218,7 +198,7 @@ namespace EncosyTower.Databases.Settings.Views
             _outputFileTypeEnum.Unbind();
             _cleanOutputFolderToggle.Unbind();
             _alwaysDownloadAllToggle.Unbind();
-            _emptyRowStreakThresholdField.Unbind();
+            _emptyRowAllowanceField.Unbind();
         }
 
         protected override void OnEnabled(bool value)
@@ -226,10 +206,7 @@ namespace EncosyTower.Databases.Settings.Views
             RefreshDownloadButton();
         }
 
-        private void InitSpreadSheetIdField(
-              ButtonTextField element
-            , Action<ButtonTextField> onClicked
-        )
+        private void InitSpreadSheetIdField(ButtonTextField element, Action<ButtonTextField> onClicked)
         {
             Add(element.WithAlignFieldClass());
 
@@ -252,7 +229,7 @@ namespace EncosyTower.Databases.Settings.Views
             _outputFileTypeEnum.RegisterValueChangedCallback(OnValueChanged_ComparableUntyped);
             _cleanOutputFolderToggle.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
             _alwaysDownloadAllToggle.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
-            _emptyRowStreakThresholdField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
+            _emptyRowAllowanceField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
 
             _authenticationEnum.RegisterValueChangedCallback(AuthenticationType_OnChanged);
             _credentialFileText.TextField.RegisterValueChangedCallback(CredentialFile_OnChanged);

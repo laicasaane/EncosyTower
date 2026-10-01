@@ -17,7 +17,7 @@ namespace EncosyTower.Databases.Settings
                       inputFolderPath
                     , extension
                     , fileSystem: null
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                     , includeSubFolders
                     , includeCommentedFiles
                 );

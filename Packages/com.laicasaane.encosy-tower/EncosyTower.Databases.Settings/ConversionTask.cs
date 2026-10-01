@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using EncosyTower.Logging;
 using UnityEditor;
@@ -12,11 +13,36 @@ namespace EncosyTower.Databases.Settings
     {
         private readonly int _id;
         private readonly Task<bool> _task;
+        private readonly Action _unsubscribe;
+        private readonly Action _removeProgress;
+        private readonly Action<Exception> _logException;
+        private readonly Action _refresh;
+
+        private bool _isCompleted;
 
         private ConversionTask(int id, Task<bool> task)
         {
             _id = id;
             _task = task;
+            _unsubscribe = Unsubscribe;
+            _removeProgress = RemoveProgress;
+            _logException = static exception => StaticDevLogger.LogException(exception);
+            _refresh = Refresh;
+        }
+
+        internal ConversionTask(
+              Task<bool> task
+            , Action unsubscribe
+            , Action removeProgress
+            , Action<Exception> logException
+            , Action refresh
+        )
+        {
+            _task = task;
+            _unsubscribe = unsubscribe;
+            _removeProgress = removeProgress;
+            _logException = logException;
+            _refresh = refresh;
         }
 
         public static void Run(
@@ -43,26 +69,41 @@ namespace EncosyTower.Databases.Settings
             EditorApplication.update += task.Update;
         }
 
-        private void Update()
+        internal void Update()
         {
-            if (_task.IsCompleted == false && _task.IsCanceled == false)
+            if (_isCompleted || _task.IsCompleted == false)
             {
                 return;
             }
 
-            EditorApplication.update -= Update;
+            _isCompleted = true;
+            _unsubscribe();
+            _removeProgress();
+
+            if (_task.IsCanceled)
+            {
+                return;
+            }
 
             if (_task.IsFaulted)
             {
-                StaticDevLogger.LogException(_task.Exception);
+                _logException(_task.Exception);
+                return;
             }
-
-            Progress.Remove(_id);
 
             if (_task.Result)
             {
-                AssetDatabase.Refresh();
+                _refresh();
             }
         }
+
+        private void Unsubscribe()
+            => EditorApplication.update -= Update;
+
+        private void RemoveProgress()
+            => Progress.Remove(_id);
+
+        private static void Refresh()
+            => AssetDatabase.Refresh();
     }
 }

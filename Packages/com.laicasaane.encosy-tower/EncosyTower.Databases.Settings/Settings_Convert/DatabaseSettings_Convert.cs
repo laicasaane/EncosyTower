@@ -7,6 +7,8 @@ using EncosyTower.Databases.Authoring;
 using EncosyTower.Logging;
 using EncosyTower.Naming;
 
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
+
 namespace EncosyTower.Databases.Settings
 {
     partial class DatabaseCollectionSettings
@@ -21,6 +23,8 @@ namespace EncosyTower.Databases.Settings
                 , bool continueOnCapturedContext
             )
             {
+                DebuggingThrowHelper.ThrowIfNull(reporter);
+
                 var result = Validate();
 
                 if (result != ValidationResult.Success)
@@ -112,10 +116,11 @@ namespace EncosyTower.Databases.Settings
                 if (sources.HasFlag(DataSourceFlags.GoogleSheet) && googleSheetSettings.enabled)
                 {
                     if (await googleSheetSettings.ConvertAsync(
-                          new(databaseAssetName, sheetContainer, owner)
-                        , token
-                        , continueOnCapturedContext
-                    ))
+                              new(databaseAssetName, sheetContainer, owner)
+                            , token
+                            , continueOnCapturedContext
+                        )
+                    )
                     {
                         resultFlags |= DataSourceFlags.GoogleSheet;
                     }
@@ -124,9 +129,10 @@ namespace EncosyTower.Databases.Settings
                 if (sources.HasFlag(DataSourceFlags.Csv) && csvSettings.enabled)
                 {
                     if (await csvSettings.ConvertAsync(
-                          new(databaseAssetName, sheetContainer, owner)
-                        , continueOnCapturedContext
-                    ))
+                              new(databaseAssetName, sheetContainer, owner)
+                            , continueOnCapturedContext
+                        )
+                    )
                     {
                         resultFlags |= DataSourceFlags.Csv;
                     }
@@ -135,9 +141,10 @@ namespace EncosyTower.Databases.Settings
                 if (sources.HasFlag(DataSourceFlags.Excel) && excelSettings.enabled)
                 {
                     if (await excelSettings.ConvertAsync(
-                          new(databaseAssetName, sheetContainer, owner)
-                        , continueOnCapturedContext
-                    ))
+                              new(databaseAssetName, sheetContainer, owner)
+                            , continueOnCapturedContext
+                        )
+                    )
                     {
                         resultFlags |= DataSourceFlags.Excel;
                     }
@@ -148,9 +155,7 @@ namespace EncosyTower.Databases.Settings
 
             private ValidationResult Validate()
             {
-                if (string.IsNullOrWhiteSpace(name)
-                    || string.Equals(name, "<Undefined>", StringComparison.Ordinal)
-                )
+                if (string.IsNullOrWhiteSpace(name) || string.Equals(name, "<Undefined>", StringComparison.Ordinal))
                 {
                     return ValidationResult.DatabaseNameIsNullOrInvalid;
                 }
@@ -194,11 +199,7 @@ namespace EncosyTower.Databases.Settings
 
                 databaseAssetName = databaseAttrib.NameCasing.ConvertName(databaseAssetName);
 
-                var candidates = authorType.GetMember(
-                      "SheetContainer"
-                    , MemberTypes.NestedType
-                    , BindingFlags.Public
-                );
+                var candidates = authorType.GetMember("SheetContainer", MemberTypes.NestedType, BindingFlags.Public);
 
                 if (candidates.Length < 1 || candidates[0] is not Type candiate)
                 {
@@ -272,9 +273,7 @@ namespace EncosyTower.Databases.Settings
                     {
                         if (sheetContainerType != null)
                         {
-                            StaticDevLogger.LogError(
-                                $"Cannot create an instance of '{sheetContainerType.FullName}'."
-                            );
+                            StaticDevLogger.LogError($"Cannot create an instance of '{sheetContainerType.FullName}'.");
                         }
                         break;
                     }

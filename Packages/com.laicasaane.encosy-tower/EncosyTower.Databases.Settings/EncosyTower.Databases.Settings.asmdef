@@ -9,25 +9,29 @@
         "BakingSheet.Google",
         "BakingSheet.Json",
         "EncosyTower.Core",
+        "EncosyTower.Data",
         "EncosyTower.Databases.Authoring",
         "EncosyTower.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bcl.Runtime.dll",
+        "Bcl.RuntimeUnsafe.dll",
+        "EncosyTower.LowLevel.Unsafe.dll",
+        "Google.Apis.Auth.dll",
+        "Google.Apis.Core.dll",
+        "Google.Apis.dll",
+        "Microsoft.Extensions.Logging.Abstractions.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [
         "BAKING_SHEET",
         "UNITY_EDITOR"
     ],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
         {
             "name": "com.laicasaane.bakingsheet",
             "expression": "",

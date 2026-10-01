@@ -47,11 +47,10 @@ namespace EncosyTower.Databases.Settings
                 var fileConverter = new DatabaseGoogleSheetConverter(
                       spreadsheetId
                     , initializer
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                 );
 
-                await fileContainer.Bake(fileConverter)
-                    .ConfigureAwait(continueOnCapturedContext);
+                await fileContainer.Bake(fileConverter).ConfigureAwait(continueOnCapturedContext);
 
                 var converters = new List<DatabaseGoogleSheetConverter>();
 
@@ -69,7 +68,7 @@ namespace EncosyTower.Databases.Settings
                         converters.Add(new DatabaseGoogleSheetConverter(
                               row.FileId
                             , initializer
-                            , emptyRowStreakThreshold
+                            , emptyRowAllowance
                         ));
                     }
                 }
@@ -84,13 +83,11 @@ namespace EncosyTower.Databases.Settings
                     return false;
                 }
 
-                await sheetContainer.Bake(converters.ToArray())
-                    .ConfigureAwait(continueOnCapturedContext);
+                await sheetContainer.Bake(converters.ToArray()).ConfigureAwait(continueOnCapturedContext);
 
                 var exporter = new DatabaseAssetExporter<DatabaseAsset>(outputRelativeFolderPath, databaseAssetName);
 
-                await sheetContainer.Store(exporter)
-                    .ConfigureAwait(continueOnCapturedContext);
+                await sheetContainer.Store(exporter).ConfigureAwait(continueOnCapturedContext);
 
                 if (continueOnCapturedContext)
                 {
@@ -133,7 +130,7 @@ namespace EncosyTower.Databases.Settings
                 var fileConverter = new DatabaseGoogleSheetConverter(
                       spreadsheetId
                     , initializer
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                 );
 
                 await fileContainer.Bake(fileConverter).ConfigureAwait(continueOnCapturedContext);
@@ -177,8 +174,7 @@ namespace EncosyTower.Databases.Settings
                 await ValidateAsync(exporters, fileSystem, continueOnCapturedContext)
                     .ConfigureAwait(continueOnCapturedContext);
 
-                await DownloadAsync(exporters, continueOnCapturedContext)
-                    .ConfigureAwait(continueOnCapturedContext);
+                await DownloadAsync(exporters, continueOnCapturedContext).ConfigureAwait(continueOnCapturedContext);
 
                 if (continueOnCapturedContext)
                 {
@@ -214,8 +210,7 @@ namespace EncosyTower.Databases.Settings
 
                     if (File.Exists(filePath))
                     {
-                        var text = await File.ReadAllTextAsync(filePath)
-                            .ConfigureAwait(continueOnCapturedContext);
+                        var text = await File.ReadAllTextAsync(filePath).ConfigureAwait(continueOnCapturedContext);
 
                         if (long.TryParse(text, out var value))
                         {

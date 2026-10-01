@@ -8,11 +8,9 @@ namespace EncosyTower.Databases.Settings.Views
         public static implicit operator ViewResources(VisualElement root)
             => new(root);
 
-        public ViewResources_GoogleSheet GoogleSheet
-            => new(this);
+        public ViewResources_GoogleSheet GoogleSheet => new(this);
 
-        public ViewResources_LocalFolder LocalFolder
-            => new(this);
+        public ViewResources_LocalFolder LocalFolder => new(this);
 
         public string DatabaseInvalid => GetLabelText("database-invalid");
 
@@ -33,47 +31,34 @@ namespace EncosyTower.Databases.Settings.Views
         {
             private const string BASE = "google-sheet";
 
-            public string Credential
-                => Resources.GetLabelText($"{BASE}__credential");
+            public string Credential => Resources.GetLabelText($"{BASE}__credential");
 
-            public string CredentialMissing
-                => Resources.GetLabelText($"{BASE}__credential-missing");
+            public string CredentialMissing => Resources.GetLabelText($"{BASE}__credential-missing");
 
-            public string ApiKeyMissing
-                => Resources.GetLabelText($"{BASE}__api-key-missing");
+            public string ApiKeyMissing => Resources.GetLabelText($"{BASE}__api-key-missing");
 
-            public string SpreadSheetId
-                => Resources.GetLabelText($"{BASE}__spreadsheet");
+            public string SpreadSheetId => Resources.GetLabelText($"{BASE}__spreadsheet");
 
-            public string SpreadSheetIdInvalid
-                => Resources.GetLabelText($"{BASE}__spreadsheet-invalid");
+            public string SpreadSheetIdInvalid => Resources.GetLabelText($"{BASE}__spreadsheet-invalid");
 
-            public string TokenFolderInvalid
-                => Resources.GetLabelText("token-folder-invalid");
+            public string TokenFolderInvalid => Resources.GetLabelText("token-folder-invalid");
 
-            public string TokenFolderMissing
-                => Resources.GetLabelText("token-folder-missing");
+            public string TokenFolderMissing => Resources.GetLabelText("token-folder-missing");
 
-            public string OutputFolderInvalid
-                => Resources.GetLabelText("output-folder-invalid");
+            public string OutputFolderInvalid => Resources.GetLabelText("output-folder-invalid");
 
-            public string OutputFolderMissing
-                => Resources.GetLabelText("output-folder-missing");
+            public string OutputFolderMissing => Resources.GetLabelText("output-folder-missing");
         }
 
         public readonly record struct ViewResources_LocalFolder(ViewResources Resources)
         {
-            public string InputFolderInvalid
-                => Resources.GetLabelText("input-folder-invalid");
+            public string InputFolderInvalid => Resources.GetLabelText("input-folder-invalid");
 
-            public string InputFolderMissing
-                => Resources.GetLabelText("input-folder-missing");
+            public string InputFolderMissing => Resources.GetLabelText("input-folder-missing");
 
-            public string OutputFolderInvalid
-                => Resources.GetLabelText("output-folder-invalid");
+            public string OutputFolderInvalid => Resources.GetLabelText("output-folder-invalid");
 
-            public string OutputFolderMissing
-                => Resources.GetLabelText("output-folder-missing");
+            public string OutputFolderMissing => Resources.GetLabelText("output-folder-missing");
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using EncosyTower.Collections;
+using EncosyTower.Collections.Extensions;
 using UnityEditor;
 
 namespace EncosyTower.Databases.Settings
@@ -29,7 +30,7 @@ namespace EncosyTower.Databases.Settings
 
             var collectionSettings = DatabaseCollectionSettings.Instance;
             var databases = collectionSettings._databases;
-            var assetPaths = new FasterList<string>(importedAssets);
+            var assetPaths = new List<string>(importedAssets);
             var paths = new HashSet<string>(importedAssets.Length);
             var csvExt = s_csvExt;
             var excelExt = s_excelExt;
@@ -41,7 +42,7 @@ namespace EncosyTower.Databases.Settings
                     , DataSourceFlags.Csv
                     , collectionSettings
                     , database.csvSettings
-                    , assetPaths
+                    , assetPaths.AsListFast()
                     , csvExt
                     , paths
                 );
@@ -51,7 +52,7 @@ namespace EncosyTower.Databases.Settings
                     , DataSourceFlags.Excel
                     , collectionSettings
                     , database.excelSettings
-                    , assetPaths
+                    , assetPaths.AsListFast()
                     , excelExt
                     , paths
                 );
@@ -63,7 +64,7 @@ namespace EncosyTower.Databases.Settings
             , DataSourceFlags source
             , UnityEngine.Object owner
             , LocalFolderSettings localFolderSettings
-            , FasterList<string> assetPaths
+            , ListFast<string> assetPaths
             , string extension
             , HashSet<string> paths
         )
@@ -93,7 +94,7 @@ namespace EncosyTower.Databases.Settings
 
         private static void Filter(
               LocalFolderSettings settings
-            , FasterList<string> assetPaths
+            , ListFast<string> assetPaths
             , string extension
             , HashSet<string> paths
         )

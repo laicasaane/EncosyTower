@@ -87,8 +87,8 @@ namespace EncosyTower.Databases.Settings.Views
                 }
 
                 {
-                    var prop = context.GetEmptyRowStreakThresholdProperty();
-                    prop.intValue = settings.emptyRowStreakThreshold;
+                    var prop = context.GetEmptyRowAllowanceProperty();
+                    prop.intValue = settings.emptyRowAllowance;
                 }
             }
 
@@ -116,8 +116,8 @@ namespace EncosyTower.Databases.Settings.Views
                     prop.boolValue = settings.liveConversion;
                 }
                 {
-                    var prop = context.GetEmptyRowStreakThresholdProperty();
-                    prop.intValue = settings.emptyRowStreakThreshold;
+                    var prop = context.GetEmptyRowAllowanceProperty();
+                    prop.intValue = settings.emptyRowAllowance;
                 }
                 {
                     var prop = context.GetIncludeSubFoldersProperty();
@@ -132,10 +132,6 @@ namespace EncosyTower.Databases.Settings.Views
                 {
                     case LocalCsvFolderSettings csvFolderSettings:
                     {
-                        {
-                            var prop = context.GetSplitHeaderProperty();
-                            prop.boolValue = csvFolderSettings.splitHeader;
-                        }
                         {
                             var prop = context.GetExtensionProperty();
                             prop.stringValue = csvFolderSettings.extension;

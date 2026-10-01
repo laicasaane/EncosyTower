@@ -16,7 +16,7 @@ namespace EncosyTower.Databases.Settings.Views
         private readonly FolderTextField _outputFolderText;
         private readonly HelpBox _outputFolderHelp;
         private readonly Toggle _liveConversionToggle;
-        private readonly IntegerField _emptyRowStreakThresholdField;
+        private readonly IntegerField _emptyRowAllowanceField;
         private readonly Toggle _includeSubFoldersToggle;
         private readonly Toggle _includeCommentedFilesToggle;
         private readonly Button _convertButton;
@@ -38,32 +38,22 @@ namespace EncosyTower.Databases.Settings.Views
             AddToClassList(Constants.SETTINGS_GROUP);
             Add((_inputFolderHelp = new()).WithDisplay(DisplayStyle.None));
 
-            _inputFolderText = CreatePathField(
-                  "Input Folder"
-                , BrowseFolder
-                , PathType.Folder
-                , out _
-            );
+            _inputFolderText = CreatePathField("Input Folder", BrowseFolder, PathType.Folder, out _);
 
             Add(new VisualSeparator());
             Add((_outputFolderHelp = new()).WithDisplay(DisplayStyle.None));
 
-            _outputFolderText = CreatePathField(
-                  "Output Folder"
-                , BrowseFolder
-                , PathType.Folder
-                , out _
-            );
+            _outputFolderText = CreatePathField("Output Folder", BrowseFolder, PathType.Folder, out _);
 
             Add(new VisualSeparator());
 
             _liveConversionToggle = new("Live Conversion?");
             Add(_liveConversionToggle.WithAlignFieldClass());
 
-            _emptyRowStreakThresholdField = new("Empty Row Streak Threshold") {
+            _emptyRowAllowanceField = new("Empty Row Allowance") {
                 tooltip = "The maximum number of continuous empty rows allowed before file is considered ended."
             };
-            Add(_emptyRowStreakThresholdField.WithAlignFieldClass());
+            Add(_emptyRowAllowanceField.WithAlignFieldClass());
 
             Add(new VisualSeparator());
 
@@ -115,7 +105,7 @@ namespace EncosyTower.Databases.Settings.Views
                 TryDisplayOutputFolderHelp(prop.stringValue);
             }
 
-            _emptyRowStreakThresholdField.WithBindProperty(context.GetEmptyRowStreakThresholdProperty());
+            _emptyRowAllowanceField.WithBindProperty(context.GetEmptyRowAllowanceProperty());
             _includeSubFoldersToggle.WithBindProperty(context.GetIncludeSubFoldersProperty());
             _includeCommentedFilesToggle.WithBindProperty(context.GetIncludeCommentedFilesProperty());
             _liveConversionToggle.WithBindProperty(context.GetLiveConversionProperty());
@@ -132,7 +122,7 @@ namespace EncosyTower.Databases.Settings.Views
             _inputFolderText.Unbind();
             _outputFolderText.Unbind();
             _liveConversionToggle.Unbind();
-            _emptyRowStreakThresholdField.Unbind();
+            _emptyRowAllowanceField.Unbind();
             _includeSubFoldersToggle.Unbind();
             _includeCommentedFilesToggle.Unbind();
 
@@ -155,7 +145,7 @@ namespace EncosyTower.Databases.Settings.Views
             _inputFolderText.TextField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
             _outputFolderText.TextField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
             _liveConversionToggle.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
-            _emptyRowStreakThresholdField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
+            _emptyRowAllowanceField.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
             _includeSubFoldersToggle.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
             _includeCommentedFilesToggle.RegisterValueChangedCallback(OnValueChanged_EquatableTyped);
 
@@ -219,9 +209,7 @@ namespace EncosyTower.Databases.Settings.Views
 
         private void RefreshConvertButton()
         {
-            var value = Enabled
-                && _inputFolderValid
-                && _outputFolderValid;
+            var value = Enabled && _inputFolderValid && _outputFolderValid;
 
             _convertButton.enabledSelf = value;
         }

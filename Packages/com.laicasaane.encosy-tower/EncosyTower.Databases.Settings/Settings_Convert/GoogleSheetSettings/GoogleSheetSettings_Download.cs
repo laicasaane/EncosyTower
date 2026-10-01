@@ -56,9 +56,7 @@ namespace EncosyTower.Databases.Settings
                     return false;
                 }
 
-                secrets = authentication == AuthenticationType.OAuth
-                    ? LoadSecrets(credentialText)
-                    : null;
+                secrets = authentication == AuthenticationType.OAuth ? LoadSecrets(credentialText) : null;
 
                 if (authentication == AuthenticationType.OAuth)
                 {

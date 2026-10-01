@@ -60,7 +60,7 @@ namespace EncosyTower.Databases.Settings
                 var fileConverter = new DatabaseGoogleSheetConverter(
                       spreadsheetId
                     , initializer
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                 );
 
                 await fileContainer.Bake(fileConverter).ConfigureAwait(continueOnCapturedContext);
@@ -81,7 +81,7 @@ namespace EncosyTower.Databases.Settings
                         converters.Add(new DatabaseGoogleSheetConverter(
                               row.FileId
                             , initializer
-                            , emptyRowStreakThreshold
+                            , emptyRowAllowance
                         ));
                     }
                 }
@@ -161,7 +161,7 @@ namespace EncosyTower.Databases.Settings
                 var fileConverter = new DatabaseGoogleSheetConverter(
                       spreadsheetId
                     , initializer
-                    , emptyRowStreakThreshold
+                    , emptyRowAllowance
                 );
 
                 await fileContainer.Bake(fileConverter).ConfigureAwait(continueOnCapturedContext);
@@ -201,8 +201,7 @@ namespace EncosyTower.Databases.Settings
 
                 Report(reporter, ProgressMessageType.Download);
 
-                await DownloadAsync(exporters, continueOnCapturedContext)
-                    .ConfigureAwait(continueOnCapturedContext);
+                await DownloadAsync(exporters, continueOnCapturedContext).ConfigureAwait(continueOnCapturedContext);
 
                 if (continueOnCapturedContext)
                 {

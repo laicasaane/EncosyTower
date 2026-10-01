@@ -6,7 +6,6 @@ namespace EncosyTower.Databases.Settings.Views
 {
     internal sealed class LocalCsvFolderSettingsView : LocalFolderSettingsView
     {
-        private Toggle _splitHeaderToggle;
         private TextField _extensionText;
 
         public LocalCsvFolderSettingsView(
@@ -21,12 +20,6 @@ namespace EncosyTower.Databases.Settings.Views
 
         protected override void CreateAdditionalFields()
         {
-            _splitHeaderToggle = new Toggle("Split Header?") {
-                tooltip = "If enabled, the header is a combination of multiple consecutive rows."
-            };
-
-            contentContainer.Add(_splitHeaderToggle.WithAlignFieldClass());
-
             _extensionText = new TextField("File Extension") {
                 tooltip = "The file extension for Excel files.",
             };
@@ -36,13 +29,11 @@ namespace EncosyTower.Databases.Settings.Views
 
         protected override void OnBind(LocalFolderContext context)
         {
-            _splitHeaderToggle.BindProperty(context.GetSplitHeaderProperty());
             _extensionText.BindProperty(context.GetExtensionProperty());
         }
 
         protected override void OnUnbind()
         {
-            _splitHeaderToggle.Unbind();
             _extensionText.Unbind();
         }
     }
