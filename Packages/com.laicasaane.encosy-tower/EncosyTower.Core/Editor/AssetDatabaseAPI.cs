@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
-using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Core;
@@ -13,6 +12,8 @@ using EncosyTower.IO;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEngine;
+
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Editor
 {
@@ -23,11 +24,12 @@ namespace EncosyTower.Editor
         /// Find all objects by a filter.
         /// </summary>
         [ApiForEditor]
-        public static FasterList<T> FindAllObjects<T>([NotNull] string filter)
+        public static List<T> FindAllObjects<T>([NotNull] string filter)
             where T : UnityEngine.Object
         {
+            DebuggingThrowHelper.ThrowIfNull(filter);
             var candidates = AssetDatabase.FindAssets(filter);
-            var result = new FasterList<T>(candidates.Length);
+            var result = new List<T>(candidates.Length);
 
             foreach (var candidate in candidates)
             {
@@ -52,6 +54,8 @@ namespace EncosyTower.Editor
         public static void FindAllObjects<T>([NotNull] string filter, [NotNull] ICollection<T> result)
             where T : UnityEngine.Object
         {
+            DebuggingThrowHelper.ThrowIfNull(filter);
+            DebuggingThrowHelper.ThrowIfNull(result);
             var candidates = AssetDatabase.FindAssets(filter);
             result.TryIncreaseCapacityToFast(candidates.Length);
 
@@ -76,7 +80,10 @@ namespace EncosyTower.Editor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Option<T> FindFirstObject<T>([NotNull] string filter)
             where T : UnityEngine.Object
-            => Option.SomeIf(FindFirstObject<T>(filter, out var obj), obj);
+        {
+            DebuggingThrowHelper.ThrowIfNull(filter);
+            return Option.SomeIf(FindFirstObject<T>(filter, out var obj), obj);
+        }
 
         /// <summary>
         /// Find first object by a filter.
@@ -85,6 +92,7 @@ namespace EncosyTower.Editor
         public static bool FindFirstObject<T>([NotNull] string filter, out T result)
             where T : UnityEngine.Object
         {
+            DebuggingThrowHelper.ThrowIfNull(filter);
             var candidates = AssetDatabase.FindAssets(filter);
 
             if (candidates.Length > 0)
@@ -158,6 +166,7 @@ namespace EncosyTower.Editor
         )
             where T : UnityEngine.Object
         {
+            DebuggingThrowHelper.ThrowIfNull(name);
             var candidates = AssetDatabase.FindAssets($"{name} t:global::{typeof(T).FullName}");
 
             if (candidates.Length > 0)
@@ -187,11 +196,11 @@ namespace EncosyTower.Editor
         /// Find all objects by global qualified type name (i.e. with `global::` prefix).
         /// </summary>
         [ApiForEditor]
-        public static FasterList<T> FindAllObjectsByGlobalQualifiedTypeName<T>()
+        public static List<T> FindAllObjectsByGlobalQualifiedTypeName<T>()
             where T : UnityEngine.Object
         {
             var candidates = AssetDatabase.FindAssets($"t:global::{typeof(T).FullName}");
-            var result = new FasterList<T>(candidates.Length);
+            var result = new List<T>(candidates.Length);
 
             foreach (var candidate in candidates)
             {
@@ -216,6 +225,7 @@ namespace EncosyTower.Editor
         public static void FindAllObjectsByGlobalQualifiedTypeName<T>([NotNull] ICollection<T> result)
             where T : UnityEngine.Object
         {
+            DebuggingThrowHelper.ThrowIfNull(result);
             var candidates = AssetDatabase.FindAssets($"t:global::{typeof(T).FullName}");
             result.TryIncreaseCapacityToFast(candidates.Length);
 
@@ -246,6 +256,9 @@ namespace EncosyTower.Editor
         )
             where T : UnityEngine.ScriptableObject
         {
+            DebuggingThrowHelper.ThrowIfNull(fileName);
+            DebuggingThrowHelper.ThrowIfNull(relativeFolderPath);
+            DebuggingThrowHelper.ThrowIfNull(onCreate);
             var type = typeof(T);
 
             if (type.IsAbstract)
@@ -339,6 +352,8 @@ namespace EncosyTower.Editor
         )
             where T : UnityEngine.ScriptableObject
         {
+            DebuggingThrowHelper.ThrowIfNull(fileName);
+            DebuggingThrowHelper.ThrowIfNull(relativeFolderPath);
             if (asset.IsInvalid())
             {
                 logger?.LogError("Asset must not be null.");
@@ -402,11 +417,7 @@ namespace EncosyTower.Editor
 
                 if (displayErrorDialog)
                 {
-                    EditorUtility.DisplayDialog(
-                          $"Save ScriptableObject To File"
-                        , ex.ToString()
-                        , "I understand"
-                    );
+                    EditorUtility.DisplayDialog($"Save ScriptableObject To File", ex.ToString(), "I understand");
                 }
 
                 return false;

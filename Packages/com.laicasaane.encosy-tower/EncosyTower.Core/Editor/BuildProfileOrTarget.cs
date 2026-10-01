@@ -13,6 +13,8 @@ using UnityEditor.Build;
 using UnityEditor.Build.Profile;
 using UnityEngine;
 
+using static EncosyTower.Debugging.ValidationDefines;
+
 namespace EncosyTower.Editor
 {
     [ApiForEditor]
@@ -140,8 +142,10 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         [HideInCallstack, StackTraceHidden]
-        private static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        public static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
         {
             if (isValid == false)
             {
