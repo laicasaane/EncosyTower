@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && ANNULUS_CODEGEN && ENCOSY_STAT_VALUE_TYPES_GENERATOR
+#if UNITY_EDITOR
 
 using EncosyTower.Core;
 using Unity.Collections.LowLevel.Unsafe;

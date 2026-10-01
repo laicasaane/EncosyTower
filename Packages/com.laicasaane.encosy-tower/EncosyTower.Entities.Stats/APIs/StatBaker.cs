@@ -177,12 +177,13 @@ namespace EncosyTower.Entities.Stats
             where TStatData : unmanaged, IStatData
         {
             if (StatAPI.TrySetStatData<TValuePair, TStat, TStatData>(
-                  handle
-                , statData
-                , produceChangeEvents
-                , userData
-                , ref _statBuffer
-            ))
+                      handle
+                    , statData
+                    , produceChangeEvents
+                    , userData
+                    , ref _statBuffer
+                )
+            )
             {
                 return handle;
             }

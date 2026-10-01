@@ -240,11 +240,7 @@ namespace EncosyTower.Entities.Stats
         /// Assumes the "statBuffer" is on the entity of the statHandle
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool TryGetStat(
-              StatHandle statHandle
-            , ReadOnlySpan<TStat> statBuffer
-            , out TStat stat
-        )
+        public readonly bool TryGetStat(StatHandle statHandle, ReadOnlySpan<TStat> statBuffer, out TStat stat)
         {
             return StatAPI.TryGetStat<TValuePair, TStat>(statHandle, statBuffer, out stat);
         }
@@ -814,13 +810,11 @@ namespace EncosyTower.Entities.Stats
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetModifierBufferLength(Entity entity)
-            => _lookupModifiers.TryGetBuffer(entity, out var modifierBuffer)
-                ? modifierBuffer.Length : 0;
+            => _lookupModifiers.TryGetBuffer(entity, out var modifierBuffer) ? modifierBuffer.Length : 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetObserverBufferLength(Entity entity)
-            => _lookupObservers.TryGetBuffer(entity, out var observerBuffer)
-                ? observerBuffer.Length : 0;
+            => _lookupObservers.TryGetBuffer(entity, out var observerBuffer) ? observerBuffer.Length : 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool TrySetBaseValues(
@@ -1799,7 +1793,7 @@ namespace EncosyTower.Entities.Stats
             modifier.AddObservedStatsToList(tmpModifierObservedStats);
 
             // Validate that every observed stat is reachable.
-            // Otherwise the modifier would be added but never react to its observed stats — fail up front instead.
+            // Otherwise the modifier would be added but never react to its observed stats, fail up front instead.
             for (var k = 0; k < tmpModifierObservedStats.Length; k++)
             {
                 var observedStatHandle = tmpModifierObservedStats[k];
@@ -1895,9 +1889,7 @@ namespace EncosyTower.Entities.Stats
 
                             if (iteratedObserverStatHandle == modifierObservedStatHandle)
                             {
-                                tmpStatObservers.Add(new TStatObserver {
-                                    ObserverHandle = affectedStatHandle,
-                                });
+                                tmpStatObservers.Add(new TStatObserver { ObserverHandle = affectedStatHandle, });
                             }
                         }
 
@@ -1905,10 +1897,11 @@ namespace EncosyTower.Entities.Stats
                         if (isGuaranteedSingleEntity)
                         {
                             if (StatAPI.TryGetStat<TValuePair, TStat>(
-                                  iteratedObserverStatHandle
-                                , statBufferOnAffectedEntity.AsNativeArray()
-                                , out TStat observerStat
-                            ))
+                                      iteratedObserverStatHandle
+                                    , statBufferOnAffectedEntity.AsNativeArray()
+                                    , out TStat observerStat
+                                )
+                            )
                             {
                                 StatAPI.AddObserversOfStatToList(
                                       observerStat.ObserverRange
@@ -2025,11 +2018,7 @@ namespace EncosyTower.Entities.Stats
 
             if (_lookupStats.TryGetBuffer(entity, out var statBuffer)
                 && _lookupModifiers.TryGetBuffer(entity, out var modifierBuffer)
-                && StatAPI.TryGetStat<TValuePair, TStat>(
-                      handle
-                    , statBuffer.AsNativeArray()
-                    , out TStat affectedStat
-                )
+                && StatAPI.TryGetStat<TValuePair, TStat>(handle, statBuffer.AsNativeArray(), out TStat affectedStat)
                 && affectedStat.ModifierRange.count > 0
             )
             {

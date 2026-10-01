@@ -92,11 +92,7 @@ namespace EncosyTower.Entities.Stats
             /// Assumes the "statBuffer" is on the entity of the statHandle
             /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly bool TryGetStat(
-                  StatHandle statHandle
-                , ReadOnlySpan<TStat> statBuffer
-                , out TStat stat
-            )
+            public readonly bool TryGetStat(StatHandle statHandle, ReadOnlySpan<TStat> statBuffer, out TStat stat)
             {
                 return StatAPI.TryGetStat<TValuePair, TStat>(statHandle, statBuffer, out stat);
             }

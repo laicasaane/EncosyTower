@@ -420,11 +420,7 @@ namespace EncosyTower.Entities.Stats
                 ref TStatModifier modifierRef = ref modifierBuffer.ElementAt(i);
 
                 // Modifier is applied by ref, so changes in the modifier struct done during Apply() are saved
-                modifierRef.Apply(
-                      statsReader
-                    , ref modifierStack
-                    , out bool addModifierTriggerEvent
-                );
+                modifierRef.Apply(statsReader, ref modifierStack, out bool addModifierTriggerEvent);
 
                 // Handle modifier trigger events
                 if (addModifierTriggerEvent)
@@ -925,13 +921,7 @@ namespace EncosyTower.Entities.Stats
         {
             if (statHandle.index.IsValidInRange(statBuffer.Length))
             {
-                SetStatValue<TValuePair, TStat>(
-                      statHandle
-                    , valuePair
-                    , produceChangeEvents
-                    , userData
-                    , ref statBuffer
-                );
+                SetStatValue<TValuePair, TStat>(statHandle, valuePair, produceChangeEvents, userData, ref statBuffer);
 
                 return true;
             }
@@ -1251,10 +1241,7 @@ namespace EncosyTower.Entities.Stats
         {
             if (lookupObservers.TryGetBuffer(entity, out var observerBuffer))
             {
-                return EntityHasAnyOtherDependantStatEntities<TStatObserver>(
-                      entity
-                    , observerBuffer.AsNativeArray()
-                );
+                return EntityHasAnyOtherDependantStatEntities<TStatObserver>(entity, observerBuffer.AsNativeArray());
             }
 
             return false;
@@ -1296,11 +1283,7 @@ namespace EncosyTower.Entities.Stats
         {
             if (lookupObservers.TryGetBuffer(entity, out var observerBuffer))
             {
-                GetOtherDependantStatsOfEntity<TStatObserver>(
-                      entity
-                    , observerBuffer.AsNativeArray()
-                    , dependentStats
-                );
+                GetOtherDependantStatsOfEntity<TStatObserver>(entity, observerBuffer.AsNativeArray(), dependentStats);
             }
         }
 

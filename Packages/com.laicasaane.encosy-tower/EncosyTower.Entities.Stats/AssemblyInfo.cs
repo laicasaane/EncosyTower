@@ -1,3 +1,7 @@
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("EncosyTower.Editor")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("EncosyTower.DevTools")]
 [assembly: EncosyTower.Entities.Stats.SkipSourceGeneratorsForAssembly]
+
+#if UNITY_EDITOR
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("EncosyCodeGenIsland")]
+#endif

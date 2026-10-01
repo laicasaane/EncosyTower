@@ -2,7 +2,6 @@
     "name": "EncosyTower.Entities.Stats",
     "rootNamespace": "EncosyTower.Entities.Stats",
     "references": [
-        "AnnulusGames.UnityCodeGen.Editor",
         "Latios.Core",
         "EncosyTower.Core",
         "Unity.Burst",
@@ -14,18 +13,17 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Bcl.Runtime.dll",
+        "Bcl.RuntimeUnsafe.dll",
+        "EncosyTower.LowLevel.Unsafe.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [
         "UNITY_ENTITIES"
     ],
     "versionDefines": [
-        {
-            "name": "com.annulusgames.unity-codegen",
-            "expression": "",
-            "define": "ANNULUS_CODEGEN"
-        },
         {
             "name": "com.latios.latiosframework",
             "expression": "",
