@@ -1,11 +1,6 @@
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using static EncosyTower.Debugging.ValidationDefines;
 
 namespace EncosyTower.Databases
 {
@@ -51,7 +46,7 @@ namespace EncosyTower.Databases
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ref readonly T GetValueByRef()
         {
-            ThrowIfInvalid(IsValid);
+            ThrowHelper.ThrowIfInvalid(IsValid);
             return ref _value[0];
         }
 
@@ -64,7 +59,7 @@ namespace EncosyTower.Databases
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly T GetValue()
         {
-            ThrowIfInvalid(IsValid);
+            ThrowHelper.ThrowIfInvalid(IsValid);
             return _value[0];
         }
 
@@ -106,24 +101,9 @@ namespace EncosyTower.Databases
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int GetHashCode()
         {
-            throw new NotSupportedException(
-                "GetHashCode() on DataAccessorRef will always throw an exception."
-            );
+            throw new NotSupportedException("GetHashCode() on DataAccessorRef will always throw an exception.");
         }
 #pragma warning restore CS0809 // Obsolete member overrides non-obsolete member
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowIfInvalid([DoesNotReturnIf(false)] bool isValid)
-        {
-            if (isValid == false)
-            {
-                throw CreateException();
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static InvalidOperationException CreateException()
-                => new("DataRef is invalid");
-        }
     }
 }

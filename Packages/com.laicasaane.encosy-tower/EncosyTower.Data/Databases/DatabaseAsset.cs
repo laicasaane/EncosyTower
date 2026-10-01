@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 using EncosyTower.Initialization;
-using EncosyTower.Logging;
 using EncosyTower.StringIds;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 
-using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Databases
 {
@@ -75,7 +73,7 @@ namespace EncosyTower.Databases
 
                 if (table.IsInvalid())
                 {
-                    LogErrorAssetIsInvalid(i, this);
+                    ThrowHelper.LogErrorAssetIsInvalid(i, this);
                     continue;
                 }
 
@@ -87,7 +85,13 @@ namespace EncosyTower.Databases
 
                 if (typeToAsset.TryGetValue(type, out var otherAsset))
                 {
-                    LogWarningAmbiguousTypeAtInitialization(i, type, name, otherAsset.name, this);
+                    ThrowHelper.LogWarningAmbiguousTypeAtInitialization(
+                          i
+                        , type
+                        , name
+                        , otherAsset.name
+                        , this
+                    );
                 }
                 else
                 {
@@ -127,11 +131,17 @@ namespace EncosyTower.Databases
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<DataTableAssetBase> GetDataTableAsset([NotNull] string name)
-            => Option.SomeIf(TryGetDataTableAsset(name, out var asset), asset);
+        {
+            DebuggingThrowHelper.ThrowIfNull(name);
+            return Option.SomeIf(TryGetDataTableAsset(name, out var asset), asset);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetDataTableAsset([NotNull] string name, out DataTableAssetBase tableAsset)
-            => TryGetDataTableAsset(GetId(name), out tableAsset);
+        {
+            DebuggingThrowHelper.ThrowIfNull(name);
+            return TryGetDataTableAsset(GetId(name), out tableAsset);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<DataTableAssetBase> GetDataTableAsset(StringId id)
@@ -139,7 +149,7 @@ namespace EncosyTower.Databases
 
         public bool TryGetDataTableAsset(StringId id, out DataTableAssetBase tableAsset)
         {
-            ThrowsDatabaseIsNotInitialized(IsInitialized);
+            ThrowHelper.ThrowsDatabaseIsNotInitialized(IsInitialized);
 
             if (_idToAsset.TryGetValue(id, out var asset))
             {
@@ -148,7 +158,7 @@ namespace EncosyTower.Databases
             }
             else
             {
-                LogErrorCannotFindAsset(id, this);
+                ThrowHelper.LogErrorCannotFindAsset(id, this);
             }
 
             tableAsset = null;
@@ -157,12 +167,17 @@ namespace EncosyTower.Databases
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<DataTableAssetBase> GetDataTableAsset([NotNull] Type type)
-            => Option.SomeIf(TryGetDataTableAsset(type, out var asset), asset);
+        {
+            DebuggingThrowHelper.ThrowIfNull(type);
+            return Option.SomeIf(TryGetDataTableAsset(type, out var asset), asset);
+        }
 
         public bool TryGetDataTableAsset([NotNull] Type type, out DataTableAssetBase tableAsset)
         {
-            ThrowsDatabaseIsNotInitialized(IsInitialized);
-            LogWarningAmbiguousTypeAtGetDataTableAsset(type, _typeToIds, this);
+            DebuggingThrowHelper.ThrowIfNull(type);
+
+            ThrowHelper.ThrowsDatabaseIsNotInitialized(IsInitialized);
+            ThrowHelper.LogWarningAmbiguousTypeAtGetDataTableAsset(type, _typeToIds, this);
 
             if (_typeToAsset.TryGetValue(type, out var asset))
             {
@@ -171,7 +186,7 @@ namespace EncosyTower.Databases
             }
             else
             {
-                LogErrorCannotFindAsset(type, this);
+                ThrowHelper.LogErrorCannotFindAsset(type, this);
             }
 
             tableAsset = null;
@@ -186,11 +201,11 @@ namespace EncosyTower.Databases
         public bool TryGetDataTableAsset<T>(out T tableAsset)
             where T : DataTableAssetBase
         {
-            ThrowsDatabaseIsNotInitialized(IsInitialized);
+            ThrowHelper.ThrowsDatabaseIsNotInitialized(IsInitialized);
 
             var type = typeof(T);
 
-            LogWarningAmbiguousTypeAtGetDataTableAsset(type, _typeToIds, this);
+            ThrowHelper.LogWarningAmbiguousTypeAtGetDataTableAsset(type, _typeToIds, this);
 
             if (_typeToAsset.TryGetValue(type, out var asset))
             {
@@ -201,12 +216,12 @@ namespace EncosyTower.Databases
                 }
                 else
                 {
-                    LogErrorFoundAssetIsNotValidType<T>(asset);
+                    ThrowHelper.LogErrorFoundAssetIsNotValidType<T>(asset);
                 }
             }
             else
             {
-                LogErrorCannotFindAsset(type, this);
+                ThrowHelper.LogErrorCannotFindAsset(type, this);
             }
 
             tableAsset = null;
@@ -216,12 +231,18 @@ namespace EncosyTower.Databases
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<T> GetDataTableAsset<T>([NotNull] string name)
             where T : DataTableAssetBase
-            => Option.SomeIf(TryGetDataTableAsset<T>(name, out var asset), asset);
+        {
+            DebuggingThrowHelper.ThrowIfNull(name);
+            return Option.SomeIf(TryGetDataTableAsset<T>(name, out var asset), asset);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetDataTableAsset<T>([NotNull] string name, out T tableAsset)
             where T : DataTableAssetBase
-            => TryGetDataTableAsset<T>(GetId(name), out tableAsset);
+        {
+            DebuggingThrowHelper.ThrowIfNull(name);
+            return TryGetDataTableAsset<T>(GetId(name), out tableAsset);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<T> GetDataTableAsset<T>(StringId id)
@@ -231,7 +252,7 @@ namespace EncosyTower.Databases
         public bool TryGetDataTableAsset<T>(StringId id, out T tableAsset)
             where T : DataTableAssetBase
         {
-            ThrowsDatabaseIsNotInitialized(IsInitialized);
+            ThrowHelper.ThrowsDatabaseIsNotInitialized(IsInitialized);
 
             if (_idToAsset.TryGetValue(id, out var asset))
             {
@@ -242,12 +263,12 @@ namespace EncosyTower.Databases
                 }
                 else
                 {
-                    LogErrorFoundAssetIsNotValidType<T>(asset);
+                    ThrowHelper.LogErrorFoundAssetIsNotValidType<T>(asset);
                 }
             }
             else
             {
-                LogErrorCannotFindAsset(id, this);
+                ThrowHelper.LogErrorCannotFindAsset(id, this);
             }
 
             tableAsset = null;
@@ -267,99 +288,5 @@ namespace EncosyTower.Databases
             return StringVault.GetOrMakeId(name);
         }
 
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogErrorAssetIsInvalid(int index, DatabaseAsset context)
-        {
-            StaticDevLogger.LogError(context, $"Table asset at index {index} is invalid.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogWarningAmbiguousTypeAtInitialization(
-              int index
-            , Type type
-            , string name
-            , string otherName
-            , DatabaseAsset context
-        )
-        {
-            StaticDevLogger.LogWarning(
-                  context
-                , $"DO NOT use the type '{type}' to get the asset named '{name}' (index {index}) " +
-                  $"because that type has already been registered to the asset named '{otherName}'!\n" +
-                  $"Please use the name '{name}' to get the correct asset!"
-            );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ThrowsDatabaseIsNotInitialized(bool initialized)
-        {
-            if (initialized)
-            {
-                return;
-            }
-
-            throw new InvalidOperationException(
-                $"The database is not yet initialized. " +
-                $"Please call '{nameof(Initialize)}' method once before using."
-            );
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogErrorCannotFindAsset(StringId id, DatabaseAsset context)
-        {
-            var name = context.GetName(id);
-            var info = string.IsNullOrEmpty(name)
-                ? $"id '{id}'"
-                : $"name '{name}'";
-
-            StaticDevLogger.LogError(context, $"Cannot find any table asset by {info}.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogErrorCannotFindAsset(Type type, DatabaseAsset context)
-        {
-            StaticDevLogger.LogError(context, $"Cannot find any table asset by the type '{type}'.");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogErrorFoundAssetIsNotValidType<T>(DataTableAssetBase context)
-        {
-            StaticDevLogger.LogError(context, $"The table asset is not an instance of type '{typeof(T)}'");
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void LogWarningAmbiguousTypeAtGetDataTableAsset(
-              Type type
-            , Dictionary<Type, List<StringId>> typeToIds
-            , DatabaseAsset context
-        )
-        {
-            if (typeToIds.TryGetValue(type, out var ids) == false || ids.Count < 2)
-            {
-                return;
-            }
-
-            var id = ids[0];
-            var name = context.GetName(id);
-            var info =  string.IsNullOrEmpty(name)
-                ? $"by id '{id}'"
-                : $"named '{name}'";
-
-            StaticDevLogger.LogWarning(
-                  context
-                , $"It is unreliable to get a table asset by the type '{type}' " +
-                  $"because it is the type of multiple assets of different names.\n" +
-                  $"The method overload always returns the asset {info} " +
-                  $"because it is the first that was registered.\n" +
-                  $"Please use the overload that takes asset names into account."
-            );
-        }
     }
 }

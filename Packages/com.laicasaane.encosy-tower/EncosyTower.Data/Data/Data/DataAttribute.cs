@@ -43,21 +43,26 @@ namespace EncosyTower.Data
     /// </item>
     /// <item>
     ///     The following collection types can also be used when a property is manually declared:
-    ///     <see cref="System.ReadOnlyMemory{T}"/>,
-    ///     <see cref="System.Memory{T}"/>,
-    ///     <see cref="System.ReadOnlySpan{T}"/>,
-    ///     <see cref="System.Span{T}"/>,
-    ///     <see cref="System.Collections.Generic.IReadOnlyList{T}"/>,
-    ///     <see cref="System.Collections.Generic.IList{T}"/>,
-    ///     <see cref="System.Collections.Generic.ISet{T}"/>,
-    ///     <see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/>,
-    ///     <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>,
-    ///     <see cref="System.Collections.Generic.List{T}"/>,
-    ///     <see cref="System.Collections.Generic.HashSet{T}"/>,
-    ///     <see cref="System.Collections.Generic.Queue{T}"/>,
-    ///     <see cref="System.Collections.Generic.Stack{T}"/>,
-    ///     <see cref="System.Collections.Generic.Dictionary{TKey, TValue}"/>,
-    ///     <see cref="EncosyTower.Collections.ListFast{T}"/>.
+    ///     <list type="bullet">
+    ///         <item><see cref="System.ReadOnlyMemory{T}"/></item>
+    ///         <item><see cref="System.Memory{T}"/></item>
+    ///         <item><see cref="System.ReadOnlySpan{T}"/></item>
+    ///         <item><see cref="System.Span{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.IReadOnlyList{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.IList{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.ISet{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.IReadOnlyDictionary{TKey, TValue}"/></item>
+    ///         <item><see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/></item>
+    ///         <item><see cref="System.Collections.Generic.List{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.HashSet{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.Queue{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.Stack{T}"/></item>
+    ///         <item><see cref="System.Collections.Generic.Dictionary{TKey, TValue}"/></item>
+    ///         <item><see cref="EncosyTower.Collections.ListFast{T}"/></item>
+    ///         <item><see cref="EncosyTower.Collections.ListFast{T}.ReadOnly"/></item>
+    ///         <item><see cref="EncosyTower.Collections.HashSetReadOnly{T}"/></item>
+    ///         <item><see cref="EncosyTower.Collections.DictionaryReadOnly{TKey, TValue}"/></item>
+    ///     </list>
     /// </item>
     /// <item>
     ///     To explicitly specify the type of a generated property for a serializable field,

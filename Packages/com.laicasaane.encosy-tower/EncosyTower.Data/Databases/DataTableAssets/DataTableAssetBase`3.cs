@@ -5,10 +5,10 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Data;
 using EncosyTower.Debugging;
-using EncosyTower.Logging;
 using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
+using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Databases
 {
@@ -51,17 +51,13 @@ namespace EncosyTower.Databases
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DataEntry<TData> GetEntry(TConvertedId id)
         {
-            return IdToIndexMap.TryGetValue(id, out var index)
-                ? DataEntry.GetEntryAt(Entries, index)
-                : default;
+            return IdToIndexMap.TryGetValue(id, out var index) ? DataEntry.GetEntryAt(Entries, index) : default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DataEntryRef<TData> GetEntryByRef(TConvertedId id)
         {
-            return IdToIndexMap.TryGetValue(id, out var index)
-                ? DataEntryRef.GetEntryAt(Entries, index)
-                : default;
+            return IdToIndexMap.TryGetValue(id, out var index) ? DataEntryRef.GetEntryAt(Entries, index) : default;
         }
 
         protected abstract TDataId GetId(in TData entry);
@@ -75,7 +71,7 @@ namespace EncosyTower.Databases
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnInitialize()
         {
-            var entries = GetEntries().AsSpan();
+            var entries = MemoryExtensions.AsSpan(GetEntries());
             var map = IdToIndexMap;
 
             for (var i = 0; i < entries.Length; i++)
@@ -124,18 +120,7 @@ namespace EncosyTower.Databases
                 _entries = new TData[0];
             }
 
-            ErrorCannotCast(obj, this);
-        }
-
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG), Conditional(RUNTIME_CHECKS)]
-        private static void ErrorCannotCast(object obj, UnityEngine.Object context)
-        {
-            StaticDevLogger.LogError(context,
-                obj == null
-                    ? $"Cannot cast null into {typeof(TData[])}"
-                    : $"Cannot cast {obj.GetType()} into {typeof(TData[])}"
-            );
+            ThrowHelper.ErrorCannotCast<TData>(obj, this);
         }
 
         [HideInCallstack, StackTraceHidden]
@@ -147,12 +132,12 @@ namespace EncosyTower.Databases
             , [NotNull] DataTableAssetBase<TDataId, TData, TConvertedId> context
         )
         {
-            StaticDevLogger.LogErrorFormat(
-                  context
-                , "Id \"{0}\" (converted from \"{1}\") is duplicated at row \"{2}\""
-                , context.ToString(convertedId)
+            DebuggingThrowHelper.ThrowIfUnityObjectInvalid(context);
+            ThrowHelper.ErrorDuplicateId(
+                  context.ToString(convertedId)
                 , context.ToString(id)
                 , index
+                , context
             );
         }
 
