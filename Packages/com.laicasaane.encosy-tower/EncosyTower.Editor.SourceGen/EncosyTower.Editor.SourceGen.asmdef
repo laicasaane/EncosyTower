@@ -1,0 +1,15 @@
+{
+    "name": "EncosyTower.Editor.SourceGen",
+    "rootNamespace": "EncosyTower.Editor.SourceGen",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false
+}
