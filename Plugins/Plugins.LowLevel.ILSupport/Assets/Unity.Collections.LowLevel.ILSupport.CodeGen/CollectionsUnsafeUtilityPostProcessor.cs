@@ -76,9 +76,7 @@ internal class CollectionsUnsafeUtilityPostProcessor : ILPostProcessor
 
         if (method == null)
         {
-            throw new InvalidOperationException(
-                $"Could not find method {Constants.CLASS_NAME}.AddressOf<T>(in T)"
-            );
+            throw new InvalidOperationException($"Could not find method {Constants.CLASS_NAME}.AddressOf<T>(in T)");
         }
 
         var il = GetILProcessorForMethod(method);
@@ -102,9 +100,7 @@ internal class CollectionsUnsafeUtilityPostProcessor : ILPostProcessor
 
         if (method == null)
         {
-            throw new InvalidOperationException(
-                $"Could not find method {Constants.CLASS_NAME}.AsRef<T>(in T)"
-            );
+            throw new InvalidOperationException($"Could not find method {Constants.CLASS_NAME}.AsRef<T>(in T)");
         }
 
         var il = GetILProcessorForMethod(method);
@@ -128,9 +124,7 @@ internal class CollectionsUnsafeUtilityPostProcessor : ILPostProcessor
 
         if (method == null)
         {
-            throw new InvalidOperationException(
-                $"Could not find method {Constants.CLASS_NAME}.NullRef<T>()"
-            );
+            throw new InvalidOperationException($"Could not find method {Constants.CLASS_NAME}.NullRef<T>()");
         }
 
         var il = GetILProcessorForMethod(method);
@@ -155,9 +149,7 @@ internal class CollectionsUnsafeUtilityPostProcessor : ILPostProcessor
 
         if (method == null)
         {
-            throw new InvalidOperationException(
-                $"Could not find method {Constants.CLASS_NAME}.IsNullRef<T>(in T)"
-            );
+            throw new InvalidOperationException($"Could not find method {Constants.CLASS_NAME}.IsNullRef<T>(in T)");
         }
 
         var il = GetILProcessorForMethod(method);
@@ -184,9 +176,7 @@ internal class CollectionsUnsafeUtilityPostProcessor : ILPostProcessor
 
         if (method == null)
         {
-            throw new InvalidOperationException(
-                $"Could not find method {Constants.CLASS_NAME}.SkipInit<T>(out T)"
-            );
+            throw new InvalidOperationException($"Could not find method {Constants.CLASS_NAME}.SkipInit<T>(out T)");
         }
 
         var il = GetILProcessorForMethod(method);

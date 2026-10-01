@@ -100,10 +100,7 @@ internal static class DevToolsForToolbar
 
     private static string GetAssemblyPath()
     {
-        return Path.Combine(
-              Application.dataPath
-            , $"../Library/ScriptAssemblies/{Constants.ASSEMBLY_NAME}.dll"
-        );
+        return Path.Combine(Application.dataPath, $"../Library/ScriptAssemblies/{Constants.ASSEMBLY_NAME}.dll");
     }
 
     private static string GetEncosyPackagePluginsPath()
@@ -116,10 +113,7 @@ internal static class DevToolsForToolbar
 
     private static string GetBclRuntimeUnsafePath()
     {
-        return Path.Combine(
-              Application.dataPath
-            , $"../../../Plugins/Bcl.Extensions/Bcl.RuntimeUnsafe"
-        );
+        return Path.Combine(Application.dataPath, $"../../../Plugins/Bcl.Extensions/Bcl.RuntimeUnsafe");
     }
 
     private struct ToolDefintion
@@ -130,13 +124,7 @@ internal static class DevToolsForToolbar
         public string icon;
         public bool themed;
 
-        public ToolDefintion(
-              string name
-            , string tooltip
-            , string menuPath
-            , string icon
-            , bool themed = true
-        )
+        public ToolDefintion(string name, string tooltip, string menuPath, string icon, bool themed = true)
         {
             this.name = name;
             this.tooltip = tooltip;
