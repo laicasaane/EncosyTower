@@ -41,13 +41,20 @@ namespace EncosyTower.Types
         }
 
         [Preserve]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static TypeId Register(Type type)
         {
-            TypeId id = new(Next);
-            s_idToTypeVault.TryAdd(id, type);
-            s_typeToIdVault.TryAdd(type, id);
-            return id;
+            lock (s_lock)
+            {
+                if (s_typeToIdVault.TryGetValue(type, out var existingId))
+                {
+                    return existingId;
+                }
+
+                TypeId id = new(Next);
+                s_idToTypeVault.TryAdd(id, type);
+                s_typeToIdVault.TryAdd(type, id);
+                return id;
+            }
         }
 
         [Preserve]

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Common;
 using EncosyTower.Tasks;
@@ -9,51 +8,58 @@ namespace EncosyTower.Vaults
 
     partial class ObjectVault<TId>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         public async UnityTask WaitUntilContains(TId id, CancellationToken token = default)
         {
+            token.ThrowIfCancellationRequested();
+
             var map = _map;
 
             while (map.ContainsKey(id) == false)
             {
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
-
                 await UnityTask.NextFrameAsync(token);
-
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
+                token.ThrowIfCancellationRequested();
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         public async UnityTask<Option<T>> TryGetAsync<T>(TId id, UnityObject context, CancellationToken token)
         {
-            await WaitUntilContains(id, token);
+            token.ThrowIfCancellationRequested();
 
-            if (token.IsCancellationRequested)
+            var map = _map;
+            object obj;
+
+            while (map.TryGetValue(id, out obj) == false)
             {
-                return Option.None;
+                await UnityTask.NextFrameAsync(token);
+                token.ThrowIfCancellationRequested();
             }
 
-            return TryCast<T>(id, _map[id], context);
+            return TryCast<T>(id, obj, context);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         public async UnityTask<Option<object>> TryGetAsync(TId id, UnityObject context, CancellationToken token)
         {
-            await WaitUntilContains(id, token);
+            token.ThrowIfCancellationRequested();
 
-            if (token.IsCancellationRequested)
+            var map = _map;
+            object obj;
+
+            while (map.TryGetValue(id, out obj) == false)
             {
-                return Option.None;
+                await UnityTask.NextFrameAsync(token);
+                token.ThrowIfCancellationRequested();
             }
 
-            return TryCast(id, _map[id], context);
+            return TryCast(id, obj, context);
         }
     }
 }

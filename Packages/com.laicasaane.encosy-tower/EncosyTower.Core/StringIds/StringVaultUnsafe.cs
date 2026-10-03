@@ -12,6 +12,12 @@ using CollectionsThrowHelper = EncosyTower.Collections.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
+    /// <remarks>
+    /// Counts and lengths are stored inline. Never copy an instance in use: pass it by <c>ref</c>, and do not box it
+    /// as <c>IStringVault</c> or <c>IEnumerable&lt;UnmanagedString&gt;</c>; interning on a copy splits the state and
+    /// can reissue ids. Use <c>StringVaultNative</c> to share one vault. An <c>Enumerator</c> is invalid after any
+    /// <c>GetOrMakeId</c>, <c>Clear</c>, <c>IncreaseCapacity*</c>, or <c>Dispose</c>.
+    /// </remarks>
     public struct StringVaultUnsafe : IStringVault, IReadOnlyList<UnmanagedString>
     {
         internal ArrayMapUnsafe<StringHash, StringId> _map;
@@ -177,6 +183,8 @@ namespace EncosyTower.StringIds
         {
             _map.Clear();
             _collisionMap.Clear();
+            _stringRanges.Clear();
+            _hashes.Clear();
             _stringRangesLength = 0;
             _stringBufferLength = 0;
             _hashesLength = 0;
@@ -185,7 +193,7 @@ namespace EncosyTower.StringIds
             StringHash invalidHash = default(UnmanagedString).GetHashCode64();
             _map.Add(invalidHash, default);
             _collisionMap.Add(default, default);
-            EnsureCapacity();
+            EnsureCapacity(_count);
             _stringRanges[0] = default;
             _hashes[0] = default;
         }
@@ -215,8 +223,7 @@ namespace EncosyTower.StringIds
 
                 var index = _count;
                 id = new Id(index);
-                _count++;
-                EnsureCapacity();
+                EnsureCapacity(index + 1);
 
                 var added = _collisionMap.TryAdd(str, id, out _);
                 ThrowHelper.ThrowIfFailedRegistering(added, str, id);
@@ -225,6 +232,7 @@ namespace EncosyTower.StringIds
                 {
                     _stringRanges[index] = WriteToBuffer(str);
                     _hashes[index] = Option.Some<StringHash>(hash);
+                    _count++;
                 }
 
                 return id;
@@ -233,15 +241,16 @@ namespace EncosyTower.StringIds
             {
                 var index = _count;
                 id = new Id(index);
+                EnsureCapacity(index + 1);
+
                 var added = _map.TryAdd(hash, id, out _);
                 ThrowHelper.ThrowIfFailedRegistering(added, str, id);
 
                 if (added)
                 {
-                    _count++;
-                    EnsureCapacity();
                     _stringRanges[index] = WriteToBuffer(str);
                     _hashes[index] = Option.Some<StringHash>(hash);
+                    _count++;
                 }
             }
 
@@ -357,9 +366,13 @@ namespace EncosyTower.StringIds
         public int IncreaseCapacityTo(int newCapacity)
         {
             _map.IncreaseCapacityTo(newCapacity);
-            return EnsureCapacity();
+            return EnsureCapacity(_count);
         }
 
+        /// <remarks>
+        /// An <c>Enumerator</c> is invalid after any <c>GetOrMakeId</c>, <c>Clear</c>, <c>IncreaseCapacity*</c>,
+        /// or <c>Dispose</c>.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator()
             => new(this);
@@ -372,10 +385,10 @@ namespace EncosyTower.StringIds
         readonly IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
 
-        private int EnsureCapacity()
+        private int EnsureCapacity(int requiredCount)
         {
             var oldCapacity = Math.Min(_hashes.Capacity, _stringRanges.Capacity);
-            var newCapacity = Math.Max(_map.Capacity, _count);
+            var newCapacity = Math.Max(_map.Capacity, requiredCount);
 
             if (newCapacity > 0 && newCapacity > oldCapacity)
             {

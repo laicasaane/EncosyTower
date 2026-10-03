@@ -31,6 +31,10 @@ namespace EncosyTower.Vaults
         public static bool TrySet<T>(Id<T> id, TValue value)
             => s_vaultIdT.TrySet(ToId2(id), value);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryAdd<T>(Id<T> id, TValue value)
+            => s_vaultIdT.TryAdd(ToId2(id), value);
+
         #region    ID2
         #endregion ===
 
@@ -50,6 +54,10 @@ namespace EncosyTower.Vaults
         public static bool TrySet(Id2 id, TValue value)
             => s_vaultId2.TrySet(id, value);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryAdd(Id2 id, TValue value)
+            => s_vaultId2.TryAdd(id, value);
+
         #region    STRINGID<T>
         #endregion ===========
 
@@ -68,6 +76,10 @@ namespace EncosyTower.Vaults
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TrySet<T>(StringId<T> id, TValue value)
             => s_vaultStringId.TrySet(ToMetaStringId(id), value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryAdd<T>(StringId<T> id, TValue value)
+            => s_vaultStringId.TryAdd(ToMetaStringId(id), value);
 
         #region    HELPERS
         #endregion =======
@@ -90,8 +102,6 @@ namespace EncosyTower.Vaults
     using System.Collections.Concurrent;
     using EncosyTower.Collections;
     using EncosyTower.Core;
-    using EncosyTower.Ids;
-    using EncosyTower.Types;
     using UnityEditor;
     using UnityEngine.Scripting;
 
@@ -108,16 +118,14 @@ namespace EncosyTower.Vaults
     [ApiForEditor]
     internal static partial class GlobalValueVaultEditor
     {
-        private readonly static ConcurrentDictionary<Id2, IClearable> s_vaults = new();
+        private static readonly ConcurrentDictionary<IClearable, byte> s_vaults = new();
 
         [InitializeOnEnterPlayMode, Preserve]
-        private static void InitWhenDomainReloadDisabled()
+        internal static void InitWhenDomainReloadDisabled()
         {
-            var vaults = s_vaults;
-
-            foreach (var (_, disposable) in vaults)
+            foreach (var (vault, _) in s_vaults)
             {
-                disposable?.Clear();
+                vault.Clear();
             }
         }
 
@@ -126,10 +134,7 @@ namespace EncosyTower.Vaults
             where TId : unmanaged, IEquatable<TId>
             where TValue : struct
         {
-            var x = (Id<TId>)Type<TId>.Id;
-            var y = (Id<TValue>)Type<TValue>.Id;
-
-            s_vaults.TryAdd(new(x, y), vault);
+            s_vaults.TryAdd(vault, default);
         }
     }
 }

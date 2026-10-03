@@ -14,10 +14,16 @@ namespace EncosyTower.Vaults
         #region    ID<T>
         #endregion =====
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask WaitUntilContains<T>(Id<T> id, CancellationToken token = default)
             => s_vaultIdT.WaitUntilContains(ToId2(id), token);
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask<Option<T>> TryGetAsync<T>(
               Id<T> id
@@ -29,10 +35,16 @@ namespace EncosyTower.Vaults
         #region    ID2
         #endregion ===
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask WaitUntilContains<T>(Id2 id, CancellationToken token = default)
             => s_vaultId2.WaitUntilContains(id, token);
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask<Option<T>> TryGetAsync<T>(
               Id2 id
@@ -41,6 +53,9 @@ namespace EncosyTower.Vaults
         )
             => s_vaultId2.TryGetAsync<T>(id, context, token);
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask<Option<object>> TryGetAsync(
               Id2 id
@@ -52,10 +67,16 @@ namespace EncosyTower.Vaults
         #region    STRINGID<T>
         #endregion ===========
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask WaitUntilContains<T>(StringId<T> id, CancellationToken token = default)
             => s_vaultStringId.WaitUntilContains(ToMetaStringId(id), token);
 
+        /// <exception cref="System.OperationCanceledException">
+        /// Thrown when <paramref name="token"/> is cancelled before or during the wait.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask<Option<T>> TryGetAsync<T>(
               StringId<T> id

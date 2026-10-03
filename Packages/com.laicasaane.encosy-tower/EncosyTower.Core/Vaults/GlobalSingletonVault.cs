@@ -2,14 +2,13 @@ namespace EncosyTower.Vaults
 {
     public static class GlobalSingletonVault
     {
-        private static SingletonVault<object > s_vault = new();
+        private static readonly SingletonVault<object> s_vault = new();
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnEnterPlayMode, UnityEngine.Scripting.Preserve]
         private static void InitWhenDomainReloadDisabled()
         {
-            s_vault?.Dispose();
-            s_vault = new();
+            s_vault.Dispose();
         }
 #endif
 

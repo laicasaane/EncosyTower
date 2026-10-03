@@ -12,6 +12,13 @@ using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.StringIds
 {
+    /// <remarks>
+    /// <c>GetOrMakeId</c> and <c>Clear</c> are serialized by an internal lock: several threads may intern at once,
+    /// and one string always receives one id. Read members take no lock; call them only when no interning,
+    /// <c>Clear</c>, capacity change, or <c>Dispose</c> can run at the same time, in practice from the main thread.
+    /// <c>Clear</c>, <c>IncreaseCapacityBy</c>, <c>IncreaseCapacityTo</c>, and <c>Dispose</c> are lifecycle
+    /// operations for the main thread.
+    /// </remarks>
     public sealed partial class StringVault : IStringVault
         , IReadOnlyList<string>
         , ICopyToSpan<string>, ITryCopyToSpan<string>
@@ -19,6 +26,10 @@ namespace EncosyTower.StringIds
         /// <summary>
         /// The default instance used by <see cref="StringToId"/> and <see cref="IdToString"/>.
         /// </summary>
+        /// <remarks>
+        /// The process-wide vault behind <see cref="StringToId"/> and <see cref="IdToString"/>.
+        /// Never <c>Dispose</c> or <c>Clear</c> it; disposing permanently breaks both.
+        /// </remarks>
         public static StringVault Default => GlobalStringVault.s_vault;
 
         internal SharedArrayMap<StringHash, StringId> _map;
@@ -83,34 +94,40 @@ namespace EncosyTower.StringIds
 
         public bool AllowEmptyString { get; }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         public string this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _managedStrings[index];
         }
 
+        /// <remarks>Lifecycle operation; main thread only.</remarks>
         public void Dispose()
         {
-            if (_map == null)
+            lock (_lock)
             {
-                return;
+                if (_map == null)
+                {
+                    return;
+                }
+
+                _map.Dispose();
+                _collisionMap.Dispose();
+                _unmanagedStringRanges.Dispose();
+                _unmanagedStringBuffer.Dispose();
+                _hashes.Dispose();
+                _count.Dispose();
+
+                _map = null;
+                _collisionMap = null;
+                _unmanagedStringRanges = null;
+                _unmanagedStringBuffer = null;
+                _hashes = null;
+                _count = null;
             }
-
-            _map.Dispose();
-            _collisionMap.Dispose();
-            _unmanagedStringRanges.Dispose();
-            _unmanagedStringBuffer.Dispose();
-            _hashes.Dispose();
-            _count.Dispose();
-
-            _map = null;
-            _collisionMap = null;
-            _unmanagedStringRanges = null;
-            _unmanagedStringBuffer = null;
-            _hashes = null;
-            _count = null;
         }
 
+        /// <remarks>Lifecycle operation; main thread only.</remarks>
         public void Clear()
         {
             lock (_lock)
@@ -168,13 +185,14 @@ namespace EncosyTower.StringIds
                     var index = count;
                     id = new Id(index);
 
-                    count += 1;
-                    EnsureCapacity();
+                    var managed = str.ToString();
+                    EnsureCapacity(index + 1);
 
                     _collisionMap[str] = id;
                     _unmanagedStringRanges[index] = WriteToBuffer(str);
-                    _managedStrings[index] = str.ToString();
+                    _managedStrings.Add(managed);
                     _hashes[index] = Option.Some<StringHash>(hash);
+                    count += 1;
                 }
                 else
                 {
@@ -182,14 +200,15 @@ namespace EncosyTower.StringIds
                     var index = count;
                     id = new Id(index);
 
+                    var managed = str.ToString();
+                    EnsureCapacity(index + 1);
+
                     if (_map.TryAdd(hash, id))
                     {
-                        count += 1;
-                        EnsureCapacity();
-
                         _unmanagedStringRanges[index] = WriteToBuffer(str);
-                        _managedStrings[index] = str.ToString();
+                        _managedStrings.Add(managed);
                         _hashes[index] = Option.Some<StringHash>(hash);
+                        count += 1;
                     }
                     else
                     {
@@ -242,13 +261,13 @@ namespace EncosyTower.StringIds
                     var index = count;
                     id = new Id(index);
 
-                    count += 1;
-                    EnsureCapacity();
+                    EnsureCapacity(index + 1);
 
                     _collisionMap[str] = id;
                     _unmanagedStringRanges[index] = WriteToBuffer(str);
-                    _managedStrings[index] = managedString;
+                    _managedStrings.Add(managedString);
                     _hashes[index] = Option.Some<StringHash>(hash);
+                    count += 1;
                 }
                 else
                 {
@@ -256,13 +275,14 @@ namespace EncosyTower.StringIds
                     var index = count;
                     id = new Id(index);
 
+                    EnsureCapacity(index + 1);
+
                     if (_map.TryAdd(hash, id))
                     {
-                        count += 1;
-                        EnsureCapacity();
                         _unmanagedStringRanges[index] = WriteToBuffer(str);
-                        _managedStrings[index] = managedString;
+                        _managedStrings.Add(managedString);
                         _hashes[index] = Option.Some<StringHash>(hash);
+                        count += 1;
                     }
                     else
                     {
@@ -274,10 +294,12 @@ namespace EncosyTower.StringIds
             }
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<StringId> TryGetId(in UnmanagedString str)
             => Option.SomeIf(TryGetId(str, out var result), result);
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         public bool TryGetId(in UnmanagedString str, out StringId result)
         {
             if (AllowEmptyString == false && str.IsEmpty)
@@ -310,10 +332,12 @@ namespace EncosyTower.StringIds
             return false;
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<StringId> TryGetId(string managedString)
             => Option.SomeIf(TryGetId(managedString, out var result), result);
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         public bool TryGetId(string managedString, out StringId result)
         {
             if (AllowEmptyString == false && managedString.IsEmpty())
@@ -347,10 +371,12 @@ namespace EncosyTower.StringIds
             return false;
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<UnmanagedString> TryGetUnmanagedString(StringId id)
             => Option.SomeIf(TryGetUnmanagedString(id, out var result), result);
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         public bool TryGetUnmanagedString(StringId id, out UnmanagedString result)
         {
             var indexUnsigned = (uint)id.Id;
@@ -374,20 +400,23 @@ namespace EncosyTower.StringIds
             return resultOpt.HasValue;
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Option<string> TryGetManagedString(StringId id)
             => Option.SomeIf(TryGetManagedString(id, out var result), result);
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         public bool TryGetManagedString(StringId id, out string result)
         {
             var indexUnsigned = (uint)id.Id;
             var index = (int)indexUnsigned;
-            var validIndex = indexUnsigned < (uint)_hashes.Count;
+            var validIndex = indexUnsigned < (uint)_managedStrings.Count;
 
             result = validIndex ? _managedStrings[index] : string.Empty;
             return validIndex && _hashes[index].HasValue;
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsId(StringId id)
         {
@@ -397,6 +426,7 @@ namespace EncosyTower.StringIds
             return validIndex && _hashes[index].HasValue;
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReadOnlySpan<string> GetManagedStringSpan()
             => _managedStrings.AsReadOnlySpan()[..Count];
@@ -483,19 +513,29 @@ namespace EncosyTower.StringIds
             }
         }
 
+        /// <remarks>Lifecycle operation; main thread only.</remarks>
         public int IncreaseCapacityBy(int amount)
         {
             ThrowHelper.ThrowIfAmountIsNotValid(amount > 0, amount);
-            return IncreaseCapacityTo(Capacity + amount);
+
+            lock (_lock)
+            {
+                return IncreaseCapacityTo(Capacity + amount);
+            }
         }
 
+        /// <remarks>Lifecycle operation; main thread only.</remarks>
         public int IncreaseCapacityTo(int newCapacity)
         {
-            _map.IncreaseCapacityTo(newCapacity);
-            EnsureCapacity();
-            return _hashes.Capacity;
+            lock (_lock)
+            {
+                _map.IncreaseCapacityTo(newCapacity);
+                EnsureCapacity(_count.ValueRO);
+                return _hashes.Capacity;
+            }
         }
 
+        /// <remarks>Not synchronized with interning; main thread only.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ListFastEnumerator<string> GetEnumerator()
             => _managedStrings.AsListFast().GetEnumerator();
@@ -508,10 +548,10 @@ namespace EncosyTower.StringIds
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
 
-        private void EnsureCapacity()
+        private void EnsureCapacity(int requiredCount)
         {
             var oldCapacity = Math.Min(_hashes.Capacity, _unmanagedStringRanges.Capacity);
-            var newCapacity = Math.Max(_map.Capacity, _count.ValueRO);
+            var newCapacity = Math.Max(_map.Capacity, requiredCount);
 
             if (newCapacity > 0 && newCapacity > oldCapacity)
             {
@@ -522,17 +562,20 @@ namespace EncosyTower.StringIds
 
             if (_hashes.Count < newCapacity)
             {
-                _hashes.AddReplicateNoInit(Math.Max(newCapacity - _hashes.Count, 0));
+                // SAFETY: The returned span is discarded; padded slots are zero-initialized owned storage.
+                unsafe
+                {
+                    _hashes.AddReplicate(newCapacity - _hashes.Count);
+                }
             }
 
             if (_unmanagedStringRanges.Count < newCapacity)
             {
-                _unmanagedStringRanges.AddReplicateNoInit(Math.Max(newCapacity - _unmanagedStringRanges.Count, 0));
-            }
-
-            if (_managedStrings.Count < newCapacity)
-            {
-                _managedStrings.AsListFast().AddReplicateNoInit(Math.Max(newCapacity - _managedStrings.Count, 0));
+                // SAFETY: The returned span is discarded; padded slots are zero-initialized owned storage.
+                unsafe
+                {
+                    _unmanagedStringRanges.AddReplicate(newCapacity - _unmanagedStringRanges.Count);
+                }
             }
 
             var newBufferCapacity = newCapacity * 512;
@@ -548,7 +591,7 @@ namespace EncosyTower.StringIds
             var buffer = _unmanagedStringBuffer;
             var startIndex = buffer.Count;
             var amount = str.Length;
-            var strSpan = buffer.AddReplicateNoInit(amount);
+            var strSpan = buffer.AddReplicate(amount);
             str.AsReadOnlySpan().CopyTo(strSpan);
 
             return new(startIndex, startIndex + amount);

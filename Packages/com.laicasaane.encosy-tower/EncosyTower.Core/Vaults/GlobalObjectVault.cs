@@ -11,22 +11,17 @@ namespace EncosyTower.Vaults
 {
     public static partial class GlobalObjectVault
     {
-        private static ObjectVault<Id2> s_vaultIdT = new();
-        private static ObjectVault<Id2> s_vaultId2 = new();
-        private static ObjectVault<MetaStringId> s_vaultStringId = new();
+        private static readonly ObjectVault<Id2> s_vaultIdT = new();
+        private static readonly ObjectVault<Id2> s_vaultId2 = new();
+        private static readonly ObjectVault<MetaStringId> s_vaultStringId = new();
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnEnterPlayMode, UnityEngine.Scripting.Preserve]
-        private static void InitWhenDomainReloadDisabled()
+        internal static void InitWhenDomainReloadDisabled()
         {
-            s_vaultIdT?.Dispose();
-            s_vaultIdT = new();
-
-            s_vaultId2?.Dispose();
-            s_vaultId2 = new();
-
-            s_vaultStringId?.Dispose();
-            s_vaultStringId = new();
+            s_vaultIdT.Dispose();
+            s_vaultId2.Dispose();
+            s_vaultStringId.Dispose();
         }
 #endif
 
@@ -52,6 +47,11 @@ namespace EncosyTower.Vaults
             => s_vaultIdT.TryRemove(ToId2(id), out obj);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryRemove<T>(Id<T> id, T expected)
+            where T : class
+            => s_vaultIdT.TryRemove(ToId2(id), expected);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryGet<T>(Id<T> id, out Option<T> obj)
             where T : class
             => s_vaultIdT.TryGet<T>(ToId2(id), out obj);
@@ -75,6 +75,11 @@ namespace EncosyTower.Vaults
         public static bool TryRemove<T>(Id2 id, out Option<T> obj)
             where T : class
             => s_vaultId2.TryRemove(id, out obj);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryRemove<T>(Id2 id, T expected)
+            where T : class
+            => s_vaultId2.TryRemove(id, expected);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryGet<T>(Id2 id, out Option<T> obj)
@@ -104,6 +109,11 @@ namespace EncosyTower.Vaults
         public static bool TryRemove<T>(StringId<T> id, out Option<T> obj)
             where T : class
             => s_vaultStringId.TryRemove(ToMetaStringId(id), out obj);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryRemove<T>(StringId<T> id, T expected)
+            where T : class
+            => s_vaultStringId.TryRemove(ToMetaStringId(id), expected);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryGet<T>(StringId<T> id, out Option<T> obj)

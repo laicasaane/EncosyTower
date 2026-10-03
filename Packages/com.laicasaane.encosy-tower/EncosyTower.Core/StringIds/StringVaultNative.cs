@@ -12,6 +12,10 @@ using Unity.Jobs;
 
 namespace EncosyTower.StringIds
 {
+    /// <remarks>
+    /// Copies share one vault, like Unity native containers. After any copy is disposed, every other copy is invalid,
+    /// including <c>IsCreated</c>.
+    /// </remarks>
     [StructLayout(LayoutKind.Sequential)]
     [NativeContainer]
     public partial struct StringVaultNative : IStringVault

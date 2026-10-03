@@ -75,13 +75,16 @@ namespace EncosyTower.Tests.Core.StringIds
         {
             using var vault = new StringVaultNative(4, Allocator.Temp);
             vault.GetOrMakeId((UnmanagedString)"temp");
+            var oldId = vault.GetOrMakeId((UnmanagedString)"temp2");
 
             vault.Clear();
 
             Assert.IsFalse(vault.TryGetId((UnmanagedString)"temp", out _));
+            Assert.IsFalse(vault.ContainsId(oldId));
 
             vault.GetOrMakeId((UnmanagedString)"fresh");
             Assert.IsTrue(vault.TryGetId((UnmanagedString)"fresh", out _));
+            Assert.IsFalse(vault.ContainsId(oldId));
         }
 
         [Test]

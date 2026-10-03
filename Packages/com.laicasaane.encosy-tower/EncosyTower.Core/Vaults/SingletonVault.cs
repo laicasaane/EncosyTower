@@ -26,13 +26,28 @@ namespace EncosyTower.Vaults
         public bool TryAdd<T>()
             where T : class, TBase, new()
         {
-            if (_singletons.ContainsKey(Type<T>.Hash))
+            var hash = Type<T>.Hash;
+
+            if (_singletons.ContainsKey(hash))
             {
                 ThrowHelper.LogErrorInstanceAlreadyExists<T>();
                 return false;
             }
 
-            return _singletons.TryAdd(Type<T>.Hash, new T());
+            var instance = new T();
+
+            if (_singletons.TryAdd(hash, instance))
+            {
+                return true;
+            }
+
+            if (instance is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            ThrowHelper.LogErrorInstanceAlreadyExists<T>();
+            return false;
         }
 
         public bool TryAdd<T>(T instance)
@@ -59,21 +74,28 @@ namespace EncosyTower.Vaults
         public bool TryGetOrAdd<T>(out T instance)
             where T : class, TBase, new()
         {
-            if (_singletons.TryGetValue(Type<T>.Hash, out var obj))
+            var hash = Type<T>.Hash;
+
+            if (_singletons.TryGetValue(hash, out var obj) == false)
             {
-                if (obj is T inst)
+                var created = new T();
+                obj = _singletons.GetOrAdd(hash, created);
+
+                if (ReferenceEquals(obj, created) == false && created is IDisposable disposable)
                 {
-                    instance = inst;
-                    return true;
-                }
-                else
-                {
-                    ThrowHelper.ThrowCannotCastEvenRegistered<T>(obj);
+                    disposable.Dispose();
                 }
             }
 
-            _singletons[Type<T>.Hash] = instance = new();
-            return true;
+            if (obj is T inst)
+            {
+                instance = inst;
+                return true;
+            }
+
+            ThrowHelper.ThrowCannotCastEvenRegistered<T>(obj);
+            instance = default;
+            return false;
         }
 
         public bool TryGet<T>(out T instance)
@@ -100,15 +122,13 @@ namespace EncosyTower.Vaults
         {
             var singletons = _singletons;
 
-            foreach (var (_, obj) in singletons)
+            foreach (var (hash, _) in singletons)
             {
-                if (obj is IDisposable disposable)
+                if (singletons.TryRemove(hash, out var obj) && obj is IDisposable disposable)
                 {
                     disposable.Dispose();
                 }
             }
-
-            singletons.Clear();
         }
 
     }

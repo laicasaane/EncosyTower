@@ -11,6 +11,10 @@ namespace EncosyTower.StringIds
     partial class StringVault
     {
         /// <safety>The returned view must not outlive this vault or survive backing collection resize.</safety>
+        /// <remarks>
+        /// Any growing <c>GetOrMakeId</c>, <c>IncreaseCapacity*</c>, <c>Clear</c>, or <c>Dispose</c> invalidates
+        /// this view; do not intern while a read-only or job view is live.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe ReadOnly AsReadOnly()
         {
@@ -21,6 +25,10 @@ namespace EncosyTower.StringIds
             }
         }
 
+        /// <remarks>
+        /// Any growing <c>GetOrMakeId</c>, <c>IncreaseCapacity*</c>, <c>Clear</c>, or <c>Dispose</c> invalidates
+        /// this view; do not intern while a read-only or job view is live.
+        /// </remarks>
         public readonly partial struct ReadOnly : IReadOnlyStringVault, IReadOnlyList<UnmanagedString>
         {
             internal readonly SharedArrayMapNative<StringHash, StringId>.ReadOnly _map;
@@ -203,7 +211,7 @@ namespace EncosyTower.StringIds
                 // SAFETY: The enumerator borrows two collections owned by the same live vault.
                 unsafe
                 {
-                    return new(_unmanagedStringRanges, _unmanagedStringBuffer);
+                    return new(_unmanagedStringRanges, _unmanagedStringBuffer, Count);
                 }
             }
 

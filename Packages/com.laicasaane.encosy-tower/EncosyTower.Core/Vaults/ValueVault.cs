@@ -34,5 +34,9 @@ namespace EncosyTower.Vaults
             _map[id] = value;
             return true;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryAdd(TId id, TValue value)
+            => _map.TryAdd(id, value);
     }
 }

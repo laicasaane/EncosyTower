@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
@@ -31,16 +32,7 @@ namespace EncosyTower.Vaults
             where T : class
         {
             DebuggingThrowHelper.ThrowIfNullOrUnityObjectInvalid(obj);
-
-            var map = _map;
-
-            if (map.ContainsKey(id))
-            {
-                return false;
-            }
-
-            map[id] = obj;
-            return true;
+            return _map.TryAdd(id, obj);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,6 +47,17 @@ namespace EncosyTower.Vaults
 
             obj = Option.None;
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryRemove<T>(TId id, T expected)
+            where T : class
+        {
+            var map = _map;
+
+            return map.TryGetValue(id, out var current)
+                && ReferenceEquals(current, expected)
+                && ((ICollection<KeyValuePair<TId, object>>)map).Remove(new(id, current));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,6 +113,7 @@ namespace EncosyTower.Vaults
             if (unityObj == false)
             {
                 ThrowHelper.LogErrorRegisteredObjectIsNull(id, context);
+                return Option.None;
             }
 
         FAILED:
