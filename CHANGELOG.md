@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.2
+
+### Core
+
+- Changed `[PolyEnumFactoryFor]` documentation to describe the supported wrapper constructors and storage
+- Changed `[WrapType]` and `[WrapRecord]` documentation to describe how mutable struct values are forwarded
+
+### SourceGen
+
+- Added errors for types that another source generator creates, because generators cannot see them: `SG_ENUM_EXT_FOR_0002`, `SG_ENUM_TEMPLATE_0006`, `SG_TYPE_WRAP_0008`, `SG_UNION_ID_0006`, `SG_VARIANT_0001`, `SG_DATA_0005`, `SG_DATA_TABLE_ASSET_0002`, `SG_AUTHOR_DATABASE_0110`, `SG_LOOKUPS_0007`, `SG_TYPE_HANDLES_0008`, `SG_STAT_DATA_0005`, and `SG_PERSISTENCE_0005`
+- Added support for positional record wrappers in `[PolyEnumFactoryFor]`
+- Added `[PolyEnumFactoryFor]` wrapper checks: the record parameter position (`SG_POLY_ENUM_FACTORY_0007`), the constructor (`SG_POLY_ENUM_FACTORY_0008`), and the storage member (`SG_POLY_ENUM_FACTORY_0009`)
+- Added `SG_TYPE_WRAP_0007` for wrapped types that are not named types, such as arrays, `dynamic`, or type parameters
+- Added `[StatCollection]` and `[StatData]` checks: `[StatData]` outside the `[StatCollection]` part (`SG_STAT_COLLECTION_0005`), undeclared `StatVariantType` arguments (`SG_STAT_DATA_0006`), and record or readonly structs (`SG_STAT_COLLECTION_0006`, `SG_STAT_DATA_0007`)
+- Changed generators to skip only the affected target when a type is unavailable, instead of the whole output
+- Changed `[WrapType]` and `[WrapRecord]` to omit forwarded setters when a mutable struct value is stored in a readonly field or record property
+- Fixed enum extensions, enum templates, poly enum structs, and union IDs declared in the global namespace to generate extension methods instead of plain static methods
+- Fixed union IDs and stat collections nested in other types, including private nested types
+- Fixed runtime type cache calls inside records
+- Fixed explicit and merged poly enum struct layouts when case storage is declared outside fields
+- Fixed poly enum struct record parameters written with arrays, nullable types, tuples, or qualified generic names
+- Fixed equatable array hash codes ignoring their items
+- Rebuilt all source generators for `0.1.8-preview.2`
+
+### Tests
+
+- Added SourceGen tests for generated types, global-namespace and nested declarations, record wrappers, and the new diagnostics
+
+### Samples
+
+- Updated sample paths for `0.1.8-preview.2`
+
+### Versioning
+
+- `EncosyTower.SourceGen.*` to `0.1.8-preview.2`
+- Package and sample references to `0.1.8-preview.2`
+
 ## 0.1.8-preview.1
 
 ### General
