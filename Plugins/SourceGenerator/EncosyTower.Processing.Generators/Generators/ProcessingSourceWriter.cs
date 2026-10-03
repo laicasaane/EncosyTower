@@ -3,6 +3,8 @@ namespace EncosyTower.Processing.Generators
     internal static class ProcessingSourceWriter
     {
         private const string AGGRESSIVE_INLINING = "[g__SR.MethodImpl(g__SR.MethodImplOptions.AggressiveInlining)]";
+        private const string GENERATED_CODE = "[" + ProcessingAliasSet.CODE_DOM_COMPILER + ".GeneratedCode(\""
+            + ProcessingSourceGenContract.GENERATOR_METADATA_NAME + "\", \"" + SourceGenVersion.VALUE + "\")]";
 
         public static SourceText WriteRequest(in ProcessingRequestSpec spec, CancellationToken token)
         {
@@ -99,6 +101,7 @@ namespace EncosyTower.Processing.Generators
         {
             var fullTypeName = spec.Declaration.FullTypeName;
             var isReferenceType = spec.Declaration.IsReferenceType;
+            printer.PrintLine(GENERATED_CODE);
             printer.PrintBeginLine("public readonly partial struct Async : g__ETP.IAsyncRequest")
                 .PrintIf(spec.HasResult, "<", string.Empty)
                 .PrintIf(spec.HasResult, spec.ResultTypeName, string.Empty)

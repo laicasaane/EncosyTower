@@ -23,12 +23,16 @@
 
         public readonly bool Equals(EventSpec other)
             => string.Equals(name, other.name, StringComparison.Ordinal)
-            && string.Equals(typeName, other.typeName, StringComparison.Ordinal);
+            && string.Equals(typeName, other.typeName, StringComparison.Ordinal)
+            && explicitInterfaceImplementationsLength == other.explicitInterfaceImplementationsLength
+            && isPublic == other.isPublic
+            && isStatic == other.isStatic
+            ;
 
         public readonly override bool Equals(object obj)
             => obj is EventSpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(name, typeName);
+            => HashValue.Combine(name, typeName, explicitInterfaceImplementationsLength, isPublic, isStatic);
     }
 }

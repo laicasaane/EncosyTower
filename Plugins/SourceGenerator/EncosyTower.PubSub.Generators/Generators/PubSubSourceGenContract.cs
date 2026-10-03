@@ -10,6 +10,7 @@ namespace EncosyTower.PubSub.Generators
         public const string GLOBAL_SCOPE = "EncosyTower.Common.GlobalScope";
         public const string SKIP_ATTRIBUTE = "global::" + NAMESPACE + ".SkipSourceGeneratorsForAssemblyAttribute";
         public const string UNITY_OBJECT = "UnityEngine.Object";
+        public const string WRAP_TYPE_ATTRIBUTE = "global::EncosyTower.TypeWraps.WrapTypeAttribute";
         public const string GENERATOR_METADATA_NAME =
             "EncosyTower.PubSub.Generators.PubSubMessageGenerator";
         public const string MESSAGE_ROLE = "PubSubMessage";

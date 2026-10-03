@@ -12,6 +12,7 @@ namespace EncosyTower.PubSub.Generators
         public readonly bool WithStateful;
         public readonly bool IsGlobalScope;
         public readonly bool IsUnityScope;
+        public readonly string Discriminator;
 
         public PubSubScopeSpec(
               PubSubTypeDeclarationSpec declaration
@@ -24,6 +25,7 @@ namespace EncosyTower.PubSub.Generators
             , bool withStateful
             , bool isGlobalScope
             , bool isUnityScope
+            , string discriminator = null
         )
         {
             Declaration = declaration;
@@ -36,6 +38,7 @@ namespace EncosyTower.PubSub.Generators
             WithStateful = withStateful;
             IsGlobalScope = isGlobalScope;
             IsUnityScope = isUnityScope;
+            Discriminator = discriminator;
         }
 
         public bool IsValid => Declaration.IsValid && string.IsNullOrEmpty(ScopeTypeName) == false;
@@ -49,7 +52,6 @@ namespace EncosyTower.PubSub.Generators
         public readonly bool Equals(PubSubScopeSpec other)
             => Declaration.Equals(other.Declaration)
             && string.Equals(ScopeTypeName, other.ScopeTypeName, StringComparison.Ordinal)
-            && string.Equals(HintName, other.HintName, StringComparison.Ordinal)
             && CanPublishParameterless == other.CanPublishParameterless
             && WithSync == other.WithSync
             && WithAsync == other.WithAsync
@@ -57,6 +59,7 @@ namespace EncosyTower.PubSub.Generators
             && WithStateful == other.WithStateful
             && IsGlobalScope == other.IsGlobalScope
             && IsUnityScope == other.IsUnityScope
+            && string.Equals(Discriminator, other.Discriminator, StringComparison.Ordinal)
             ;
 
         public readonly override bool Equals(object obj)
@@ -67,7 +70,6 @@ namespace EncosyTower.PubSub.Generators
             var hash = new HashValue();
             hash = hash.Add(Declaration);
             hash = hash.Add(ScopeTypeName);
-            hash = hash.Add(HintName);
             hash = hash.Add(CanPublishParameterless);
             hash = hash.Add(WithSync);
             hash = hash.Add(WithAsync);
@@ -75,6 +77,7 @@ namespace EncosyTower.PubSub.Generators
             hash = hash.Add(WithStateful);
             hash = hash.Add(IsGlobalScope);
             hash = hash.Add(IsUnityScope);
+            hash = hash.Add(Discriminator);
             return hash.ToHashCode();
         }
     }

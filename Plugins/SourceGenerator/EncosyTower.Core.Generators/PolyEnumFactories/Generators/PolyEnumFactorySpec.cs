@@ -8,6 +8,7 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
         public string wrapperTypeName;
         public string wrapperSelfName;
         public string wrapperConstraints;
+        public string wrapperConstraintIdentity;
         public string wrapperTypeNamespace;
         public string wrapperKindKeyword;
         public string wrapperPreModifiers;
@@ -20,6 +21,7 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
         public string hintName;
         public string openingSource;
         public string closingSource;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
         public FactoryOutputScopeSpec wrapperOutputScope;
         public EquatableArray<CaseSpec> cases;
         public int enumStructSize;
@@ -42,6 +44,7 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             => string.Equals(wrapperTypeName, other.wrapperTypeName, StringComparison.Ordinal)
             && string.Equals(wrapperSelfName, other.wrapperSelfName, StringComparison.Ordinal)
             && string.Equals(wrapperConstraints, other.wrapperConstraints, StringComparison.Ordinal)
+            && string.Equals(wrapperConstraintIdentity, other.wrapperConstraintIdentity, StringComparison.Ordinal)
             && string.Equals(wrapperTypeNamespace, other.wrapperTypeNamespace, StringComparison.Ordinal)
             && string.Equals(wrapperKindKeyword, other.wrapperKindKeyword, StringComparison.Ordinal)
             && string.Equals(wrapperPreModifiers, other.wrapperPreModifiers, StringComparison.Ordinal)
@@ -51,9 +54,7 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             && string.Equals(enumCaseTypeName, other.enumCaseTypeName, StringComparison.Ordinal)
             && string.Equals(supportTypeName, other.supportTypeName, StringComparison.Ordinal)
             && string.Equals(fieldName, other.fieldName, StringComparison.Ordinal)
-            && string.Equals(hintName, other.hintName, StringComparison.Ordinal)
-            && string.Equals(openingSource, other.openingSource, StringComparison.Ordinal)
-            && string.Equals(closingSource, other.closingSource, StringComparison.Ordinal)
+            && containingTypes.Equals(other.containingTypes)
             && wrapperOutputScope.Equals(other.wrapperOutputScope)
             && cases.Equals(other.cases)
             && enumStructSize == other.enumStructSize
@@ -72,31 +73,30 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(wrapperTypeName);
-            hash.Add(wrapperSelfName);
-            hash.Add(wrapperConstraints);
-            hash.Add(wrapperTypeNamespace);
-            hash.Add(wrapperKindKeyword);
-            hash.Add(wrapperPreModifiers);
-            hash.Add(wrapperAccessibility);
-            hash.Add(enumStructTypeName);
-            hash.Add(enumStructNamespace);
-            hash.Add(enumCaseTypeName);
-            hash.Add(supportTypeName);
-            hash.Add(fieldName);
-            hash.Add(hintName);
-            hash.Add(openingSource);
-            hash.Add(closingSource);
-            hash.Add(wrapperOutputScope);
-            hash.Add(cases);
-            hash.Add(enumStructSize);
-            hash.Add(enumStructIsReadOnly);
-            hash.Add(emitBackingField);
-            hash.Add(emitExplicitUndefinedMethod);
-            hash.Add(parentIsNamespace);
-            hash.Add(isStruct);
-            hash.Add(separateTypeContainer);
-            hash.Add(typeContainer);
+            hash = hash.Add(wrapperTypeName);
+            hash = hash.Add(wrapperSelfName);
+            hash = hash.Add(wrapperConstraints);
+            hash = hash.Add(wrapperConstraintIdentity);
+            hash = hash.Add(wrapperTypeNamespace);
+            hash = hash.Add(wrapperKindKeyword);
+            hash = hash.Add(wrapperPreModifiers);
+            hash = hash.Add(wrapperAccessibility);
+            hash = hash.Add(enumStructTypeName);
+            hash = hash.Add(enumStructNamespace);
+            hash = hash.Add(enumCaseTypeName);
+            hash = hash.Add(supportTypeName);
+            hash = hash.Add(fieldName);
+            hash = hash.Add(containingTypes);
+            hash = hash.Add(wrapperOutputScope);
+            hash = hash.Add(cases);
+            hash = hash.Add(enumStructSize);
+            hash = hash.Add(enumStructIsReadOnly);
+            hash = hash.Add(emitBackingField);
+            hash = hash.Add(emitExplicitUndefinedMethod);
+            hash = hash.Add(parentIsNamespace);
+            hash = hash.Add(isStruct);
+            hash = hash.Add(separateTypeContainer);
+            hash = hash.Add(typeContainer);
             return hash.ToHashCode();
         }
 
@@ -144,16 +144,16 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             public readonly override int GetHashCode()
             {
                 var hash = new HashValue();
-                hash.Add(name);
-                hash.Add(identifier);
-                hash.Add(qualifiedName);
-                hash.Add(ctors);
-                hash.Add(initMembers);
-                hash.Add(strategy);
-                hash.Add(size);
-                hash.Add(isUndefined);
-                hash.Add(isReadOnly);
-                hash.Add(emitMemberInitOverload);
+                hash = hash.Add(name);
+                hash = hash.Add(identifier);
+                hash = hash.Add(qualifiedName);
+                hash = hash.Add(ctors);
+                hash = hash.Add(initMembers);
+                hash = hash.Add(strategy);
+                hash = hash.Add(size);
+                hash = hash.Add(isUndefined);
+                hash = hash.Add(isReadOnly);
+                hash = hash.Add(emitMemberInitOverload);
                 return hash.ToHashCode();
             }
         }
@@ -174,8 +174,8 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             public readonly override int GetHashCode()
             {
                 var hash = new HashValue();
-                hash.Add(parameters);
-                hash.Add(isParameterless);
+                hash = hash.Add(parameters);
+                hash = hash.Add(isParameterless);
                 return hash.ToHashCode();
             }
         }
@@ -204,12 +204,12 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             public readonly override int GetHashCode()
             {
                 var hash = new HashValue();
-                hash.Add(name);
-                hash.Add(typeFullyQualifiedName);
-                hash.Add(defaultValueLiteral);
-                hash.Add(refKind);
-                hash.Add(isParams);
-                hash.Add(hasExplicitDefaultValue);
+                hash = hash.Add(name);
+                hash = hash.Add(typeFullyQualifiedName);
+                hash = hash.Add(defaultValueLiteral);
+                hash = hash.Add(refKind);
+                hash = hash.Add(isParams);
+                hash = hash.Add(hasExplicitDefaultValue);
                 return hash.ToHashCode();
             }
         }
@@ -234,10 +234,10 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             public readonly override int GetHashCode()
             {
                 var hash = new HashValue();
-                hash.Add(name);
-                hash.Add(parameterName);
-                hash.Add(typeFullyQualifiedName);
-                hash.Add(isProperty);
+                hash = hash.Add(name);
+                hash = hash.Add(parameterName);
+                hash = hash.Add(typeFullyQualifiedName);
+                hash = hash.Add(isProperty);
                 return hash.ToHashCode();
             }
         }

@@ -134,6 +134,31 @@ namespace EncosyTower.SourceGen.Helpers.Variants
             , bool useTypeConstants = false
         )
         {
+            WriteVariantBody(
+                  p: ref p
+                , isValueType: isValueType
+                , hasImplicitFromStructToType: hasImplicitFromStructToType
+                , typeName: typeName
+                , structName: structName
+                , variantName: variantName
+                , generatedCode: null
+                , useMvvmThrowHelper: useMvvmThrowHelper
+                , useTypeConstants: useTypeConstants
+            );
+        }
+
+        public void WriteVariantBody(
+              ref Printer p
+            , bool isValueType
+            , bool hasImplicitFromStructToType
+            , string typeName
+            , string structName
+            , string variantName
+            , string generatedCode
+            , bool useMvvmThrowHelper = false
+            , bool useTypeConstants = false
+        )
+        {
             var writer = useTypeConstants ? new VariantPrinter(true) : this;
             p.OpenScope();
             {
@@ -182,7 +207,15 @@ namespace EncosyTower.SourceGen.Helpers.Variants
                     );
                 }
 
-                writer.WriteConverterClass(ref p, typeName, structName, variantName, isValueType, useMvvmThrowHelper);
+                writer.WriteConverterClass(
+                      ref p
+                    , typeName
+                    , structName
+                    , variantName
+                    , generatedCode
+                    , isValueType
+                    , useMvvmThrowHelper
+                );
             }
             p.CloseScope();
         }
@@ -520,11 +553,13 @@ namespace EncosyTower.SourceGen.Helpers.Variants
             , string typeName
             , string structName
             , string variantName
+            , string generatedCode
             , bool isValueType
             , bool useMvvmThrowHelper
         )
         {
             p.PrintLine(PRESERVE);
+            p.PrintLineIf(string.IsNullOrEmpty(generatedCode) == false, generatedCode);
             p.PrintBeginLine()
                 .Print(PUBLIC_SEALED_CLASS_CONVERTER)
                 .Print(string.Format(FormatProvider, FORMAT_G_ETVC_IVARIANT_CONVERTER_0, typeName))

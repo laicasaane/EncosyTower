@@ -13,6 +13,7 @@ namespace EncosyTower.Processing.Generators
         public readonly bool WithStateful;
         public readonly bool IsGlobalScope;
         public readonly bool IsUnityScope;
+        public readonly string Discriminator;
 
         public ProcessingScopeSpec(
               ProcessingTypeDeclarationSpec declaration
@@ -26,6 +27,7 @@ namespace EncosyTower.Processing.Generators
             , bool withStateful
             , bool isGlobalScope
             , bool isUnityScope
+            , string discriminator = null
         )
         {
             Declaration = declaration;
@@ -39,6 +41,7 @@ namespace EncosyTower.Processing.Generators
             WithStateful = withStateful;
             IsGlobalScope = isGlobalScope;
             IsUnityScope = isUnityScope;
+            Discriminator = discriminator;
         }
 
         public bool IsValid => Declaration.IsValid && string.IsNullOrEmpty(ScopeTypeName) == false;
@@ -53,7 +56,6 @@ namespace EncosyTower.Processing.Generators
             => Declaration.Equals(other.Declaration)
             && string.Equals(ResultTypeName, other.ResultTypeName, StringComparison.Ordinal)
             && string.Equals(ScopeTypeName, other.ScopeTypeName, StringComparison.Ordinal)
-            && string.Equals(HintName, other.HintName, StringComparison.Ordinal)
             && HasResult == other.HasResult
             && WithSync == other.WithSync
             && WithAsync == other.WithAsync
@@ -61,6 +63,7 @@ namespace EncosyTower.Processing.Generators
             && WithStateful == other.WithStateful
             && IsGlobalScope == other.IsGlobalScope
             && IsUnityScope == other.IsUnityScope
+            && string.Equals(Discriminator, other.Discriminator, StringComparison.Ordinal)
             ;
 
         public readonly override bool Equals(object obj)
@@ -72,7 +75,6 @@ namespace EncosyTower.Processing.Generators
             hash = hash.Add(Declaration);
             hash = hash.Add(ResultTypeName);
             hash = hash.Add(ScopeTypeName);
-            hash = hash.Add(HintName);
             hash = hash.Add(HasResult);
             hash = hash.Add(WithSync);
             hash = hash.Add(WithAsync);
@@ -80,6 +82,7 @@ namespace EncosyTower.Processing.Generators
             hash = hash.Add(WithStateful);
             hash = hash.Add(IsGlobalScope);
             hash = hash.Add(IsUnityScope);
+            hash = hash.Add(Discriminator);
             return hash.ToHashCode();
         }
     }

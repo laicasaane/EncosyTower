@@ -365,4 +365,431 @@ public class PolyEnumFactoryGeneratorTests
             }
             , additionalGenerators: new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
         );
+
+    [DataTestMethod]
+    [DataRow(
+          """
+          [PolyEnumStruct]
+          public partial struct Result<T>
+              where T : IMarker
+          {
+              public partial record struct Ok(T Value);
+          }
+
+          [PolyEnumFactoryFor(typeof(Result<>))]
+          public readonly partial struct ResultFactory<T>
+              where T : IMarker
+          {
+          }
+          """
+    )]
+    [DataRow(
+          """
+          [PolyEnumStruct]
+          public partial struct Choice
+          {
+              public partial struct A { }
+          }
+
+          public partial class Outer<T>
+              where T : IMarker
+          {
+              [PolyEnumFactoryFor(typeof(Choice))]
+              public readonly partial struct ChoiceFactory { }
+          }
+          """
+    )]
+    public Task SeparateContainer_ImportedConstraint_CompilesFullyQualified(string declarations)
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumFactoryGenerator>(
+              $$"""
+              using EncosyTower.PolyEnumStructs;
+              using Markers;
+
+              namespace Markers
+              {
+                  public interface IMarker { }
+              }
+
+              namespace TestProject
+              {
+              {{declarations}}
+              }
+              """
+            , expectedSourceCount: 2
+            , expectedFragments: new[] { "where T : global::Markers.IMarker" }
+            , unexpectedFragments: new[] { " : IMarker" }
+            , additionalGenerators: new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
+        );
+
+    [TestMethod]
+    public Task RecordWrapper_EnumStructParameter_StoresValueInParameter()
+        => VerifyWrapperAsync(
+              "[PolyEnumFactoryFor(typeof(Choice))]\n"
+                + "public readonly partial record struct ChoiceFactory(Choice Value);"
+            , nameof(RecordWrapper_EnumStructParameter_StoresValueInParameter)
+            , CHOICE_FACTORY_HINT
+        );
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct ChoiceFactory(TestProject.Choice Value);")]
+    [DataRow("public readonly partial record struct ChoiceFactory(global::TestProject.Choice Value);")]
+    [DataRow(
+          "public readonly partial record struct ChoiceFactory;\n\n"
+            + "public readonly partial record struct ChoiceFactory(Choice Value);"
+    )]
+    public Task RecordWrapper_EnumStructParameterSpellings_ProduceSameFactory(string wrapper)
+        => VerifyWrapperAsync(
+              "[PolyEnumFactoryFor(typeof(Choice))]\n" + wrapper
+            , nameof(RecordWrapper_EnumStructParameter_StoresValueInParameter)
+            , CHOICE_FACTORY_HINT
+        );
+
+    [TestMethod]
+    public Task RecordWrapper_ClosedGenericParameter_StoresValueInParameter()
+        => VerifyWrapperAsync(
+              "[PolyEnumFactoryFor(typeof(Result<int>))]\n"
+                + "public readonly partial record struct ResultFactory(Result<int> Value);"
+            , nameof(RecordWrapper_ClosedGenericParameter_StoresValueInParameter)
+            , "ResultFactory.PolyEnumFactory.2abf286cb371986d.g.cs"
+        );
+
+    [TestMethod]
+    public Task RecordWrapper_OpenGenericParameter_StoresValueInParameter()
+        => VerifyWrapperAsync(
+              "[PolyEnumFactoryFor(typeof(Result<>))]\n"
+                + "public readonly partial record struct ResultFactory<T>(Result<T> Value);"
+            , nameof(RecordWrapper_OpenGenericParameter_StoresValueInParameter)
+            , "ResultFactory_1.PolyEnumFactory.43216dfeaab827a6.g.cs"
+            , "ResultFactory_1.PolyEnumFactoryContainer.72e2429a07d5eb5d.g.cs"
+        );
+
+    [TestMethod]
+    public Task ClassWrapper_AutoPropertySetByConstructor_StoresValueInProperty()
+        => VerifyWrapperAsync(
+              """
+              [PolyEnumFactoryFor(typeof(Choice))]
+              public partial class ChoiceFactory
+              {
+                  public Choice Value { get; }
+
+                  public ChoiceFactory(Choice value)
+                  {
+                      Value = value;
+                  }
+              }
+              """
+            , nameof(ClassWrapper_AutoPropertySetByConstructor_StoresValueInProperty)
+            , CHOICE_FACTORY_HINT
+        );
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct ChoiceFactory(int Id, Choice Value);")]
+    [DataRow("public partial record class ChoiceFactory(int Id, Choice Value);")]
+    public Task RecordWrapper_EnumStructNotFirstParameter_ProducesNoFactoryOutput(string wrapper)
+        => GeneratorTestHelper.VerifyNoOutputAsync<PolyEnumFactoryGenerator>(ChoiceWrapperSource(wrapper));
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct ChoiceFactory(int Id);")]
+    [DataRow("public readonly partial record struct ChoiceFactory();")]
+    [DataRow("public partial record class ChoiceFactory(int Id);")]
+    [DataRow("public readonly partial record struct ChoiceFactory(Choice First, Choice Second);")]
+    [DataRow(
+          """
+          public readonly partial struct ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(int id, Choice value)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(Choice value, int id)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    public Task Wrapper_ConstructorBlocksFactory_ProducesNoFactoryOutput(string wrapper)
+        => GeneratorTestHelper.VerifyNoOutputAsync<PolyEnumFactoryGenerator>(ChoiceWrapperSource(wrapper));
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct ChoiceFactory;")]
+    [DataRow("public readonly partial record struct ChoiceFactory(Choice Value, int Id = 0);")]
+    [DataRow(
+          """
+          public readonly partial record struct ChoiceFactory(Choice First, Choice Second)
+          {
+              public ChoiceFactory(Choice value) : this(value, default)
+              {
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial record class ChoiceFactory(int Id)
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(Choice value) : this(0)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public readonly partial struct ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(Choice value)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public readonly partial struct ChoiceFactory
+          {
+              public ChoiceFactory(int id) : this()
+              {
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(int id, Choice value)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(in Choice value)
+              {
+                  _value = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(Choice value, int id)
+              {
+                  _value = value;
+              }
+
+              public ChoiceFactory(object value)
+              {
+                  _value = (Choice)value;
+              }
+          }
+          """
+    )]
+    public Task Wrapper_SupportedConstructorShape_GeneratesCompilingFactory(string wrapper)
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumFactoryGenerator>(
+              ChoiceWrapperSource(wrapper)
+            , expectedSourceCount: 1
+            , expectedFragments: new[] { "public static ChoiceFactory A()" }
+            , unexpectedFragments: Array.Empty<string>()
+            , additionalGenerators: new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
+        );
+
+    [DataTestMethod]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly object _boxed;
+
+              public ChoiceFactory(Choice value)
+              {
+                  _boxed = value;
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public readonly partial struct ChoiceFactory
+          {
+              public static Choice Default { get; }
+
+              public ChoiceFactory(Choice value)
+              {
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              public Choice Value => default;
+
+              public ChoiceFactory(in Choice value)
+              {
+              }
+          }
+          """
+    )]
+    [DataRow(
+          """
+          public partial record class ChoiceFactory(int Id)
+          {
+              public ChoiceFactory(Choice value) : this(0)
+              {
+              }
+          }
+          """
+    )]
+    public Task Wrapper_EnumStructNotStored_ProducesNoFactoryOutput(string wrapper)
+        => GeneratorTestHelper.VerifyNoOutputAsync<PolyEnumFactoryGenerator>(ChoiceWrapperSource(wrapper));
+
+    [DataTestMethod]
+    [DataRow(
+          """
+          public partial class ChoiceFactory
+          {
+              private readonly Choice _value;
+
+              public ChoiceFactory(Choice value)
+              {
+                  _value = value;
+              }
+          }
+          """
+        , "return this._value.GetEnumCase()"
+    )]
+    [DataRow(
+          """
+          public readonly partial struct ChoiceFactory
+          {
+              public Choice Value { get; }
+
+              public ChoiceFactory(Choice value)
+              {
+                  Value = value;
+              }
+          }
+          """
+        , "return this.Value.GetEnumCase()"
+    )]
+    [DataRow("public partial class ChoiceFactory { }", "return this._enumStruct_Choice.GetEnumCase()")]
+    [DataRow("public partial record class ChoiceFactory(Choice Value);", "return this.Value.GetEnumCase()")]
+    public Task Wrapper_EnumStructStorage_GeneratesFactoryReadingStorage(string wrapper, string storageRead)
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumFactoryGenerator>(
+              ChoiceWrapperSource(wrapper)
+            , expectedSourceCount: 1
+            , expectedFragments: new[] { "public static ChoiceFactory A()", storageRead }
+            , unexpectedFragments: Array.Empty<string>()
+            , additionalGenerators: new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
+        );
+
+    private static string ChoiceWrapperSource(string wrapper)
+        => $$"""
+            using EncosyTower.PolyEnumStructs;
+
+            namespace TestProject;
+
+            [PolyEnumStruct]
+            public partial struct Choice
+            {
+                public partial struct A { }
+            }
+
+            [PolyEnumFactoryFor(typeof(Choice))]
+            {{wrapper}}
+            """;
+
+    private const string CHOICE_FACTORY_HINT = "ChoiceFactory.PolyEnumFactory.49747cb4cbc3c1c5.g.cs";
+
+    private static Task VerifyWrapperAsync(
+          string wrapper
+        , string snapshotTestMethod
+        , params string[] hintNames
+    )
+        => GeneratorTestHelper.VerifyGeneratedSourcesWithProducersAsync<PolyEnumFactoryGenerator>(
+              $$"""
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+              }
+
+              [PolyEnumStruct]
+              public partial struct Result<T>
+              {
+                  public partial record struct Ok(T Value);
+              }
+
+              {{wrapper}}
+              """
+            , hintNames
+                .Select(hintName => ExpectedGeneratedSource.Create<PolyEnumFactoryGenerator>(
+                      hintName
+                    , testMethod: snapshotTestMethod
+                ))
+                .ToArray()
+            , new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
+        );
+
+    [TestMethod]
+    public Task GlobalNamespaceFactory_GeneratesFactoryAndPolyEnum()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumFactoryGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              [PolyEnumStruct]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+              }
+
+              [PolyEnumFactoryFor(typeof(Choice))]
+              public partial class ChoiceFactory { }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumFactoryGenerator>(
+                    "ChoiceFactory.PolyEnumFactory.4db87b0f813a8c5e.g.cs"
+                ),
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                    "Choice.PolyEnumStruct.85ed3cc2d96bac08.g.cs"
+                ),
+            }
+            , new IIncrementalGenerator[] { new PolyEnumStructGenerator() }
+        );
 }

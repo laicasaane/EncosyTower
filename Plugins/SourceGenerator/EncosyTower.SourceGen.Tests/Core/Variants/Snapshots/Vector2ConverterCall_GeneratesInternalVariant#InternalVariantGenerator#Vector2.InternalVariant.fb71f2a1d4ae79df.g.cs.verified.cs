@@ -97,6 +97,7 @@ namespace EncosyTower.Variants.__InternalVariants__.I_EncosyTower_x002ESourceGen
             public static implicit operator Variant__I_UnityEngine_x002EVector2(in g__ETV.Variant<global::UnityEngine.Vector2> value) => new Variant__I_UnityEngine_x002EVector2(value);
 
             [g__UES.Preserve]
+            [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.InternalVariantGenerator", "0.1.8-preview.1")]
             public sealed class Converter : g__ETVC.IVariantConverter<global::UnityEngine.Vector2>
             {
                 [g__UES.Preserve]

@@ -78,6 +78,7 @@ namespace EncosyTower.Core.Generators.Variants
             if (type.TypeArguments[0] is not INamedTypeSymbol typeArg
                 || typeArg.IsUnboundGenericType
                 || (typeArg.IsGenericType && typeArg.TypeParameters.Length != 0)
+                || typeArg.ContainsErrorType(token)
             )
             {
                 return default;

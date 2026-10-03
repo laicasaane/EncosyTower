@@ -52,7 +52,6 @@ namespace EncosyTower.Processing.Generators
             => Declaration.Equals(other.Declaration)
             && Scopes.Equals(other.Scopes)
             && string.Equals(ResultTypeName, other.ResultTypeName, StringComparison.Ordinal)
-            && string.Equals(HintName, other.HintName, StringComparison.Ordinal)
             && HasResult == other.HasResult
             && GenerateRequestInterface == other.GenerateRequestInterface
             && WithAsync == other.WithAsync
@@ -75,7 +74,6 @@ namespace EncosyTower.Processing.Generators
 
             hash = hash.Add(Scopes.Count);
             hash = hash.Add(ResultTypeName);
-            hash = hash.Add(HintName);
             hash = hash.Add(HasResult);
             hash = hash.Add(GenerateRequestInterface);
             hash = hash.Add(WithAsync);

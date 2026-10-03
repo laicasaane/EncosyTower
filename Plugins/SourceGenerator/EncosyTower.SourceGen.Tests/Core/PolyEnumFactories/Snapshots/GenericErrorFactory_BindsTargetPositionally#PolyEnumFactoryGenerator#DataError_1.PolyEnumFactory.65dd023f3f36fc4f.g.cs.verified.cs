@@ -19,10 +19,10 @@ namespace TestProject
     public readonly partial struct DataError<U> // Factory API
     where U : unmanaged
     {
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         private readonly global::TestProject.Error<U> _enumStruct_Error;
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         private DataError(global::TestProject.Error<U> value) : this()
@@ -30,7 +30,7 @@ namespace TestProject
             this._enumStruct_Error = value;
         }
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         public static DataError<U> Invalid(U data)
@@ -38,7 +38,7 @@ namespace TestProject
             return new DataError<U>(new global::TestProject.Error<U>.Invalid(data));
         }
 
-        [g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
         public static DataError<U> Undefined()
@@ -54,7 +54,7 @@ namespace TestProject
     public readonly partial struct DataError<U> // Type API
     where U : unmanaged
     {
-        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("PolyEnumFactoryGenerator", "0.1.8-preview.1")]
+        [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)][g__SDCA.ExcludeFromCodeCoverage][g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator", "0.1.8-preview.1")]
         public bool Is(global::TestProject.DataError.Type type)
         {
             return this._enumStruct_Error.GetEnumCase() == (global::TestProject.Error.EnumCase)((byte)type);

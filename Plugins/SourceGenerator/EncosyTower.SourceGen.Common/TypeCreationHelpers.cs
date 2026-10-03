@@ -91,6 +91,44 @@ namespace EncosyTower.SourceGen
             closingSource = printer.Result;
         }
 
+        /// <summary>
+        /// Gets the containing type declarations that <see cref="GenerateOpeningAndClosingSource"/> prints
+        /// for <paramref name="containingSyntax"/>, outermost first. Namespaces and using directives are excluded.
+        /// </summary>
+        public static EquatableArray<ContainingTypeSpec> GetContainingTypeSpecs(
+              SyntaxNode containingSyntax
+            , CancellationToken token
+        )
+        {
+            token.ThrowIfCancellationRequested();
+
+            var (openingSyntaxes, _) = GetOpeningSyntaxes(containingSyntax, token);
+            using var builder = ImmutableArrayBuilder<ContainingTypeSpec>.Rent();
+
+            foreach (var syntax in openingSyntaxes)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (syntax is not TypeDeclarationSyntax typeSyntax)
+                {
+                    continue;
+                }
+
+                var keyword = typeSyntax is RecordDeclarationSyntax recordSyntax
+                    ? $"record {recordSyntax.ClassOrStructKeyword.ValueText}"
+                    : typeSyntax.Keyword.ValueText;
+
+                builder.Add(new ContainingTypeSpec(
+                      keyword
+                    , typeSyntax.Identifier.ToString()
+                    , typeSyntax.TypeParameterList?.ToString() ?? string.Empty
+                    , typeSyntax.ConstraintClauses.ToString()
+                ));
+            }
+
+            return builder.ToImmutable().AsEquatableArray();
+        }
+
         private static ClosingSyntax WriteOpeningSyntax_AndReturnClosingSyntax(
               ref Printer printer
             , SyntaxNode containingTypeSyntax

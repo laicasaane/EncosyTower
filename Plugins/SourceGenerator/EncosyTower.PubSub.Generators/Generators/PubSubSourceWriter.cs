@@ -4,6 +4,8 @@ namespace EncosyTower.PubSub.Generators
     {
         private const string AGGRESSIVE_INLINING =
             "[g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]";
+        private const string GENERATED_CODE = "[" + PubSubAliasSet.CODE_DOM_COMPILER + ".GeneratedCode(\""
+            + PubSubSourceGenContract.GENERATOR_METADATA_NAME + "\", \"" + SourceGenVersion.VALUE + "\")]";
 
         public static SourceText WriteMessage(in PubSubMessageSpec spec, CancellationToken token)
         {
@@ -63,6 +65,7 @@ namespace EncosyTower.PubSub.Generators
         private static void WriteAsyncStorage(ref Printer printer, PubSubMessageSpec spec)
         {
             var storageType = spec.Declaration.FullTypeName;
+            printer.PrintLine(GENERATED_CODE);
             printer.PrintLine("public readonly partial struct Async : g__ETPS.IMessage");
             printer.OpenScope();
             {

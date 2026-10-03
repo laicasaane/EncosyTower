@@ -1066,12 +1066,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         if (attributeList.Target.Identifier.IsKind(SyntaxKind.FieldKeyword))
                         {
@@ -1152,12 +1157,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         propertyAttributesInfo.Add(attributeInfo);
                     }
@@ -1231,12 +1241,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         var typeName = attributeTypeSymbol.ToFullName();
                         propertyAttributesInfo.Add((typeName, attributeInfo));
@@ -1311,12 +1326,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         var typeName = attributeTypeSymbol.ToFullName();
                         fieldAttributesInfo.Add((typeName, attributeInfo));
@@ -1368,7 +1388,7 @@ namespace EncosyTower.SourceGen
                     token.ThrowIfCancellationRequested();
 
                     if (attributeList.Target != null
-                        && attributeList.Target.Identifier.Kind() is not SyntaxKind.FieldDeclaration
+                        && attributeList.Target.Identifier.Kind() is not SyntaxKind.FieldKeyword
                     )
                     {
                         continue;
@@ -1392,12 +1412,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         var typeName = attributeTypeSymbol.ToFullName();
                         attributes.Add((typeName, attributeInfo));
@@ -1479,12 +1504,17 @@ namespace EncosyTower.SourceGen
                             continue;
                         }
 
-                        var attributeInfo = AttributeInfo.From(
+                        if (AttributeInfo.TryFrom(
                               attributeTypeSymbol
                             , semanticModel
                             , attribute.ArgumentList?.Arguments ?? Enumerable.Empty<AttributeArgumentSyntax>()
+                            , out var attributeInfo
                             , token
-                        );
+                        ) == false
+                        )
+                        {
+                            continue;
+                        }
 
                         var typeName = attributeTypeSymbol.ToFullName();
                         fieldAttributesInfo.Add((typeName, attributeInfo));
@@ -1509,7 +1539,11 @@ namespace EncosyTower.SourceGen
             {
                 token.ThrowIfCancellationRequested();
 
-                var attributeInfo = AttributeInfo.From(candidate);
+                if (AttributeInfo.TryFrom(candidate, out var attributeInfo) == false)
+                {
+                    continue;
+                }
+
                 attributesArrayBuilder.Add(attributeInfo);
             }
 

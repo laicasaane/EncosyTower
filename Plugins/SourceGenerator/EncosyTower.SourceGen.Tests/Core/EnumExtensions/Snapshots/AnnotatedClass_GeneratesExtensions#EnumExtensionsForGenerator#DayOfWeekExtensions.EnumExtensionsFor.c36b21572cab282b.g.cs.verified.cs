@@ -31,7 +31,7 @@ namespace TestProject
 static partial class DayOfWeekExtensions { } // IDayOfWeekExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::System.DayOfWeek), typeof(IDayOfWeekExtensions), typeof(DayOfWeekExtensions), typeof(DayOfWeekExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
 public partial interface IDayOfWeekExtensions
     : g__ETEE.IEnumExtensions<DayOfWeekExtended, global::System.DayOfWeek, int>
     , g__ETCon.IToFixedString
@@ -47,7 +47,7 @@ public partial interface IDayOfWeekExtensions
 static partial class DayOfWeekExtensions { } // DayOfWeekExtended
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::System.DayOfWeek), typeof(IDayOfWeekExtensions), typeof(DayOfWeekExtensions), typeof(DayOfWeekExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 [g__SRIS.StructLayout(g__SRIS.LayoutKind.Explicit)]
 public readonly partial struct DayOfWeekExtended : IDayOfWeekExtensions
@@ -228,7 +228,7 @@ public readonly partial struct DayOfWeekExtended : IDayOfWeekExtensions
 #endregion ==========
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::System.DayOfWeek), typeof(IDayOfWeekExtensions), typeof(DayOfWeekExtensions), typeof(DayOfWeekExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
 [g__SDCA.ExcludeFromCodeCoverage]
 public static partial class DayOfWeekExtensions // DayOfWeekExtensions
 {
@@ -711,7 +711,7 @@ public static partial class DayOfWeekExtensions // DayOfWeekExtensions
             _ => -1,
         };
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Values
     {
@@ -737,7 +737,7 @@ public static partial class DayOfWeekExtensions // DayOfWeekExtensions
             => g__UC.CollectionHelper.CreateNativeArray<global::System.DayOfWeek>(s_values, allocator);
     }
 
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class UnderlyingValues
     {
@@ -770,7 +770,7 @@ public static partial class DayOfWeekExtensions // DayOfWeekExtensions
 
 static partial class DayOfWeekExtensions// Names
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class Names
     {
@@ -829,7 +829,7 @@ static partial class DayOfWeekExtensions// Names
 
 static partial class DayOfWeekExtensions// DisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class DisplayNames
     {
@@ -888,7 +888,7 @@ static partial class DayOfWeekExtensions// DisplayNames
 
 static partial class DayOfWeekExtensions// FixedNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedNames
     {
@@ -977,7 +977,7 @@ static partial class DayOfWeekExtensions// FixedNames
 
 static partial class DayOfWeekExtensions// FixedDisplayNames
 {
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator", "0.1.8-preview.1")]
     [g__SDCA.ExcludeFromCodeCoverage]
     public static partial class FixedDisplayNames
     {

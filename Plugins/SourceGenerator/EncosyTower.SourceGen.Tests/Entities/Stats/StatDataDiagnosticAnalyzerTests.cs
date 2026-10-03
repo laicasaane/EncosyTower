@@ -95,4 +95,33 @@ public class StatDataDiagnosticAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("TestProject.NotAnEnum")
         );
+
+    [TestMethod]
+    public Task UndefinedVariantType_ReportsMustBeDefined()
+        => RunAsync(
+              """
+                  [{|#0:EncosyTower.Entities.Stats.StatData((EncosyTower.Entities.Stats.StatVariantType)200)|}]
+                  public partial struct Hp { }
+              """
+            , new DiagnosticResult(StatDataDiagnosticAnalyzer.StatVariantTypeMustBeDefined)
+                .WithLocation(0)
+                .WithArguments("Hp", 200)
+        );
+
+    [DataTestMethod]
+    [DataRow("public partial record struct {|#0:Hp|} { }")]
+    [DataRow("public partial record struct {|#0:Hp|}(int Extra);")]
+    [DataRow("public partial record struct {|#0:Hp|}();")]
+    [DataRow("public readonly partial record struct {|#0:Hp|} { }")]
+    [DataRow("public readonly partial struct {|#0:Hp|} { }")]
+    public Task RecordOrReadOnlyStruct_ReportsMustNotBeRecordOrReadOnly(string declaration)
+        => RunAsync(
+              $$"""
+                  [EncosyTower.Entities.Stats.StatData(EncosyTower.Entities.Stats.StatVariantType.Float)]
+                  {{declaration}}
+              """
+            , new DiagnosticResult(StatDataDiagnosticAnalyzer.MustNotBeRecordOrReadOnly)
+                .WithLocation(0)
+                .WithArguments("Hp")
+        );
 }

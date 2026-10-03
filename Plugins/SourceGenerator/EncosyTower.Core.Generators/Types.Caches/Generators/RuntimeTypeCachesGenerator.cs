@@ -178,9 +178,10 @@ namespace EncosyTower.Core.Generators.Types.Caches
                 containingTypeIdentifier = containingSyntax.Identifier.ValueText,
                 isStruct = isStruct,
                 isRefStruct = isStruct && containingSyntax.Modifiers.Any(SyntaxKind.RefKeyword),
-                isRecord = containingSyntax.Modifiers.Any(SyntaxKind.RecordKeyword),
+                isRecord = containingSyntax is RecordDeclarationSyntax,
                 openingSource = scopeOpening,
                 closingSource = scopeClosing,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(containingSyntax, token),
                 typeFullName = typeFullName,
                 cacheAttributeType = cacheAttributeType,
                 assemblyName = assemblyName,
@@ -485,7 +486,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
             CacheMethodsWithAttribute,
         }
 
-        private struct PartialTypeSpec : IEquatable<PartialTypeSpec>
+        internal struct PartialTypeSpec : IEquatable<PartialTypeSpec>
         {
             public string containingTypeFullName;
             public string containingTypeIdentifier;
@@ -493,6 +494,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
             public string assemblyName;
             public string openingSource;
             public string closingSource;
+            public EquatableArray<ContainingTypeSpec> containingTypes;
             public CacheAttributeType cacheAttributeType;
             public bool isStruct;
             public bool isRefStruct;
@@ -510,6 +512,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
                     && isStruct == other.isStruct
                     && isRefStruct == other.isRefStruct
                     && isRecord == other.isRecord
+                    && containingTypes.Equals(other.containingTypes)
                     ;
             }
 
@@ -527,15 +530,17 @@ namespace EncosyTower.Core.Generators.Types.Caches
                 )
                 .Add(isRefStruct)
                 .Add(isRecord)
+                .Add(containingTypes)
                 ;
         }
 
-        private struct TypeSpec : IEquatable<TypeSpec>
+        internal struct TypeSpec : IEquatable<TypeSpec>
         {
             public string containingTypeFullName;
             public string containingTypeIdentifier;
             public string openingSource;
             public string closingSource;
+            public EquatableArray<ContainingTypeSpec> containingTypes;
             public bool isStruct;
             public bool isRefStruct;
             public bool isRecord;
@@ -546,6 +551,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
                 containingTypeIdentifier = c.containingTypeIdentifier,
                 openingSource = c.openingSource,
                 closingSource = c.closingSource,
+                containingTypes = c.containingTypes,
                 isStruct = c.isStruct,
                 isRefStruct = c.isRefStruct,
                 isRecord = c.isRecord,
@@ -557,6 +563,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
                     && isStruct == other.isStruct
                     && isRefStruct == other.isRefStruct
                     && isRecord == other.isRecord
+                    && containingTypes.Equals(other.containingTypes)
                     ;
             }
 
@@ -564,7 +571,7 @@ namespace EncosyTower.Core.Generators.Types.Caches
                 => obj is TypeSpec other && Equals(other);
 
             public readonly override int GetHashCode()
-                => HashValue.Combine(containingTypeFullName, isStruct, isRefStruct, isRecord);
+                => HashValue.Combine(containingTypeFullName, isStruct, isRefStruct, isRecord, containingTypes);
         }
     }
 }

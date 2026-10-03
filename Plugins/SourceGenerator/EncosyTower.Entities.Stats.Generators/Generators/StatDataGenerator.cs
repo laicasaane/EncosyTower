@@ -44,7 +44,9 @@ namespace EncosyTower.Entities.Stats.Generators
                 return default;
             }
 
-            if (context.TargetSymbol is not INamedTypeSymbol structSymbol)
+            if (context.TargetSymbol is not INamedTypeSymbol structSymbol
+                || StatDataRules.IsSupportedTarget(structSymbol) == false
+            )
             {
                 return default;
             }
@@ -77,16 +79,18 @@ namespace EncosyTower.Entities.Stats.Generators
                 hintName = hintName,
                 openingSource = openingSource,
                 closingSource = closingSource,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
                 singleValue = false,
             };
 
             var firstArg = attribute.ConstructorArguments[0];
 
-            if (firstArg.Kind == TypedConstantKind.Enum && firstArg.Value is byte enumByte)
+            if (firstArg.Kind == TypedConstantKind.Enum)
             {
-                var index = (int)enumByte;
-
-                if (StatTypeInfo.TryGet(index, out var typeInfo) == false)
+                if (StatDataRules.IsAcceptedVariantType(firstArg) == false
+                    || firstArg.Value is not byte enumByte
+                    || StatTypeInfo.TryGet(enumByte, out var typeInfo) == false
+                )
                 {
                     return default;
                 }
@@ -96,20 +100,16 @@ namespace EncosyTower.Entities.Stats.Generators
                 result.valueType = typeInfo.type;
                 result.valueTypeName = typeInfo.typeName;
             }
-            else if (firstArg.Kind == TypedConstantKind.Type && firstArg.Value is INamedTypeSymbol enumType)
+            else if (firstArg.Kind == TypedConstantKind.Type
+                && firstArg.Value is ITypeSymbol typeArgument
+                && StatTypeInfo.TryGetEnumStatType(
+                      typeArgument
+                    , out var enumType
+                    , out var underlyingType
+                    , out var valueTypeName
+                )
+            )
             {
-                if (enumType.TypeKind != TypeKind.Enum)
-                {
-                    return default;
-                }
-
-                var underlyingType = enumType.EnumUnderlyingType.ToFullNameNoGlobal();
-
-                if (StatTypeInfo.TryGetEnumTypeName(underlyingType, out var valueTypeName) == false)
-                {
-                    return default;
-                }
-
                 result.isEnum = true;
                 result.valueTypeName = valueTypeName;
                 result.valueType = enumType.ToFullName();

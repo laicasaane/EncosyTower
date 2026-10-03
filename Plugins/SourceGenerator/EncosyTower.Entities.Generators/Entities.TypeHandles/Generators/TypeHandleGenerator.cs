@@ -63,7 +63,10 @@ namespace EncosyTower.Entities.Generators.Entities.TypeHandles
                     continue;
                 }
 
-                if (type.IsUnboundGenericType || type.IsUnmanagedType == false)
+                if (type.IsUnboundGenericType
+                    || type.IsUnmanagedType == false
+                    || type.ContainsErrorType(token)
+                )
                 {
                     continue;
                 }
@@ -108,10 +111,12 @@ namespace EncosyTower.Entities.Generators.Entities.TypeHandles
 
             return new TypeHandleSpec {
                 structName = structSymbol.Name,
+                structFullName = structSymbol.ToFullName(),
                 hintName = hintName,
                 openingSource = openingSource,
                 closingSource = closingSource,
                 typeRefs = typeRefs,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
             };
         }
 

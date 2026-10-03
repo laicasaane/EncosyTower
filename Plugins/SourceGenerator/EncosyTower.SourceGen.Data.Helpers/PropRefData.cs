@@ -115,28 +115,28 @@ namespace EncosyTower.SourceGen.Data.Helpers
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(propertyName);
-            hash.Add(fieldName);
-            hash.Add(fieldTypeName);
-            hash.Add(propertyTypeName);
-            hash.Add(mutablePropertyTypeName);
-            hash.Add(immutablePropertyTypeName);
-            hash.Add(samePropertyType);
-            hash.Add(typesAreDifferent);
-            hash.Add(implicitlyConvertible);
-            hash.Add(fieldIsImplemented);
-            hash.Add(isPropertyPublic);
-            hash.Add(doesCreateProperty);
-            hash.Add(propertyConverter);
-            hash.Add(fieldConverter);
-            hash.Add(fieldEqualityComparer);
-            hash.Add(fieldCollection);
-            hash.Add(fieldEquality);
-            hash.Add(fieldTypeDeclNameForEquality);
-            hash.Add(fieldTypeIsReferenceType);
-            hash.Add(forwardedFieldAttributes);
-            hash.Add(manualAuthoringAttribute);
-            hash.Add(converterAttribute);
+            hash = hash.Add(propertyName);
+            hash = hash.Add(fieldName);
+            hash = hash.Add(fieldTypeName);
+            hash = hash.Add(propertyTypeName);
+            hash = hash.Add(mutablePropertyTypeName);
+            hash = hash.Add(immutablePropertyTypeName);
+            hash = hash.Add(samePropertyType);
+            hash = hash.Add(typesAreDifferent);
+            hash = hash.Add(implicitlyConvertible);
+            hash = hash.Add(fieldIsImplemented);
+            hash = hash.Add(isPropertyPublic);
+            hash = hash.Add(doesCreateProperty);
+            hash = hash.Add(propertyConverter);
+            hash = hash.Add(fieldConverter);
+            hash = hash.Add(fieldEqualityComparer);
+            hash = hash.Add(fieldCollection);
+            hash = hash.Add(fieldEquality);
+            hash = hash.Add(fieldTypeDeclNameForEquality);
+            hash = hash.Add(fieldTypeIsReferenceType);
+            hash = hash.Add(forwardedFieldAttributes);
+            hash = hash.Add(manualAuthoringAttribute);
+            hash = hash.Add(converterAttribute);
             return hash.ToHashCode();
         }
     }

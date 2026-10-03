@@ -93,7 +93,10 @@ namespace EncosyTower.Entities.Generators.Entities.Lookups
                     continue;
                 }
 
-                if (type.IsUnboundGenericType || type.IsUnmanagedType == false)
+                if (type.IsUnboundGenericType
+                    || type.IsUnmanagedType == false
+                    || type.ContainsErrorType(token)
+                )
                 {
                     continue;
                 }
@@ -135,6 +138,7 @@ namespace EncosyTower.Entities.Generators.Entities.Lookups
 
             return new LookupSpec {
                 structName = structSymbol.Name,
+                structFullName = structSymbol.ToFullName(),
                 hintName = hintName,
                 openingSource = openingSource,
                 closingSource = closingSource,
@@ -142,6 +146,7 @@ namespace EncosyTower.Entities.Generators.Entities.Lookups
                 interfaceLookupRW = interfaceLookupRW,
                 kind = kind,
                 typeRefs = typeRefs,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
             };
         }
 

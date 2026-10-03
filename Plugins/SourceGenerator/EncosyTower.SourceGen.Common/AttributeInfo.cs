@@ -49,54 +49,88 @@ namespace EncosyTower.SourceGen
         public EquatableArray<(string Name, TypedConstantInfo Value)> NamedArgumentInfo { get; }
 
         /// <summary>
-        /// Creates a new <see cref="AttributeInfo"/> instance from a given <see cref="AttributeData"/> value.
+        /// Tries to create a new <see cref="AttributeInfo"/> instance from a given <see cref="AttributeData"/> value.
         /// </summary>
         /// <param name="attributeData">The input <see cref="AttributeData"/> value.</param>
-        /// <returns>A <see cref="AttributeInfo"/> instance representing <paramref name="attributeData"/>.</returns>
-        public static AttributeInfo From(AttributeData attributeData)
+        /// <param name="result">The created value; <see langword="default"/> on failure.</param>
+        /// <returns>
+        /// <see langword="false"/> when the attribute did not bind to a constructor or one of its arguments is not a
+        /// valid constant.
+        /// </returns>
+        public static bool TryFrom(AttributeData attributeData, out AttributeInfo result)
         {
-            string typeName = attributeData.AttributeClass!.ToFullName();
+            if (attributeData.AttributeClass == null || attributeData.AttributeConstructor == null)
+            {
+                result = default;
+                return false;
+            }
 
             using var constructorArguments = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
             using var namedArguments = ImmutableArrayBuilder<(string, TypedConstantInfo)>.Rent();
 
-            foreach (TypedConstant typedConstant in attributeData.ConstructorArguments)
+            var constructorConstants = attributeData.ConstructorArguments;
+            var constructorCount = constructorConstants.Length;
+
+            for (var i = 0; i < constructorCount; i++)
             {
-                constructorArguments.Add(TypedConstantInfo.From(typedConstant));
+                if (TypedConstantInfo.TryFrom(constructorConstants[i], out var argumentInfo) == false)
+                {
+                    result = default;
+                    return false;
+                }
+
+                constructorArguments.Add(argumentInfo);
             }
 
-            foreach (KeyValuePair<string, TypedConstant> namedConstant in attributeData.NamedArguments)
+            var namedConstants = attributeData.NamedArguments;
+            var namedCount = namedConstants.Length;
+
+            for (var i = 0; i < namedCount; i++)
             {
-                namedArguments.Add((namedConstant.Key, TypedConstantInfo.From(namedConstant.Value)));
+                var namedConstant = namedConstants[i];
+
+                if (TypedConstantInfo.TryFrom(namedConstant.Value, out var argumentInfo) == false)
+                {
+                    result = default;
+                    return false;
+                }
+
+                namedArguments.Add((namedConstant.Key, argumentInfo));
             }
 
-            return new(typeName, constructorArguments.ToImmutable(), namedArguments.ToImmutable());
+            result = new(
+                  attributeData.AttributeClass.ToFullName()
+                , constructorArguments.ToImmutable()
+                , namedArguments.ToImmutable()
+            );
+
+            return true;
         }
 
         /// <summary>
-        /// Creates a new <see cref="AttributeInfo"/> instance from a given syntax node.
+        /// Tries to create a new <see cref="AttributeInfo"/> instance from a given syntax node.
         /// </summary>
         /// <param name="typeSymbol">The symbol for the attribute type.</param>
         /// <param name="semanticModel">The <see cref="SemanticModel"/> instance for the current run.</param>
         /// <param name="arguments">The sequence of <see cref="AttributeArgumentSyntax"/> instances to process.</param>
+        /// <param name="result">The created value; <see langword="default"/> on failure.</param>
         /// <param name="token">The cancellation token for the current operation.</param>
-        /// <returns>A <see cref="AttributeInfo"/> instance representing the input attribute data.</returns>
-        public static AttributeInfo From(
+        /// <returns><see langword="false"/> when one of the arguments is not a valid constant.</returns>
+        public static bool TryFrom(
               INamedTypeSymbol typeSymbol
             , SemanticModel semanticModel
             , IEnumerable<AttributeArgumentSyntax> arguments
+            , out AttributeInfo result
             , CancellationToken token
         )
         {
             token.ThrowIfCancellationRequested();
 
-            string typeName = typeSymbol.ToFullName();
-
             using var constructorArguments = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
             using var constructorArgumentNames = ImmutableArrayBuilder<string>.Rent();
             using var namedArguments = ImmutableArrayBuilder<(string, TypedConstantInfo)>.Rent();
 
-            foreach (AttributeArgumentSyntax argument in arguments)
+            foreach (var argument in arguments)
             {
                 token.ThrowIfCancellationRequested();
 
@@ -105,7 +139,18 @@ namespace EncosyTower.SourceGen
                     continue;
                 }
 
-                var argumentInfo = TypedConstantInfo.From(operation, semanticModel, argument.Expression, token);
+                if (TypedConstantInfo.TryFrom(
+                      operation
+                    , semanticModel
+                    , argument.Expression
+                    , out var argumentInfo
+                    , token
+                ) == false
+                )
+                {
+                    result = default;
+                    return false;
+                }
 
                 if (argument.NameEquals?.Name.Identifier.ValueText is string argumentName)
                 {
@@ -118,12 +163,14 @@ namespace EncosyTower.SourceGen
                 }
             }
 
-            return new(
-                  typeName
+            result = new(
+                  typeSymbol.ToFullName()
                 , constructorArguments.ToImmutable()
                 , namedArguments.ToImmutable()
                 , constructorArgumentNames.ToImmutable()
             );
+
+            return true;
         }
 
         public override bool Equals(object obj)

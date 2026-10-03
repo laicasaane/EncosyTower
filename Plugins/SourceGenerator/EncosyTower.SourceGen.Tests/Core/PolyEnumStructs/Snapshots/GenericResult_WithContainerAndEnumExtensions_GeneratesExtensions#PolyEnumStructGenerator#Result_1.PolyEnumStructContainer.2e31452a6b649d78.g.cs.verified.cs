@@ -134,7 +134,7 @@ namespace TestProject
     static partial class ResultCases_EnumCaseExtensions { } // IResultCases_EnumCaseExtensions
 
     [g__ETEESG.GeneratedEnumExtensionsFor(typeof(ResultCases.EnumCase), typeof(IResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtensions), typeof(ResultCases_EnumCaseExtended))]
-    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.PolyEnumStructs.PolyEnumStructGenerator", "0.1.8-preview.1")]
     public partial interface IResultCases_EnumCaseExtensions
         : g__ETEE.IEnumExtensions<ResultCases_EnumCaseExtended, ResultCases.EnumCase, byte>
         , g__ETCon.IToFixedString

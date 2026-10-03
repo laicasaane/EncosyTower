@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace EncosyTower.SourceGen
 {
@@ -13,22 +11,6 @@ namespace EncosyTower.SourceGen
 
         public const string FIELD_PREFIX_UNDERSCORE = "_";
         public const string FIELD_PREFIX_M_UNDERSCORE = "m_";
-
-        public readonly static string[] FullyQualifiedFixedStringTypeNames = new string[] {
-            "global::Unity.Collections.FixedString32Bytes",
-            "global::Unity.Collections.FixedString64Bytes",
-            "global::Unity.Collections.FixedString128Bytes",
-            "global::Unity.Collections.FixedString512Bytes",
-            "global::Unity.Collections.FixedString4096Bytes",
-        };
-
-        public readonly static string[] Print_FixedStringTypeNames = new string[] {
-            "g__UC.FixedString32Bytes",
-            "g__UC.FixedString64Bytes",
-            "g__UC.FixedString128Bytes",
-            "g__UC.FixedString512Bytes",
-            "g__UC.FixedString4096Bytes",
-        };
 
         public static bool IsValidCompilation(
               this Compilation compilation
@@ -87,59 +69,6 @@ namespace EncosyTower.SourceGen
 
                 return false;
             }
-        }
-
-        public static bool IsClassSyntaxMatch(SyntaxNode syntaxNode, CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
-
-            return syntaxNode is ClassDeclarationSyntax classSyntax
-                && classSyntax.BaseList != null
-                && classSyntax.BaseList.Types.Count > 0;
-        }
-
-        public static bool IsStructSyntaxMatch(SyntaxNode syntaxNode, CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
-
-            return syntaxNode is StructDeclarationSyntax structSyntax
-                && structSyntax.BaseList != null
-                && structSyntax.BaseList.Types.Count > 0;
-        }
-
-        public static bool IsClassSyntaxMatchByAttribute(
-              SyntaxNode syntaxNode
-            , CancellationToken token
-            , SyntaxKind syntaxKind
-            , string attributeNamespace
-            , string attributeName
-        )
-        {
-            token.ThrowIfCancellationRequested();
-
-            if (syntaxNode is not ClassDeclarationSyntax classSyntax
-                || classSyntax.BaseList == null
-                || classSyntax.BaseList.Types.Count < 1
-            )
-            {
-                return false;
-            }
-
-            var members = classSyntax.Members;
-
-            foreach (var member in members)
-            {
-                token.ThrowIfCancellationRequested();
-
-                if (member.Kind() == syntaxKind
-                    && member.HasAttributeCandidate(attributeNamespace, attributeName)
-                )
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public static string ToPropertyName(this IFieldSymbol field)
@@ -220,15 +149,6 @@ namespace EncosyTower.SourceGen
                 <= 128 - 3 => "FixedString128Bytes",
                 <= 512 - 3 => "FixedString512Bytes",
                 _ => "FixedString4096Bytes",
-            };
-
-        public static string GetFixedStringFullyQualifiedTypeName(int maxByteCount)
-            => maxByteCount switch {
-                <= 32 - 3 => "global::Unity.Collections.FixedString32Bytes",
-                <= 64 - 3 => "global::Unity.Collections.FixedString64Bytes",
-                <= 128 - 3 => "global::Unity.Collections.FixedString128Bytes",
-                <= 512 - 3 => "global::Unity.Collections.FixedString512Bytes",
-                _ => "global::Unity.Collections.FixedString4096Bytes",
             };
 
         public static string GetPrintFixedStringTypeName(int maxByteCount)

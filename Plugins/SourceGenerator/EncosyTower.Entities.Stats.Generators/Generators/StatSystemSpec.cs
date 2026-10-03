@@ -9,6 +9,7 @@
         public string hintName;
         public string openingSource;
         public string closingSource;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
         public int maxDataSize;
         public int maxUserDataSize;
         public bool isStatic;
@@ -32,12 +33,14 @@
             && maxDataSize == other.maxDataSize
             && maxUserDataSize == other.maxUserDataSize
             && isStatic == other.isStatic
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
             => HashValue.Combine(typeName, typeNamespace, syntaxKeyword, maxDataSize)
             .Add(maxUserDataSize)
             .Add(isStatic)
+            .Add(containingTypes)
             ;
     }
 }

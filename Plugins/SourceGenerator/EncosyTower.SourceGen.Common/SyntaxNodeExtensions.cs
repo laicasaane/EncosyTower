@@ -86,45 +86,6 @@ namespace EncosyTower.SourceGen
             return IsTypeNameCandidate(syntaxNode, typeNameNamesapce.AsSpan(), typeName.AsSpan(), out _, token);
         }
 
-        public static bool IsTypeNameCandidate(
-              this SyntaxNode syntaxNode
-            , string fullyQualifedTypeName
-            , CancellationToken token = default
-        )
-        {
-            return IsTypeNameCandidate(syntaxNode, fullyQualifedTypeName, out _, token);
-        }
-
-        public static bool IsTypeNameCandidate(
-              this SyntaxNode syntaxNode
-            , string fullyQualifedTypeName
-            , out TypeArgumentListSyntax typeArgumentListSyntax
-            , CancellationToken token = default
-        )
-        {
-            var span = fullyQualifedTypeName.AsSpan();
-            var iLastDot = span.LastIndexOf('.');
-
-            if (iLastDot < 0)
-            {
-                return IsTypeNameCandidate(
-                      syntaxNode
-                    , ReadOnlySpan<char>.Empty
-                    , span
-                    , out typeArgumentListSyntax
-                    , token
-                );
-            }
-
-            return IsTypeNameCandidate(
-                  syntaxNode
-                , span.Slice(0, iLastDot)
-                , span.Slice(iLastDot + 1)
-                , out typeArgumentListSyntax
-                , token
-            );
-        }
-
         /// <summary>
         /// Figures out as fast as possible if the syntax node does not represent a type name.
         /// Use for early-out tests within the OnVisitSyntaxNode calls.
@@ -244,58 +205,6 @@ namespace EncosyTower.SourceGen
             return false;
         }
 
-        public static bool HasAttribute(
-              this MemberDeclarationSyntax syntaxNode
-            , string attributeNameSpace
-            , string attributeName
-            , CancellationToken token = default
-        )
-        {
-            token.ThrowIfCancellationRequested();
-
-            foreach (var attribList in syntaxNode.AttributeLists)
-            {
-                token.ThrowIfCancellationRequested();
-
-                foreach (var attrib in attribList.Attributes)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    if (attrib.Name.IsTypeNameCandidate(attributeNameSpace, attributeName, token))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public static AttributeSyntax GetAttribute(
-              this MemberDeclarationSyntax syntaxNode
-            , string attributeNameSpace
-            , string attributeName
-            , CancellationToken token = default
-        )
-        {
-            foreach (var attribList in syntaxNode.AttributeLists)
-            {
-                token.ThrowIfCancellationRequested();
-
-                foreach (var attrib in attribList.Attributes)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    if (attrib.Name.IsTypeNameCandidate(attributeNameSpace, attributeName, token))
-                    {
-                        return attrib;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         public static TRoot InsertNodesAfterThenRemove<TRoot>(
               this TRoot root
             , SyntaxNode nodeInList
@@ -311,58 +220,6 @@ namespace EncosyTower.SourceGen
 
             var toRemove = root.GetCurrentNode(nodeInList);
             return root.RemoveNode(toRemove, removeOptions);
-        }
-
-        public static string GetDisplayNameOrDefault(
-              this MemberDeclarationSyntax syntax
-            , string defaultValue
-            , CancellationToken token = default
-        )
-        {
-            var displayName = defaultValue;
-            Get(syntax, ref displayName, token);
-            return displayName;
-
-            static void Get(MemberDeclarationSyntax syntax, ref string displayName, CancellationToken token)
-            {
-                token.ThrowIfCancellationRequested();
-
-                foreach (var attributeList in syntax.AttributeLists)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    if (attributeList is null)
-                    {
-                        continue;
-                    }
-
-                    foreach (var attrib in attributeList.Attributes)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        if (attrib is null
-                            || attrib.Name is not IdentifierNameSyntax identifierName
-                            || attrib.ArgumentList is not AttributeArgumentListSyntax attributeArgumentList
-                            || attributeArgumentList.Arguments is not { Count: > 0 } attributeArguments
-                            || attributeArguments[0].Expression is not LiteralExpressionSyntax literalExpression
-                            || literalExpression.Token.Value is not string displayNameValue
-                        )
-                        {
-                            continue;
-                        }
-
-                        switch (identifierName.Identifier.Text)
-                        {
-                            case "Label":
-                            case "Description":
-                            case "Display":
-                            case "DisplayName":
-                                displayName = displayNameValue;
-                                return;
-                        }
-                    }
-                }
-            }
         }
     }
 }

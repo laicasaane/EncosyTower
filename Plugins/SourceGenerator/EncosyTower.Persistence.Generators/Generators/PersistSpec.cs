@@ -9,10 +9,12 @@ namespace EncosyTower.Persistence.Generators
         public string closingSource;
         public string hintName;
         public string typeName;
+        public string typeFullName;
         public string typeKeyword;
         public bool generateInterface;
         public MemberDefinition memberId;
         public MemberDefinition memberVersion;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid => string.IsNullOrEmpty(typeName) == false;
 
@@ -59,6 +61,7 @@ namespace EncosyTower.Persistence.Generators
 
             return new PersistSpec {
                 typeName = symbol.Name,
+                typeFullName = symbol.ToFullName(),
                 typeKeyword = symbol.ToPartialTypeKeyword(),
                 openingSource = openingSource,
                 closingSource = closingSource,
@@ -66,6 +69,7 @@ namespace EncosyTower.Persistence.Generators
                 generateInterface = generateInterface,
                 memberId = memberId,
                 memberVersion = memberVersion,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
             };
         }
 
@@ -94,6 +98,29 @@ namespace EncosyTower.Persistence.Generators
             {
                 token.ThrowIfCancellationRequested();
 
+                if (IsPersistTarget(baseType, token))
+                {
+                    if (memberId.IsValid == false)
+                    {
+                        memberId = new MemberDefinition {
+                            name = "Id",
+                            isField = false,
+                            type = MemberDefinitionType.DefinedInBaseType,
+                        };
+                    }
+
+                    if (memberVersion.IsValid == false)
+                    {
+                        memberVersion = new MemberDefinition {
+                            name = "Version",
+                            isField = false,
+                            type = MemberDefinitionType.DefinedInBaseType,
+                        };
+                    }
+
+                    return;
+                }
+
                 GetMembers(baseType, true, semanticModel, token, ref memberId, ref memberVersion);
 
                 if (HasBoth(memberId, memberVersion))
@@ -106,6 +133,12 @@ namespace EncosyTower.Persistence.Generators
 
             static bool HasBoth(MemberDefinition memberId, MemberDefinition memberVersion)
                 => memberId.IsValid && memberVersion.IsValid;
+
+            static bool IsPersistTarget(INamedTypeSymbol type, CancellationToken token)
+                => type.DeclaringSyntaxReferences.IsEmpty == false
+                    && type.IsAbstract == false
+                    && type.Arity == 0
+                    && type.HasAttribute(PERSIST_ATTRIBUTE, token);
 
             static void GetMembers(
                   ITypeSymbol type
@@ -270,17 +303,19 @@ namespace EncosyTower.Persistence.Generators
 
         public readonly bool Equals(PersistSpec other)
             => string.Equals(typeName, other.typeName, StringComparison.Ordinal)
-            && string.Equals(hintName, other.hintName, StringComparison.Ordinal)
+            && string.Equals(typeFullName, other.typeFullName, StringComparison.Ordinal)
             && string.Equals(typeKeyword, other.typeKeyword, StringComparison.Ordinal)
             && generateInterface == other.generateInterface
             && memberId.Equals(other.memberId)
-            && memberVersion.Equals(other.memberVersion);
+            && memberVersion.Equals(other.memberVersion)
+            && containingTypes.Equals(other.containingTypes);
 
         public readonly override bool Equals(object obj)
             => obj is PersistSpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(typeName, hintName, typeKeyword, generateInterface, memberId, memberVersion);
+            => HashValue.Combine(typeName, typeFullName, typeKeyword, generateInterface, memberId, memberVersion)
+            .Add(containingTypes);
     }
 
     internal struct MemberDefinition : IEquatable<MemberDefinition>

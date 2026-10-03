@@ -250,10 +250,18 @@ internal static class PubSubRuntimeFixture
         }
         """;
 
+    internal static Task<PubSubRun> RunAsync(
+          IReadOnlyList<NamedSource> sources
+        , [AllowNull] PubSubRun previous
+        , CancellationToken token = default
+    )
+        => RunAsync(sources, previous, Array.Empty<IIncrementalGenerator>(), token);
+
     internal static async Task<PubSubRun> RunAsync(
-        IReadOnlyList<NamedSource> sources,
-        [AllowNull] PubSubRun previous,
-        CancellationToken token = default
+          IReadOnlyList<NamedSource> sources
+        , [AllowNull] PubSubRun previous
+        , IReadOnlyList<IIncrementalGenerator> additionalGenerators
+        , CancellationToken token = default
     )
     {
         var references = await TestReferenceHelper.ResolveCompilationReferencesAsync(token);
@@ -264,8 +272,14 @@ internal static class PubSubRuntimeFixture
         };
         allSources.AddRange(sources);
         var compilation = CreateCompilation(allSources, references, previous?.InputCompilation, token);
+        var generators = new List<ISourceGenerator>(1 + additionalGenerators.Count) {
+            new PubSubMessageGenerator().AsSourceGenerator(),
+        };
+
+        generators.AddRange(additionalGenerators.Select(static generator => generator.AsSourceGenerator()));
+
         var driver = previous?.Driver ?? CSharpGeneratorDriver.Create(
-              new[] { new PubSubMessageGenerator().AsSourceGenerator() }
+              generators
             , parseOptions: s_parseOptions
             , driverOptions: new GeneratorDriverOptions(
                   disabledOutputs: default
@@ -285,10 +299,21 @@ internal static class PubSubRuntimeFixture
             , diagnostics.Length
             , string.Join(Environment.NewLine, diagnostics.Select(static diagnostic => diagnostic.ToString()))
         );
-        Assert.AreEqual(1, result.Results.Length);
-        Assert.IsNull(result.Results[0].Exception);
-        Assert.AreEqual(0, result.Results[0].Diagnostics.Length);
-        return new PubSubRun(driver, compilation, outputCompilation, result.Results[0]);
+        Assert.AreEqual(1 + additionalGenerators.Count, result.Results.Length);
+
+        foreach (var generatorResult in result.Results)
+        {
+            Assert.IsNull(generatorResult.Exception);
+            Assert.AreEqual(0, generatorResult.Diagnostics.Length);
+        }
+
+        return new PubSubRun(
+              driver
+            , compilation
+            , outputCompilation
+            , result.Results[0]
+            , result.Results.RemoveAt(0)
+        );
     }
 
     internal static Task<PubSubRun> RunAsync(string source, CancellationToken token = default)
@@ -334,7 +359,13 @@ internal static class PubSubRuntimeFixture
         Assert.AreEqual(1, result.Results.Length);
         Assert.IsNull(result.Results[0].Exception);
         Assert.AreEqual(0, result.Results[0].Diagnostics.Length);
-        return new PubSubRun(driver, compilation, outputCompilation, result.Results[0]);
+        return new PubSubRun(
+              driver
+            , compilation
+            , outputCompilation
+            , result.Results[0]
+            , ImmutableArray<GeneratorRunResult>.Empty
+        );
     }
 
     internal static async Task<ImmutableArray<Diagnostic>> GetAnalyzerDiagnosticsAsync(
@@ -409,7 +440,8 @@ internal sealed record PubSubRun(
     GeneratorDriver Driver,
     Compilation InputCompilation,
     Compilation OutputCompilation,
-    GeneratorRunResult Result
+    GeneratorRunResult Result,
+    ImmutableArray<GeneratorRunResult> AdditionalResults
 )
 {
     internal IReadOnlyList<GeneratedSourceResult> Sources => Result.GeneratedSources;

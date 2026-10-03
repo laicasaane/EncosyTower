@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using EncosyTower.Core.Generators.TypeWraps;
 using EncosyTower.PubSub.Generators;
 
 namespace EncosyTower.SourceGen.Tests.PubSub;
@@ -281,10 +282,17 @@ public sealed class PubSubMessageIncrementalTests
         );
 
         AssertDistinct(declaration, new PubSubTypeDeclarationSpec(
-            "changed", "closing", "Message", "class", "global::Test.Message", "Test.Message", true
+              "opening"
+            , "closing"
+            , "Message"
+            , "class"
+            , "global::Test.Message"
+            , "Test.Message"
+            , true
+            , ImmutableArray.Create(new ContainingTypeSpec("struct", "Outer", "", "")).AsEquatableArray()
         ));
         AssertDistinct(declaration, new PubSubTypeDeclarationSpec(
-            "opening", "changed", "Message", "class", "global::Test.Message", "Test.Message", true
+            "opening", "closing", "Message", "class", "global::Test.Message", "Test.Message", true, default, "Other"
         ));
         AssertDistinct(declaration, new PubSubTypeDeclarationSpec(
             "opening", "closing", "Changed", "class", "global::Test.Message", "Test.Message", true
@@ -308,7 +316,7 @@ public sealed class PubSubMessageIncrementalTests
             declaration, "global::Test.Changed", "scope.g.cs", true, true, true, true, true, false, false
         ));
         AssertDistinct(scope, new PubSubScopeSpec(
-            declaration, "global::Test.Scope", "changed.g.cs", true, true, true, true, true, false, false
+            declaration, "global::Test.Scope", "scope.g.cs", true, true, true, true, true, false, false, "changed"
         ));
         AssertDistinct(scope, new PubSubScopeSpec(
             declaration, "global::Test.Scope", "scope.g.cs", false, true, true, true, true, false, false
@@ -333,13 +341,63 @@ public sealed class PubSubMessageIncrementalTests
         ));
         AssertDistinct(message, new PubSubMessageSpec(default, scopes, "message.g.cs", true, true, true));
         AssertDistinct(message, new PubSubMessageSpec(declaration, default, "message.g.cs", true, true, true));
-        AssertDistinct(message, new PubSubMessageSpec(declaration, scopes, "changed.g.cs", true, true, true));
         AssertDistinct(message, new PubSubMessageSpec(declaration, scopes, "message.g.cs", false, true, true));
         AssertDistinct(message, new PubSubMessageSpec(declaration, scopes, "message.g.cs", true, false, true));
         AssertDistinct(message, new PubSubMessageSpec(declaration, scopes, "message.g.cs", true, true, false));
 
         Assert.AreEqual(new CollisionValue(1).GetHashCode(), new CollisionValue(2).GetHashCode());
         AssertDistinct(new CollisionValue(1), new CollisionValue(2));
+    }
+
+    [TestMethod]
+    public async Task WrapTypeDeclarationAdded_RemovesParameterlessPublish()
+    {
+        var message = new NamedSource("Message.cs", """
+            using EncosyTower.PubSub;
+
+            namespace TestProject;
+
+            [PubSub(ApiMode.Both, State = StateMode.Both)]
+            public partial class Points { }
+            """);
+        var additionalGenerators = new IIncrementalGenerator[] { new TypeWrapGenerator() };
+        var firstSources = new[] {
+            message,
+            new NamedSource("Wrap.cs", "namespace TestProject; public partial class Points { }"),
+        };
+        var secondSources = new[] {
+            message,
+            new NamedSource("Wrap.cs", """
+                using EncosyTower.TypeWraps;
+
+                namespace TestProject;
+
+                [WrapType(typeof(int), "value")]
+                public partial class Points { }
+                """),
+        };
+
+        var first = await PubSubRuntimeFixture.RunAsync(
+              sources: firstSources
+            , previous: null
+            , additionalGenerators: additionalGenerators
+        );
+
+        var second = await PubSubRuntimeFixture.RunAsync(secondSources, first, additionalGenerators);
+
+        var fresh = await PubSubRuntimeFixture.RunAsync(
+              sources: secondSources
+            , previous: null
+            , additionalGenerators: additionalGenerators
+        );
+
+        Assert.AreEqual(GetMessageSource(first), GetMessageSource(second));
+        Assert.AreNotEqual(GetScopeSource(first, "g__ET.GlobalScope"), GetScopeSource(second, "g__ET.GlobalScope"));
+        AssertReasonsInclude(second, "PubSubMessageGenerator.ScopeOutputs", IncrementalStepRunReason.Modified);
+        Assert.AreEqual(0, first.AdditionalResults.Single().GeneratedSources.Length);
+        Assert.AreEqual(1, second.AdditionalResults.Single().GeneratedSources.Length);
+        PubSubRuntimeFixture.AssertNoOutputErrors(second);
+        CollectionAssert.AreEqual(GetSources(fresh), GetSources(second));
     }
 
     private static GeneratedSourceResult[] GetMessageSources(PubSubRun run)

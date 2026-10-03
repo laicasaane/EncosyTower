@@ -179,6 +179,7 @@ namespace EncosyTower.Core.Generators.EnumTemplates
 
             ExtensionsRef = new EnumExtensionsDeclaration(unityCollections, maxByteCount) {
                 GeneratedCode = GENERATED_CODE,
+                InterfaceGeneratedCode = GENERATED_CODE,
                 Name = EnumName,
                 ExtensionsName = EnumExtensionsDeclaration.GetNameExtensionsClass(EnumName),
                 StructName = EnumExtensionsDeclaration.GetNameExtendedStruct(EnumName),

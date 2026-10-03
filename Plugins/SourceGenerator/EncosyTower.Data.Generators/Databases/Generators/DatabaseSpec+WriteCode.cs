@@ -281,6 +281,7 @@ namespace EncosyTower.Data.Generators.Databases
                     p.PrintEndLine();
                 }
 
+                p.PrintLine(PR_GENERATED_CODE);
                 p.PrintLine("public static partial class Tables");
                 p.OpenScope();
                 {
@@ -318,6 +319,7 @@ namespace EncosyTower.Data.Generators.Databases
                     .Print("<").Print(PR_DATABASE_ASSET).PrintEndLine("> Database = new(Names.DATABASE);");
                 p.PrintEndLine();
 
+                p.PrintLine(PR_GENERATED_CODE);
                 p.PrintLine("public static partial class Tables");
                 p.OpenScope();
                 {
@@ -380,6 +382,7 @@ namespace EncosyTower.Data.Generators.Databases
                 p.CloseScope();
                 p.PrintEndLine();
 
+                p.PrintLine(PR_GENERATED_CODE);
                 p.PrintLine("public static partial class Tables");
                 p.OpenScope();
                 {
@@ -516,6 +519,7 @@ namespace EncosyTower.Data.Generators.Databases
                 p.Print("#endif").PrintEndLine();
                 p.PrintEndLine();
 
+                p.PrintLine(PR_GENERATED_CODE);
                 p.PrintLine("public static partial class Tables");
                 p.OpenScope();
                 {

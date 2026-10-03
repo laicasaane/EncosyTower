@@ -281,4 +281,156 @@ public class PolyEnumStructAnalyzerTests
             , new DiagnosticResult(PolyEnumStructAnalyzer.UndefinedCaseDuplicated)
                 .WithLocation(0).WithArguments("Result")
         );
+
+    private const string PAYLOAD = "public struct Payload { public string Name; }";
+
+    private static string ExplicitMessage(string named)
+        => $$"""
+            [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+            public partial struct Message
+            {
+            {{named}}
+
+                public partial struct Empty { }
+            }
+            """;
+
+    private static DiagnosticResult ManagedReference(params object[] arguments)
+        => new DiagnosticResult(PolyEnumStructAnalyzer.CaseFieldHoldsManagedReference)
+            .WithLocation(0)
+            .WithArguments(arguments);
+
+    [TestMethod]
+    public Task ExplicitLayout_ManagedStructField_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              PAYLOAD + "\n" + ExplicitMessage("public partial struct Named { public {|#0:Payload|} Value; }")
+            , ManagedReference("Message", "Value", "Named", "global::TestProject.Payload")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_ManagedStructRecordParameter_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              PAYLOAD + "\n" + ExplicitMessage("public partial record struct Named({|#0:Payload|} Value);")
+            , ManagedReference("Message", "Value", "Named", "global::TestProject.Payload")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_PrivateReferenceField_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              ExplicitMessage("public partial struct Named { private {|#0:string|} _name; }")
+            , ManagedReference("Message", "_name", "Named", "string")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_ReferenceAutoProperty_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              ExplicitMessage("public partial struct Named { public {|#0:object|} Value { get; set; } }")
+            , ManagedReference("Message", "Value", "Named", "object")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_FieldLikeEvent_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              ExplicitMessage("public partial struct Named { public event {|#0:System.Action|} Changed; }")
+            , ManagedReference("Message", "Changed", "Named", "global::System.Action")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_ArrayField_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              ExplicitMessage("public partial struct Named { public {|#0:int[]|} Values; }")
+            , ManagedReference("Message", "Values", "Named", "int[]")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_StructConstrainedTypeParameterField_ReportsCaseFieldHoldsManagedReference()
+        => RunAsync(
+              """
+                  [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+                  [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+                  public partial struct Message<T> where T : struct
+                  {
+                      public partial struct Named { public {|#0:T|} Value; }
+
+                      public partial struct Empty { }
+                  }
+              """
+            , ManagedReference("Message", "Value", "Named", "T")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_UnmanagedTypeParameterField_ReportsCaseFieldSizeUnknown()
+        => RunAsync(
+              """
+                  [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+                  [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+                  public partial struct Message<T> where T : unmanaged
+                  {
+                      public partial struct Named { public {|#0:T|} Value; }
+
+                      public partial struct Empty { }
+                  }
+              """
+            , new DiagnosticResult(PolyEnumStructAnalyzer.CaseFieldSizeUnknown)
+                .WithLocation(0)
+                .WithArguments("Message", "Value", "Named", "T")
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_UnmanagedStorage_NoDiagnostics()
+        => RunAsync("""
+                public enum Tint : byte { Red }
+
+                [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+                [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+                public partial struct Message
+                {
+                    public partial struct Named
+                    {
+                        public static string Shared;
+                        public const string LABEL = "named";
+
+                        public int number;
+                        private long _secret;
+                        public int? maybe;
+                        public (int, long) pair;
+                        public Tint tint;
+
+                        public decimal Amount { get; set; }
+                    }
+
+                    public partial record struct Point(int X, long Y);
+
+                    public partial struct Nothing { }
+                }
+            """);
+
+    [TestMethod]
+    public Task SequentialLayout_ReferenceStorage_NoDiagnostics()
+        => RunAsync("""
+                public struct Payload { public string Name; }
+
+                [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+                public partial struct Message
+                {
+                    public partial struct Named
+                    {
+                        public Payload payload;
+                        private string _name;
+                        public event System.Action Changed;
+
+                        public object Item { get; set; }
+                    }
+
+                    public partial struct Empty { }
+                }
+            """);
+
+    [TestMethod]
+    public Task ExplicitLayout_MissingFieldType_ReportsOnlyCompilerError()
+        => RunAsync(
+              ExplicitMessage("public partial struct Named { public {|#0:Missing|} Value; }")
+            , DiagnosticResult.CompilerError("CS0246").WithLocation(0).WithArguments("Missing")
+        );
 }

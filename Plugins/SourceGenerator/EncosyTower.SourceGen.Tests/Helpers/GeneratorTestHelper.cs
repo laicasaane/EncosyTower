@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -33,6 +35,7 @@ internal static class GeneratorTestHelper
         }
         """;
     private const string UNRELATED_PATH = "Unrelated.cs";
+    private const string UNRELATED_SOURCE = "namespace Unrelated { internal sealed class Marker { } }";
 
     private static readonly CSharpParseOptions s_parseOptions = CSharpParseOptions.Default
         .WithLanguageVersion(LanguageVersion.CSharp10);
@@ -289,6 +292,48 @@ internal static class GeneratorTestHelper
         }
     }
 
+    internal static async Task VerifyReusedDriverEditAsync(
+          IReadOnlyList<IIncrementalGenerator> generators
+        , string sourceBefore
+        , string sourceAfter
+        , IReadOnlyList<string> modifiedOutputTrackingNames
+        , CancellationToken token = default
+    )
+    {
+        var references = await TestReferenceHelper.ResolveCompilationReferencesAsync(token);
+        var firstRun = RunDriver(
+              CreateDriver(generators)
+            , CreateCompilation(
+                  new[] { new NamedSource(INPUT_PATH, sourceBefore) }
+                , INPUT_ASSEMBLY_NAME
+                , references
+                , token
+            )
+            , token
+        );
+
+        Assert.IsTrue(
+              GetActualSources(firstRun.Result, generators).Count > 0
+            , "The source before the edit must produce generated output."
+        );
+
+        var editedRun = RunDriver(
+              firstRun.Driver
+            , CreateTransitionCompilation(
+                  firstRun.InputCompilation
+                , new[] { new NamedSource(INPUT_PATH, sourceAfter) }
+                , INPUT_ASSEMBLY_NAME
+                , references
+                , token
+            )
+            , token
+        );
+        var freshRun = RunDriver(CreateDriver(generators), editedRun.InputCompilation, token);
+
+        VerifySecondRunSources(freshRun.Result, editedRun.Result, generators);
+        VerifyModifiedOutputSteps(editedRun.Result, modifiedOutputTrackingNames);
+    }
+
     internal static async Task VerifyProductionContractAsync(
           ProductionGeneratorContractCase contract
         , string validSource
@@ -484,11 +529,12 @@ internal static class GeneratorTestHelper
         var driver = CreateDriver(generators);
         var firstRun = RunDriver(driver, compilation, token);
         await VerifyExpectedSourcesAsync(
-              firstRun.Result
-            , generators
-            , expectedSources
-            , verifyDebuggingAliasContract
-            , token
+              result: firstRun.Result
+            , generators: generators
+            , expectedSources: expectedSources
+            , verifyDebuggingAliasContract: verifyDebuggingAliasContract
+            , ownerGeneratorType: null
+            , token: token
         );
 
         var sameInputRun = RunDriver(firstRun.Driver, compilation, token);
@@ -496,7 +542,7 @@ internal static class GeneratorTestHelper
         VerifySecondRunSources(firstRun.Result, sameInputRun.Result, generators);
 
         var unrelatedTree = CSharpSyntaxTree.ParseText(
-              "namespace Unrelated { internal sealed class Marker { } }"
+              UNRELATED_SOURCE
             , s_parseOptions
             , UNRELATED_PATH
             , encoding: null
@@ -510,6 +556,48 @@ internal static class GeneratorTestHelper
         var removalCompilation = secondCompilation.RemoveSyntaxTrees(compilation.SyntaxTrees);
         var removalRun = RunDriver(secondRun.Driver, removalCompilation, token);
         VerifyRemovedSources(firstRun.Result, removalRun.Result, generators);
+
+        var freshRun = RunDriver(CreateDriver(generators), compilation, token);
+        VerifySecondRunSources(firstRun.Result, freshRun.Result, generators);
+    }
+
+    internal static async Task VerifyGeneratedSourcesWithProducersAsync<TGenerator>(
+          string source
+        , IReadOnlyList<ExpectedGeneratedSource> expectedSources
+        , IReadOnlyList<IIncrementalGenerator> producerGenerators
+        , CancellationToken token = default
+    )
+        where TGenerator : IIncrementalGenerator, new()
+    {
+        ValidateExpectedSources(expectedSources);
+
+        var expectedCount = expectedSources.Count;
+
+        for (var i = 0; i < expectedCount; i++)
+        {
+            Assert.AreEqual(
+                  typeof(TGenerator)
+                , expectedSources[i].GeneratorType
+                , "Only outputs of the generator under test are compared."
+            );
+        }
+
+        var references = await TestReferenceHelper.ResolveCompilationReferencesAsync(token);
+        var compilation = CreateCompilation(source, INPUT_ASSEMBLY_NAME, references);
+        var generators = new List<IIncrementalGenerator> { new TGenerator() };
+
+        generators.AddRange(producerGenerators);
+
+        var firstRun = RunDriver(CreateDriver(generators), compilation, token);
+
+        await VerifyExpectedSourcesAsync(
+              result: firstRun.Result
+            , generators: generators
+            , expectedSources: expectedSources
+            , verifyDebuggingAliasContract: false
+            , ownerGeneratorType: typeof(TGenerator)
+            , token: token
+        );
 
         var freshRun = RunDriver(CreateDriver(generators), compilation, token);
         VerifySecondRunSources(firstRun.Result, freshRun.Result, generators);
@@ -803,6 +891,50 @@ internal static class GeneratorTestHelper
         VerifyStableOwnedOutputSteps(removedRun.Result, new[] { outputTrackingName });
     }
 
+    internal static async Task VerifyCrossFileEditAsync(
+          IReadOnlyList<IIncrementalGenerator> generators
+        , IReadOnlyList<NamedSource> sourcesBefore
+        , IReadOnlyList<NamedSource> sourcesAfter
+        , IReadOnlyList<string> expectedChangedHintNames
+        , CancellationToken token = default
+    )
+    {
+        var references = await TestReferenceHelper.ResolveCompilationReferencesAsync(token);
+        var unrelatedSource = new NamedSource(UNRELATED_PATH, UNRELATED_SOURCE);
+        var firstCompilation = CreateCompilation(sourcesBefore, INPUT_ASSEMBLY_NAME, references, token);
+        var firstRun = RunDriver(CreateDriver(generators), firstCompilation, token);
+
+        var unrelatedCompilation = CreateTransitionCompilation(
+              firstRun.InputCompilation
+            , sourcesBefore.Append(unrelatedSource).ToArray()
+            , INPUT_ASSEMBLY_NAME
+            , references
+            , token
+        );
+
+        var unrelatedRun = RunDriver(firstRun.Driver, unrelatedCompilation, token);
+        AssertSourceSetsEqual(firstRun.Result, unrelatedRun.Result, generators);
+
+        foreach (var generatorResult in unrelatedRun.Result.Results)
+        {
+            VerifyIncrementalSteps(generatorResult.TrackedOutputSteps);
+        }
+
+        var editedCompilation = CreateTransitionCompilation(
+              unrelatedRun.InputCompilation
+            , sourcesAfter.Append(unrelatedSource).ToArray()
+            , INPUT_ASSEMBLY_NAME
+            , references
+            , token
+        );
+
+        var editedRun = RunDriver(unrelatedRun.Driver, editedCompilation, token);
+        VerifyChangedOutputs(unrelatedRun.Result, editedRun.Result, generators, expectedChangedHintNames);
+
+        var freshRun = RunDriver(CreateDriver(generators), editedRun.InputCompilation, token);
+        AssertSourceSetsEqual(freshRun.Result, editedRun.Result, generators);
+    }
+
     internal static async Task VerifyObservablePropertyMarkerOutputTransitionAsync(
         CancellationToken token = default
     )
@@ -927,6 +1059,58 @@ internal static class GeneratorTestHelper
         return MetadataReference.CreateFromImage(stream.ToArray());
     }
 
+    internal static async Task<string> RunGeneratedProbeAsync<TGenerator>(
+          string source
+        , string probeTypeName
+        , CancellationToken token = default
+    )
+        where TGenerator : IIncrementalGenerator, new()
+    {
+        var references = await TestReferenceHelper.ResolveCompilationReferencesAsync(token);
+        var compilation = CreateCompilation(source, INPUT_ASSEMBLY_NAME, references);
+        var run = RunDriver(CreateDriver(new IIncrementalGenerator[] { new TGenerator() }), compilation, token);
+        using var stream = new MemoryStream();
+        var emitResult = run.OutputCompilation.Emit(stream, cancellationToken: token);
+
+        if (emitResult.Success == false)
+        {
+            Assert.Fail($"Probe compilation failed:\n{string.Join("\n", emitResult.Diagnostics)}");
+        }
+
+        var context = new AssemblyLoadContext(nameof(RunGeneratedProbeAsync), isCollectible: true);
+        context.Resolving += ResolveUnityAssembly;
+
+        try
+        {
+            stream.Position = 0;
+            var probeType = context.LoadFromStream(stream).GetType(probeTypeName, throwOnError: true)!;
+            var method = probeType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static)!;
+            return (string)method.Invoke(null, null)!;
+        }
+        finally
+        {
+            context.Resolving -= ResolveUnityAssembly;
+            context.Unload();
+        }
+
+        static Assembly? ResolveUnityAssembly(AssemblyLoadContext context, AssemblyName name)
+        {
+            var path = UnityDllPaths.All.FirstOrDefault(value => string.Equals(
+                  Path.GetFileNameWithoutExtension(value)
+                , name.Name
+                , StringComparison.OrdinalIgnoreCase
+            ));
+
+            if (path == null)
+            {
+                return null;
+            }
+
+            using var assemblyStream = File.OpenRead(path);
+            return context.LoadFromStream(assemblyStream);
+        }
+    }
+
     internal static CSharpCompilation CreateCompilation(
           string source
         , string assemblyName
@@ -939,7 +1123,7 @@ internal static class GeneratorTestHelper
             , CancellationToken.None
         );
 
-    private static CSharpCompilation CreateCompilation(
+    internal static CSharpCompilation CreateCompilation(
           IReadOnlyList<NamedSource> sources
         , string assemblyName
         , IEnumerable<MetadataReference> references
@@ -1071,11 +1255,30 @@ internal static class GeneratorTestHelper
         );
         var result = driver.GetRunResult();
 
-        if (diagnostics.IsDefaultOrEmpty == false)
+        AssertNoGeneratorFailures(diagnostics, result);
+
+        if (includeGeneratedSourcesOnFailure)
+        {
+            AssertCleanCompilation(outputCompilation, result, token);
+        }
+        else
+        {
+            AssertCleanCompilation(outputCompilation, token);
+        }
+
+        return new DriverRun(driver, compilation, outputCompilation, result);
+    }
+
+    internal static void AssertNoGeneratorFailures(
+          ImmutableArray<Diagnostic> driverDiagnostics
+        , GeneratorDriverRunResult result
+    )
+    {
+        if (driverDiagnostics.IsDefaultOrEmpty == false)
         {
             Assert.Fail(
                 "Generator driver diagnostics:\n"
-                    + string.Join("\n", diagnostics.Select(static value => value.ToString()))
+                    + string.Join("\n", driverDiagnostics.Select(static value => value.ToString()))
             );
         }
 
@@ -1094,17 +1297,6 @@ internal static class GeneratorTestHelper
                 );
             }
         }
-
-        if (includeGeneratedSourcesOnFailure)
-        {
-            AssertCleanCompilation(outputCompilation, result, token);
-        }
-        else
-        {
-            AssertCleanCompilation(outputCompilation, token);
-        }
-
-        return new DriverRun(driver, compilation, outputCompilation, result);
     }
 
     private static DriverRun RunContractTransition(
@@ -1334,6 +1526,34 @@ internal static class GeneratorTestHelper
                 Assert.IsTrue(
                     output.Reason is IncrementalStepRunReason.Cached or IncrementalStepRunReason.Unchanged,
                     $"Unexpected incremental reason for '{trackingName}': {output.Reason}."
+                );
+            }
+        }
+    }
+
+    private static void VerifyModifiedOutputSteps(
+          GeneratorDriverRunResult result
+        , IReadOnlyList<string> trackingNames
+    )
+    {
+        foreach (var trackingName in trackingNames)
+        {
+            var outputs = result.Results
+                .SelectMany(generatorResult => TryGetOwnedTrackingSteps(generatorResult, trackingName, out var steps)
+                    ? steps
+                    : ImmutableArray<IncrementalGeneratorRunStep>.Empty
+                )
+                .SelectMany(static step => step.Outputs)
+                .ToArray();
+
+            Assert.IsTrue(outputs.Length > 0, $"Output tracking name '{trackingName}' recorded no outputs.");
+
+            foreach (var output in outputs)
+            {
+                Assert.AreEqual(
+                      IncrementalStepRunReason.Modified
+                    , output.Reason
+                    , $"Unexpected incremental reason for '{trackingName}'."
                 );
             }
         }
@@ -1697,10 +1917,19 @@ internal static class GeneratorTestHelper
         , IReadOnlyList<IIncrementalGenerator> generators
         , IReadOnlyList<ExpectedGeneratedSource> expectedSources
         , bool verifyDebuggingAliasContract
+        , Type? ownerGeneratorType
         , CancellationToken token
     )
     {
         var actualSources = GetActualSources(result, generators);
+
+        if (ownerGeneratorType != null)
+        {
+            actualSources = actualSources
+                .Where(pair => pair.Key.GeneratorType == ownerGeneratorType)
+                .ToDictionary(static pair => pair.Key, static pair => pair.Value);
+        }
+
         var expectedKeys = expectedSources.Select(static expected => (
             expected.GeneratorType,
             expected.HintName

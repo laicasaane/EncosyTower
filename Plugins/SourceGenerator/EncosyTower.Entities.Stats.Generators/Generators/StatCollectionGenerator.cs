@@ -5,7 +5,6 @@ namespace EncosyTower.Entities.Stats.Generators
     {
         private const string NAMESPACE = StatTypeInfo.NAMESPACE;
         private const string SKIP_ATTRIBUTE = StatTypeInfo.SKIP_ATTRIBUTE;
-        private const string STAT_DATA = "StatData";
         private const string STAT_COLLECTION_ATTRIBUTE = $"global::{NAMESPACE}.StatCollectionAttribute";
         private const string STAT_COLLECTION_ATTRIBUTE_METADATA = $"{NAMESPACE}.StatCollectionAttribute";
         private const string STAT_SYSTEM_ATTRIBUTE = $"global::{NAMESPACE}.StatSystemAttribute";
@@ -42,7 +41,10 @@ namespace EncosyTower.Entities.Stats.Generators
                 return default;
             }
 
-            if (context.TargetSymbol is not INamedTypeSymbol structSymbol)
+            if (context.TargetSymbol is not INamedTypeSymbol structSymbol
+                || structSymbol.IsGenericType
+                || StatDataRules.IsSupportedTarget(structSymbol) == false
+            )
             {
                 return default;
             }
@@ -85,7 +87,22 @@ namespace EncosyTower.Entities.Stats.Generators
                 hintName = hintName,
                 openingSource = openingSource,
                 closingSource = closingSource,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
+                typeFullName = structSymbol.ToFullName(),
+                typeAccessibility = structSymbol.DeclaredAccessibility,
+                extensionsPlacement = GetExtensionsPlacement(structSymbol),
             };
+
+            if (result.HasNamespaceExtensions)
+            {
+                TypeCreationHelpers.GenerateOpeningAndClosingSource(
+                      syntax.Ancestors().OfType<TypeDeclarationSyntax>().Last()
+                    , token
+                    , out result.extensionsOpeningSource
+                    , out result.extensionsClosingSource
+                    , printAdditionalUsings: PrintAdditionalUsings
+                );
+            }
 
             var args = attribute.ConstructorArguments;
 
@@ -94,7 +111,7 @@ namespace EncosyTower.Entities.Stats.Generators
                 result.typeIdOffset = typeIdOffset;
             }
 
-            GetStatDataDefintions(syntax, token, ref result);
+            GetStatDataDefintions(syntax, semanticModel, token, ref result);
 
             if ((result.typeIdOffset + (ulong)result.statDataCollection.Count) > uint.MaxValue)
             {
@@ -134,6 +151,7 @@ namespace EncosyTower.Entities.Stats.Generators
 
             static void GetStatDataDefintions(
                   StructDeclarationSyntax parentSyntax
+                , SemanticModel semanticModel
                 , CancellationToken token
                 , ref StatCollectionSpec statCollection
             )
@@ -146,7 +164,7 @@ namespace EncosyTower.Entities.Stats.Generators
                 {
                     token.ThrowIfCancellationRequested();
 
-                    var statData = GetStatDataDefinition(childNode, token);
+                    var statData = GetStatDataDefinition(childNode, semanticModel, token);
 
                     if (statData.IsValid == false)
                     {
@@ -159,41 +177,43 @@ namespace EncosyTower.Entities.Stats.Generators
                 statCollection.statDataCollection = arrayBuilder.ToImmutable();
             }
 
-            static StatCollectionSpec.StatDataSpec GetStatDataDefinition(SyntaxNode node, CancellationToken token)
+            static StatCollectionSpec.StatDataSpec GetStatDataDefinition(
+                  SyntaxNode node
+                , SemanticModel semanticModel
+                , CancellationToken token
+            )
             {
                 token.ThrowIfCancellationRequested();
 
-                if (node is not StructDeclarationSyntax syntax
-                    || syntax.TypeParameterList is not null
-                    || syntax.GetAttribute(NAMESPACE, STAT_DATA, token) is not AttributeSyntax attributeSyntax
-                    || attributeSyntax.ArgumentList is not AttributeArgumentListSyntax argumentList
-                    || argumentList.Arguments.Count < 1
+                if (StatDataRules.IsEntryDeclaration(node, out var syntax) == false
+                    || semanticModel.GetDeclaredSymbol(syntax, token) is not INamedTypeSymbol symbol
+                    || StatDataRules.IsSupportedTarget(symbol) == false
+                    || StatDataRules.TryGetEntryAttribute(
+                          syntax
+                        , symbol
+                        , token
+                        , out var attribute
+                        , out var attributeSyntax
+                    ) == false
                 )
                 {
                     return default;
                 }
 
-                var args = argumentList.Arguments;
                 var result = new StatCollectionSpec.StatDataSpec {
                     typeName = syntax.Identifier.ValueText,
                     fieldName = syntax.Identifier.ValueText.ToPublicFieldName(),
                     singleValue = false,
                 };
 
-                if (args[0].Expression is MemberAccessExpressionSyntax memberAccessExpr
-                    && memberAccessExpr.Expression is IdentifierNameSyntax identifierSyntax
-                    && string.Equals(identifierSyntax.Identifier.ValueText, "StatVariantType")
-                )
+                var firstArg = attribute.ConstructorArguments[0];
+
+                if (firstArg.Kind == TypedConstantKind.Enum)
                 {
-                    if (Enum.TryParse(memberAccessExpr.Name.Identifier.Text, false, out StatVariantType variantType) == false)
-                    {
-                        return default;
-
-                    }
-
-                    var index = (int)variantType;
-
-                    if (StatTypeInfo.TryGet(index, out var typeInfo) == false)
+                    if (StatDataRules.IsAcceptedVariantType(firstArg) == false
+                        || firstArg.Value is not byte variantIndex
+                        || StatTypeInfo.TryGet(variantIndex, out var typeInfo) == false
+                    )
                     {
                         return default;
                     }
@@ -201,9 +221,18 @@ namespace EncosyTower.Entities.Stats.Generators
                     result.valueTypeNamespace = typeInfo.namespaceName;
                     result.valueType = typeInfo.type;
                 }
-                else if (args[0].Expression is TypeOfExpressionSyntax typeOfExpr)
+                else if (firstArg.Kind == TypedConstantKind.Type
+                    && StatTypeInfo.TryGetEnumStatType(
+                          type: firstArg.Value as ITypeSymbol
+                        , enumType: out var enumType
+                        , underlyingTypeName: out _
+                        , valueTypeName: out _
+                    )
+                    && TryGetTypeOfOperand(attributeSyntax, out var typeOfOperand)
+                )
                 {
-                    result.valueType = typeOfExpr.Type.ToFullString();
+                    result.valueType = typeOfOperand.ToFullString();
+                    result.valueTypeFullName = enumType.ToFullName();
                 }
                 else
                 {
@@ -212,31 +241,68 @@ namespace EncosyTower.Entities.Stats.Generators
 
                 token.ThrowIfCancellationRequested();
 
-                for (var i = 1; i < args.Count; i++)
+                foreach (var namedArg in attribute.NamedArguments)
                 {
                     token.ThrowIfCancellationRequested();
 
-                    var arg = args[i];
-
-                    if (arg.NameEquals is not NameEqualsSyntax nameEquals
-                        || arg.Expression is not LiteralExpressionSyntax literalExpr2
+                    if (string.Equals(namedArg.Key, "SingleValue", StringComparison.Ordinal)
+                        && namedArg.Value.Value is bool singleValue
                     )
                     {
-                        continue;
-                    }
-
-                    switch (nameEquals.Name.Identifier.ValueText)
-                    {
-                        case "SingleValue":
-                        {
-                            result.singleValue = (bool)literalExpr2.Token.Value;
-                            break;
-                        }
+                        result.singleValue = singleValue;
                     }
                 }
 
                 return result;
             }
+
+            static bool TryGetTypeOfOperand(AttributeSyntax attributeSyntax, out TypeSyntax operand)
+            {
+                if (attributeSyntax.ArgumentList is { Arguments: { Count: > 0 } arguments }
+                    && arguments[0].NameEquals == null
+                    && arguments[0].Expression is TypeOfExpressionSyntax typeOf
+                )
+                {
+                    operand = typeOf.Type;
+                    return true;
+                }
+
+                operand = null;
+                return false;
+            }
+        }
+
+        private static StatCollectionSpec.ExtensionsPlacement GetExtensionsPlacement(INamedTypeSymbol symbol)
+        {
+            var isPublic = true;
+
+            for (var type = symbol; type is not null; type = type.ContainingType)
+            {
+                switch (type.DeclaredAccessibility)
+                {
+                    case Accessibility.Public:
+                        break;
+
+                    case Accessibility.Internal:
+                    case Accessibility.ProtectedOrInternal:
+                        isPublic = false;
+                        break;
+
+                    default:
+                        return StatCollectionSpec.ExtensionsPlacement.BesideNestedType;
+                }
+            }
+
+            if (symbol.ContainingType is null)
+            {
+                return isPublic
+                    ? StatCollectionSpec.ExtensionsPlacement.BesideTopLevelPublic
+                    : StatCollectionSpec.ExtensionsPlacement.BesideTopLevelInternal;
+            }
+
+            return isPublic
+                ? StatCollectionSpec.ExtensionsPlacement.NamespacePublic
+                : StatCollectionSpec.ExtensionsPlacement.NamespaceInternal;
         }
 
         private static void GenerateOutput(
@@ -271,6 +337,28 @@ namespace EncosyTower.Entities.Stats.Generators
             );
             context.CancellationToken.ThrowIfCancellationRequested();
             context.AddSource(hintName, generatedSource);
+
+            if (candidate.HasNamespaceExtensions == false)
+            {
+                return;
+            }
+
+            var extensionsHintName = SourceGenHelpers.BuildSemanticHintName(
+                  "EncosyTower.Entities.Stats.Generators.StatCollectionGenerator"
+                , assemblyName
+                , candidate.hintName
+                , "StatCollectionExtensions"
+                , string.Empty
+            );
+
+            var extensionsSource = TypeCreationHelpers.GenerateSourceText(
+                  candidate.extensionsOpeningSource
+                , candidate.WriteNamespaceExtensionsCode(context.CancellationToken)
+                , candidate.extensionsClosingSource
+                , context.CancellationToken
+            );
+            context.CancellationToken.ThrowIfCancellationRequested();
+            context.AddSource(extensionsHintName, extensionsSource);
         }
     }
 }

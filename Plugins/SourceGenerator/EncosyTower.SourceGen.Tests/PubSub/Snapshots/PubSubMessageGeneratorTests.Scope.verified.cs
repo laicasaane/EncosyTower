@@ -2,6 +2,7 @@
 
 using EncosyTower.PubSub;
 using g__S = global::System;
+using g__SCDC = global::System.CodeDom.Compiler;
 using g__SDCA = global::System.Diagnostics.CodeAnalysis;
 using g__ST = global::System.Threading;
 using g__SRCS = global::System.Runtime.CompilerServices;

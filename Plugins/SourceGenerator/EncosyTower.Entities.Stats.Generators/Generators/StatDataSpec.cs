@@ -12,6 +12,7 @@
         public string hintName;
         public string openingSource;
         public string closingSource;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
         public int size;
         public bool singleValue;
         public bool isEnum;
@@ -39,6 +40,7 @@
             && size == other.size
             && singleValue == other.singleValue
             && isEnum == other.isEnum
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
@@ -46,6 +48,7 @@
             .Add(size)
             .Add(singleValue)
             .Add(isEnum)
+            .Add(containingTypes)
             ;
     }
 }

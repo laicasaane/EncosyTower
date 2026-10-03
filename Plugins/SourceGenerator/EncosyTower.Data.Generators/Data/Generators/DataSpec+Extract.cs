@@ -296,32 +296,22 @@ namespace EncosyTower.Data.Generators.Data
 
                     token.ThrowIfCancellationRequested();
 
-                    field.GatherAttributes(semanticModel, token, out var attributes);
+                    field.GatherAttributes(
+                          semanticModel
+                        , token
+                        , out var manualAuthoringAttributes
+                        , DATA_MANUAL_AUTHORING_ATTRIBUTE
+                    );
 
-                    ForwardedAttributeData? manualAuthoringAttribute = null;
-                    ForwardedAttributeData? converterAttribute = null;
+                    field.GatherAttributes(
+                          semanticModel
+                        , token
+                        , out var converterAttributes
+                        , DATA_AUTHORING_CONVERTER_ATTRIBUTE
+                    );
 
-                    foreach (var (fullyTypeName, attributeInfo) in attributes)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        switch (fullyTypeName)
-                        {
-                            case DATA_MANUAL_AUTHORING_ATTRIBUTE:
-                                manualAuthoringAttribute = new ForwardedAttributeData {
-                                    fullTypeName = fullyTypeName,
-                                    syntax = attributeInfo.GetSyntax().ToFullString(),
-                                };
-                                break;
-
-                            case DATA_AUTHORING_CONVERTER_ATTRIBUTE:
-                                converterAttribute = new ForwardedAttributeData {
-                                    fullTypeName = fullyTypeName,
-                                    syntax = attributeInfo.GetSyntax().ToFullString(),
-                                };
-                                break;
-                        }
-                    }
+                    var manualAuthoringAttribute = GetLastAttributeData(manualAuthoringAttributes);
+                    var converterAttribute = GetLastAttributeData(converterAttributes);
 
                     var fieldRefData = new FieldRefData {
                         fieldName = field.Name,
@@ -485,32 +475,22 @@ namespace EncosyTower.Data.Generators.Data
 
                     token.ThrowIfCancellationRequested();
 
-                    property.GatherAttributes(semanticModel, token, out var attributes);
+                    property.GatherAttributes(
+                          semanticModel
+                        , token
+                        , out var manualAuthoringAttributes
+                        , DATA_MANUAL_AUTHORING_ATTRIBUTE
+                    );
 
-                    ForwardedAttributeData? manualAuthoringAttribute = null;
-                    ForwardedAttributeData? converterAttribute = null;
+                    property.GatherAttributes(
+                          semanticModel
+                        , token
+                        , out var converterAttributes
+                        , DATA_AUTHORING_CONVERTER_ATTRIBUTE
+                    );
 
-                    foreach (var (fullyTypeName, attributeInfo) in attributes)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        switch (fullyTypeName)
-                        {
-                            case DATA_MANUAL_AUTHORING_ATTRIBUTE:
-                                manualAuthoringAttribute = new ForwardedAttributeData {
-                                    fullTypeName = fullyTypeName,
-                                    syntax = attributeInfo.GetSyntax().ToFullString(),
-                                };
-                                break;
-
-                            case DATA_AUTHORING_CONVERTER_ATTRIBUTE:
-                                converterAttribute = new ForwardedAttributeData {
-                                    fullTypeName = fullyTypeName,
-                                    syntax = attributeInfo.GetSyntax().ToFullString(),
-                                };
-                                break;
-                        }
-                    }
+                    var manualAuthoringAttribute = GetLastAttributeData(manualAuthoringAttributes);
+                    var converterAttribute = GetLastAttributeData(converterAttributes);
 
                     var doesCreateProperty = property.HasAttribute(CREATE_PROPERTY_ATTRIBUTE, token);
                     var fieldIsImplemented = existingFields.Contains(fieldName);
@@ -671,6 +651,7 @@ namespace EncosyTower.Data.Generators.Data
                 fieldRefs = resolvedFieldRefs.AsEquatableArray(),
                 propRefs = resolvedPropRefs.AsEquatableArray(),
                 overrideEquals = overrideEqualsBuilder.ToImmutable().AsEquatableArray(),
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(typeSyntax, token),
             };
         }
 
@@ -721,6 +702,21 @@ namespace EncosyTower.Data.Generators.Data
                 keyTypeName = collection.KeyType?.ToFullName() ?? string.Empty,
                 isElementEquatable = collection.IsElementEquatable,
                 isKeyEquatable = collection.IsKeyEquatable,
+            };
+        }
+
+        private static ForwardedAttributeData? GetLastAttributeData(ImmutableArray<(string, AttributeInfo)> attributes)
+        {
+            if (attributes.Length < 1)
+            {
+                return null;
+            }
+
+            var (fullTypeName, attributeInfo) = attributes[attributes.Length - 1];
+
+            return new ForwardedAttributeData {
+                fullTypeName = fullTypeName,
+                syntax = attributeInfo.GetSyntax().ToFullString(),
             };
         }
 

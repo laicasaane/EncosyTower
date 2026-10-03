@@ -5,6 +5,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
     public partial struct DataTableAssetSpec : IEquatable<DataTableAssetSpec>
     {
         public string className;
+        public string classFullName;
         public string openingSource;
         public string closingSource;
         public string hintName;
@@ -16,6 +17,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
         public bool getIdMethodIsImplemented;
         public bool initializeMethodIsImplemented;
         public bool convertIdMethodIsImplemented;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid
             => string.IsNullOrEmpty(className) == false
@@ -76,6 +78,11 @@ namespace EncosyTower.Data.Generators.DataTableAssets
             }
 
             if (idType == null || dataType == null)
+            {
+                return default;
+            }
+
+            if (idType.ContainsErrorType(token) || dataType.ContainsErrorType(token))
             {
                 return default;
             }
@@ -152,7 +159,10 @@ namespace EncosyTower.Data.Generators.DataTableAssets
             var convertedIdTypeName = convertedIdType?.ToFullName();
             string convertExpression = null;
 
-            if (convertedIdType != null && convertIdImpl == false)
+            if (convertedIdType != null
+                && convertIdImpl == false
+                && convertedIdType.ContainsErrorType(token) == false
+            )
             {
                 convertExpression = GetConvertExpression(idType, convertedIdType, convertedIdTypeName, token);
 
@@ -181,6 +191,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
 
             return new DataTableAssetSpec {
                 className = classSyntax.Identifier.Text,
+                classFullName = symbol.ToFullName(),
                 openingSource = openingSource,
                 closingSource = closingSource,
                 hintName = hintName,
@@ -192,6 +203,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
                 getIdMethodIsImplemented = getIdImpl,
                 initializeMethodIsImplemented = initializeImpl,
                 convertIdMethodIsImplemented = convertIdImpl,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(classSyntax, token),
             };
         }
 
@@ -265,6 +277,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
 
         public readonly bool Equals(DataTableAssetSpec other)
             => string.Equals(className, other.className, StringComparison.Ordinal)
+            && string.Equals(classFullName, other.classFullName, StringComparison.Ordinal)
             && string.Equals(idTypeName, other.idTypeName, StringComparison.Ordinal)
             && string.Equals(dataTypeName, other.dataTypeName, StringComparison.Ordinal)
             && string.Equals(convertedIdTypeName, other.convertedIdTypeName, StringComparison.Ordinal)
@@ -273,6 +286,7 @@ namespace EncosyTower.Data.Generators.DataTableAssets
             && getIdMethodIsImplemented == other.getIdMethodIsImplemented
             && initializeMethodIsImplemented == other.initializeMethodIsImplemented
             && convertIdMethodIsImplemented == other.convertIdMethodIsImplemented
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override bool Equals(object obj)
@@ -290,6 +304,8 @@ namespace EncosyTower.Data.Generators.DataTableAssets
             )
             .Add(initializeMethodIsImplemented)
             .Add(convertIdMethodIsImplemented)
+            .Add(classFullName)
+            .Add(containingTypes)
             ;
     }
 }

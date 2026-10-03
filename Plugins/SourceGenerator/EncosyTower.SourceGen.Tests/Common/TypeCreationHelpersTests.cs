@@ -69,4 +69,44 @@ public sealed class TypeCreationHelpersTests
         Assert.AreEqual(EXPECTED_OPENING, openingSource);
         Assert.AreEqual(EXPECTED_CLOSING, closingSource);
     }
+
+    [TestMethod]
+    public void GetContainingTypeSpecs_NestedTypes_ReturnPrintedDeclarations()
+    {
+        const string SOURCE = """
+            namespace Example
+            {
+                partial record Outer
+                {
+                    partial class Container<T>
+                        where T : class
+                    {
+                        partial record struct Entry<TValue>
+                            where TValue : struct
+                        {
+                            private void Target()
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+            """;
+
+        var root = CSharpSyntaxTree.ParseText(SOURCE).GetCompilationUnitRoot();
+        var target = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
+        var outer = root.DescendantNodes().OfType<RecordDeclarationSyntax>().First();
+
+        var specs = TypeCreationHelpers.GetContainingTypeSpecs(target, CancellationToken.None);
+
+        CollectionAssert.AreEqual(
+              new[] {
+                new ContainingTypeSpec("record ", "Outer", string.Empty, string.Empty),
+                new ContainingTypeSpec("class", "Container", "<T>", "where T : class"),
+                new ContainingTypeSpec("record struct", "Entry", "<TValue>", "where TValue : struct"),
+              }
+            , specs.ToArray()
+        );
+        Assert.AreEqual(0, TypeCreationHelpers.GetContainingTypeSpecs(outer, CancellationToken.None).Count);
+    }
 }

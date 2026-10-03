@@ -107,7 +107,7 @@ namespace EncosyTower.SourceGen
 
             foreach (T item in array)
             {
-                hashCode.Add(item);
+                hashCode = hashCode.Add(item);
             }
 
             return hashCode.ToHashCode();

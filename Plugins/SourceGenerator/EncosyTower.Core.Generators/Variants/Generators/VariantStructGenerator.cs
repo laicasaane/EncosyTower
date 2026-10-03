@@ -79,6 +79,11 @@ namespace EncosyTower.Core.Generators.Variants
         {
             token.ThrowIfCancellationRequested();
 
+            if (typeArg.ContainsErrorType(token))
+            {
+                return default;
+            }
+
             var fullTypeName = typeArg.ToFullName();
 
             if (fullTypeName.ToUnionType().IsNativeUnionType())

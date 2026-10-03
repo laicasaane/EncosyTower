@@ -1,4 +1,5 @@
 using System.Text;
+using EncosyTower.Core.Generators.EnumTemplates;
 using EncosyTower.Core.Generators.PolyEnumStructs;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -48,6 +49,141 @@ public class PolyEnumStructGeneratorTests
                     "Choice.PolyEnumStruct.a18c245f1860e08b.g.cs"
                 ),
             }
+        );
+
+    [TestMethod]
+    public Task RecordParameter_Int32_GeneratesParameterChain()
+        => VerifyRecordParameterAsync("int Amount", nameof(RecordParameter_Int32_GeneratesParameterChain));
+
+    [DataTestMethod]
+    [DataRow("Int32 Amount")]
+    [DataRow("System.Int32 Amount")]
+    [DataRow("global::System.Int32 Amount")]
+    [DataRow("in int Amount")]
+    [DataRow("in System.Int32 Amount")]
+    public Task RecordParameter_Int32Spellings_ProduceSameChain(string parameters)
+        => VerifyRecordParameterAsync(parameters, nameof(RecordParameter_Int32_GeneratesParameterChain));
+
+    [TestMethod]
+    public Task RecordParameter_QualifiedGeneric_GeneratesParameterChain()
+        => VerifyRecordParameterAsync(
+              "System.Collections.Generic.List<int> Items"
+            , nameof(RecordParameter_QualifiedGeneric_GeneratesParameterChain)
+        );
+
+    [TestMethod]
+    public Task RecordParameter_Generic_ProducesSameChain()
+        => VerifyRecordParameterAsync(
+              "List<int> Items"
+            , nameof(RecordParameter_QualifiedGeneric_GeneratesParameterChain)
+        );
+
+    [TestMethod]
+    public Task RecordParameter_QualifiedMixedList_GeneratesParameterChain()
+        => VerifyRecordParameterAsync(
+              "int Amount, System.Collections.Generic.List<int> Items"
+            , nameof(RecordParameter_QualifiedMixedList_GeneratesParameterChain)
+        );
+
+    [TestMethod]
+    public Task RecordParameter_MixedList_KeepsEveryParameter()
+        => VerifyRecordParameterAsync(
+              "int Amount, List<int> Items"
+            , nameof(RecordParameter_QualifiedMixedList_GeneratesParameterChain)
+        );
+
+    [DataTestMethod]
+    [DataRow("int[] Values, int? Maybe, (int, int) Pair")]
+    [DataRow("Int32[] Values, Nullable<Int32> Maybe, ValueTuple<Int32, Int32> Pair")]
+    public Task RecordParameter_ArrayNullableTupleSpellings_KeepEveryParameter(string parameters)
+        => VerifyRecordParameterAsync(
+              parameters
+            , nameof(RecordParameter_ArrayNullableTupleSpellings_KeepEveryParameter)
+        );
+
+    [DataTestMethod]
+    [DataRow(
+          """
+          [PolyEnumStruct]
+          public partial struct Result<T>
+              where T : IMarker
+          {
+              public partial record struct Ok(T Value);
+          }
+          """
+        , "where T : global::Markers.IMarker"
+    )]
+    [DataRow(
+          """
+          [PolyEnumStruct]
+          public partial struct Result<T, U>
+              where T : IMarker
+              where U : unmanaged
+          {
+              public partial record struct Ok(T Value, U Code);
+          }
+          """
+        , "where T : global::Markers.IMarker"
+    )]
+    [DataRow(
+          """
+          public partial class Outer<T>
+              where T : IMarker
+          {
+              [PolyEnumStruct]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+              }
+          }
+          """
+        , "where T : global::Markers.IMarker"
+    )]
+    [DataRow(
+          """
+          [PolyEnumStruct(Container = typeof(ResultCases))]
+          public partial struct Result<TValue>
+              where TValue : IMarker
+          {
+          }
+
+          public static partial class ResultCases
+          {
+              public partial interface IEnumCase { }
+
+              public partial interface IEnumCase<TValue> : IEnumCase
+                  where TValue : IMarker
+              {
+              }
+
+              public readonly partial record struct Success<TValue>(TValue Value)
+                  where TValue : IMarker;
+          }
+          """
+        , "where TValue : global::Markers.IMarker"
+    )]
+    public Task SeparateContainer_ImportedConstraint_CompilesFullyQualified(
+          string declarations
+        , string expectedConstraint
+    )
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumStructGenerator>(
+              $$"""
+              using EncosyTower.PolyEnumStructs;
+              using Markers;
+
+              namespace Markers
+              {
+                  public interface IMarker { }
+              }
+
+              namespace TestProject
+              {
+              {{declarations}}
+              }
+              """
+            , expectedSourceCount: 2
+            , expectedFragments: new[] { expectedConstraint }
+            , unexpectedFragments: new[] { " : IMarker" }
         );
 
     [TestMethod]
@@ -710,6 +846,671 @@ public class PolyEnumStructGeneratorTests
             """
         );
 
+    [TestMethod]
+    public Task ExplicitLayout_GeneratedCaseFieldType_SkipsOnlyThatTarget()
+        => GeneratorTestHelper.VerifyGeneratedSourcesWithProducersAsync<PolyEnumStructGenerator>(
+              $$"""
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              {{ProducerFixtures.SCREEN_TYPE_TEMPLATE}}
+
+              [PolyEnumStruct]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+
+                  public partial record struct B(int Value);
+
+                  public partial struct C
+                  {
+                      public int Value;
+                  }
+
+                  [EnumCaseIgnore]
+                  public partial struct Ignored { }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct Screen
+              {
+                  public partial struct Opened
+                  {
+                      public ScreenType screen;
+                      public long frame;
+                  }
+
+                  public partial struct Closed { }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                      "Choice.PolyEnumStruct.a18c245f1860e08b.g.cs"
+                    , testMethod: nameof(ChoiceCases_GeneratePolyEnum)
+                ),
+            }
+            , new IIncrementalGenerator[] { new EnumTemplateGenerator() }
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_ManagedCaseField_ProducesNoOutput()
+        => GeneratorTestHelper.VerifyNoOutputAsync<PolyEnumStructGenerator>(
+            """
+            using EncosyTower.PolyEnumStructs;
+
+            namespace TestProject;
+
+            public struct Payload { public string Name; }
+
+            [PolyEnumStruct]
+            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+            public partial struct Message
+            {
+                public partial struct Named { public Payload Value; }
+
+                public partial struct Empty { }
+            }
+            """
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_ReferenceCaseStorage_SkipsOnlyThoseTargets()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+
+                  public partial record struct B(int Value);
+
+                  public partial struct C
+                  {
+                      public int Value;
+                  }
+
+                  [EnumCaseIgnore]
+                  public partial struct Ignored { }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct PrivateField
+              {
+                  public partial struct Named
+                  {
+                      private string _name;
+
+                      public Named(string name)
+                      {
+                          _name = name;
+                      }
+
+                      public readonly string Name => _name;
+                  }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct AutoProperty
+              {
+                  public partial struct Named
+                  {
+                      public object Item { get; set; }
+                  }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct RecordParameter
+              {
+                  public partial record struct Named(string Name);
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct FieldLikeEvent
+              {
+                  public partial struct Named
+                  {
+                      public event System.Action Changed;
+
+                      public void Raise()
+                      {
+                          Changed?.Invoke();
+                      }
+                  }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct ArrayField
+              {
+                  public partial struct Named
+                  {
+                      public int[] values;
+                  }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                      "Choice.PolyEnumStruct.a18c245f1860e08b.g.cs"
+                    , testMethod: nameof(ChoiceCases_GeneratePolyEnum)
+                ),
+            }
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_PointerPayloadAndUnmanagedCases_KeepOutput()
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              public enum Tint : byte { Red }
+
+              public struct PointerPayload
+              {
+                  public unsafe int* head;
+                  public int count;
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct Storage
+              {
+                  public partial struct Node
+                  {
+                      public PointerPayload payload;
+                  }
+
+                  public partial struct Money
+                  {
+                      public Tint tint;
+                      public decimal amount;
+                  }
+
+                  public partial struct Nothing { }
+              }
+              """
+            , expectedSourceCount: 1
+            , expectedFragments: new[] {
+                "[g__SRIS.FieldOffset(24)] public EnumCase enumCase;",
+                "return this.case_Node;",
+                "return this.case_Money;",
+            }
+            , unexpectedFragments: Array.Empty<string>()
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_KnownCaseSizes_PlacesEnumCaseAfterLargestCase()
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct PaddingEnum
+              {
+                  public partial struct Mixed
+                  {
+                      public int number;
+                      public byte before;
+                      public byte after;
+                  }
+
+                  public partial struct Nothing { }
+              }
+              """
+            , expectedSourceCount: 1
+            , expectedFragments: new[] {
+                "[g__SRIS.FieldOffset(8)] public EnumCase enumCase;",
+            }
+            , unexpectedFragments: new[] {
+                "[g__SRIS.FieldOffset(0)] public EnumCase enumCase;",
+            }
+        );
+
+    [TestMethod]
+    public Task ExplicitLayout_CaseStorageOutsideFields_GeneratesWholeCaseLayout()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumStructGenerator>(
+              """
+              using System.Runtime.InteropServices;
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              [StructLayout(LayoutKind.Explicit)]
+              public partial struct Storage
+              {
+                  public partial struct Mixed
+                  {
+                      public int visible;
+                      private int _hidden;
+
+                      public Mixed(int visible, int hidden)
+                      {
+                          this.visible = visible;
+                          _hidden = hidden;
+                      }
+
+                      public readonly int Hidden => _hidden;
+                  }
+
+                  public partial struct Secret
+                  {
+                      private long _value;
+
+                      public Secret(long value)
+                      {
+                          _value = value;
+                      }
+
+                      public readonly long Value => _value;
+                  }
+
+                  public partial struct Nothing { }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>("Storage.PolyEnumStruct.4b04a9917a9b7e7f.g.cs"),
+            }
+        );
+
+    [TestMethod]
+    public async Task ExplicitLayout_CaseStorageOutsideFields_RoundTripsValues()
+    {
+        var result = await GeneratorTestHelper.RunGeneratedProbeAsync<PolyEnumStructGenerator>(
+              """
+              using System.Runtime.InteropServices;
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              [StructLayout(LayoutKind.Explicit)]
+              public partial struct MixedStorage
+              {
+                  public partial struct Mixed
+                  {
+                      public int visible;
+                      private int _hidden;
+
+                      public Mixed(int visible, int hidden)
+                      {
+                          this.visible = visible;
+                          _hidden = hidden;
+                      }
+
+                      public readonly int Hidden => _hidden;
+                  }
+
+                  public partial struct Nothing { }
+              }
+
+              [PolyEnumStruct]
+              [StructLayout(LayoutKind.Explicit)]
+              public partial struct SecretStorage
+              {
+                  public partial struct Secret
+                  {
+                      private long _value;
+
+                      public Secret(long value)
+                      {
+                          _value = value;
+                      }
+
+                      public readonly long Value => _value;
+                  }
+
+                  public partial struct Nothing { }
+              }
+
+              [PolyEnumStruct]
+              [StructLayout(LayoutKind.Explicit)]
+              public partial struct PositionalStorage
+              {
+                  public partial record struct Positional(long Value);
+
+                  public partial struct Nothing { }
+              }
+
+              [PolyEnumStruct]
+              [StructLayout(LayoutKind.Explicit)]
+              public partial struct AutoStorage
+              {
+                  public partial struct Auto
+                  {
+                      public long Value { get; set; }
+                  }
+
+                  public partial struct Nothing { }
+              }
+
+              public static class Probe
+              {
+                  public static string Run()
+                  {
+                      MixedStorage mixed = new MixedStorage.Mixed(3, 0x01020304);
+                      SecretStorage secret = new SecretStorage.Secret(0x0102030405060708);
+                      PositionalStorage positional = new PositionalStorage.Positional(0x0102030405060708);
+                      AutoStorage auto = new AutoStorage.Auto { Value = 0x0102030405060708 };
+                      var mixedCase = (MixedStorage.Mixed)mixed;
+
+                      return $"{mixed.GetEnumCase()}:{mixedCase.visible}:{mixedCase.Hidden:X}"
+                          + $"|{secret.GetEnumCase()}:{((SecretStorage.Secret)secret).Value:X}"
+                          + $"|{positional.GetEnumCase()}:{((PositionalStorage.Positional)positional).Value:X}"
+                          + $"|{auto.GetEnumCase()}:{((AutoStorage.Auto)auto).Value:X}";
+                  }
+              }
+              """
+            , "TestProject.Probe"
+        );
+
+        Assert.AreEqual(
+              "Mixed:3:1020304|Secret:102030405060708|Positional:102030405060708|Auto:102030405060708"
+            , result
+        );
+    }
+
+    [TestMethod]
+    public Task MergedLayout_CaseStorageOutsideFields_SizesWholeCaseAndCompiles()
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Holder
+              {
+                  public partial struct Hidden
+                  {
+                      public int visible;
+                      private long _hidden;
+
+                      public Hidden(long hidden) : this()
+                      {
+                          _hidden = hidden;
+                      }
+
+                      public readonly long Value => _hidden;
+                  }
+
+                  public partial struct Auto
+                  {
+                      public int visible;
+
+                      public long Total { get; set; }
+                  }
+
+                  public partial struct Notifying
+                  {
+                      public int visible;
+
+              #pragma warning disable CS0067
+                      public event System.Action Changed;
+              #pragma warning restore CS0067
+                  }
+
+                  public partial struct Small
+                  {
+                      public int visible;
+                  }
+              }
+              """
+            , expectedSourceCount: 1
+            , expectedFragments: new[] {
+                "public Holder(in Hidden @case) : this()",
+                "public Holder(in Auto @case) : this()",
+                "public Holder(in Notifying @case) : this()",
+                "public Holder(Small @case) : this()",
+            }
+            , unexpectedFragments: new[] {
+                "public Holder(Hidden @case) : this()",
+                "public Holder(Auto @case) : this()",
+                "public Holder(Notifying @case) : this()",
+                "public Holder(in Small @case) : this()",
+            }
+            , expectedOrderedFragments: new[] {
+                "partial struct Small : IEnumCase",
+                "g__ET.Option<int> visible = default\n            )\n",
+            }
+        );
+
+    [TestMethod]
+    public Task MergedLayout_CaseStorageOutsideFields_GeneratesHiddenStorageMembers()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Holder
+              {
+                  public partial struct Mixed
+                  {
+                      public int visible;
+                      private int _hidden;
+
+                      public Mixed(int visible, int hidden, long total, System.Action changed) : this()
+                      {
+                          this.visible = visible;
+                          _hidden = hidden;
+                          Total = total;
+                          Changed = changed;
+                      }
+
+                      public event System.Action Changed;
+
+                      public long Total { get; private set; }
+
+                      public readonly int Hidden => _hidden;
+                  }
+
+                  public partial struct Small
+                  {
+                      public int visible;
+                  }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                    "Holder.PolyEnumStruct.c3631e893050956c.g.cs"
+                ),
+            }
+        );
+
+    [TestMethod]
+    public async Task MergedLayout_CaseStorageOutsideFields_RoundTripsValues()
+    {
+        var result = await GeneratorTestHelper.RunGeneratedProbeAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Holder
+              {
+                  public partial struct Mixed
+                  {
+                      public int visible;
+                      private int _hidden;
+
+                      public Mixed(int visible, int hidden, long total, System.Action changed) : this()
+                      {
+                          this.visible = visible;
+                          _hidden = hidden;
+                          Total = total;
+                          Changed = changed;
+                      }
+
+                      public event System.Action Changed;
+
+                      public long Total { get; private set; }
+
+                      public readonly int Hidden => _hidden;
+
+                      public readonly void Raise()
+                      {
+                          Changed?.Invoke();
+                      }
+                  }
+
+                  public readonly partial struct Frozen
+                  {
+                      private readonly long _stamp;
+
+                      public Frozen(long stamp, int code)
+                      {
+                          _stamp = stamp;
+                          Code = code;
+                      }
+
+                      public int Code { get; }
+
+                      public long Stamp => _stamp;
+                  }
+
+                  public readonly partial record struct Tagged(int Id)
+                  {
+                      private readonly long _stamp = 0;
+
+                      public Tagged(int id, long stamp) : this(id)
+                      {
+                          _stamp = stamp;
+                      }
+
+                      public long Stamp => _stamp;
+                  }
+              }
+
+              public static partial class ResultCases
+              {
+                  public readonly partial record struct Success<T>(T Value)
+                  {
+                      private readonly int _attempt = 0;
+
+                      public Success(T value, int attempt) : this(value)
+                      {
+                          _attempt = attempt;
+                      }
+
+                      public int Attempt => _attempt;
+                  }
+              }
+
+              [PolyEnumStruct(Container = typeof(ResultCases))]
+              public partial struct Result<T> { }
+
+              public static class Probe
+              {
+                  public static string Run()
+                  {
+                      var raised = 0;
+                      Holder mixed = new Holder.Mixed(3, 4, 5, () => raised++);
+                      Holder frozen = new Holder.Frozen(6, 7);
+                      Holder tagged = new Holder.Tagged(8, 9);
+                      Result<string> success = new ResultCases.Success<string>("ok", 10);
+
+                      var mixedCase = (Holder.Mixed)mixed;
+                      mixedCase.Raise();
+
+                      var frozenCase = (Holder.Frozen)frozen;
+                      var taggedCase = (Holder.Tagged)tagged;
+                      success.TryGetValue(out ResultCases.Success<string> successCase);
+
+                      return $"{mixed.GetEnumCase()}:{mixedCase.visible}:{mixedCase.Hidden}:{mixedCase.Total}:{raised}"
+                          + $"|{frozen.GetEnumCase()}:{frozenCase.Stamp}:{frozenCase.Code}"
+                          + $"|{tagged.GetEnumCase()}:{taggedCase.Id}:{taggedCase.Stamp}"
+                          + $"|{success.GetEnumCase()}:{successCase.Value}:{successCase.Attempt}";
+                  }
+              }
+              """
+            , "TestProject.Probe"
+        );
+
+        Assert.AreEqual("Mixed:3:4:5:1|Frozen:6:7|Tagged:8:9|Success:ok:10", result);
+    }
+
+    [TestMethod]
+    public Task ExplicitLayout_ExplicitOperatorParameterFollowsExplicitLayoutSize()
+        => GeneratorTestHelper.VerifyGeneratedSourceSetFragmentsAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct Reading
+              {
+                  public partial struct Count
+                  {
+                      public int value;
+                  }
+
+                  public partial struct Ratio
+                  {
+                      public float value;
+                  }
+
+                  public partial struct Level
+                  {
+                      public short value;
+                  }
+              }
+
+              [PolyEnumStruct]
+              [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Explicit)]
+              public partial struct Vault
+              {
+                  public partial struct Hidden
+                  {
+                      private long _value;
+
+                      public Hidden(long value)
+                      {
+                          _value = value;
+                      }
+
+                      public readonly long Value => _value;
+                  }
+
+                  public partial struct Nothing { }
+              }
+              """
+            , expectedSourceCount: 2
+            , expectedFragments: new[] {
+                "[g__SRIS.FieldOffset(4)] public EnumCase enumCase;",
+                "public static explicit operator Count(Reading @enum)",
+                "public static explicit operator Ratio(Reading @enum)",
+                "public static explicit operator Level(Reading @enum)",
+                "public static explicit operator Reading_Undefined(Reading @enum)",
+                "[g__SRIS.FieldOffset(8)] public EnumCase enumCase;",
+                "public static explicit operator Hidden(in Vault @enum)",
+                "public static explicit operator Nothing(in Vault @enum)",
+                "public static explicit operator Vault_Undefined(in Vault @enum)",
+            }
+            , unexpectedFragments: new[] {
+                "(in Reading @enum)",
+                "(Vault @enum)",
+            }
+        );
+
     private static IReadOnlyDictionary<string, string> RunObservableChangeTransition(
           ref GeneratorDriver driver
         , string source
@@ -791,4 +1592,54 @@ public class PolyEnumStructGeneratorTests
             Assert.AreEqual(expectedReason, output.Reason);
         }
     }
+
+    private static Task VerifyRecordParameterAsync(string parameters, string snapshotTestMethod)
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumStructGenerator>(
+              $$"""
+              using System;
+              using System.Collections.Generic;
+              using EncosyTower.PolyEnumStructs;
+
+              namespace TestProject;
+
+              [PolyEnumStruct]
+              public partial struct Damage
+              {
+                  public partial record struct Hit({{parameters}});
+
+                  public partial struct Miss { }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                      "Damage.PolyEnumStruct.a7b9b77136846634.g.cs"
+                    , testMethod: snapshotTestMethod
+                ),
+            }
+        );
+
+    [TestMethod]
+    public Task GlobalNamespaceStruct_GeneratesEnumCaseExtensionMethods()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<PolyEnumStructGenerator>(
+              """
+              using EncosyTower.PolyEnumStructs;
+
+              [PolyEnumStruct(WithEnumExtensions = true)]
+              public partial struct Choice
+              {
+                  public partial struct A { }
+              }
+
+              internal static class Usage
+              {
+                  public static string Name()
+                      => Choice.EnumCase.A.ToStringFast();
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<PolyEnumStructGenerator>(
+                    "Choice.PolyEnumStruct.85ed3cc2d96bac08.g.cs"
+                ),
+            }
+        );
 }

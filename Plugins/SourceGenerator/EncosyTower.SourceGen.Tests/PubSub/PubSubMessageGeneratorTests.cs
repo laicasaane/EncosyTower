@@ -1,3 +1,4 @@
+using EncosyTower.Core.Generators.TypeWraps;
 using EncosyTower.PubSub.Generators;
 using EncosyTower.SourceGen.Tests.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -514,6 +515,78 @@ public sealed class PubSubMessageGeneratorTests
             Assert.IsTrue(text.EndsWith("\n", StringComparison.Ordinal));
             Assert.IsFalse(text.EndsWith("\n\n", StringComparison.Ordinal));
         }
+    }
+
+    [DataTestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WrapTypeClassMessage_PublishesParameterlessOnlyWithDeclaredConstructor(
+          bool declaresParameterlessConstructor
+    )
+    {
+        var constructor = declaresParameterlessConstructor ? "public Points() : this(0) { }" : string.Empty;
+        var caseName = declaresParameterlessConstructor ? "WrapTypeMessageWithConstructor" : "WrapTypeMessage";
+        var run = await PubSubRuntimeFixture.RunAsync(
+              sources: [
+                  new NamedSource("Message.cs", $$"""
+                      using EncosyTower.PubSub;
+                      using EncosyTower.TypeWraps;
+
+                      namespace TestProject;
+
+                      [WrapType(typeof(int), "value")]
+                      [PubSub(ApiMode.Both, State = StateMode.Both)]
+                      public partial class Points
+                      {
+                          {{constructor}}
+                      }
+                      """),
+              ]
+            , previous: null
+            , additionalGenerators: [new TypeWrapGenerator()]
+        );
+        var scope = GetScopeSources(run).Single();
+        var typeWrapSources = run.AdditionalResults.Single().GeneratedSources;
+
+        AssertHintRoles(run, messageCount: 1, scopeCount: 1);
+        AssertGeneratorSucceeded(run);
+        PubSubRuntimeFixture.AssertNoOutputErrors(run);
+        Assert.AreEqual(1, typeWrapSources.Length);
+        Assert.AreEqual("Points.TypeWrap.b758ebbfb7b8ec68.g.cs", typeWrapSources[0].HintName);
+
+        AssertMethodCounts(
+              scope
+            , total: declaresParameterlessConstructor ? 90 : 86
+            , cache: 2
+            , publish: declaresParameterlessConstructor ? 8 : 4
+            , subscribe: 80
+        );
+
+        var snapshotDirectory = Path.Combine(
+              FindSourceGeneratorRoot()
+            , "EncosyTower.SourceGen.Tests"
+            , "PubSub"
+            , "Snapshots"
+        );
+
+        var messageMismatch = await GeneratedSourceSnapshot.VerifyAsync(
+              GetMessageSource(run).SourceText.ToString()
+            , Path.Combine(snapshotDirectory, "PubSubMessageGeneratorTests.WrapTypeMessage.Message.verified.cs")
+        );
+
+        var scopeMismatch = await GeneratedSourceSnapshot.VerifyAsync(
+              scope.SourceText.ToString()
+            , Path.Combine(snapshotDirectory, $"PubSubMessageGeneratorTests.{caseName}.Scope.verified.cs")
+        );
+
+        var typeWrapMismatch = await GeneratedSourceSnapshot.VerifyAsync(
+              typeWrapSources[0].SourceText.ToString()
+            , Path.Combine(snapshotDirectory, $"PubSubMessageGeneratorTests.{caseName}.TypeWrap.verified.cs")
+        );
+
+        Assert.IsNull(messageMismatch, messageMismatch);
+        Assert.IsNull(scopeMismatch, scopeMismatch);
+        Assert.IsNull(typeWrapMismatch, typeWrapMismatch);
     }
 
     private static GeneratedSourceResult GetMessageSource(PubSubRun run)

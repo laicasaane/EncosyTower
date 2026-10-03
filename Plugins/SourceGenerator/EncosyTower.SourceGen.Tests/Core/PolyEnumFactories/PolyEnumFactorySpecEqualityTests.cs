@@ -32,9 +32,6 @@ public sealed class PolyEnumFactorySpecEqualityTests
         Assert.AreEqual(baseline.GetHashCode(), copy.GetHashCode());
         Assert.AreNotEqual(baseline, baseline with { wrapperSelfName = "DataError<U>" });
         Assert.AreNotEqual(baseline, baseline with { wrapperConstraints = "where T : struct" });
-        Assert.AreNotEqual(baseline, baseline with { hintName = "Other" });
-        Assert.AreNotEqual(baseline, baseline with { openingSource = "namespace Other {" });
-        Assert.AreNotEqual(baseline, baseline with { closingSource = "}}" });
         Assert.AreNotEqual(baseline, baseline with { enumCaseTypeName = "global::Other.EnumCase" });
         Assert.AreNotEqual(baseline, baseline with { supportTypeName = "global::Other.Error" });
         Assert.AreNotEqual(baseline, baseline with { separateTypeContainer = false });

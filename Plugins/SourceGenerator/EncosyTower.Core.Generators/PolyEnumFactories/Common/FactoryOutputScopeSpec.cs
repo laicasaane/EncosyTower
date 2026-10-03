@@ -1,3 +1,5 @@
+using EncosyTower.SourceGen.Helpers.PolyEnumStructs;
+
 namespace EncosyTower.Core.PolyEnumFactories
 {
     internal readonly struct FactoryOutputScopeSpec : IEquatable<FactoryOutputScopeSpec>
@@ -135,7 +137,10 @@ namespace EncosyTower.Core.PolyEnumFactories
 
             if (string.IsNullOrEmpty(Constraints) == false)
             {
-                p.PrintLine(Constraints);
+                foreach (var constraint in Constraints.Split('\n'))
+                {
+                    p.PrintLine(constraint);
+                }
             }
         }
 
@@ -156,15 +161,15 @@ namespace EncosyTower.Core.PolyEnumFactories
         public override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(Name);
-            hash.Add(Keyword);
-            hash.Add(Accessibility);
-            hash.Add(TypeParameters);
-            hash.Add(Constraints);
-            hash.Add(IsStatic);
-            hash.Add(IsReadOnly);
-            hash.Add(IsRef);
-            hash.Add(IsRecord);
+            hash = hash.Add(Name);
+            hash = hash.Add(Keyword);
+            hash = hash.Add(Accessibility);
+            hash = hash.Add(TypeParameters);
+            hash = hash.Add(Constraints);
+            hash = hash.Add(IsStatic);
+            hash = hash.Add(IsReadOnly);
+            hash = hash.Add(IsRef);
+            hash = hash.Add(IsRecord);
             return hash.ToHashCode();
         }
     }
@@ -264,7 +269,7 @@ namespace EncosyTower.Core.PolyEnumFactories
                 , keyword
                 , GetAccessibility(type.DeclaredAccessibility, token)
                 , syntax.TypeParameterList?.ToString() ?? string.Empty
-                , syntax.ConstraintClauses.ToString()
+                , ContainerResolver.FormatConstraintClauses(type, token)
                 , type.IsStatic
                 , type.IsReadOnly
                 , type.IsRefLikeType

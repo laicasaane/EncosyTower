@@ -96,7 +96,10 @@ namespace EncosyTower.Databases.Authoring.Generators
 
             token.ThrowIfCancellationRequested();
 
-            var dataMap = BuildShapeDataMap(tableInfoList, ignoredTypes, resultTypes, token);
+            var unresolvedDataTypes = new HashSet<string>(StringComparer.Ordinal);
+            var dataMap = BuildShapeDataMap(tableInfoList, ignoredTypes, resultTypes, unresolvedDataTypes, token);
+
+            MarkTablesWithUnresolvedTypes(tableInfoList, dataMap, unresolvedDataTypes, token);
 
             var scopedConvertersBuilder = ImmutableArrayBuilder<ScopedConverterSpec>.Rent();
 
@@ -209,6 +212,7 @@ namespace EncosyTower.Databases.Authoring.Generators
                 openingSource = openingSource,
                 closingSource = closingSource,
                 containerHintName = containerHintName,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(authoringTypeSyntax, token),
                 allDataModels = dataSpecListBuilder.ToImmutable().AsEquatableArray(),
                 scopedConverters = scopedConverters,
                 tables = tableSpecListBuilder.ToImmutable().AsEquatableArray(),
@@ -538,6 +542,11 @@ namespace EncosyTower.Databases.Authoring.Generators
                     continue;
                 }
 
+                if (tableInfo.hasUnresolvedType)
+                {
+                    continue;
+                }
+
                 var tableTypeSimpleName = tableInfo.tableTypeSimpleName;
                 var simpleBaseSheetName = $"{tableInfo.dataTypeSimpleName}Sheet";
 
@@ -805,6 +814,7 @@ namespace EncosyTower.Databases.Authoring.Generators
               List<TableInfo> tableInfoList
             , IgnoredTypes ignoredTypes
             , ResultTypes resultTypes
+            , HashSet<string> unresolvedDataTypes
             , CancellationToken token
         )
         {
@@ -843,7 +853,13 @@ namespace EncosyTower.Databases.Authoring.Generators
 
                     set.Add(type);
 
-                    var dataModel = ExtractDataModel(type, ignoredTypes, resultTypes, token);
+                    var dataModel = ExtractDataModel(
+                          type
+                        , ignoredTypes
+                        , resultTypes
+                        , out var hasUnresolvedType
+                        , token
+                    );
 
                     EnqueueTypes(queue, resultTypes, token);
                     resultTypes.Clear();
@@ -857,22 +873,107 @@ namespace EncosyTower.Databases.Authoring.Generators
                     }
 
                     map[dataModel.fullName] = dataModel;
+
+                    if (hasUnresolvedType)
+                    {
+                        unresolvedDataTypes.Add(dataModel.fullName);
+                    }
                 }
             }
 
             return map;
         }
 
-        private static DataSpec ExtractDataModel(
-              ITypeSymbol type
-            , IgnoredTypes ignoredTypes
-            , ResultTypes resultTypes
+        private static void MarkTablesWithUnresolvedTypes(
+              List<TableInfo> tableInfoList
+            , Dictionary<string, DataSpec> dataMap
+            , HashSet<string> unresolvedDataTypes
             , CancellationToken token
         )
         {
             token.ThrowIfCancellationRequested();
 
-            ExtractMemberModels(type, ignoredTypes, resultTypes, out var propRefs, out var fieldRefs, token);
+            if (unresolvedDataTypes.Count < 1)
+            {
+                return;
+            }
+
+            for (var i = 0; i < tableInfoList.Count; i++)
+            {
+                token.ThrowIfCancellationRequested();
+
+                var tableInfo = tableInfoList[i];
+                var visited = new HashSet<string>(StringComparer.Ordinal);
+                var queue = new Queue<string>();
+
+                EnqueueRoot(tableInfo.idTypeFullName, dataMap, visited, queue);
+                EnqueueRoot(tableInfo.dataTypeFullName, dataMap, visited, queue);
+
+                while (queue.Count > 0)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var shape = dataMap[queue.Dequeue()];
+
+                    if (unresolvedDataTypes.Contains(shape.fullName))
+                    {
+                        tableInfo.hasUnresolvedType = true;
+                        break;
+                    }
+
+                    EnqueueMemberTypes(shape.propRefs, dataMap, visited, queue);
+                    EnqueueMemberTypes(shape.fieldRefs, dataMap, visited, queue);
+
+                    foreach (var layer in shape.baseTypeRefs)
+                    {
+                        EnqueueMemberTypes(layer.propRefs, dataMap, visited, queue);
+                        EnqueueMemberTypes(layer.fieldRefs, dataMap, visited, queue);
+                    }
+                }
+
+                tableInfoList[i] = tableInfo;
+            }
+        }
+
+        private static void EnqueueMemberTypes(
+              EquatableArray<MemberSpec> members
+            , Dictionary<string, DataSpec> dataMap
+            , HashSet<string> visited
+            , Queue<string> queue
+        )
+        {
+            foreach (var member in members)
+            {
+                var manualAuthoring = member.manualAuthoring;
+
+                if (manualAuthoring.defined && manualAuthoring.type.IsValid)
+                {
+                    EnqueueSheetSideType(manualAuthoring.collection, manualAuthoring.type, dataMap, visited, queue);
+                }
+
+                EnqueueSheetSideType(member.collection, member.type, dataMap, visited, queue);
+            }
+        }
+
+        private static DataSpec ExtractDataModel(
+              ITypeSymbol type
+            , IgnoredTypes ignoredTypes
+            , ResultTypes resultTypes
+            , out bool hasUnresolvedType
+            , CancellationToken token
+        )
+        {
+            token.ThrowIfCancellationRequested();
+
+            ExtractMemberModels(
+                  type
+                , ignoredTypes
+                , resultTypes
+                , out var propRefs
+                , out var fieldRefs
+                , out hasUnresolvedType
+                , token
+            );
 
             using var baseTypeBuilder = ImmutableArrayBuilder<BaseDataSpec>.Rent();
 
@@ -893,8 +994,11 @@ namespace EncosyTower.Databases.Authoring.Generators
                     , resultTypes
                     , out var basePropRefs
                     , out var baseFieldRefs
+                    , out var baseHasUnresolvedType
                     , token
                 );
+
+                hasUnresolvedType |= baseHasUnresolvedType;
 
                 baseTypeBuilder.Add(new BaseDataSpec {
                     fullName = baseType.ToFullName(),
@@ -937,10 +1041,12 @@ namespace EncosyTower.Databases.Authoring.Generators
             , ResultTypes resultTypes
             , out EquatableArray<MemberSpec> propRefs
             , out EquatableArray<MemberSpec> fieldRefs
+            , out bool hasUnresolvedType
             , CancellationToken token
         )
         {
             token.ThrowIfCancellationRequested();
+            hasUnresolvedType = false;
 
             var members = type.GetMembers();
             var memberLength = members.Length;
@@ -1078,6 +1184,7 @@ namespace EncosyTower.Databases.Authoring.Generators
                     sourceMemberSymbol = field;
                 }
 
+                hasUnresolvedType |= HasUnresolvedType(member, sourceMemberSymbol, token);
                 uniqueFieldNames.Add(member.fieldName);
                 propBuilder.Add(BuildMemberModel(
                       member.propertyName
@@ -1108,6 +1215,7 @@ namespace EncosyTower.Databases.Authoring.Generators
                     generatedFromMember = property;
                 }
 
+                hasUnresolvedType |= HasUnresolvedType(member, generatedFromMember, token);
                 uniqueFieldNames.Add(member.fieldName);
                 fieldBuilder.Add(BuildMemberModel(
                       member.propertyName
@@ -1168,6 +1276,40 @@ namespace EncosyTower.Databases.Authoring.Generators
                 memberConverter = memberConverter,
                 localConverter = localConverter,
             };
+        }
+
+        private static bool HasUnresolvedType(
+              in MemberInfo member
+            , ISymbol sourceMemberSymbol
+            , CancellationToken token
+        )
+            => member.fieldType.ContainsErrorType(token)
+            || HasUnresolvedManualAuthoringType(member.member, token)
+            || HasUnresolvedManualAuthoringType(sourceMemberSymbol, token);
+
+        private static bool HasUnresolvedManualAuthoringType(ISymbol memberSymbol, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            if (memberSymbol?.GetAttribute(DATA_MANUAL_AUTHORING_ATTRIBUTE, token) is not { } attrib)
+            {
+                return false;
+            }
+
+            foreach (var arg in attrib.ConstructorArguments)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (arg.Kind == TypedConstantKind.Type
+                    && arg.Value is ITypeSymbol type
+                    && type.ContainsErrorType(token)
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static ConverterSpec TryFallbackConverterModel(
@@ -1868,6 +2010,7 @@ namespace EncosyTower.Databases.Authoring.Generators
             public EquatableArray<HorizontalCollectionSpec> horizontalCollections;
             public EquatableArray<string> generatedKeyTypeFullNames;
             public bool transpose;
+            public bool hasUnresolvedType;
         }
 
         private struct HorizontalSelectionInfo

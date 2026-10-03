@@ -5,6 +5,9 @@
         public const string OBSOLETE_ATTRIBUTE = "global::System.ObsoleteAttribute";
         public const string FIELD_NAME_FORMAT = "{0}Of{1}";
 
+        // A record cannot declare a member named Clone (CS8859).
+        private const string CLONE_MEMBER_NAME = "Clone";
+
         public string hintName;
         public string openingSource;
         public string closingSource;
@@ -12,6 +15,7 @@
         public string typeNameWithTypeParams;
         public string fullTypeName;
         public string fieldTypeName;
+        public string fieldTypePatternName;
         public string fieldEnumUnderlyingTypeName;
         public string fieldName;
         public InterfaceKind ignoreInterfaceMethods;
@@ -27,6 +31,7 @@
         public bool fieldTypeIsInterface;
         public bool excludeConverter;
         public bool isFieldDeclared;
+        public bool storageMembersAreReadOnly;
         public bool isFieldEnum;
         public bool isReadOnly;
         public bool fieldTypeIsReadOnly;
@@ -37,6 +42,7 @@
         public EquatableArray<EventSpec> events;
         public EquatableArray<MethodSpec> methods;
         public EquatableArray<OperatorEntry> operatorEntries;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid
             => string.IsNullOrEmpty(fullTypeName) == false
@@ -137,6 +143,7 @@
 
             this.fieldName = string.Format(fieldName, isStruct ? "value" : "instance", fieldTypeAsIdentifier);
             fieldTypeName = fieldTypeSymbol.ToFullName();
+            fieldTypePatternName = GetPatternTypeName(fieldTypeSymbol, fieldTypeName);
             this.excludeConverter = excludeConverter;
             isFieldEnum = fieldTypeSymbol.IsEnumType();
             fieldEnumUnderlyingTypeName = isFieldEnum ? fieldTypeSymbol.EnumUnderlyingType.ToFullName() : string.Empty;
@@ -151,6 +158,8 @@
 
             isFieldDeclared = false;
 
+            var declaredFieldIsReadOnly = false;
+
             foreach (var member in members)
             {
                 switch (member)
@@ -164,6 +173,7 @@
                         )
                         {
                             this.isFieldDeclared = true;
+                            declaredFieldIsReadOnly = field.IsReadOnly;
                         }
 
                         definedMembers.Add(field.ToDisplayString(globalFormat));
@@ -271,6 +281,11 @@
             definedMembers.Add("GetHashCode()");
             definedMembers.Add("ToString()");
 
+            var storageIsVariable = isRecord == false
+                && (isFieldDeclared ? declaredFieldIsReadOnly == false : isStruct && isReadOnly == false);
+
+            storageMembersAreReadOnly = storageIsVariable == false && fieldTypeSymbol.IsValueType;
+
             using var fieldArrayBuilder = ImmutableArrayBuilder<FieldSpec>.Rent();
             using var propertyArrayBuilder = ImmutableArrayBuilder<PropertySpec>.Rent();
             using var eventArrayBuilder = ImmutableArrayBuilder<EventSpec>.Rent();
@@ -289,7 +304,9 @@
 
             foreach (var member in fieldTypeMembers)
             {
-                if (member.HasAttribute(OBSOLETE_ATTRIBUTE))
+                if (member.HasAttribute(OBSOLETE_ATTRIBUTE)
+                    || (isRecord && string.Equals(member.Name, CLONE_MEMBER_NAME, StringComparison.Ordinal))
+                )
                 {
                     continue;
                 }
@@ -320,6 +337,7 @@
                                     , fieldTypeSymbol
                                     , this.isStruct
                                     , this.isReadOnly
+                                    , storageMembersAreReadOnly
                                     , token
                                 ));
                             }
@@ -511,6 +529,28 @@
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Names <paramref name="type"/> so that it parses as a type pattern: tuple syntax in a pattern is a
+        /// positional pattern, so a tuple type is written as its <c>System.ValueTuple</c> type.
+        /// </summary>
+        private static string GetPatternTypeName(INamedTypeSymbol type, string fullName)
+        {
+            if (type.IsTupleType == false)
+            {
+                return fullName;
+            }
+
+            var typeArguments = type.TypeArguments;
+            var names = new string[typeArguments.Length];
+
+            for (var i = 0; i < typeArguments.Length; i++)
+            {
+                names[i] = typeArguments[i].ToFullName();
+            }
+
+            return $"global::System.ValueTuple<{string.Join(", ", names)}>";
         }
 
         private static OpType GetOpType(ITypeSymbol type, ITypeSymbol fieldType, string fullTypeName, bool retain)
@@ -889,31 +929,75 @@
             => obj is TypeWrapSpec other && Equals(other);
 
         public readonly bool Equals(TypeWrapSpec other)
-            => string.Equals(fullTypeName, other.fullTypeName, StringComparison.Ordinal)
+            => string.Equals(typeName, other.typeName, StringComparison.Ordinal)
+            && string.Equals(typeNameWithTypeParams, other.typeNameWithTypeParams, StringComparison.Ordinal)
+            && string.Equals(fullTypeName, other.fullTypeName, StringComparison.Ordinal)
             && string.Equals(fieldTypeName, other.fieldTypeName, StringComparison.Ordinal)
+            && string.Equals(fieldTypePatternName, other.fieldTypePatternName, StringComparison.Ordinal)
             && string.Equals(fieldEnumUnderlyingTypeName, other.fieldEnumUnderlyingTypeName, StringComparison.Ordinal)
             && string.Equals(fieldName, other.fieldName, StringComparison.Ordinal)
+            && ignoreInterfaceMethods == other.ignoreInterfaceMethods
+            && ignoreOperators == other.ignoreOperators
+            && implementInterfaces == other.implementInterfaces
+            && implementOperators == other.implementOperators
+            && implementSpecialMethods == other.implementSpecialMethods
+            && fieldSpecialType == other.fieldSpecialType
+            && fieldUnderlyingSpecialType == other.fieldUnderlyingSpecialType
+            && isRecord == other.isRecord
+            && isStruct == other.isStruct
+            && isRefStruct == other.isRefStruct
+            && fieldTypeIsInterface == other.fieldTypeIsInterface
             && excludeConverter == other.excludeConverter
+            && isFieldDeclared == other.isFieldDeclared
+            && storageMembersAreReadOnly == other.storageMembersAreReadOnly
+            && isFieldEnum == other.isFieldEnum
+            && isReadOnly == other.isReadOnly
+            && fieldTypeIsReadOnly == other.fieldTypeIsReadOnly
+            && isSealed == other.isSealed
+            && enableNullable == other.enableNullable
             && fields.Equals(other.fields)
             && properties.Equals(other.properties)
             && events.Equals(other.events)
             && methods.Equals(other.methods)
             && operatorEntries.Equals(other.operatorEntries)
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(fullTypeName);
-            hash.Add(fieldTypeName);
-            hash.Add(fieldEnumUnderlyingTypeName);
-            hash.Add(fieldName);
-            hash.Add(excludeConverter);
-            hash.Add(fields);
-            hash.Add(properties);
-            hash.Add(events);
-            hash.Add(methods);
-            hash.Add(operatorEntries);
+            hash = hash.Add(typeName);
+            hash = hash.Add(typeNameWithTypeParams);
+            hash = hash.Add(fullTypeName);
+            hash = hash.Add(fieldTypeName);
+            hash = hash.Add(fieldTypePatternName);
+            hash = hash.Add(fieldEnumUnderlyingTypeName);
+            hash = hash.Add(fieldName);
+            hash = hash.Add(ignoreInterfaceMethods);
+            hash = hash.Add(ignoreOperators);
+            hash = hash.Add(implementInterfaces);
+            hash = hash.Add(implementOperators);
+            hash = hash.Add(implementSpecialMethods);
+            hash = hash.Add(fieldSpecialType);
+            hash = hash.Add(fieldUnderlyingSpecialType);
+            hash = hash.Add(isRecord);
+            hash = hash.Add(isStruct);
+            hash = hash.Add(isRefStruct);
+            hash = hash.Add(fieldTypeIsInterface);
+            hash = hash.Add(excludeConverter);
+            hash = hash.Add(isFieldDeclared);
+            hash = hash.Add(storageMembersAreReadOnly);
+            hash = hash.Add(isFieldEnum);
+            hash = hash.Add(isReadOnly);
+            hash = hash.Add(fieldTypeIsReadOnly);
+            hash = hash.Add(isSealed);
+            hash = hash.Add(enableNullable);
+            hash = hash.Add(fields);
+            hash = hash.Add(properties);
+            hash = hash.Add(events);
+            hash = hash.Add(methods);
+            hash = hash.Add(operatorEntries);
+            hash = hash.Add(containingTypes);
             return hash.ToHashCode();
         }
 

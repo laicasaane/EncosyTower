@@ -61,9 +61,6 @@ namespace EncosyTower.Persistence.Analyzers
                     || fieldDeclaration.Declaration.Variables.Count < 1
                     || ValidateFieldName(fieldDeclaration.Declaration.Variables[0].Identifier.Text) == false
                     || attributeTarget.Identifier.Kind() is not SyntaxKind.PropertyKeyword
-                    || fieldDeclaration.Parent is not TypeDeclarationSyntax typeDeclaration
-                    || typeDeclaration.AttributeLists.Count < 1
-                    || typeDeclaration.HasAttribute(NAMESPACE, "Persist", token) == false
                 )
                 {
                     continue;

@@ -3,6 +3,7 @@ namespace EncosyTower.PubSub.Generators
     internal static class PubSubAliasSet
     {
         public const string SYSTEM = "g__S";
+        public const string CODE_DOM_COMPILER = "g__SCDC";
         public const string CODE_ANALYSIS = "g__SDCA";
         public const string THREADING = "g__ST";
         public const string RUNTIME_COMPILER_SERVICES = "g__SRCS";
@@ -15,6 +16,7 @@ namespace EncosyTower.PubSub.Generators
         public static void WriteAliases(ref Printer printer)
         {
             printer.PrintLine("using g__S = global::System;");
+            printer.PrintLine("using g__SCDC = global::System.CodeDom.Compiler;");
             printer.PrintLine("using g__SDCA = global::System.Diagnostics.CodeAnalysis;");
             printer.PrintLine("using g__ST = global::System.Threading;");
             printer.PrintLine("using g__SRCS = global::System.Runtime.CompilerServices;");

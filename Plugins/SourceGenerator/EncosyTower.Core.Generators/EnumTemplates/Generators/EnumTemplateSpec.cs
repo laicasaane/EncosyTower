@@ -69,6 +69,13 @@ namespace EncosyTower.Core.Generators.EnumTemplates
                     continue;
                 }
 
+                if (typeSymbol.ContainsErrorType(token)
+                    && attrib.AttributeClass.HasFullName(MEMBERS_FROM_ENUM_ATTRIBUTE, token)
+                )
+                {
+                    continue;
+                }
+
                 var candidate = TemplateMemberSpec.Extract(
                       typeSymbol
                     , templateFullName
@@ -90,7 +97,7 @@ namespace EncosyTower.Core.Generators.EnumTemplates
                 templateSimpleName = templateSymbol.Name,
                 fileHintName = templateSymbol.ToFileName(),
                 accessibility = templateSymbol.DeclaredAccessibility,
-                parentIsNamespace = syntax.Parent is BaseNamespaceDeclarationSyntax,
+                parentIsNamespace = syntax.Parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax,
                 namespaceName = namespaceName,
                 containingTypes = containingTypes,
                 inlineMembers = new EquatableArray<TemplateMemberSpec>(inlineMemberBuilder.ToImmutable()),

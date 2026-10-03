@@ -64,7 +64,7 @@ namespace EncosyTower.Core.Generators.EnumExtensions
 
             var candidate = EnumExtensionSpec.Extract(
                   enumSymbol
-                , syntax.Parent is BaseNamespaceDeclarationSyntax
+                , syntax.Parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax
                 , EnumExtensionsDeclaration.GetNameExtensionsClass(enumSymbol.Name)
                 , enumSymbol.DeclaredAccessibility
                 , namespaceName

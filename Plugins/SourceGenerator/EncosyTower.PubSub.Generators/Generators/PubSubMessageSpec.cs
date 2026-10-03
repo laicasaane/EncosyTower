@@ -47,7 +47,6 @@ namespace EncosyTower.PubSub.Generators
         public readonly bool Equals(PubSubMessageSpec other)
             => Declaration.Equals(other.Declaration)
             && Scopes.Equals(other.Scopes)
-            && string.Equals(HintName, other.HintName, StringComparison.Ordinal)
             && CanPublishParameterless == other.CanPublishParameterless
             && WithSync == other.WithSync
             && WithAsync == other.WithAsync
@@ -69,7 +68,6 @@ namespace EncosyTower.PubSub.Generators
             }
 
             hash = hash.Add(Scopes.Count);
-            hash = hash.Add(HintName);
             hash = hash.Add(CanPublishParameterless);
             hash = hash.Add(WithSync);
             hash = hash.Add(WithAsync);

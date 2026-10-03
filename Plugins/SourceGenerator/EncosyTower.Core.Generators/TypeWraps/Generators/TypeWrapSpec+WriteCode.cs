@@ -152,6 +152,23 @@
             }
         }
 
+        private readonly void WriteWrapperValueSetter(ref Printer p, string assignment)
+        {
+            if (isStruct)
+            {
+                p.PrintLine($"set => {assignment}");
+                return;
+            }
+
+            p.PrintLine("set");
+            p.OpenScope();
+            {
+                WriteThrowIfNull(ref p, "value");
+                p.PrintLine(assignment);
+            }
+            p.CloseScope();
+        }
+
         readonly void WriteField(ref Printer p, in FieldSpec field)
         {
             var returnTypeName = field.typeName;
@@ -195,7 +212,7 @@
                         p.PrintEndLine();
 
                         p.PrintLine(AGGRESSIVE_INLINING);
-                        p.PrintLine($"set => {fieldTypeName}.{name} = value.{fieldName};");
+                        WriteWrapperValueSetter(ref p, $"{fieldTypeName}.{name} = value.{fieldName};");
                     }
                     p.CloseScope();
                 }
@@ -216,7 +233,7 @@
             }
             else
             {
-                var isReadOnly = this.isReadOnly || field.isReadOnly;
+                var isReadOnly = this.isReadOnly || field.isReadOnly || storageMembersAreReadOnly;
 
                 if (isReadOnly && sameType)
                 {
@@ -242,7 +259,7 @@
                         p.PrintEndLine();
 
                         p.PrintLine(AGGRESSIVE_INLINING);
-                        p.PrintLine($"set => this.{fieldName}.{name} = value.{fieldName};");
+                        WriteWrapperValueSetter(ref p, $"this.{fieldName}.{name} = value.{fieldName};");
                     }
                     p.CloseScope();
                 }
@@ -618,7 +635,7 @@
             p.PrintIf(method.isUnsafe, "unsafe ");
             p.PrintIf(method.isStatic, "static ");
             p.PrintIf(isStruct == false && method.isOverride, "override ");
-            p.PrintIf(method.isReadOnly, "readonly ");
+            p.PrintIf(isStruct && method.isReadOnly, "readonly ");
             p.PrintIf(method.refKind == RefKind.Ref, "ref ");
             p.PrintIf(method.refKind == RefKind.RefReadOnly, "ref readonly ");
             p.PrintIf(method.returnsVoid, "void", returnTypeName);
@@ -737,11 +754,7 @@
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public ").PrintIf(isStruct, "readonly ", "virtual ")
                         .Print("int CompareTo(").Print(fullTypeName).PrintEndLine(" other)");
-                    p = p.IncreasedIndent();
-                    {
-                        p.PrintBeginLine("=> this.CompareTo(other.").Print(fieldName).PrintEndLine(");");
-                    }
-                    p = p.DecreasedIndent();
+                    WriteOtherComparisonBody(ref p, $"this.CompareTo(other.{fieldName})", "0", "1");
                     p.PrintEndLine();
                 }
                 else
@@ -749,11 +762,7 @@
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public ").PrintIf(isStruct, "readonly ", "virtual ")
                         .Print("int CompareTo(").Print(fullTypeName).PrintEndLine(" other)");
-                    p = p.IncreasedIndent();
-                    {
-                        p.PrintBeginLine("=> this.").Print(fieldName).Print(".CompareTo(other.").Print(fieldName).PrintEndLine(");");
-                    }
-                    p = p.DecreasedIndent();
+                    WriteOtherComparisonBody(ref p, $"this.{fieldName}.CompareTo(other.{fieldName})", "0", "1");
                     p.PrintEndLine();
                 }
             }
@@ -772,7 +781,8 @@
                     p.OpenScope();
                     {
                         p.PrintBeginLine(typeNameWithTypeParams).PrintEndLine(" other => CompareTo(other),");
-                        p.PrintBeginLine(fieldTypeName).Print(" other => this.").Print(fieldName).PrintEndLine(".CompareTo(other),");
+                        p.PrintBeginLine(fieldTypePatternName).Print(" other => this.")
+                            .Print(fieldName).PrintEndLine(".CompareTo(other),");
                         p.PrintLine("_ => 1,");
                     }
                     p.CloseScope("};");
@@ -807,11 +817,7 @@
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public ").PrintIf(isStruct, "readonly ", "virtual ")
                         .Print("bool Equals(").Print(fullTypeName).PrintEndLine(" other)");
-                    p = p.IncreasedIndent();
-                    {
-                        p.PrintBeginLine("=> this.").Print(fieldName).Print(" == other.").Print(fieldName).PrintEndLine(";");
-                    }
-                    p = p.DecreasedIndent();
+                    WriteOtherComparisonBody(ref p, $"this.{fieldName} == other.{fieldName}", "true", "false");
                     p.PrintEndLine();
                 }
                 else
@@ -819,18 +825,11 @@
                     p.PrintLine(AGGRESSIVE_INLINING);
                     p.PrintBeginLine("public ").PrintIf(isStruct, "readonly ", "virtual ")
                         .Print("bool Equals(").Print(fullTypeName).PrintEndLine(" other)");
-                    p = p.IncreasedIndent();
-                    {
-                        if (implementOperators.HasFlag(OperatorKind.Equal))
-                        {
-                            p.PrintBeginLine("=> this.").Print(fieldName).Print(" == other.").Print(fieldName).PrintEndLine(";");
-                        }
-                        else
-                        {
-                            p.PrintBeginLine("=> this.").Print(fieldName).Print(".Equals(other.").Print(fieldName).PrintEndLine(");");
-                        }
-                    }
-                    p = p.DecreasedIndent();
+                    var valueEquality = implementOperators.HasFlag(OperatorKind.Equal)
+                        ? $"this.{fieldName} == other.{fieldName}"
+                        : $"this.{fieldName}.Equals(other.{fieldName})";
+
+                    WriteOtherComparisonBody(ref p, valueEquality, "true", "false");
                     p.PrintEndLine();
                 }
             }
@@ -853,7 +852,8 @@
                     p.OpenScope();
                     {
                         p.PrintBeginLine(typeNameWithTypeParams).PrintEndLine(" other => Equals(other),");
-                        p.PrintBeginLine(fieldTypeName).Print(" other => this.").Print(fieldName).PrintEndLine(".Equals(other),");
+                        p.PrintBeginLine(fieldTypePatternName).Print(" other => this.")
+                            .Print(fieldName).PrintEndLine(".Equals(other),");
                         p.PrintLine("_ => false,");
                     }
                     p.CloseScope("};");
@@ -919,6 +919,32 @@
             }
         }
 
+        private readonly void WriteOtherComparisonBody(
+              ref Printer p
+            , string valueComparison
+            , string sameReferenceResult
+            , string nullOtherResult
+        )
+        {
+            if (isStruct)
+            {
+                p = p.IncreasedIndent();
+                {
+                    p.PrintBeginLine("=> ").Print(valueComparison).PrintEndLine(";");
+                }
+                p = p.DecreasedIndent();
+                return;
+            }
+
+            p.OpenScope();
+            {
+                WriteReturnIf(ref p, "global::System.Object.ReferenceEquals(this, other)", sameReferenceResult);
+                WriteReturnIf(ref p, "other is null", nullOtherResult);
+                p.PrintBeginLine("return ").Print(valueComparison).PrintEndLine(";");
+            }
+            p.CloseScope();
+        }
+
         private readonly void WriteConversionOperators(ref Printer p)
         {
             if (fieldTypeIsInterface)
@@ -940,11 +966,24 @@
             p.PrintLine(AGGRESSIVE_INLINING);
             p.PrintBeginLine("public static implicit operator ").Print(fieldTypeName)
                 .Print("(").Print(fullTypeName).PrintEndLine(" value)");
-            p = p.IncreasedIndent();
+
+            if (isStruct)
             {
-                p.PrintBeginLine("=> value.").Print(fieldName).PrintEndLine(";");
+                p = p.IncreasedIndent();
+                {
+                    p.PrintBeginLine("=> value.").Print(fieldName).PrintEndLine(";");
+                }
+                p = p.DecreasedIndent();
             }
-            p = p.DecreasedIndent();
+            else
+            {
+                p.OpenScope();
+                {
+                    WriteThrowIfNull(ref p, "value");
+                    p.PrintBeginLine("return value.").Print(fieldName).PrintEndLine(";");
+                }
+                p.CloseScope();
+            }
             p.PrintEndLine();
         }
 
@@ -981,6 +1020,7 @@
                             , returnType
                             , argTypes
                             , fieldSpecialType
+                            , isStruct
                         );
                     }
                 }
@@ -998,6 +1038,7 @@
                         , returnType
                         , argTypes
                         , fieldSpecialType
+                        , isStruct
                     );
                 }
             }
@@ -1017,6 +1058,7 @@
             , OpType opReturnType
             , OpArgTypes opArgTypes
             , SpecialType fieldSpecialType
+            , bool isStruct
         )
         {
             var (isValid, firstType, firstName, secondType, secondName) = opArgTypes;
@@ -1034,6 +1076,11 @@
             p.PrintEndLine(")");
             p.OpenScope();
             {
+                if (isStruct == false)
+                {
+                    WriteNullOperandChecks(ref p, kind, opReturnType, opArgTypes);
+                }
+
                 switch (kind)
                 {
                     case OperatorKind.UnaryPlus:
@@ -1237,6 +1284,82 @@
                     p.Print(".").Print(fieldName);
                 }
             }
+
+            static void WriteNullOperandChecks(
+                  ref Printer p
+                , OperatorKind kind
+                , OpType opReturnType
+                , OpArgTypes opArgTypes
+            )
+            {
+                var (_, firstType, firstName, secondType, secondName) = opArgTypes;
+                var isBoolComparison = kind is OperatorKind.Equal
+                    or OperatorKind.NotEqual
+                    or OperatorKind.Greater
+                    or OperatorKind.Lesser
+                    or OperatorKind.GreaterEqual
+                    or OperatorKind.LesserEqual;
+
+                if (isBoolComparison == false
+                    || string.Equals(opReturnType.Value, "bool", StringComparison.Ordinal) == false
+                )
+                {
+                    if (firstType.IsWrapper)
+                    {
+                        WriteThrowIfNull(ref p, firstName);
+                    }
+
+                    if (secondType.IsWrapper)
+                    {
+                        WriteThrowIfNull(ref p, secondName);
+                    }
+
+                    return;
+                }
+
+                if (firstType.IsWrapper && secondType.IsWrapper)
+                {
+                    var sameReferenceResult = kind is OperatorKind.Equal
+                        or OperatorKind.GreaterEqual
+                        or OperatorKind.LesserEqual
+                        ? "true"
+                        : "false";
+
+                    var nullOperandResult = kind switch {
+                        OperatorKind.Equal => "false",
+                        OperatorKind.NotEqual => "true",
+                        OperatorKind.Greater or OperatorKind.GreaterEqual => $"{secondName} is null",
+                        _ => $"{firstName} is null",
+                    };
+
+                    WriteReturnIf(
+                          ref p
+                        , $"global::System.Object.ReferenceEquals({firstName}, {secondName})"
+                        , sameReferenceResult
+                    );
+                    WriteReturnIf(ref p, $"{firstName} is null || {secondName} is null", nullOperandResult);
+                }
+                else if (firstType.IsWrapper)
+                {
+                    var nullFirstResult = kind is OperatorKind.NotEqual
+                        or OperatorKind.Lesser
+                        or OperatorKind.LesserEqual
+                        ? "true"
+                        : "false";
+
+                    WriteReturnIf(ref p, $"{firstName} is null", nullFirstResult);
+                }
+                else if (secondType.IsWrapper)
+                {
+                    var nullSecondResult = kind is OperatorKind.NotEqual
+                        or OperatorKind.Greater
+                        or OperatorKind.GreaterEqual
+                        ? "true"
+                        : "false";
+
+                    WriteReturnIf(ref p, $"{secondName} is null", nullSecondResult);
+                }
+            }
         }
 
         private readonly void WriteEnumOperators(
@@ -1256,13 +1379,13 @@
                 {
                     foreach (var (returnType, _) in operators)
                     {
-                        Write(ref p, fullTypeName, fieldUnderlyingSpecialType, fieldName, op, returnType);
+                        Write(ref p, fullTypeName, fieldUnderlyingSpecialType, fieldName, op, returnType, isStruct);
                     }
                 }
                 else
                 {
                     var returnType = new OpType(DetermineReturnType(kind, fullTypeName), true);
-                    Write(ref p, fullTypeName, fieldUnderlyingSpecialType, fieldName, op, returnType);
+                    Write(ref p, fullTypeName, fieldUnderlyingSpecialType, fieldName, op, returnType, isStruct);
                 }
             }
 
@@ -1273,6 +1396,7 @@
                 , string fieldName
                 , string op
                 , OpType opReturnType
+                , bool isStruct
             )
             {
                 var args = fieldUnderlyingSpecialType switch {
@@ -1292,6 +1416,11 @@
                     .Print("(").Print(args).PrintEndLine(")");
                 p.OpenScope();
                 {
+                    if (isStruct == false)
+                    {
+                        WriteThrowIfNull(ref p, "left");
+                    }
+
                     p.PrintBeginLine("return ");
 
                     if (opReturnType.IsWrapper)
@@ -1349,6 +1478,29 @@
                 OperatorKind.LesserEqual => "<=",
                 _ => string.Empty,
             };
+        }
+
+        private static void WriteReturnIf(ref Printer p, string condition, string result)
+        {
+            p.PrintBeginLine("if (").Print(condition).PrintEndLine(")");
+            p.OpenScope();
+            {
+                p.PrintBeginLine("return ").Print(result).PrintEndLine(";");
+            }
+            p.CloseScope();
+            p.PrintEndLine();
+        }
+
+        private static void WriteThrowIfNull(ref Printer p, string name)
+        {
+            p.PrintBeginLine("if (").Print(name).PrintEndLine(" is null)");
+            p.OpenScope();
+            {
+                p.PrintBeginLine("throw global::EncosyTower.Debugging.ThrowHelper.CreateArgumentNullException(nameof(")
+                    .Print(name).PrintEndLine("));");
+            }
+            p.CloseScope();
+            p.PrintEndLine();
         }
 
         private readonly void WriteTypeConverter(ref Printer p)

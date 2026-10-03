@@ -247,4 +247,79 @@ public sealed class TypeWrapDiagnosticAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("Wrapper", "bad name")
         );
+
+    [TestMethod]
+    public Task WrapType_ArrayType_ReportsWrappedTypeMustBeNamedType()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapType(typeof({|#0:int[]|}))]
+                  public partial struct Wrapper { }
+              """
+            , new DiagnosticResult(TypeWrapDiagnosticAnalyzer.WrappedTypeMustBeNamedType)
+                .WithLocation(0)
+                .WithArguments("WrapType", "Wrapper", "int[]")
+        );
+
+    [TestMethod]
+    public Task WrapRecord_ArrayParameter_ReportsWrappedTypeMustBeNamedType()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapRecord]
+                  public partial record struct Wrapper({|#0:int[]|} Value);
+              """
+            , new DiagnosticResult(TypeWrapDiagnosticAnalyzer.WrappedTypeMustBeNamedType)
+                .WithLocation(0)
+                .WithArguments("WrapRecord", "Wrapper", "int[]")
+        );
+
+    [TestMethod]
+    public Task WrapRecord_TypeParameter_ReportsWrappedTypeMustBeNamedType()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapRecord]
+                  public partial record struct Wrapper<T>({|#0:T|} Value);
+              """
+            , new DiagnosticResult(TypeWrapDiagnosticAnalyzer.WrappedTypeMustBeNamedType)
+                .WithLocation(0)
+                .WithArguments("WrapRecord", "Wrapper", "T")
+        );
+
+    [TestMethod]
+    public Task WrapRecord_DynamicParameter_ReportsWrappedTypeMustBeNamedType()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapRecord]
+                  public partial record struct Wrapper({|#0:dynamic|} Value);
+              """
+            , new DiagnosticResult(TypeWrapDiagnosticAnalyzer.WrappedTypeMustBeNamedType)
+                .WithLocation(0)
+                .WithArguments("WrapRecord", "Wrapper", "dynamic")
+        );
+
+    [TestMethod]
+    public Task WrapRecord_ConstructedGenericParameter_NoDiagnostics()
+        => RunAsync("""
+                [EncosyTower.TypeWraps.WrapRecord]
+                public partial record struct Wrapper<T>(System.Collections.Generic.List<T> Value);
+            """);
+
+    [TestMethod]
+    public Task WrapRecord_MissingParameterType_ReportsOnlyCompilerError()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapRecord]
+                  public partial record struct Wrapper({|#0:Missing|} Value);
+              """
+            , DiagnosticResult.CompilerError("CS0246").WithLocation(0).WithArguments("Missing")
+        );
+
+    [TestMethod]
+    public Task WrapType_MissingType_ReportsOnlyCompilerError()
+        => RunAsync(
+              """
+                  [EncosyTower.TypeWraps.WrapType(typeof({|#0:Missing|}))]
+                  public partial struct Wrapper { }
+              """
+            , DiagnosticResult.CompilerError("CS0246").WithLocation(0).WithArguments("Missing")
+        );
 }

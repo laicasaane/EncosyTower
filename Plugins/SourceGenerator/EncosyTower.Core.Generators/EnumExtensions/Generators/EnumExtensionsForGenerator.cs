@@ -10,6 +10,10 @@ namespace EncosyTower.Core.Generators.EnumExtensions
         public const string FLAGS_ATTRIBUTE = "global::System.FlagsAttribute";
         public const string GENERATOR_NAME = nameof(EnumExtensionsGenerator);
 
+        private const string GENERATED_CODE = "[g__SCDC.GeneratedCode("
+            + "\"EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator\", "
+            + $"\"{SourceGenVersion.VALUE}\")]";
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
 
@@ -66,6 +70,7 @@ namespace EncosyTower.Core.Generators.EnumExtensions
 
             if (attribData.ConstructorArguments[0].Value is not INamedTypeSymbol enumSymbol
                 || enumSymbol.TypeKind != TypeKind.Enum
+                || enumSymbol.ContainsErrorType(token)
             )
             {
                 return default;
@@ -86,7 +91,7 @@ namespace EncosyTower.Core.Generators.EnumExtensions
             var namespaceName = ns is { IsGlobalNamespace: false } ? ns.ToDisplayString() : string.Empty;
             var candidate = EnumExtensionSpec.Extract(
                   enumSymbol
-                , syntax.Parent is BaseNamespaceDeclarationSyntax
+                , syntax.Parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax
                 , classSymbol.Name
                 , classSymbol.DeclaredAccessibility
                 , namespaceName
@@ -116,7 +121,10 @@ namespace EncosyTower.Core.Generators.EnumExtensions
 
             context.CancellationToken.ThrowIfCancellationRequested();
 
-            var declaration = new EnumExtensionsDeclaration(candidate, compilation.UnityCollections);
+            var declaration = new EnumExtensionsDeclaration(candidate, compilation.UnityCollections) {
+                GeneratedCode = GENERATED_CODE,
+                InterfaceGeneratedCode = GENERATED_CODE,
+            };
             var assemblyName = compilation.Compilation.AssemblyName;
             var hintName = SourceGenHelpers.BuildSemanticHintName(
                   "EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsForGenerator"

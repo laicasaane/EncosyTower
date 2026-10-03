@@ -41,6 +41,7 @@
     internal struct LookupSpec : IEquatable<LookupSpec>
     {
         public string structName;
+        public string structFullName;
         public string hintName;
         public string openingSource;
         public string closingSource;
@@ -48,6 +49,7 @@
         public string interfaceLookupRW;
         public LookupKind kind;
         public EquatableArray<TypeRefSpec> typeRefs;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid
             => kind != LookupKind.None
@@ -61,12 +63,15 @@
         public readonly bool Equals(LookupSpec other)
             => kind == other.kind
             && string.Equals(structName, other.structName, StringComparison.Ordinal)
+            && string.Equals(structFullName, other.structFullName, StringComparison.Ordinal)
             && string.Equals(interfaceLookupRO, other.interfaceLookupRO, StringComparison.Ordinal)
             && string.Equals(interfaceLookupRW, other.interfaceLookupRW, StringComparison.Ordinal)
             && typeRefs.Equals(other.typeRefs)
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(structName, interfaceLookupRO, interfaceLookupRW, kind, typeRefs);
+            => HashValue.Combine(structName, structFullName, interfaceLookupRO, interfaceLookupRW, kind, typeRefs)
+            .Add(containingTypes);
     }
 }

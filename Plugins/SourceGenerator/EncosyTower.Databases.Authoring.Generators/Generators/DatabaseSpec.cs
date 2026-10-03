@@ -8,6 +8,7 @@ namespace EncosyTower.Databases.Authoring.Generators
         public string openingSource;
         public string closingSource;
         public string containerHintName;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
         public EquatableArray<DataSpec> allDataModels;
         public EquatableArray<ScopedConverterSpec> scopedConverters;
         public EquatableArray<TableSpec> tables;
@@ -25,9 +26,7 @@ namespace EncosyTower.Databases.Authoring.Generators
             => string.Equals(databaseTypeName, other.databaseTypeName, StringComparison.Ordinal)
             && string.Equals(databaseTypeKeyword, other.databaseTypeKeyword, StringComparison.Ordinal)
             && string.Equals(databaseIdentifier, other.databaseIdentifier, StringComparison.Ordinal)
-            && string.Equals(openingSource, other.openingSource, StringComparison.Ordinal)
-            && string.Equals(closingSource, other.closingSource, StringComparison.Ordinal)
-            && string.Equals(containerHintName, other.containerHintName, StringComparison.Ordinal)
+            && containingTypes.Equals(other.containingTypes)
             && allDataModels.Equals(other.allDataModels)
             && scopedConverters.Equals(other.scopedConverters)
             && tables.Equals(other.tables)
@@ -44,9 +43,7 @@ namespace EncosyTower.Databases.Authoring.Generators
                   databaseTypeName
                 , databaseTypeKeyword
                 , databaseIdentifier
-                , openingSource
-                , closingSource
-                , containerHintName
+                , containingTypes
                 , allDataModels
             )
             .Add(scopedConverters)

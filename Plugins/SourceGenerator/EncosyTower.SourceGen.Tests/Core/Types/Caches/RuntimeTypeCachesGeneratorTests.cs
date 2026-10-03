@@ -45,4 +45,33 @@ public class RuntimeTypeCachesGeneratorTests
                 ),
             }
         );
+
+    [TestMethod]
+    public Task RuntimeTypeCacheCallInRecord_GeneratesRecordPartial()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<RuntimeTypeCachesGenerator>(
+              """
+              using System;
+              using EncosyTower.Types;
+
+              namespace TestProject;
+
+              public class SpecialAttribute : Attribute { }
+
+              public partial record class Usage
+              {
+                  public void Execute()
+                  {
+                      RuntimeTypeCache.GetInfo<SpecialAttribute>();
+                  }
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<RuntimeTypeCachesGenerator>(
+                    "Usage.RuntimeTypeCache.ac003e4d5245071a.g.cs"
+                ),
+                ExpectedGeneratedSource.Create<RuntimeTypeCachesGenerator>(
+                    "Input.RuntimeTypeCacheHeader.f77403357d7eb1ba.g.cs"
+                ),
+            }
+        );
 }

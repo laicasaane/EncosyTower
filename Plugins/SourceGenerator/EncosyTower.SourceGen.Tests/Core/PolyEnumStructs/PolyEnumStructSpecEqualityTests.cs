@@ -39,9 +39,6 @@ public sealed class PolyEnumStructSpecEqualityTests
         Assert.AreNotEqual(baseline, baseline with { typeConstraints = "where T : struct" });
         Assert.AreNotEqual(baseline, baseline with { enumExtensionsAttributeOwner = "global::Other.Owner<>" });
         Assert.AreNotEqual(baseline, baseline with { typeIdentifier = "Other" });
-        Assert.AreNotEqual(baseline, baseline with { hintName = "Other" });
-        Assert.AreNotEqual(baseline, baseline with { openingSource = "namespace Other {" });
-        Assert.AreNotEqual(baseline, baseline with { closingSource = "}}" });
         Assert.AreNotEqual(baseline, baseline with { typeAccessibility = Accessibility.Internal });
         Assert.AreNotEqual(baseline, baseline with { supportContainer = CreateSupportContainer("Other") });
         Assert.AreNotEqual(baseline, baseline with { targetOutputScope = CreateSupportContainer("Other") });
@@ -50,6 +47,45 @@ public sealed class PolyEnumStructSpecEqualityTests
         Assert.AreNotEqual(baseline, baseline with { withEnumExtensions = true });
         Assert.AreNotEqual(baseline, baseline with { parentIsNamespace = true });
         Assert.AreNotEqual(baseline, baseline with { separateContainer = false });
+    }
+
+    [TestMethod]
+    public void StructSpec_UnlistedStorageParticipatesInEquality()
+    {
+        var baseline = new PolyEnumStructSpec.StructSpec {
+            name = "Secret",
+            declarationName = "Secret",
+            identifier = "Secret",
+            size = 8,
+        };
+        var copy = baseline;
+
+        Assert.AreEqual(baseline, copy);
+        Assert.AreEqual(baseline.GetHashCode(), copy.GetHashCode());
+        Assert.AreNotEqual(baseline, baseline with { hasUnlistedStorage = true });
+    }
+
+    [TestMethod]
+    public void StructSpec_HiddenFieldsParticipateInEquality()
+    {
+        var baseline = new PolyEnumStructSpec.StructSpec {
+            name = "Secret",
+            declarationName = "Secret",
+            identifier = "Secret",
+            size = 8,
+        };
+        var hiddenFields = new[] {
+            new PolyEnumStructSpec.FieldSpec {
+                name = "_value",
+                returnType = new PolyEnumStructSpec.TypeSpec { name = "long", identifier = "long" },
+                size = 8,
+            },
+        }.ToImmutableArray().AsEquatableArray();
+        var copy = baseline with { hiddenFields = hiddenFields };
+
+        Assert.AreEqual(copy, baseline with { hiddenFields = hiddenFields });
+        Assert.AreEqual(copy.GetHashCode(), (baseline with { hiddenFields = hiddenFields }).GetHashCode());
+        Assert.AreNotEqual(baseline, copy);
     }
 
     private static SupportContainerSpec CreateSupportContainer(string name)

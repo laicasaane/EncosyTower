@@ -9,6 +9,8 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             public StructSpec Value { get; set; }
 
             public Dictionary<string, string> FieldToMergedFieldMap { get; set; }
+
+            public Dictionary<string, string> HiddenFieldToMergedFieldMap { get; set; }
         }
 
         public struct MergedFieldRef
@@ -197,6 +199,7 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
                 var structRef = new StructRef() {
                     Value = structs[i],
                     FieldToMergedFieldMap = new(),
+                    HiddenFieldToMergedFieldMap = new(),
                 };
 
                 var @struct = structRef.Value;
@@ -344,51 +347,14 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
                 {
                     token.ThrowIfCancellationRequested();
                     ref readonly var field = ref parameters[i].field;
-                    var matchingListIndex = -1;
-                    var mergedFieldRefCount = mergedFieldRefs.Count;
-
-                    for (int mergedIndex = 0; mergedIndex < mergedFieldRefCount; mergedIndex++)
-                    {
-                        token.ThrowIfCancellationRequested();
-                        if (usedIndexesInList.Contains(mergedIndex) == false)
-                        {
-                            if (field.returnType.Equals(mergedFieldRefs[mergedIndex].Value.returnType))
-                            {
-                                matchingListIndex = mergedIndex;
-                                break;
-                            }
-                        }
-                    }
-
-                    MergedFieldRef mergedField;
-
-                    if (matchingListIndex < 0)
-                    {
-                        int newListIndex = mergedFieldRefs.Count;
-
-                        if (pool.Count > 0)
-                        {
-                            mergedField = pool.Dequeue();
-                        }
-                        else
-                        {
-                            mergedField = new MergedFieldRef();
-                        }
-
-                        mergedField.Value = field;
-                        mergedField.Name = $"field_{field.returnType.identifier}_{newListIndex}";
-
-                        structSize += field.size;
-                        mergedFieldRefs.Add(mergedField);
-                        usedIndexesInList.Add(newListIndex);
-                    }
-                    else
-                    {
-                        mergedField = mergedFieldRefs[matchingListIndex];
-                        usedIndexesInList.Add(matchingListIndex);
-                    }
-
-                    fieldMergedFieldMap[field.name] = mergedField.Name;
+                    fieldMergedFieldMap[field.name] = AddMergedField(
+                          field
+                        , mergedFieldRefs
+                        , usedIndexesInList
+                        , pool
+                        , ref structSize
+                        , token
+                    );
                 }
 
                 var fields = structRef.Value.fields;
@@ -398,52 +364,89 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
                 {
                     token.ThrowIfCancellationRequested();
                     ref readonly var field = ref fields[i];
-                    var matchingListIndex = -1;
-                    var mergedFieldRefCount = mergedFieldRefs.Count;
+                    fieldMergedFieldMap[field.name] = AddMergedField(
+                          field
+                        , mergedFieldRefs
+                        , usedIndexesInList
+                        , pool
+                        , ref structSize
+                        , token
+                    );
+                }
 
-                    for (int mergedIndex = 0; mergedIndex < mergedFieldRefCount; mergedIndex++)
+                var hiddenFieldMergedFieldMap = structRef.HiddenFieldToMergedFieldMap;
+                var hiddenFields = structRef.Value.hiddenFields;
+                var hiddenFieldCount = hiddenFields.Count;
+
+                for (int i = 0; i < hiddenFieldCount; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    ref readonly var field = ref hiddenFields[i];
+                    hiddenFieldMergedFieldMap[field.name] = AddMergedField(
+                          field
+                        , mergedFieldRefs
+                        , usedIndexesInList
+                        , pool
+                        , ref structSize
+                        , token
+                    );
+                }
+            }
+
+            private static string AddMergedField(
+                  in FieldSpec field
+                , List<MergedFieldRef> mergedFieldRefs
+                , HashSet<int> usedIndexesInList
+                , Queue<MergedFieldRef> pool
+                , ref int structSize
+                , CancellationToken token
+            )
+            {
+                var matchingListIndex = -1;
+                var mergedFieldRefCount = mergedFieldRefs.Count;
+
+                for (int mergedIndex = 0; mergedIndex < mergedFieldRefCount; mergedIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (usedIndexesInList.Contains(mergedIndex) == false)
                     {
-                        token.ThrowIfCancellationRequested();
-                        if (usedIndexesInList.Contains(mergedIndex) == false)
+                        if (field.returnType.Equals(mergedFieldRefs[mergedIndex].Value.returnType))
                         {
-                            if (field.returnType.Equals(mergedFieldRefs[mergedIndex].Value.returnType))
-                            {
-                                matchingListIndex = mergedIndex;
-                                break;
-                            }
+                            matchingListIndex = mergedIndex;
+                            break;
                         }
                     }
+                }
 
-                    MergedFieldRef mergedField;
+                MergedFieldRef mergedField;
 
-                    if (matchingListIndex < 0)
+                if (matchingListIndex < 0)
+                {
+                    int newListIndex = mergedFieldRefs.Count;
+
+                    if (pool.Count > 0)
                     {
-                        int newListIndex = mergedFieldRefs.Count;
-
-                        if (pool.Count > 0)
-                        {
-                            mergedField = pool.Dequeue();
-                        }
-                        else
-                        {
-                            mergedField = new MergedFieldRef();
-                        }
-
-                        mergedField.Value = field;
-                        mergedField.Name = $"field_{field.returnType.identifier}_{newListIndex}";
-
-                        structSize += field.size;
-                        mergedFieldRefs.Add(mergedField);
-                        usedIndexesInList.Add(newListIndex);
+                        mergedField = pool.Dequeue();
                     }
                     else
                     {
-                        mergedField = mergedFieldRefs[matchingListIndex];
-                        usedIndexesInList.Add(matchingListIndex);
+                        mergedField = new MergedFieldRef();
                     }
 
-                    fieldMergedFieldMap[field.name] = mergedField.Name;
+                    mergedField.Value = field;
+                    mergedField.Name = $"field_{field.returnType.identifier}_{newListIndex}";
+
+                    structSize += field.size;
+                    mergedFieldRefs.Add(mergedField);
+                    usedIndexesInList.Add(newListIndex);
                 }
+                else
+                {
+                    mergedField = mergedFieldRefs[matchingListIndex];
+                    usedIndexesInList.Add(matchingListIndex);
+                }
+
+                return mergedField.Name;
             }
 
             public static void AggregateCountMap<TDef, TSig>(

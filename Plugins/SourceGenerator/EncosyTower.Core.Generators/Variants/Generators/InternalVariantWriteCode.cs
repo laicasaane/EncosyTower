@@ -81,6 +81,7 @@ namespace EncosyTower.Core.Generators.Variants
                         , typeName
                         , structName
                         , variantName
+                        , GENERATED_CODE
                     );
                 }
                 p.CloseScope();

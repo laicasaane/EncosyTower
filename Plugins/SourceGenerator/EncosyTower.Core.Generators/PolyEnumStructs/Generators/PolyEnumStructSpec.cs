@@ -14,6 +14,7 @@
         public string hintName;
         public string openingSource;
         public string closingSource;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
         public SupportContainerSpec targetOutputScope;
         public SupportContainerSpec supportContainer;
         public InterfaceSpec interfaceDef;
@@ -44,9 +45,7 @@
             && string.Equals(enumExtensionsAttributeOwner, other.enumExtensionsAttributeOwner, StringComparison.Ordinal)
             && string.Equals(typeNamespace, other.typeNamespace, StringComparison.Ordinal)
             && string.Equals(typeIdentifier, other.typeIdentifier, StringComparison.Ordinal)
-            && string.Equals(hintName, other.hintName, StringComparison.Ordinal)
-            && string.Equals(openingSource, other.openingSource, StringComparison.Ordinal)
-            && string.Equals(closingSource, other.closingSource, StringComparison.Ordinal)
+            && containingTypes.Equals(other.containingTypes)
             && targetOutputScope.Equals(other.targetOutputScope)
             && supportContainer.Equals(other.supportContainer)
             && interfaceDef.Equals(other.interfaceDef)
@@ -71,32 +70,30 @@
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(typeName);
-            hash.Add(typeSelfName);
-            hash.Add(typeFullName);
-            hash.Add(typeConstraints);
-            hash.Add(enumExtensionsAttributeOwner);
-            hash.Add(typeNamespace);
-            hash.Add(typeIdentifier);
-            hash.Add(hintName);
-            hash.Add(openingSource);
-            hash.Add(closingSource);
-            hash.Add(targetOutputScope);
-            hash.Add(supportContainer);
-            hash.Add(interfaceDef);
-            hash.Add(genericInterfaceDef);
-            hash.Add(targetParameters);
-            hash.Add(genericInterfaceTargetIndices);
-            hash.Add(structs);
-            hash.Add(definedUndefinedStruct);
-            hash.Add(parentIsNamespace);
-            hash.Add(sortFieldsBySize);
-            hash.Add(autoEquatable);
-            hash.Add(withEnumExtensions);
-            hash.Add(isReadOnly);
-            hash.Add(isExplicitLayout);
-            hash.Add(separateContainer);
-            hash.Add(typeAccessibility);
+            hash = hash.Add(typeName);
+            hash = hash.Add(typeSelfName);
+            hash = hash.Add(typeFullName);
+            hash = hash.Add(typeConstraints);
+            hash = hash.Add(enumExtensionsAttributeOwner);
+            hash = hash.Add(typeNamespace);
+            hash = hash.Add(typeIdentifier);
+            hash = hash.Add(containingTypes);
+            hash = hash.Add(targetOutputScope);
+            hash = hash.Add(supportContainer);
+            hash = hash.Add(interfaceDef);
+            hash = hash.Add(genericInterfaceDef);
+            hash = hash.Add(targetParameters);
+            hash = hash.Add(genericInterfaceTargetIndices);
+            hash = hash.Add(structs);
+            hash = hash.Add(definedUndefinedStruct);
+            hash = hash.Add(parentIsNamespace);
+            hash = hash.Add(sortFieldsBySize);
+            hash = hash.Add(autoEquatable);
+            hash = hash.Add(withEnumExtensions);
+            hash = hash.Add(isReadOnly);
+            hash = hash.Add(isExplicitLayout);
+            hash = hash.Add(separateContainer);
+            hash = hash.Add(typeAccessibility);
             return hash.ToHashCode();
         }
 
@@ -252,12 +249,14 @@
             public EquatableArray<IndexerDeclaration> indexers;
             public EquatableArray<MethodDeclaration> methods;
             public EquatableArray<ParameterSpec> parameters;
+            public EquatableArray<FieldSpec> hiddenFields;
             public int size;
             public bool isUndefined;
             public bool implicitlyDeclared;
             public bool isReadOnly;
             public bool isRecord;
             public bool ownerIsContainer;
+            public bool hasUnlistedStorage;
 
             public readonly bool IsValid => string.IsNullOrEmpty(name) == false;
 
@@ -279,37 +278,41 @@
                 && indexers.Equals(other.indexers)
                 && methods.Equals(other.methods)
                 && parameters.Equals(other.parameters)
+                && hiddenFields.Equals(other.hiddenFields)
                 && size == other.size
                 && isUndefined == other.isUndefined
                 && implicitlyDeclared == other.implicitlyDeclared
                 && isReadOnly == other.isReadOnly
                 && isRecord == other.isRecord
                 && ownerIsContainer == other.ownerIsContainer
+                && hasUnlistedStorage == other.hasUnlistedStorage
                 ;
 
             public readonly override int GetHashCode()
             {
                 var hash = new HashValue();
-                hash.Add(name);
-                hash.Add(declarationName);
-                hash.Add(declarationConstraints);
-                hash.Add(targetTypeName);
-                hash.Add(toMethodTypeParameters);
-                hash.Add(toMethodConstraints);
-                hash.Add(displayName);
-                hash.Add(targetIndices);
-                hash.Add(constructions);
-                hash.Add(fields);
-                hash.Add(properties);
-                hash.Add(indexers);
-                hash.Add(methods);
-                hash.Add(parameters);
-                hash.Add(size);
-                hash.Add(isUndefined);
-                hash.Add(implicitlyDeclared);
-                hash.Add(isReadOnly);
-                hash.Add(isRecord);
-                hash.Add(ownerIsContainer);
+                hash = hash.Add(name);
+                hash = hash.Add(declarationName);
+                hash = hash.Add(declarationConstraints);
+                hash = hash.Add(targetTypeName);
+                hash = hash.Add(toMethodTypeParameters);
+                hash = hash.Add(toMethodConstraints);
+                hash = hash.Add(displayName);
+                hash = hash.Add(targetIndices);
+                hash = hash.Add(constructions);
+                hash = hash.Add(fields);
+                hash = hash.Add(properties);
+                hash = hash.Add(indexers);
+                hash = hash.Add(methods);
+                hash = hash.Add(parameters);
+                hash = hash.Add(hiddenFields);
+                hash = hash.Add(size);
+                hash = hash.Add(isUndefined);
+                hash = hash.Add(implicitlyDeclared);
+                hash = hash.Add(isReadOnly);
+                hash = hash.Add(isRecord);
+                hash = hash.Add(ownerIsContainer);
+                hash = hash.Add(hasUnlistedStorage);
                 return hash.ToHashCode();
             }
         }

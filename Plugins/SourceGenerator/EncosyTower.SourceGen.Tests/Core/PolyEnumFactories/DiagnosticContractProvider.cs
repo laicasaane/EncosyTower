@@ -89,6 +89,50 @@ internal sealed class DiagnosticContractProvider : IDiagnosticContractProvider
             , ""
             , Array.Empty<string>()
         ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
+            , "SG_POLY_ENUM_FACTORY_0007"
+            , "[PolyEnumFactoryFor] record must take the poly-enum struct as its first parameter"
+            , "Record \"{0}\" takes \"{1}\" as positional parameter \"{2}\", which is not the first. Make it the " +
+              "first positional parameter; no factory code is generated until then."
+            , "PolyEnumFactoryGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "A positional record decorated with [PolyEnumFactoryFor] stores the poly-enum struct in its first " +
+              "positional parameter. The generator skips a record that declares it at a later position."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
+            , "SG_POLY_ENUM_FACTORY_0008"
+            , "[PolyEnumFactoryFor] wrapper needs a constructor that takes only the poly-enum struct"
+            , "\"{0}\" has no constructor that takes \"{1}\" as its only required argument, and this constructor " +
+              "keeps the generator from adding one. Add such a constructor; no factory code is generated until then."
+            , "PolyEnumFactoryGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "The factory creates the wrapper from the poly-enum struct alone. The generator cannot add that " +
+              "constructor to a positional record or next to struct constructors that leave its field unassigned, " +
+              "and skips the wrapper."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new DiagnosticDescriptorContract(
+              "EncosyTower.Core.Analyzers.PolyEnumFactories.PolyEnumFactoryAnalyzer"
+            , "SG_POLY_ENUM_FACTORY_0009"
+            , "[PolyEnumFactoryFor] wrapper needs a field or auto-property of the poly-enum struct type"
+            , "\"{0}\" has a constructor that takes \"{1}\" but no field or auto-property of type \"{1}\" to " +
+              "store it in. Store the value in such a member; no factory code is generated until then."
+            , "PolyEnumFactoryGenerator"
+            , DiagnosticSeverity.Error
+            , true
+            , "When the wrapper declares a constructor whose first parameter is the poly-enum struct, the generated " +
+              "members read the value from the wrapper's first instance field or auto-property of that type. The " +
+              "generator skips a wrapper that declares none."
+            , ""
+            , Array.Empty<string>()
+        ),
     };
 
     public IReadOnlyList<SuppressionDescriptorContract> Suppressions => Array.Empty<SuppressionDescriptorContract>();

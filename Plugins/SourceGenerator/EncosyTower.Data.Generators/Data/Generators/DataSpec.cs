@@ -31,6 +31,7 @@ namespace EncosyTower.Data.Generators.Data
         public EquatableArray<FieldRefData> fieldRefs;
         public EquatableArray<PropRefData> propRefs;
         public EquatableArray<string> overrideEquals;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool HasBaseType => string.IsNullOrEmpty(baseTypeName) == false;
 
@@ -61,7 +62,8 @@ namespace EncosyTower.Data.Generators.Data
             && orders.Equals(other.orders)
             && fieldRefs.Equals(other.fieldRefs)
             && propRefs.Equals(other.propRefs)
-            && overrideEquals.Equals(other.overrideEquals);
+            && overrideEquals.Equals(other.overrideEquals)
+            && containingTypes.Equals(other.containingTypes);
 
         public readonly override bool Equals(object obj)
             => obj is DataSpec other && Equals(other);
@@ -69,29 +71,30 @@ namespace EncosyTower.Data.Generators.Data
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash.Add(typeName);
-            hash.Add(readOnlyTypeName);
-            hash.Add(typeIdentifier);
-            hash.Add(typeValidIdentifier);
-            hash.Add(baseTypeName);
-            hash.Add(accessibilityKeyword);
-            hash.Add(idPropertyTypeName);
-            hash.Add(fieldPolicy);
-            hash.Add(isMutable);
-            hash.Add(isValueType);
-            hash.Add(withoutPropertySetters);
-            hash.Add(withReadOnlyView);
-            hash.Add(isSealed);
-            hash.Add(hasSerializableAttribute);
-            hash.Add(hasGeneratePropertyBagAttribute);
-            hash.Add(hasGetHashCodeMethod);
-            hash.Add(hasEqualsMethod);
-            hash.Add(hasIEquatableMethod);
-            hash.Add(withoutId);
-            hash.Add(orders);
-            hash.Add(fieldRefs);
-            hash.Add(propRefs);
-            hash.Add(overrideEquals);
+            hash = hash.Add(typeName);
+            hash = hash.Add(readOnlyTypeName);
+            hash = hash.Add(typeIdentifier);
+            hash = hash.Add(typeValidIdentifier);
+            hash = hash.Add(baseTypeName);
+            hash = hash.Add(accessibilityKeyword);
+            hash = hash.Add(idPropertyTypeName);
+            hash = hash.Add(fieldPolicy);
+            hash = hash.Add(isMutable);
+            hash = hash.Add(isValueType);
+            hash = hash.Add(withoutPropertySetters);
+            hash = hash.Add(withReadOnlyView);
+            hash = hash.Add(isSealed);
+            hash = hash.Add(hasSerializableAttribute);
+            hash = hash.Add(hasGeneratePropertyBagAttribute);
+            hash = hash.Add(hasGetHashCodeMethod);
+            hash = hash.Add(hasEqualsMethod);
+            hash = hash.Add(hasIEquatableMethod);
+            hash = hash.Add(withoutId);
+            hash = hash.Add(orders);
+            hash = hash.Add(fieldRefs);
+            hash = hash.Add(propRefs);
+            hash = hash.Add(overrideEquals);
+            hash = hash.Add(containingTypes);
             return hash.ToHashCode();
         }
     }

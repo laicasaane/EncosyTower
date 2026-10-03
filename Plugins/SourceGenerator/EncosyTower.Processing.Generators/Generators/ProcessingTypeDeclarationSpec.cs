@@ -9,6 +9,8 @@ namespace EncosyTower.Processing.Generators
         public readonly string FullTypeName;
         public readonly string MetadataName;
         public readonly bool IsReferenceType;
+        public readonly EquatableArray<ContainingTypeSpec> ContainingTypes;
+        public readonly string AssemblyName;
 
         public ProcessingTypeDeclarationSpec(
               string openingSource
@@ -18,6 +20,8 @@ namespace EncosyTower.Processing.Generators
             , string fullTypeName
             , string metadataName
             , bool isReferenceType
+            , EquatableArray<ContainingTypeSpec> containingTypes = default
+            , string assemblyName = null
         )
         {
             OpeningSource = openingSource;
@@ -27,6 +31,8 @@ namespace EncosyTower.Processing.Generators
             FullTypeName = fullTypeName;
             MetadataName = metadataName;
             IsReferenceType = isReferenceType;
+            ContainingTypes = containingTypes;
+            AssemblyName = assemblyName;
         }
 
         public bool IsValid => string.IsNullOrEmpty(TypeName) == false;
@@ -38,13 +44,13 @@ namespace EncosyTower.Processing.Generators
             => left.Equals(right) == false;
 
         public readonly bool Equals(ProcessingTypeDeclarationSpec other)
-            => string.Equals(OpeningSource, other.OpeningSource, StringComparison.Ordinal)
-            && string.Equals(ClosingSource, other.ClosingSource, StringComparison.Ordinal)
-            && string.Equals(TypeName, other.TypeName, StringComparison.Ordinal)
+            => string.Equals(TypeName, other.TypeName, StringComparison.Ordinal)
             && string.Equals(TypeKeyword, other.TypeKeyword, StringComparison.Ordinal)
             && string.Equals(FullTypeName, other.FullTypeName, StringComparison.Ordinal)
             && string.Equals(MetadataName, other.MetadataName, StringComparison.Ordinal)
             && IsReferenceType == other.IsReferenceType
+            && ContainingTypes.Equals(other.ContainingTypes)
+            && string.Equals(AssemblyName, other.AssemblyName, StringComparison.Ordinal)
             ;
 
         public readonly override bool Equals(object obj)
@@ -53,13 +59,13 @@ namespace EncosyTower.Processing.Generators
         public readonly override int GetHashCode()
         {
             var hash = new HashValue();
-            hash = hash.Add(OpeningSource);
-            hash = hash.Add(ClosingSource);
             hash = hash.Add(TypeName);
             hash = hash.Add(TypeKeyword);
             hash = hash.Add(FullTypeName);
             hash = hash.Add(MetadataName);
             hash = hash.Add(IsReferenceType);
+            hash = hash.Add(ContainingTypes);
+            hash = hash.Add(AssemblyName);
             return hash.ToHashCode();
         }
     }

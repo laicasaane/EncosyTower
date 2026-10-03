@@ -19,7 +19,6 @@
 
         public readonly bool Equals(NewtonsoftAotHelperSpec other)
             => string.Equals(typeName, other.typeName, StringComparison.Ordinal)
-            && string.Equals(hintName, other.hintName, StringComparison.Ordinal)
             && string.Equals(baseTypeFullName, other.baseTypeFullName, StringComparison.Ordinal)
             && string.Equals(namespaceName, other.namespaceName, StringComparison.Ordinal)
             && typeCandidates.Equals(other.typeCandidates)
@@ -34,7 +33,7 @@
             => obj is NewtonsoftAotHelperSpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(typeName, hintName, baseTypeFullName, namespaceName)
+            => HashValue.Combine(typeName, baseTypeFullName, namespaceName)
             .Add(typeCandidates.GetHashCode())
             .Add(containingTypes.GetHashCode())
             .Add(isStatic)

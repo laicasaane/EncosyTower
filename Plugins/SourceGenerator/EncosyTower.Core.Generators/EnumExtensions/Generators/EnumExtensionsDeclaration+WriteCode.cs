@@ -19,6 +19,8 @@
 
         public string GeneratedCode { get; set; } = GENERATED_CODE;
 
+        public string InterfaceGeneratedCode { get; set; } = GENERATED_CODE;
+
         public string ExcludeCoverage { get; set; } = EXCLUDE_COVERAGE;
 
         public string AggressiveInlining { get; set; } = AGGRESSIVE_INLINING;
@@ -63,7 +65,7 @@
 
             WriteAttribute(ref p);
 
-            p.PrintLine(GENERATED_CODE);
+            p.PrintLine(InterfaceGeneratedCode);
             p.PrintBeginLine(Accessibility.GetKeyword()).Print(" partial interface I").PrintEndLine(ExtensionsName);
             p = p.IncreasedIndent();
             {
@@ -519,6 +521,7 @@
                 p.CloseScope();
                 p.PrintEndLine();
 
+                p.PrintLine(GeneratedCode);
                 p.PrintBeginLine("public partial struct Enumerator")
                     .Print(" : g__SCG.IEnumerator<")
                     .Print(FullyQualifiedName).PrintEndLine(">");

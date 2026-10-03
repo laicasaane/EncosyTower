@@ -40,10 +40,12 @@
     internal struct TypeHandleSpec : IEquatable<TypeHandleSpec>
     {
         public string structName;
+        public string structFullName;
         public string hintName;
         public string openingSource;
         public string closingSource;
         public EquatableArray<TypeRefSpec> typeRefs;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid => string.IsNullOrEmpty(structName) == false && typeRefs.Count > 0;
 
@@ -51,10 +53,13 @@
             => obj is TypeHandleSpec other && Equals(other);
 
         public readonly bool Equals(TypeHandleSpec other)
-            => string.Equals(structName, other.structName, StringComparison.Ordinal) && typeRefs.Equals(other.typeRefs)
+            => string.Equals(structName, other.structName, StringComparison.Ordinal)
+            && string.Equals(structFullName, other.structFullName, StringComparison.Ordinal)
+            && typeRefs.Equals(other.typeRefs)
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(structName, typeRefs);
+            => HashValue.Combine(structName, structFullName, typeRefs, containingTypes);
     }
 }

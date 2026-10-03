@@ -49,7 +49,7 @@ partial struct Value_EnumTemplate { }  // ValueExtensions
 static partial class ValueExtensions { } // IValueExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Value), typeof(IValueExtensions), typeof(ValueExtensions), typeof(ValueExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumTemplates.EnumTemplateGenerator", "0.1.8-preview.1")]
 public partial interface IValueExtensions
     : g__ETEE.IEnumExtensions<ValueExtended, global::TestProject.Value, byte>
     , g__ETCon.IToFixedString

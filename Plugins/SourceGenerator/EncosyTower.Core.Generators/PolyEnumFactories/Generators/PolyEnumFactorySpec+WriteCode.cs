@@ -2,7 +2,9 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
 {
     partial struct PolyEnumFactorySpec
     {
-        private const string GENERATED_CODE = $"[g__SCDC.GeneratedCode(\"PolyEnumFactoryGenerator\", \"{SourceGenVersion.VALUE}\")]";
+        private const string GENERATED_CODE = "[g__SCDC.GeneratedCode("
+            + "\"EncosyTower.Core.Generators.PolyEnumFactories.PolyEnumFactoryGenerator\", "
+            + $"\"{SourceGenVersion.VALUE}\")]";
         private const string EXCLUDE_COVERAGE = "[g__SDCA.ExcludeFromCodeCoverage]";
         private const string AGGRESSIVE_INLINING = "[g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]";
         private const string UNDEFINED_NAME = "Undefined";
@@ -144,7 +146,13 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             p.Print("partial ").Print(wrapperKindKeyword).Print(" ").Print(wrapperSelfName)
                 .Print(" // ")
                 .PrintEndLine(comment);
-            p.PrintLineIf(string.IsNullOrEmpty(wrapperConstraints) == false, wrapperConstraints);
+            if (string.IsNullOrEmpty(wrapperConstraints) == false)
+            {
+                foreach (var constraint in wrapperConstraints.Split('\n'))
+                {
+                    p.PrintLine(constraint);
+                }
+            }
         }
 
         private readonly void WriteBackingFieldAndCtor(ref Printer p)

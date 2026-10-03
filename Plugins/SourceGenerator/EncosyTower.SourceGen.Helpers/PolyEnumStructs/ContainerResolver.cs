@@ -324,6 +324,38 @@ namespace EncosyTower.SourceGen.Helpers.PolyEnumStructs
                 : $"where {parameterName} : {string.Join(", ", constraints)}";
         }
 
+        /// <summary>
+        /// Gets the constraint clauses of the type parameters <paramref name="type"/> declares, with every
+        /// constraint type fully qualified, one clause per line.
+        /// </summary>
+        public static string FormatConstraintClauses(INamedTypeSymbol type, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var substitutions = new Dictionary<ITypeParameterSymbol, int>(SymbolEqualityComparer.Default);
+            var clauses = new List<string>();
+
+            foreach (var parameter in type.TypeParameters)
+            {
+                token.ThrowIfCancellationRequested();
+
+                var clause = FormatConstraintClause(
+                      parameter
+                    , parameter.Name
+                    , substitutions
+                    , Array.Empty<string>()
+                    , token
+                );
+
+                if (string.IsNullOrEmpty(clause) == false)
+                {
+                    clauses.Add(clause);
+                }
+            }
+
+            return string.Join("\n", clauses);
+        }
+
         public static List<ITypeSymbol> GetEffectiveTypeArguments(INamedTypeSymbol type, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();

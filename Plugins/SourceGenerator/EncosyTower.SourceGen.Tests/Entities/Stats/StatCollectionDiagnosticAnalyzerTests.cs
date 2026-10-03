@@ -108,4 +108,45 @@ public class StatCollectionDiagnosticAnalyzerTests
                 [EncosyTower.Entities.Stats.StatCollection(typeof(Sys), 4294967295u)]
                 public partial struct Coll { }
             """);
+
+    [DataTestMethod]
+    [DataRow("public partial record struct {|#0:Coll|} { }")]
+    [DataRow("public partial record struct {|#0:Coll|}(int Extra);")]
+    [DataRow("public partial record struct {|#0:Coll|}();")]
+    [DataRow("public readonly partial record struct {|#0:Coll|} { }")]
+    [DataRow("public readonly partial struct {|#0:Coll|} { }")]
+    public Task RecordOrReadOnlyStruct_ReportsMustNotBeRecordOrReadOnly(string declaration)
+        => RunAsync(
+              $$"""
+                  [EncosyTower.Entities.Stats.StatSystem(EncosyTower.Entities.Stats.StatDataSize.Size4)]
+                  public partial struct Sys { }
+
+                  [EncosyTower.Entities.Stats.StatCollection(typeof(Sys))]
+                  {{declaration}}
+              """
+            , new DiagnosticResult(StatCollectionDiagnosticAnalyzer.MustNotBeRecordOrReadOnly)
+                .WithLocation(0)
+                .WithArguments("Coll")
+        );
+
+    [TestMethod]
+    public Task StatDataInPartWithoutCollectionAttribute_ReportsOutsideAttributedPart()
+        => RunAsync(
+              """
+                  [EncosyTower.Entities.Stats.StatSystem(EncosyTower.Entities.Stats.StatDataSize.Size4)]
+                  public partial struct Sys { }
+
+                  [EncosyTower.Entities.Stats.StatCollection(typeof(Sys))]
+                  public partial struct Coll { }
+
+                  public partial struct Coll
+                  {
+                      [EncosyTower.Entities.Stats.StatData(EncosyTower.Entities.Stats.StatVariantType.Float)]
+                      public partial struct {|#0:Hp|} { }
+                  }
+              """
+            , new DiagnosticResult(StatCollectionDiagnosticAnalyzer.StatDataOutsideAttributedPart)
+                .WithLocation(0)
+                .WithArguments("Hp", "Coll")
+        );
 }

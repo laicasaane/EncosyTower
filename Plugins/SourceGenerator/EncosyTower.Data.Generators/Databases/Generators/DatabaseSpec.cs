@@ -6,6 +6,7 @@ namespace EncosyTower.Data.Generators.Databases
     {
 
         public string typeName;
+        public string typeFullName;
         public bool isStruct;
         public NameCasing nameCasing;
         public string assetName;
@@ -14,6 +15,7 @@ namespace EncosyTower.Data.Generators.Databases
         public string closingSource;
         public string hintName;
         public EquatableArray<TableSpec> tables;
+        public EquatableArray<ContainingTypeSpec> containingTypes;
 
         public readonly bool IsValid => string.IsNullOrEmpty(typeName) == false;
 
@@ -158,6 +160,7 @@ namespace EncosyTower.Data.Generators.Databases
 
             return new DatabaseSpec {
                 typeName = typeName,
+                typeFullName = typeSymbol.ToFullName(),
                 isStruct = isStruct,
                 nameCasing = nameCasing,
                 assetName = assetName,
@@ -166,6 +169,7 @@ namespace EncosyTower.Data.Generators.Databases
                 closingSource = closingSource,
                 hintName = hintName,
                 tables = tables,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(typeSyntax, token),
             };
         }
 
@@ -199,14 +203,17 @@ namespace EncosyTower.Data.Generators.Databases
 
         public readonly bool Equals(DatabaseSpec other)
             => string.Equals(typeName, other.typeName, StringComparison.Ordinal)
+            && string.Equals(typeFullName, other.typeFullName, StringComparison.Ordinal)
             && isStruct == other.isStruct
             && nameCasing == other.nameCasing
             && string.Equals(assetName, other.assetName, StringComparison.Ordinal)
             && withInstanceAPI == other.withInstanceAPI
             && tables.Equals(other.tables)
+            && containingTypes.Equals(other.containingTypes)
             ;
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(typeName, isStruct, nameCasing, assetName, withInstanceAPI, tables);
+            => HashValue.Combine(typeName, typeFullName, isStruct, nameCasing, assetName, withInstanceAPI, tables)
+            .Add(containingTypes);
     }
 }

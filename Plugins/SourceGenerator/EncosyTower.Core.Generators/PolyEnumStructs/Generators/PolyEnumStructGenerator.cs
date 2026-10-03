@@ -14,7 +14,6 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
         private const string UNDEFINED_NAME = "Undefined";
         private const string INTERFACE_NAME = "IEnumCase";
         private const string READ_ONLY_ATTRIBUTE = "global::System.ComponentModel.ReadOnlyAttribute";
-        private const string STRUCT_LAYOUT_ATTRIBUTE = "global::System.Runtime.InteropServices.StructLayoutAttribute";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -71,35 +70,28 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             var typeIdentifier = structSymbol.ToValidIdentifier();
             var hintName = structSymbol.ToMetadataName();
 
-            var isExplicitLayout = false;
+            var isExplicitLayout = CaseLayoutRules.IsExplicitLayout(structSymbol, token);
 
-            if (structSymbol.TryGetAttribute(STRUCT_LAYOUT_ATTRIBUTE, out var layoutAttrib))
+            if (isExplicitLayout && HasCaseFieldWithUnknownSize(resolution, token))
             {
-                foreach (var arg in layoutAttrib.ConstructorArguments)
-                {
-                    token.ThrowIfCancellationRequested();
+                return default;
+            }
 
-                    if (arg.Value is int layoutKindValue
-                        && Enum.IsDefined(typeof(LayoutKind), layoutKindValue)
-                        && (LayoutKind)layoutKindValue == LayoutKind.Explicit
-                    )
-                    {
-                        isExplicitLayout = true;
-                        break;
-                    }
-                }
+            if (isExplicitLayout && HasCaseStorageWithManagedReference(resolution, token))
+            {
+                return default;
             }
 
             var result = new PolyEnumStructSpec {
                 typeName = structSymbol.Name,
                 typeSelfName = structSyntax.Identifier.Text + structSyntax.TypeParameterList,
                 typeFullName = structSymbol.ToFullName(),
-                typeConstraints = structSyntax.ConstraintClauses.ToString(),
+                typeConstraints = ContainerResolver.FormatConstraintClauses(structSymbol, token),
                 enumExtensionsAttributeOwner = GetUnboundContainingTypeName(structSymbol.ContainingType, token),
                 typeNamespace = structSymbol.ContainingNamespace.ToDisplayString(),
                 typeIdentifier = typeIdentifier,
                 hintName = hintName,
-                parentIsNamespace = structSyntax.Parent is BaseNamespaceDeclarationSyntax,
+                parentIsNamespace = structSyntax.Parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax,
                 isReadOnly = structSymbol.IsReadOnly,
                 isExplicitLayout = isExplicitLayout,
                 typeAccessibility = structSymbol.DeclaredAccessibility,
@@ -119,6 +111,8 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
                     , out result.closingSource
                     , printAdditionalUsings: PrintAdditionalUsings
                 );
+
+                result.containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(structSyntax, token);
             }
 
             FillTargetParameters(ref result, resolution, token);
@@ -325,7 +319,6 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
 
             var structName = resolution.Target.Name;
             var verboseUndefinedName = $"{structName}_{UNDEFINED_NAME}";
-            var paramList = new List<PolyEnumStructSpec.SlimParameterSpec>();
 
             PolyEnumStructSpec.StructSpec undefinedStruct = default;
 
@@ -333,7 +326,7 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             {
                 token.ThrowIfCancellationRequested();
 
-                var @struct = GetStruct(@case, resolution, polyEnumStruct, paramList, token);
+                var @struct = GetStruct(@case, resolution, polyEnumStruct, token);
 
                 if (@struct.IsValid == false)
                 {
@@ -406,6 +399,82 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             EnsureGenericInterface(ref polyEnumStruct.genericInterfaceDef, polyEnumStruct);
         }
 
+        private static bool HasCaseFieldWithUnknownSize(ContainerResolution resolution, CancellationToken token)
+        {
+            var cases = resolution.Cases;
+            var caseCount = cases.Count;
+
+            for (var i = 0; i < caseCount; i++)
+            {
+                var members = cases[i].Symbol.GetMembers();
+                var memberCount = members.Length;
+
+                for (var k = 0; k < memberCount; k++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    if (members[k] is IFieldSymbol field
+                        && (CaseLayoutRules.HasUnknownSize(field, token) || StoresErrorType(field, token))
+                    )
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool StoresErrorType(IFieldSymbol field, CancellationToken token)
+        {
+            if (field.IsStatic || field.IsConst)
+            {
+                return false;
+            }
+
+            return CaseLayoutRules.TryFindStoredType(
+                  field.Type
+                , static (type, _) => type.TypeKind == TypeKind.Error
+                , token
+                , out _
+            );
+        }
+
+        private static bool HasCaseStorageWithManagedReference(ContainerResolution resolution, CancellationToken token)
+        {
+            var cases = resolution.Cases;
+            var caseCount = cases.Count;
+
+            for (var i = 0; i < caseCount; i++)
+            {
+                var members = cases[i].Symbol.GetMembers();
+                var memberCount = members.Length;
+
+                for (var k = 0; k < memberCount; k++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var member = members[k];
+
+                    if (member is IFieldSymbol { IsStatic: false, IsConst: false } field
+                        && CaseLayoutRules.CanHoldManagedReference(field.Type)
+                    )
+                    {
+                        return true;
+                    }
+
+                    if (member is IEventSymbol { IsStatic: false } eventSymbol
+                        && CaseLayoutRules.IsFieldLikeEvent(eventSymbol)
+                    )
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private static bool TryGetUndefinedCase(
               string caseName
             , string undefinedName
@@ -447,7 +516,7 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
                 declarationName = syntax is null
                     ? symbol.Name
                     : syntax.Identifier.Text + syntax.TypeParameterList,
-                constraints = syntax?.ConstraintClauses.ToString() ?? string.Empty,
+                constraints = ContainerResolver.FormatConstraintClauses(symbol, token),
                 definedInterface = true,
             };
 
@@ -576,7 +645,6 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
               CaseResolution @case
             , ContainerResolution resolution
             , in PolyEnumStructSpec polyEnumStruct
-            , List<PolyEnumStructSpec.SlimParameterSpec> paramList
             , CancellationToken token
         )
         {
@@ -636,8 +704,16 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             };
 
             AggregateConstructions(ref result, symbol, substitutions, targetArgumentNames, token);
-            AggregatePrimaryParameters(ref result, symbol, substitutions, targetArgumentNames, paramList, token);
-            AggregateStructMembers(ref result, symbol, substitutions, targetArgumentNames, token);
+            AggregatePrimaryParameters(ref result, symbol, substitutions, targetArgumentNames, token);
+
+            AggregateStructMembers(
+                  ref result
+                , symbol
+                , substitutions
+                , targetArgumentNames
+                , polyEnumStruct.isExplicitLayout == false
+                , token
+            );
 
             return result;
         }
@@ -683,189 +759,62 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             , INamedTypeSymbol symbol
             , IReadOnlyDictionary<ITypeParameterSymbol, int> substitutions
             , IReadOnlyList<string> targetArgumentNames
-            , List<PolyEnumStructSpec.SlimParameterSpec> paramList
             , CancellationToken token
         )
         {
-            paramList.Clear();
+            token.ThrowIfCancellationRequested();
 
-            var parametersBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.ParameterSpec>.Rent();
+            using var parametersBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.ParameterSpec>.Rent();
 
-            foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
+            if (TryGetPrimaryConstructor(symbol, token, out var constructor))
             {
-                token.ThrowIfCancellationRequested();
+                var isReadOnly = symbol.IsReadOnly;
 
-                var node = syntaxRef.GetSyntax(token);
-
-                if (node is RecordDeclarationSyntax recordSyntax)
+                foreach (var parameter in constructor.Parameters)
                 {
-                    if (recordSyntax.ParameterList is { } paramListSyntax)
-                    {
-                        AggregateParamList(paramListSyntax, paramList, token);
-                        FillParametersBuilder(
-                              ref parametersBuilder
-                            , symbol
-                            , substitutions
-                            , targetArgumentNames
-                            , paramList
-                            , token
-                        );
-                        break;
-                    }
+                    token.ThrowIfCancellationRequested();
+
+                    var fieldSize = 0;
+                    parameter.Type.GetUnmanagedSize(ref fieldSize, token);
+
+                    parametersBuilder.Add(new PolyEnumStructSpec.ParameterSpec {
+                        refKind = parameter.RefKind,
+                        field = new PolyEnumStructSpec.FieldSpec {
+                            name = parameter.Name,
+                            returnType = GetType(parameter.Type, substitutions, targetArgumentNames, token),
+                            size = fieldSize,
+                            implicityDeclared = true,
+                            isReadOnly = isReadOnly,
+                        },
+                    });
                 }
             }
 
             structDef.parameters = parametersBuilder.ToImmutable();
+        }
 
-            return;
-
-            static void AggregateParamList(
-                  ParameterListSyntax paramListSyntax
-                , List<PolyEnumStructSpec.SlimParameterSpec> paramList
-                , CancellationToken token
-            )
+        private static bool TryGetPrimaryConstructor(
+              INamedTypeSymbol symbol
+            , CancellationToken token
+            , out IMethodSymbol result
+        )
+        {
+            foreach (var constructor in symbol.InstanceConstructors)
             {
                 token.ThrowIfCancellationRequested();
 
-                var parameters = paramListSyntax.Parameters;
-                var paramCount = parameters.Count;
-
-                if (paramList.Capacity < paramCount)
+                foreach (var reference in constructor.DeclaringSyntaxReferences)
                 {
-                    paramList.Capacity = paramCount;
-                }
-
-                for (var i = 0; i < paramCount; i++)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    var parameter = parameters[i];
-                    string typeName;
-
-                    if (parameter.Type is PredefinedTypeSyntax preType)
+                    if (reference.GetSyntax(token) is RecordDeclarationSyntax)
                     {
-                        typeName = preType.Keyword.ValueText;
+                        result = constructor;
+                        return true;
                     }
-                    else if (parameter.Type is IdentifierNameSyntax idType)
-                    {
-                        typeName = idType.Identifier.Text;
-                    }
-                    else if (parameter.Type is QualifiedNameSyntax qType)
-                    {
-                        typeName = qType.ToString();
-                    }
-                    else
-                    {
-                        continue;
-                    }
-
-                    var paramDef = new PolyEnumStructSpec.SlimParameterSpec {
-                        name = parameter.Identifier.Text,
-                        type = new PolyEnumStructSpec.TypeSpec {
-                            name = typeName,
-                            identifier = typeName,
-                        },
-                    };
-
-                    var modifiers = parameter.Modifiers;
-                    var modCount = modifiers.Count;
-
-                    for (var k = 0; k < modCount; k++)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        var mod = modifiers[k];
-
-                        if (mod.IsKind(SyntaxKind.RefKeyword))
-                        {
-                            paramDef.refKind = RefKind.Ref;
-                            break;
-                        }
-
-                        if (mod.IsKind(SyntaxKind.InKeyword))
-                        {
-                            paramDef.refKind = RefKind.In;
-                            break;
-                        }
-                    }
-
-                    paramList.Add(paramDef);
                 }
             }
 
-            static void FillParametersBuilder(
-                  ref ImmutableArrayBuilder<PolyEnumStructSpec.ParameterSpec> parametersBuilder
-                , INamedTypeSymbol symbol
-                , IReadOnlyDictionary<ITypeParameterSymbol, int> substitutions
-                , IReadOnlyList<string> targetArgumentNames
-                , List<PolyEnumStructSpec.SlimParameterSpec> paramList
-                , CancellationToken token
-            )
-            {
-                token.ThrowIfCancellationRequested();
-
-                if (paramList.Count < 1)
-                {
-                    return;
-                }
-
-                var length = paramList.Count;
-                var isReadOnly = symbol.IsReadOnly;
-
-                foreach (var constructor in symbol.Constructors)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    if (constructor.Parameters.Length != length)
-                    {
-                        continue;
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        var ctorParam = constructor.Parameters[i];
-                        var paramDef = paramList[i];
-
-                        if (ctorParam.RefKind != paramDef.refKind)
-                        {
-                            break;
-                        }
-
-                        if (ctorParam.Name != paramDef.name)
-                        {
-                            break;
-                        }
-
-                        var fullName = ctorParam.Type.ToFullName();
-
-                        if (fullName.EndsWith(paramDef.type.name) == false)
-                        {
-                            continue;
-                        }
-
-                        int fieldSize = 0;
-                        ctorParam.Type.GetUnmanagedSize(ref fieldSize, token);
-
-                        parametersBuilder.Add(new PolyEnumStructSpec.ParameterSpec {
-                            refKind = paramDef.refKind,
-                            field = new PolyEnumStructSpec.FieldSpec {
-                                name = paramDef.name,
-                                returnType = GetType(
-                                      ctorParam.Type
-                                    , substitutions
-                                    , targetArgumentNames
-                                    , token
-                                ),
-                                size = fieldSize,
-                                implicityDeclared = true,
-                                isReadOnly = isReadOnly,
-                            },
-                        });
-                    }
-                }
-            }
+            result = null;
+            return false;
         }
 
         private static void AggregateStructMembers(
@@ -873,18 +822,21 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             , ITypeSymbol symbol
             , IReadOnlyDictionary<ITypeParameterSymbol, int> substitutions
             , IReadOnlyList<string> targetArgumentNames
+            , bool collectHiddenFields
             , CancellationToken token
         )
         {
             token.ThrowIfCancellationRequested();
 
             using var fieldsBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.FieldSpec>.Rent();
+            using var hiddenFieldsBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.FieldSpec>.Rent();
             using var propertiesBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.PropertyDeclaration>.Rent();
             using var indexersBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.IndexerDeclaration>.Rent();
             using var methodsBuilder = ImmutableArrayBuilder<PolyEnumStructSpec.MethodDeclaration>.Rent();
 
-            int structSize = 0;
-            int structAlignment = 1;
+            var structSize = 0;
+            var structAlignment = 1;
+            var hasUnlistedStorage = false;
             var isReadOnly = symbol.IsReadOnly;
 
             foreach (var member in symbol.GetMembers())
@@ -900,58 +852,65 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
 
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                    if (fieldSymbol.IsConst
-                        || ((fieldSymbol.IsImplicitlyDeclared && accessibility is Accessibility.Private) == false
-                        && (accessibility is Accessibility.Public or Accessibility.Internal) == false
-                        )
-                    )
+                    if (fieldSymbol.IsConst)
                     {
                         continue;
-                    }
-
-                    string fieldName;
-
-                    if (fieldSymbol.IsImplicitlyDeclared && accessibility is Accessibility.Private)
-                    {
-                        var displayPropertyName = fieldSymbol.ToDisplayParts()
-                            .Where(static x => x.Kind == SymbolDisplayPartKind.PropertyName)
-                            .FirstOrDefault();
-
-                        if (displayPropertyName.Kind == SymbolDisplayPartKind.PropertyName)
-                        {
-                            fieldName = displayPropertyName.ToString();
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        fieldName = fieldSymbol.Name;
                     }
 
                     var fieldSize = 0;
                     var fieldAlignment = 1;
                     fieldSymbol.GetUnmanagedSizeAndAlignment(ref fieldSize, ref fieldAlignment, token);
+                    AppendStorage(ref structSize, ref structAlignment, fieldSize, fieldAlignment);
 
-                    var fieldRemainder = structSize % fieldAlignment;
+                    var isListed = fieldSymbol.IsImplicitlyDeclared == false
+                        && accessibility is Accessibility.Public or Accessibility.Internal;
 
-                    if (fieldRemainder != 0)
+                    if (isListed == false)
                     {
-                        structSize += fieldAlignment - fieldRemainder;
+                        hasUnlistedStorage = true;
+
+                        if (collectHiddenFields
+                            && TryGetHiddenFieldName(fieldSymbol, structDef.parameters, out var hiddenName)
+                        )
+                        {
+                            hiddenFieldsBuilder.Add(new PolyEnumStructSpec.FieldSpec {
+                                name = hiddenName,
+                                returnType = GetType(fieldSymbol.Type, substitutions, targetArgumentNames, token),
+                                size = fieldSize,
+                                implicityDeclared = fieldSymbol.IsImplicitlyDeclared,
+                                isReadOnly = fieldSymbol.IsReadOnly,
+                            });
+                        }
+
+                        continue;
                     }
 
-                    structSize += fieldSize;
-                    structAlignment = Math.Max(structAlignment, fieldAlignment);
-
                     fieldsBuilder.Add(new PolyEnumStructSpec.FieldSpec {
-                        name = fieldName,
+                        name = fieldSymbol.Name,
                         returnType = GetType(fieldSymbol.Type, substitutions, targetArgumentNames, token),
                         size = fieldSize,
                         implicityDeclared = fieldSymbol.IsImplicitlyDeclared,
                         isReadOnly = fieldSymbol.IsReadOnly,
                     });
+
+                    continue;
+                }
+
+                if (member is IEventSymbol eventSymbol && CaseLayoutRules.IsFieldLikeEvent(eventSymbol))
+                {
+                    AppendStorage(ref structSize, ref structAlignment, sizeof(ulong), sizeof(ulong));
+                    hasUnlistedStorage = true;
+
+                    if (collectHiddenFields)
+                    {
+                        hiddenFieldsBuilder.Add(new PolyEnumStructSpec.FieldSpec {
+                            name = eventSymbol.Name,
+                            returnType = GetType(eventSymbol.Type, substitutions, targetArgumentNames, token),
+                            size = sizeof(ulong),
+                            implicityDeclared = true,
+                            isReadOnly = false,
+                        });
+                    }
 
                     continue;
                 }
@@ -984,7 +943,70 @@ namespace EncosyTower.Core.Generators.PolyEnumStructs
             structDef.properties = propertiesBuilder.ToImmutable();
             structDef.indexers = indexersBuilder.ToImmutable();
             structDef.methods = methodsBuilder.ToImmutable();
+            structDef.hiddenFields = hiddenFieldsBuilder.ToImmutable();
             structDef.size = structSize;
+            structDef.hasUnlistedStorage = hasUnlistedStorage;
+
+            return;
+
+            static void AppendStorage(ref int structSize, ref int structAlignment, int size, int alignment)
+            {
+                var remainder = structSize % alignment;
+
+                if (remainder != 0)
+                {
+                    structSize += alignment - remainder;
+                }
+
+                structSize += size;
+                structAlignment = Math.Max(structAlignment, alignment);
+            }
+
+            static bool TryGetHiddenFieldName(
+                  IFieldSymbol field
+                , EquatableArray<PolyEnumStructSpec.ParameterSpec> parameters
+                , out string name
+            )
+            {
+                name = null;
+
+                if (field.IsFixedSizeBuffer || field.Type.TypeKind is TypeKind.Pointer or TypeKind.FunctionPointer)
+                {
+                    return false;
+                }
+
+                if (field.IsImplicitlyDeclared == false)
+                {
+                    name = field.Name;
+                    return true;
+                }
+
+                if (field.AssociatedSymbol is not IPropertySymbol property
+                    || property.ExplicitInterfaceImplementations.Length > 0
+                    || IsPrimaryParameter(property.Name, parameters)
+                )
+                {
+                    return false;
+                }
+
+                name = property.Name;
+                return true;
+            }
+
+            static bool IsPrimaryParameter(string name, EquatableArray<PolyEnumStructSpec.ParameterSpec> parameters)
+            {
+                var count = parameters.Count;
+
+                for (var i = 0; i < count; i++)
+                {
+                    if (string.Equals(parameters[i].field.name, name, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
 
         private static bool TryGetInterfaceMember(

@@ -3,6 +3,7 @@ namespace EncosyTower.Processing.Generators
     internal static class ProcessingAliasSet
     {
         public const string SYSTEM = "g__S";
+        public const string CODE_DOM_COMPILER = "g__SCDC";
         public const string DIAGNOSTICS = "g__SD";
         public const string CODE_ANALYSIS = "g__SCA";
         public const string RUNTIME_COMPILER_SERVICES = "g__SR";
@@ -14,6 +15,7 @@ namespace EncosyTower.Processing.Generators
         public static void WriteAliases(ref Printer printer)
         {
             printer.PrintLine("using g__S = global::System;");
+            printer.PrintLine("using g__SCDC = global::System.CodeDom.Compiler;");
             printer.PrintLine("using g__SD = global::System.Diagnostics;");
             printer.PrintLine("using g__SCA = global::System.Diagnostics.CodeAnalysis;");
             printer.PrintLine("using g__SR = global::System.Runtime.CompilerServices;");

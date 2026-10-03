@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -16,131 +14,199 @@ namespace EncosyTower.SourceGen
     partial class TypedConstantInfo
     {
         /// <summary>
-        /// Creates a new <see cref="TypedConstantInfo"/> instance from a given <see cref="TypedConstant"/> value.
+        /// Tries to create a <see cref="TypedConstantInfo"/> from a <see cref="TypedConstant"/> value.
         /// </summary>
         /// <param name="arg">The input <see cref="TypedConstant"/> value.</param>
-        /// <returns>A <see cref="TypedConstantInfo"/> instance representing <paramref name="arg"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the input argument is not valid.</exception>
-        public static TypedConstantInfo From(TypedConstant arg)
+        /// <param name="result">The created value, or <see langword="null"/> on failure.</param>
+        /// <returns>
+        /// <see langword="false"/> when <paramref name="arg"/> or one of its array elements is not a valid constant,
+        /// for example an argument that names a member of a type the compilation cannot see.
+        /// </returns>
+        public static bool TryFrom(TypedConstant arg, out TypedConstantInfo result)
         {
+            if (arg.Kind == TypedConstantKind.Error)
+            {
+                result = null;
+                return false;
+            }
+
             if (arg.IsNull)
             {
-                return new Null();
+                result = new Null();
+                return true;
             }
 
             if (arg.Kind == TypedConstantKind.Array)
             {
-                string elementTypeName = ((IArrayTypeSymbol)arg.Type!).ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var items = arg.Values.Select(From).ToImmutableArray();
-
-                return new Array(elementTypeName, items);
+                return TryFromArray(arg, out result);
             }
 
-            return (arg.Kind, arg.Value) switch {
+            var format = SymbolDisplayFormat.FullyQualifiedFormat;
+
+            result = (arg.Kind, arg.Value) switch {
                 (TypedConstantKind.Primitive, string text) => new Primitive.String(text),
                 (TypedConstantKind.Primitive, bool flag) => new Primitive.Boolean(flag),
-                (TypedConstantKind.Primitive, object value) => value switch {
-                    byte b => new Primitive.Of<byte>(b),
-                    char c => new Primitive.Of<char>(c),
-                    double d => new Primitive.Of<double>(d),
-                    float f => new Primitive.Of<float>(f),
-                    int i => new Primitive.Of<int>(i),
-                    long l => new Primitive.Of<long>(l),
-                    sbyte sb => new Primitive.Of<sbyte>(sb),
-                    short sh => new Primitive.Of<short>(sh),
-                    uint ui => new Primitive.Of<uint>(ui),
-                    ulong ul => new Primitive.Of<ulong>(ul),
-                    ushort ush => new Primitive.Of<ushort>(ush),
-                    _ => throw new ArgumentException("Invalid primitive type")
-                },
-                (TypedConstantKind.Type, ITypeSymbol type) => new Type(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)),
-                (TypedConstantKind.Enum, object value) => new Enum(arg.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), value),
-                _ => throw new ArgumentException("Invalid typed constant type"),
+                (TypedConstantKind.Primitive, object value) => CreateNumericOrNull(value),
+                (TypedConstantKind.Type, ITypeSymbol type) => new Type(type.ToDisplayString(format)),
+                (TypedConstantKind.Enum, object value) => new Enum(arg.Type.ToDisplayString(format), value),
+                _ => null,
             };
+
+            return result != null;
         }
 
         /// <summary>
-        /// Creates a new <see cref="TypedConstantInfo"/> instance from a given <see cref="IOperation"/> value.
+        /// Tries to create a <see cref="TypedConstantInfo"/> from an attribute argument <see cref="IOperation"/>.
         /// </summary>
         /// <param name="operation">The input <see cref="IOperation"/> value.</param>
-        /// <param name="semanticModel">The <see cref="SemanticModel"/> that was used to retrieve <paramref name="operation"/>.</param>
-        /// <param name="expression">The <see cref="ExpressionSyntax"/> that <paramref name="operation"/> was retrieved from.</param>
+        /// <param name="semanticModel">The <see cref="SemanticModel"/> that produced the operation.</param>
+        /// <param name="expression">The <see cref="ExpressionSyntax"/> that produced the operation.</param>
+        /// <param name="result">The created value, or <see langword="null"/> on failure.</param>
         /// <param name="token">The cancellation token for the current operation.</param>
-        /// <returns>A <see cref="TypedConstantInfo"/> instance representing <paramref name="operation"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the input argument is not valid.</exception>
-        public static TypedConstantInfo From(
-            IOperation operation,
-            SemanticModel semanticModel,
-            ExpressionSyntax expression,
-            CancellationToken token)
+        /// <returns>
+        /// <see langword="false"/> when <paramref name="operation"/> or one of its array elements is not a constant,
+        /// a <see langword="typeof"/> expression, or an array creation.
+        /// </returns>
+        public static bool TryFrom(
+              IOperation operation
+            , SemanticModel semanticModel
+            , ExpressionSyntax expression
+            , out TypedConstantInfo result
+            , CancellationToken token
+        )
         {
+            token.ThrowIfCancellationRequested();
+
+            var format = SymbolDisplayFormat.FullyQualifiedFormat;
+
             if (operation.ConstantValue.HasValue)
             {
+                var value = operation.ConstantValue.Value;
+
                 // Enum values are constant but need to be checked explicitly in this case
                 if (operation.Type?.TypeKind is TypeKind.Enum)
                 {
-                    return new Enum(operation.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), operation.ConstantValue.Value!);
+                    result = new Enum(operation.Type.ToDisplayString(format), value);
+                    return true;
                 }
 
                 // Handle all other constant literals normally
-                return operation.ConstantValue.Value switch {
+                result = value switch {
                     null => new Null(),
                     string text => new Primitive.String(text),
                     bool flag => new Primitive.Boolean(flag),
-                    byte b => new Primitive.Of<byte>(b),
-                    char c => new Primitive.Of<char>(c),
-                    double d => new Primitive.Of<double>(d),
-                    float f => new Primitive.Of<float>(f),
-                    int i => new Primitive.Of<int>(i),
-                    long l => new Primitive.Of<long>(l),
-                    sbyte sb => new Primitive.Of<sbyte>(sb),
-                    short sh => new Primitive.Of<short>(sh),
-                    uint ui => new Primitive.Of<uint>(ui),
-                    ulong ul => new Primitive.Of<ulong>(ul),
-                    ushort ush => new Primitive.Of<ushort>(ush),
-                    _ => throw new ArgumentException("Invalid primitive type")
+                    _ => CreateNumericOrNull(value),
                 };
+
+                return result != null;
             }
 
             if (operation is ITypeOfOperation typeOfOperation)
             {
-                return new Type(typeOfOperation.TypeOperand.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                result = new Type(typeOfOperation.TypeOperand.ToDisplayString(format));
+                return true;
             }
 
             if (operation is IArrayCreationOperation)
             {
-                var elementTypeName = ((IArrayTypeSymbol)operation.Type)?.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-                // If the element type is not available (since the attribute wasn't checked), just default to object
-                elementTypeName ??= "object";
-
-                InitializerExpressionSyntax initializerExpression =
-                (expression as ImplicitArrayCreationExpressionSyntax)?.Initializer
-                ?? (expression as ArrayCreationExpressionSyntax)?.Initializer;
-
-                // No initializer found, just return an empty array
-                if (initializerExpression is null)
-                {
-                    return new Array(elementTypeName, ImmutableArray<TypedConstantInfo>.Empty);
-                }
-
-                using var items = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
-
-                // Enumerate all array elements and extract serialized info for them
-                foreach (ExpressionSyntax initializationExpression in initializerExpression.Expressions)
-                {
-                    if (semanticModel.GetOperation(initializationExpression, token) is not IOperation initializationOperation)
-                    {
-                        throw new ArgumentException("Failed to retrieve an operation for the current array element");
-                    }
-
-                    items.Add(From(initializationOperation, semanticModel, initializationExpression, token));
-                }
-
-                return new Array(elementTypeName, items.ToImmutable());
+                return TryFromArrayCreation(operation, semanticModel, expression, out result, token);
             }
 
-            throw new ArgumentException("Invalid attribute argument value");
+            result = null;
+            return false;
         }
+
+        private static bool TryFromArray(TypedConstant arg, out TypedConstantInfo result)
+        {
+            if (arg.Type is not IArrayTypeSymbol arrayType)
+            {
+                result = null;
+                return false;
+            }
+
+            var values = arg.Values;
+            var count = values.Length;
+            using var items = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
+
+            for (var i = 0; i < count; i++)
+            {
+                if (TryFrom(values[i], out var item) == false)
+                {
+                    result = null;
+                    return false;
+                }
+
+                items.Add(item);
+            }
+
+            var elementTypeName = arrayType.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            result = new Array(elementTypeName, items.ToImmutable());
+            return true;
+        }
+
+        private static bool TryFromArrayCreation(
+              IOperation operation
+            , SemanticModel semanticModel
+            , ExpressionSyntax expression
+            , out TypedConstantInfo result
+            , CancellationToken token
+        )
+        {
+            // If the element type is not available (since the attribute wasn't checked), just default to object
+            var elementTypeName = operation.Type is IArrayTypeSymbol arrayType
+                ? arrayType.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                : "object";
+
+            var initializer = (expression as ImplicitArrayCreationExpressionSyntax)?.Initializer
+                ?? (expression as ArrayCreationExpressionSyntax)?.Initializer;
+
+            // No initializer found, just return an empty array
+            if (initializer == null)
+            {
+                result = new Array(elementTypeName, ImmutableArray<TypedConstantInfo>.Empty);
+                return true;
+            }
+
+            var elements = initializer.Expressions;
+            var count = elements.Count;
+            using var items = ImmutableArrayBuilder<TypedConstantInfo>.Rent();
+
+            // Enumerate all array elements and extract serialized info for them
+            for (var i = 0; i < count; i++)
+            {
+                token.ThrowIfCancellationRequested();
+
+                var element = elements[i];
+
+                if (semanticModel.GetOperation(element, token) is not IOperation elementOperation
+                    || TryFrom(elementOperation, semanticModel, element, out var item, token) == false
+                )
+                {
+                    result = null;
+                    return false;
+                }
+
+                items.Add(item);
+            }
+
+            result = new Array(elementTypeName, items.ToImmutable());
+            return true;
+        }
+
+        private static TypedConstantInfo CreateNumericOrNull(object value)
+            => value switch {
+                byte b => new Primitive.Of<byte>(b),
+                char c => new Primitive.Of<char>(c),
+                double d => new Primitive.Of<double>(d),
+                float f => new Primitive.Of<float>(f),
+                int i => new Primitive.Of<int>(i),
+                long l => new Primitive.Of<long>(l),
+                sbyte sb => new Primitive.Of<sbyte>(sb),
+                short sh => new Primitive.Of<short>(sh),
+                uint ui => new Primitive.Of<uint>(ui),
+                ulong ul => new Primitive.Of<ulong>(ul),
+                ushort ush => new Primitive.Of<ushort>(ush),
+                _ => null,
+            };
     }
 }

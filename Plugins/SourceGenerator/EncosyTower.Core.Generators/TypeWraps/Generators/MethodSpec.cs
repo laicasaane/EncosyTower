@@ -340,13 +340,41 @@
             => string.Equals(name, other.name, StringComparison.Ordinal)
             && string.Equals(returnTypeName, other.returnTypeName, StringComparison.Ordinal)
             && string.Equals(typeParameters, other.typeParameters, StringComparison.Ordinal)
+            && string.Equals(typeParameterConstraints, other.typeParameterConstraints, StringComparison.Ordinal)
             && string.Equals(parameters, other.parameters, StringComparison.Ordinal)
-            && refKind == other.refKind;
+            && string.Equals(arguments, other.arguments, StringComparison.Ordinal)
+            && explicitInterfaceImplementationsLength == other.explicitInterfaceImplementationsLength
+            && refKind == other.refKind
+            && sameType == other.sameType
+            && isPublic == other.isPublic
+            && isUnsafe == other.isUnsafe
+            && isOverride == other.isOverride
+            && isReadOnly == other.isReadOnly
+            && isStatic == other.isStatic
+            && returnsVoid == other.returnsVoid
+            ;
 
         public readonly override bool Equals(object obj)
             => obj is MethodSpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(name, returnTypeName, typeParameters, parameters, refKind);
+            => HashValue.Combine(
+                  name
+                , returnTypeName
+                , typeParameters
+                , typeParameterConstraints
+                , parameters
+                , arguments
+                , explicitInterfaceImplementationsLength
+                , refKind
+            )
+            .Add(sameType)
+            .Add(isPublic)
+            .Add(isUnsafe)
+            .Add(isOverride)
+            .Add(isReadOnly)
+            .Add(isStatic)
+            .Add(returnsVoid)
+            ;
     }
 }

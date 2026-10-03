@@ -94,6 +94,20 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
 
             var enumStructSymbol = resolution.Target;
 
+            var wrapperShape = FactoryWrapperRules.GetWrapperShape(
+                  wrapperSymbol
+                , enumStructSymbol
+                , token
+                , out var recordParameter
+                , out _
+                , out var storageField
+            );
+
+            if (wrapperShape != WrapperShape.Supported)
+            {
+                return default;
+            }
+
             var canAccessMembers = wrapperSymbol.CanAccessMembersOf(enumStructSymbol, token);
 
             if (canAccessMembers == CanAccessMembersResult.NoAccess)
@@ -108,7 +122,8 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             var result = new PolyEnumFactorySpec {
                 wrapperTypeName = wrapperSymbol.Name,
                 wrapperSelfName = wrapperSyntax.Identifier.Text + wrapperSyntax.TypeParameterList,
-                wrapperConstraints = wrapperSyntax.ConstraintClauses.ToString(),
+                wrapperConstraints = ContainerResolver.FormatConstraintClauses(wrapperSymbol, token),
+                wrapperConstraintIdentity = GetConstraintIdentity(wrapperSymbol, token),
                 wrapperTypeNamespace = wrapperSymbol.ContainingNamespace?.ToDisplayString() ?? string.Empty,
                 wrapperKindKeyword = GetWrapperKindKeyword(wrapperSyntax),
                 wrapperPreModifiers = GetWrapperPreModifiers(wrapperSyntax, token),
@@ -118,7 +133,7 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
                 enumStructIsReadOnly = enumStructSymbol.IsReadOnly,
                 enumStructSize = 0,
                 hintName = hintName,
-                parentIsNamespace = wrapperSyntax.Parent is BaseNamespaceDeclarationSyntax,
+                parentIsNamespace = wrapperSyntax.Parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax,
                 isStruct = IsStruct(wrapperSyntax),
             };
             result.supportTypeName = containerResolution.SupportTypeName;
@@ -140,9 +155,11 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
                     , out result.closingSource
                     , printAdditionalUsings: PrintAdditionalUsings
                 );
+
+                result.containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(wrapperSyntax, token);
             }
 
-            ResolveBackingField(wrapperSyntax, wrapperSymbol, enumStructSymbol, ref result, token);
+            ResolveBackingField(wrapperSymbol, enumStructSymbol, recordParameter, storageField, ref result, token);
             AggregateCases(
                   enumStructSymbol
                 , containerResolution
@@ -155,50 +172,38 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             return result;
         }
 
+        /// <param name="recordParameter">
+        /// The first positional parameter when it has the enum-struct type, otherwise <see langword="null"/>.
+        /// </param>
+        /// <param name="storageField">
+        /// The wrapper's own field of the enum-struct type when a constructor takes the enum struct first,
+        /// otherwise <see langword="null"/>.
+        /// </param>
         private static void ResolveBackingField(
-              TypeDeclarationSyntax wrapperSyntax
-            , INamedTypeSymbol wrapperSymbol
+              INamedTypeSymbol wrapperSymbol
             , INamedTypeSymbol enumStructSymbol
+            , IParameterSymbol recordParameter
+            , IFieldSymbol storageField
             , ref PolyEnumFactorySpec result
             , CancellationToken token
         )
         {
             token.ThrowIfCancellationRequested();
 
-            if (wrapperSyntax is RecordDeclarationSyntax recordSyntax
-                && recordSyntax.ParameterList is ParameterListSyntax paramListSyntax
-                && paramListSyntax.Parameters.Count > 0
-            )
+            if (recordParameter is not null)
             {
-                var param = paramListSyntax.Parameters[0];
-
-                if (param.Type is TypeSyntax type && type.IsTypeNameCandidate(result.enumStructTypeName, token))
-                {
-                    result.emitBackingField = false;
-                    result.fieldName = param.Identifier.Text;
-                    return;
-                }
+                result.emitBackingField = false;
+                result.fieldName = GetParameterName(recordParameter, token);
+                return;
             }
 
-            var comparer = SymbolEqualityComparer.Default;
-
-            foreach (var ctor in wrapperSymbol.InstanceConstructors)
+            if (storageField is not null)
             {
-                token.ThrowIfCancellationRequested();
-
-                if (ctor.Parameters.Length < 1)
-                {
-                    continue;
-                }
-
-                var paramType = ctor.Parameters[0].Type;
-
-                if (comparer.Equals(paramType, enumStructSymbol))
-                {
-                    result.emitBackingField = false;
-                    result.fieldName = GetUserDefinedBackingField(wrapperSymbol, enumStructSymbol, token);
-                    return;
-                }
+                result.emitBackingField = false;
+                result.fieldName = storageField.AssociatedSymbol is IPropertySymbol property
+                    ? property.Name
+                    : storageField.Name;
+                return;
             }
 
             result.emitBackingField = true;
@@ -220,28 +225,19 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             result.fieldName = fieldName;
             return;
 
-            static string GetUserDefinedBackingField(
-                  INamedTypeSymbol wrapperSymbol
-                , INamedTypeSymbol enumStructSymbol
-                , CancellationToken token
-            )
+            static string GetParameterName(IParameterSymbol parameter, CancellationToken token)
             {
-                var comparer = SymbolEqualityComparer.Default;
-
-                foreach (var member in wrapperSymbol.GetMembers())
+                foreach (var reference in parameter.DeclaringSyntaxReferences)
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (member is IFieldSymbol field
-                        && field.IsStatic == false
-                        && comparer.Equals(field.Type, enumStructSymbol)
-                    )
+                    if (reference.GetSyntax(token) is ParameterSyntax syntax)
                     {
-                        return field.Name;
+                        return syntax.Identifier.Text;
                     }
                 }
 
-                return string.Empty;
+                return parameter.Name;
             }
         }
 
@@ -809,6 +805,41 @@ namespace EncosyTower.Core.Generators.PolyEnumFactories
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Gets the constraint clauses of <paramref name="type"/> and its containing types with every
+        /// constraint type fully qualified, innermost type first, one clause per line.
+        /// </summary>
+        private static string GetConstraintIdentity(INamedTypeSymbol type, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var substitutions = new Dictionary<ITypeParameterSymbol, int>(SymbolEqualityComparer.Default);
+            var clauses = new List<string>();
+
+            for (var current = type; current is not null; current = current.ContainingType)
+            {
+                foreach (var parameter in current.TypeParameters)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var clause = ContainerResolver.FormatConstraintClause(
+                          parameter
+                        , parameter.Name
+                        , substitutions
+                        , Array.Empty<string>()
+                        , token
+                    );
+
+                    if (string.IsNullOrEmpty(clause) == false)
+                    {
+                        clauses.Add(clause);
+                    }
+                }
+            }
+
+            return string.Join("\n", clauses);
         }
 
         private static string SelectEnumStructTypeName(INamedTypeSymbol type, CanAccessMembersResult access)

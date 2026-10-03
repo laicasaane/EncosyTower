@@ -4,11 +4,6 @@ namespace EncosyTower.Core.Generators.TypeWraps
     public sealed class TypeWrapGenerator : IIncrementalGenerator
     {
         public const string NAMESPACE = "EncosyTower.TypeWraps";
-        public const string WRAP_TYPE = "WrapType";
-        public const string WRAP_TYPE_ATTRIBUTE = $"global::{NAMESPACE}.WrapTypeAttribute";
-        public const string WRAP_RECORD = "WrapRecord";
-        public const string WRAP_RECORD_ATTRIBUTE = $"global::{NAMESPACE}.WrapRecordAttribute";
-        public const string GENERATOR_NAME = nameof(TypeWrapGenerator);
         private const string SKIP_ATTRIBUTE = $"global::{NAMESPACE}.SkipSourceGeneratorsForAssemblyAttribute";
         private const string WRAP_TYPE_ATTRIBUTE_METADATA = $"{NAMESPACE}.WrapTypeAttribute";
         private const string WRAP_RECORD_ATTRIBUTE_METADATA = $"{NAMESPACE}.WrapRecordAttribute";
@@ -63,11 +58,14 @@ namespace EncosyTower.Core.Generators.TypeWraps
         {
             token.ThrowIfCancellationRequested();
 
-            if (context.TargetSymbol is not INamedTypeSymbol symbol)
+            if (context.TargetSymbol is not INamedTypeSymbol symbol
+                || context.Attributes.Length < 1
+            )
             {
                 return default;
             }
 
+            var attribute = context.Attributes[0];
             var semanticModel = context.SemanticModel;
             var enableNullable = semanticModel.Compilation.Options.NullableContextOptions != NullableContextOptions.Disable;
 
@@ -75,10 +73,16 @@ namespace EncosyTower.Core.Generators.TypeWraps
             {
                 case StructDeclarationSyntax structSyntax:
                 {
-                    if (TryGetWrapTypeInfo(structSyntax, token, out var candidate))
+                    if (TryGetWrapTypeInfo(attribute, token, out var candidate))
                     {
                         GetTypeName(structSyntax, token, ref candidate);
-                        SetOtherFields(ref candidate, structSyntax, symbol, semanticModel, token);
+                        SetOtherFields(ref candidate, structSyntax, symbol, token);
+
+                        if (candidate.IsValid == false)
+                        {
+                            return default;
+                        }
+
                         candidate.isStruct = true;
                         candidate.isRefStruct = structSyntax.Modifiers.Any(SyntaxKind.RefKeyword);
 
@@ -109,7 +113,9 @@ namespace EncosyTower.Core.Generators.TypeWraps
                             , candidate.excludeConverter || candidate.isGeneric
                             , enableNullable
                             , token
-                        );
+                        ) {
+                            containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(structSyntax, token),
+                        };
                     }
 
                     break;
@@ -117,12 +123,17 @@ namespace EncosyTower.Core.Generators.TypeWraps
 
                 case ClassDeclarationSyntax classSyntax:
                 {
-                    if (TryGetWrapTypeInfo(classSyntax, token, out var candidate)
+                    if (TryGetWrapTypeInfo(attribute, token, out var candidate)
                         && InheritBaseClass(symbol, token) == false
                     )
                     {
                         GetTypeName(classSyntax, token, ref candidate);
-                        SetOtherFields(ref candidate, classSyntax, symbol, semanticModel, token);
+                        SetOtherFields(ref candidate, classSyntax, symbol, token);
+
+                        if (candidate.IsValid == false)
+                        {
+                            return default;
+                        }
 
                         var syntaxTree = classSyntax.SyntaxTree;
                         var fileTypeName = symbol.ToFileName();
@@ -151,7 +162,9 @@ namespace EncosyTower.Core.Generators.TypeWraps
                             , candidate.excludeConverter || candidate.isGeneric
                             , enableNullable
                             , token
-                        );
+                        ) {
+                            containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(classSyntax, token),
+                        };
                     }
 
                     break;
@@ -170,6 +183,7 @@ namespace EncosyTower.Core.Generators.TypeWraps
 
             if (context.TargetNode is not RecordDeclarationSyntax recordSyntax
                 || context.TargetSymbol is not INamedTypeSymbol symbol
+                || context.Attributes.Length < 1
             )
             {
                 return default;
@@ -183,13 +197,19 @@ namespace EncosyTower.Core.Generators.TypeWraps
             var semanticModel = context.SemanticModel;
             var enableNullable = semanticModel.Compilation.Options.NullableContextOptions != NullableContextOptions.Disable;
 
-            if (TryGetWrapRecordInfo(recordSyntax, token, out var candidate)
+            if (TryGetWrapRecordInfo(recordSyntax, context.Attributes[0], semanticModel, token, out var candidate)
                 && (recordSyntax.ClassOrStructKeyword.IsKind(SyntaxKind.ClassKeyword) == false
                     || InheritBaseClass(symbol, token) == false)
             )
             {
                 GetTypeName(recordSyntax, token, ref candidate);
-                SetOtherFields(ref candidate, recordSyntax, symbol, semanticModel, token);
+                SetOtherFields(ref candidate, recordSyntax, symbol, token);
+
+                if (candidate.IsValid == false)
+                {
+                    return default;
+                }
+
                 candidate.isStruct = recordSyntax.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword);
                 candidate.isRecord = true;
 
@@ -220,7 +240,9 @@ namespace EncosyTower.Core.Generators.TypeWraps
                     , candidate.excludeConverter || candidate.isGeneric
                     , enableNullable
                     , token
-                );
+                ) {
+                    containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(recordSyntax, token),
+                };
             }
 
             return default;
@@ -273,7 +295,7 @@ namespace EncosyTower.Core.Generators.TypeWraps
         }
 
         private static bool TryGetWrapTypeInfo(
-              TypeDeclarationSyntax syntax
+              AttributeData attribute
             , CancellationToken token
             , out Candidate result
         )
@@ -282,191 +304,71 @@ namespace EncosyTower.Core.Generators.TypeWraps
 
             result = new Candidate {
                 fieldName = string.Empty,
+                excludeConverter = GetExcludeConverter(attribute, token),
             };
 
-            TypeSyntax fieldTypeSyntax = null;
+            var args = attribute.ConstructorArguments;
 
-            foreach (var attribList in syntax.AttributeLists)
+            if (args.Length < 1
+                || args[0].Kind != TypedConstantKind.Type
+                || args[0].Value is not ITypeSymbol fieldType
+            )
             {
-                token.ThrowIfCancellationRequested();
-
-                foreach (var attrib in attribList.Attributes)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    var argumentList = attrib.ArgumentList;
-
-                    if (argumentList == null)
-                    {
-                        continue;
-                    }
-
-                    var arguments = argumentList.Arguments;
-
-                    if (arguments.Count < 1)
-                    {
-                        continue;
-                    }
-
-                    if (attrib.Name.IsTypeNameCandidate(NAMESPACE, WRAP_TYPE, token) == false)
-                    {
-                        continue;
-                    }
-
-                    foreach (var arg in arguments)
-                    {
-                        token.ThrowIfCancellationRequested();
-
-                        if (arg.NameEquals != null)
-                        {
-                            switch (arg.NameEquals.Name.Identifier.Text)
-                            {
-                                case "ExcludeConverter":
-                                {
-                                    if (arg.Expression is LiteralExpressionSyntax literal)
-                                    {
-                                        result.excludeConverter = (bool)literal.Token.Value;
-                                    }
-
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            switch (arg.Expression)
-                            {
-                                case TypeOfExpressionSyntax typeOf:
-                                {
-                                    fieldTypeSyntax = typeOf.Type;
-                                    break;
-                                }
-
-                                case LiteralExpressionSyntax literal:
-                                {
-                                    result.fieldName = literal.Token.ValueText;
-                                    break;
-                                }
-
-                                case InvocationExpressionSyntax invocation:
-                                {
-                                    if (invocation.Expression is IdentifierNameSyntax identifierName
-                                        && identifierName.Identifier.ValueText == "nameof"
-                                        && invocation.ArgumentList.Arguments.Count == 1
-                                    )
-                                    {
-                                        var nameofArg = invocation.ArgumentList.Arguments[0];
-
-                                        if (nameofArg.Expression is IdentifierNameSyntax idName)
-                                        {
-                                            result.fieldName = idName.Identifier.ValueText;
-                                        }
-                                        else if (nameofArg.Expression is MemberAccessExpressionSyntax memberAccess)
-                                        {
-                                            result.fieldName = memberAccess.Name.Identifier.ValueText;
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (fieldTypeSyntax != null)
-                    {
-                        break;
-                    }
-                }
-
-                if (fieldTypeSyntax != null)
-                {
-                    break;
-                }
+                return false;
             }
 
-            if (fieldTypeSyntax != null)
+            result.fieldTypeSymbol = fieldType as INamedTypeSymbol;
+
+            if (args.Length > 1 && args[1].Value is string memberName)
             {
-                result.fieldTypeSyntax = fieldTypeSyntax;
+                result.fieldName = memberName;
             }
 
-            return result.fieldTypeSyntax != null;
+            return true;
         }
 
         private static bool TryGetWrapRecordInfo(
               RecordDeclarationSyntax syntax
+            , AttributeData attribute
+            , SemanticModel semanticModel
             , CancellationToken token
             , out Candidate result
         )
         {
             token.ThrowIfCancellationRequested();
 
-            result = new Candidate();
+            result = new Candidate {
+                excludeConverter = GetExcludeConverter(attribute, token),
+            };
 
-            foreach (var attribList in syntax.AttributeLists)
+            if (syntax.ParameterList is not { Parameters.Count: > 0 } parameterList
+                || semanticModel.GetDeclaredSymbol(parameterList.Parameters[0], token)
+                    is not IParameterSymbol parameter
+            )
+            {
+                return false;
+            }
+
+            result.fieldTypeSymbol = parameter.Type as INamedTypeSymbol;
+            result.fieldName = parameter.Name;
+            return true;
+        }
+
+        private static bool GetExcludeConverter(AttributeData attribute, CancellationToken token)
+        {
+            foreach (var namedArgument in attribute.NamedArguments)
             {
                 token.ThrowIfCancellationRequested();
 
-                var alreadProcessed = false;
-
-                foreach (var attrib in attribList.Attributes)
+                if (string.Equals(namedArgument.Key, "ExcludeConverter", StringComparison.Ordinal)
+                    && namedArgument.Value.Value is bool excludeConverter
+                )
                 {
-                    token.ThrowIfCancellationRequested();
-
-                    if (attrib.Name.IsTypeNameCandidate(NAMESPACE, WRAP_RECORD, token) == false)
-                    {
-                        continue;
-                    }
-
-                    var argumentList = attrib.ArgumentList;
-
-                    if (argumentList != null)
-                    {
-                        var arguments = argumentList.Arguments;
-
-                        foreach (var arg in arguments)
-                        {
-                            token.ThrowIfCancellationRequested();
-
-                            if (arg.NameEquals == null)
-                            {
-                                continue;
-                            }
-
-                            switch (arg.NameEquals.Name.Identifier.Text)
-                            {
-                                case "ExcludeConverter":
-                                {
-                                    if (arg.Expression is LiteralExpressionSyntax literal)
-                                    {
-                                        result.excludeConverter = (bool)literal.Token.Value;
-                                    }
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    alreadProcessed = true;
-                    break;
-                }
-
-                if (alreadProcessed)
-                {
-                    break;
+                    return excludeConverter;
                 }
             }
 
-            if (syntax.ParameterList != null
-                && syntax.ParameterList.Parameters.Count > 0
-                && syntax.ParameterList.Parameters[0].Type is TypeSyntax targetTypeSyntax
-            )
-            {
-                result.fieldTypeSyntax = targetTypeSyntax;
-                result.fieldName = syntax.ParameterList.Parameters[0].Identifier.ValueText;
-            }
-
-            return result.fieldTypeSyntax != null;
+            return false;
         }
 
         private static void GetTypeName(TypeDeclarationSyntax syntax, CancellationToken token, ref Candidate candidate)
@@ -509,11 +411,11 @@ namespace EncosyTower.Core.Generators.TypeWraps
               ref Candidate candidate
             , TypeDeclarationSyntax syntax
             , INamedTypeSymbol symbol
-            , SemanticModel semanticModel
             , CancellationToken token
         )
         {
-            candidate.fieldTypeSymbol = semanticModel.GetSymbolInfo(candidate.fieldTypeSyntax, token).Symbol as INamedTypeSymbol;
+            token.ThrowIfCancellationRequested();
+
             candidate.syntax = syntax;
             candidate.symbol = symbol;
         }
@@ -562,19 +464,18 @@ namespace EncosyTower.Core.Generators.TypeWraps
             public bool isStruct;
             public bool isRefStruct;
             public bool isRecord;
-            public TypeSyntax fieldTypeSyntax;
             public INamedTypeSymbol fieldTypeSymbol;
             public string fieldName;
             public bool excludeConverter;
 
             public readonly bool IsValid
-                => syntax is { }
-                && symbol is { }
-                && fieldTypeSyntax is { }
-                && fieldTypeSymbol is { }
+                => syntax != null
+                && symbol != null
+                && fieldTypeSymbol != null
                 && string.IsNullOrEmpty(typeName) == false
                 && string.IsNullOrEmpty(typeNameWithTypeParams) == false
-                && fieldTypeSymbol.TypeKind != TypeKind.Dynamic;
+                && fieldTypeSymbol.TypeKind is not (TypeKind.Dynamic or TypeKind.Error)
+                && fieldTypeSymbol.ContainsErrorType() == false;
 
             public readonly override bool Equals(object obj)
                 => obj is Candidate other && Equals(other);

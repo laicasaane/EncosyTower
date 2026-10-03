@@ -62,6 +62,7 @@ namespace EncosyTower.Core.Generators.Variants
                 , fullTypeName
                 , structName
                 , variantName
+                , GENERATED_CODE
             );
 
             return p.Result;

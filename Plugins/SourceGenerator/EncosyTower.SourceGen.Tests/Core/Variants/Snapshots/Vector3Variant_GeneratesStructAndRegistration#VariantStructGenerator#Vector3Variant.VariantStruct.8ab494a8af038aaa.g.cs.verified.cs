@@ -99,6 +99,7 @@ partial struct Vector3Variant : g__ETV.IVariant<global::UnityEngine.Vector3>
     public static implicit operator Vector3Variant(in g__ETV.Variant<global::UnityEngine.Vector3> value) => new Vector3Variant(value);
 
     [g__UES.Preserve]
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.Variants.VariantStructGenerator", "0.1.8-preview.1")]
     public sealed class Converter : g__ETVC.IVariantConverter<global::UnityEngine.Vector3>
     {
         [g__UES.Preserve]

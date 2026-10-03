@@ -1207,6 +1207,7 @@ partial struct Id // Serializable
 
 partial struct Id // TypeConverter
 {
+    [g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
     public sealed class TypeConverter : g__ETS.ParsableStructConverter<Id>
     {
         public override bool IgnoreCase => false;
@@ -1534,7 +1535,7 @@ partial struct Id { } // IdKindExtensions
 static partial class Id_IdKindExtensions { } // IId_IdKindExtensions
 
 [g__ETEESG.GeneratedEnumExtensionsFor(typeof(global::TestProject.Id.IdKind), typeof(IId_IdKindExtensions), typeof(Id_IdKindExtensions), typeof(Id_IdKindExtended))]
-[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.EnumExtensions.EnumExtensionsGenerator", "0.1.8-preview.1")]
+[g__SCDC.GeneratedCode("EncosyTower.Core.Generators.UnionIds.UnionIdGenerator", "0.1.8-preview.1")]
 public partial interface IId_IdKindExtensions
     : g__ETEE.IEnumExtensions<Id_IdKindExtended, global::TestProject.Id.IdKind, byte>
     , g__ETCon.IToFixedString

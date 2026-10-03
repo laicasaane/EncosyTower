@@ -13,12 +13,13 @@ namespace EncosyTower.Persistence.Generators
 
         public readonly bool Equals(PersistenceSpec other)
             => string.Equals(metadataName, other.metadataName, StringComparison.Ordinal)
-            && isStatic == other.isStatic;
-
+            && isStatic == other.isStatic
+            && containingTypeDeclarations.Equals(other.containingTypeDeclarations);
         public readonly override bool Equals(object obj)
             => obj is PersistenceSpec other && Equals(other);
 
+
         public readonly override int GetHashCode()
-            => HashValue.Combine(metadataName, isStatic);
+            => HashValue.Combine(metadataName, isStatic, containingTypeDeclarations);
     }
 }

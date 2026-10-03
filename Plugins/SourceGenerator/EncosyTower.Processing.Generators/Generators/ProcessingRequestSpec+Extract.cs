@@ -61,6 +61,7 @@ namespace EncosyTower.Processing.Generators
                 , printAdditionalUsings: ProcessingAliasSet.WriteAliases
             );
 
+            var assemblyName = compilation.AssemblyName ?? string.Empty;
             var declaration = new ProcessingTypeDeclarationSpec(
                   openingSource
                 , closingSource
@@ -69,13 +70,14 @@ namespace EncosyTower.Processing.Generators
                 , request.ToDisplayString(s_displayFormat)
                 , request.ToMetadataName()
                 , request.IsReferenceType
+                , TypeCreationHelpers.GetContainingTypeSpecs(currentDeclaration, token)
+                , assemblyName
             );
 
             var resultTypeName = results.Count == 1
                 ? results[0].ToDisplayString(s_displayFormat)
                 : string.Empty;
             var hasResult = results.Count == 1;
-            var assemblyName = compilation.AssemblyName ?? string.Empty;
             var requestHint = SourceGenHelpers.BuildSemanticHintName(
                   ProcessingSourceGenContract.GENERATOR_METADATA_NAME
                 , assemblyName
@@ -181,6 +183,7 @@ namespace EncosyTower.Processing.Generators
                     , withStateful
                     , isGlobalScope
                     , isUnityScope
+                    , discriminator
                 ));
             }
 

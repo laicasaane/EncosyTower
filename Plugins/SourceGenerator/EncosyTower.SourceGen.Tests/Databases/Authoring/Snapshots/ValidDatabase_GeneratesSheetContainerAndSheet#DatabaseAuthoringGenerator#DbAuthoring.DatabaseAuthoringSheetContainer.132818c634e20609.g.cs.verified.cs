@@ -44,7 +44,7 @@ namespace TestProject
 
         [g__S.Serializable]
         [g__ETDBASG.GeneratedSheetContainer]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Databases.Authoring.Generators.DatabaseAuthoringGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class SheetContainer : g__ETDBA.DataSheetContainerBase, g__ETDBA.IPostExportDatabase
         {
@@ -81,7 +81,7 @@ namespace TestProject
 
         [g__S.Serializable]
         [g__ETDBASG.GeneratedSheetContainer]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Databases.Authoring.Generators.DatabaseAuthoringGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class SheetContainer { }
 
@@ -90,7 +90,7 @@ namespace TestProject
         [g__S.Serializable]
         [g__ETDBASG.TableNaming("Items", g__ETN.NameCasing.Pascal)]
         [g__ETDBASG.GeneratedSheet(typeof(int), typeof(global::TestProject.Row), typeof(global::TestProject.Rows), "Rows")]
-        [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
+        [g__SCDC.GeneratedCode("EncosyTower.Databases.Authoring.Generators.DatabaseAuthoringGenerator", "0.1.8-preview.1")]
         [g__SDCA.ExcludeFromCodeCoverage]
         public partial class Rows_RowSheet_Items : RowSheet { }
 

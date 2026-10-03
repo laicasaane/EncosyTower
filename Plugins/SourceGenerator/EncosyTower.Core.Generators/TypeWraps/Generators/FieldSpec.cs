@@ -25,12 +25,17 @@
 
         public readonly bool Equals(FieldSpec other)
             => string.Equals(name, other.name, StringComparison.Ordinal)
-            && string.Equals(typeName, other.typeName, StringComparison.Ordinal);
+            && string.Equals(typeName, other.typeName, StringComparison.Ordinal)
+            && sameType == other.sameType
+            && isConst == other.isConst
+            && isStatic == other.isStatic
+            && isReadOnly == other.isReadOnly
+            ;
 
         public readonly override bool Equals(object obj)
             => obj is FieldSpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(name, typeName);
+            => HashValue.Combine(name, typeName, sameType, isConst, isStatic, isReadOnly);
     }
 }

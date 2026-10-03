@@ -1306,8 +1306,9 @@
             {
                 if (UnityCollections)
                 {
-                    p.PrintBeginLine("if (g__ETCol.EncosyFixedStringExtensions.TryFormat(")
-                        .PrintEndLine("Kind.ToFixedString(), destination, out var kindCharsWritten) == false)");
+                    p.PrintBeginLine("if (g__ETCol.EncosyFixedStringExtensions.TryFormat(");
+                    PrintKindCall(ref p, "ToFixedString", null)
+                        .PrintEndLine(", destination, out var kindCharsWritten) == false)");
                     p.OpenScope();
                     {
                         p.PrintLine("charsWritten = 0;");
@@ -1332,7 +1333,8 @@
                 }
                 else
                 {
-                    p.PrintLine("var kind = g__S.MemoryExtensions.AsSpan(Kind.ToStringFast());");
+                    p.PrintBeginLine("var kind = g__S.MemoryExtensions.AsSpan(");
+                    PrintKindCall(ref p, "ToStringFast", null).PrintEndLine(");");
                     p.PrintLine("var id = g__S.MemoryExtensions.AsSpan(GetIdStringFast());");
                     p.PrintEndLine();
 
@@ -1594,8 +1596,9 @@
 
                         var idField = isSerializableStruct ? "Id" : "IdUnsigned";
 
-                        p.PrintBeginLine("_ => $\"{Kind.ToUnderlyingValue().ToString()}{SEPARATOR}{")
-                            .Print(idField).PrintEndLine("}\",");
+                        p.PrintBeginLine("_ => $\"{");
+                        PrintKindCall(ref p, "ToUnderlyingValue", null)
+                            .Print(".ToString()}{SEPARATOR}{").Print(idField).PrintEndLine("}\",");
                     }
                     p.CloseScope("};");
                 }
@@ -1677,15 +1680,18 @@
                             {
                                 p.PrintBeginLine("IdKind.").Print(kindName.EscapeCSharpIdentifier())
                                     .Print(" => $\"")
-                                    .Print("{Kind.ToDisplayStringFast()}{SEPARATOR}{Id_").Print(kindName)
+                                    .Print("{");
+                                PrintKindCall(ref p, "ToDisplayStringFast", null)
+                                    .Print("}{SEPARATOR}{Id_").Print(kindName)
                                     .PrintEndLine("}\",");
                             }
                         }
 
                         var idField = isSerializableStruct ? "Id" : "IdUnsigned";
 
-                        p.PrintBeginLine("_ => $\"{Kind.ToUnderlyingValue().ToString()}{SEPARATOR}{")
-                            .Print(idField).PrintEndLine("}\",");
+                        p.PrintBeginLine("_ => $\"{");
+                        PrintKindCall(ref p, "ToUnderlyingValue", null)
+                            .Print(".ToString()}{SEPARATOR}{").Print(idField).PrintEndLine("}\",");
                     }
                     p.CloseScope("};");
 
@@ -1745,7 +1751,8 @@
                 }
                 else
                 {
-                    p.PrintLine("g__UC.FixedStringMethods.Append(ref fs, Kind.ToFixedString(false));");
+                    p.PrintBeginLine("g__UC.FixedStringMethods.Append(ref fs, ");
+                    PrintKindCall(ref p, "ToFixedString", "false").PrintEndLine(");");
                     p.PrintBeginLine("g__UC.FixedStringMethods.Append(ref fs, '").Print(Separator).PrintEndLine("');");
                     p.PrintEndLine();
 
@@ -1836,7 +1843,8 @@
                 }
                 else
                 {
-                    p.PrintLine("g__UC.FixedStringMethods.Append(ref fs, Kind.ToDisplayFixedString(false));");
+                    p.PrintBeginLine("g__UC.FixedStringMethods.Append(ref fs, ");
+                    PrintKindCall(ref p, "ToDisplayFixedString", "false").PrintEndLine(");");
                     p.PrintBeginLine("g__UC.FixedStringMethods.Append(ref fs, '").Print(Separator).PrintEndLine("');");
                     p.PrintEndLine();
 
@@ -2579,6 +2587,7 @@
 
         private void WriteTypeConverter(ref Printer p, string typeName)
         {
+            p.PrintLine(GENERATED_CODE);
             p.PrintBeginLine("public sealed class TypeConverter : ")
                 .Print("g__ETS.ParsableStructConverter<")
                 .Print(typeName).PrintEndLine(">");
@@ -2878,6 +2887,17 @@
             }
             p.CloseScope();
             p.PrintEndLine();
+        }
+
+        private Printer PrintKindCall(ref Printer p, string methodName, string argument)
+        {
+            if (ParentIsNamespace)
+            {
+                return p.Print("Kind.").Print(methodName).Print("(").Print(argument).Print(")");
+            }
+
+            return p.Print(KindExtensionsRef.ExtensionsName).Print(".").Print(methodName).Print("(Kind")
+                .PrintIf(argument is not null, ", ").Print(argument).Print(")");
         }
 
         private void WriteIdEnumExtensions(ref Printer p, string typeName, CancellationToken token)

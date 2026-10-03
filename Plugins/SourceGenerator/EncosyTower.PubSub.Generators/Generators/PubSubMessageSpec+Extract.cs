@@ -52,6 +52,7 @@ namespace EncosyTower.PubSub.Generators
                 , printAdditionalUsings: PubSubAliasSet.WriteAliases
             );
 
+            var assemblyName = compilation.AssemblyName ?? string.Empty;
             var declaration = new PubSubTypeDeclarationSpec(
                   openingSource
                 , closingSource
@@ -60,8 +61,9 @@ namespace EncosyTower.PubSub.Generators
                 , message.ToDisplayString(s_displayFormat)
                 , message.ToMetadataName()
                 , message.IsReferenceType
+                , TypeCreationHelpers.GetContainingTypeSpecs(currentDeclaration, token)
+                , assemblyName
             );
-            var assemblyName = compilation.AssemblyName ?? string.Empty;
             var messageHint = SourceGenHelpers.BuildSemanticHintName(
                   PubSubSourceGenContract.GENERATOR_METADATA_NAME
                 , assemblyName
@@ -69,7 +71,7 @@ namespace EncosyTower.PubSub.Generators
                 , PubSubSourceGenContract.MESSAGE_ROLE
                 , string.Empty
             );
-            var canPublishParameterless = DetermineCanPublishParameterless(message);
+            var canPublishParameterless = DetermineCanPublishParameterless(message, token);
             var scopes = CreateScopes(
                   applications
                 , message
@@ -163,6 +165,7 @@ namespace EncosyTower.PubSub.Generators
                     , withStateful
                     , isGlobalScope
                     , isUnityScope
+                    , discriminator
                 ));
             }
 
@@ -443,7 +446,7 @@ namespace EncosyTower.PubSub.Generators
             return false;
         }
 
-        private static bool DetermineCanPublishParameterless(INamedTypeSymbol message)
+        private static bool DetermineCanPublishParameterless(INamedTypeSymbol message, CancellationToken token)
         {
             if (message.TypeKind == TypeKind.Struct)
             {
@@ -464,6 +467,9 @@ namespace EncosyTower.PubSub.Generators
 
                 if (constructor.Parameters.Length == 0
                     && constructor.DeclaredAccessibility == Accessibility.Public
+                    && (constructor.IsImplicitlyDeclared == false
+                        || message.HasAttribute(PubSubSourceGenContract.WRAP_TYPE_ATTRIBUTE, token) == false
+                    )
                 )
                 {
                     return true;

@@ -7,11 +7,15 @@
         private const string PR_GENERATOR = "\"EncosyTower.Entities.Stats.Generators.StatCollectionGenerator\"";
 
         private const string PR_AGGRESSIVE_INLINING = "[g__SRCS.MethodImpl(INLINING)]";
+        private const string PR_AGGRESSIVE_INLINING_LITERAL = $"[g__SRCS.MethodImpl({PR_INLINING})]";
         private const string PR_EXCLUDE_COVERAGE = "[g__SDCA.ExcludeFromCodeCoverage]";
         private const string PR_GENERATED_CODE = $"[g__SCDC.GeneratedCode(GENERATOR, \"{SourceGenVersion.VALUE}\")]";
         private const string PR_VALIDATION_ATTRIBUTES = "[g__UE.HideInCallstack, g__SD.StackTraceHidden, " +
             "g__SD.Conditional(g__ETDVD.UNITY_EDITOR), g__SD.Conditional(g__ETDVD.DEBUG), " +
             "g__SD.Conditional(g__ETDVD.RUNTIME_CHECKS), g__SD.Conditional(g__ETDVD.STATS_CHECKS)]";
+
+        private readonly string StaticExtensionsName
+            => extensionsPlacement == ExtensionsPlacement.BesideNestedType ? $"{typeName}Extensions" : null;
 
         public readonly string WriteCode(CancellationToken token)
         {
@@ -67,7 +71,11 @@
                 WriteBakerStructs(ref p);
                 WriteAccessorStructs(ref p);
                 WriteReaderStruct(ref p);
-                WriteExtensionsClass(ref p);
+
+                if (HasNamespaceExtensions == false)
+                {
+                    WriteExtensionsClass(ref p);
+                }
 
                 p.Print("#region INTERNALS").PrintEndLine();
                 p.Print("#endregion ======").PrintEndLine();
@@ -83,14 +91,36 @@
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
-                p.PrintBeginLine("static partial class ").Print(typeName).PrintEndLine("Extensions // Internals");
-                p.OpenScope();
+                if (HasNamespaceExtensions == false)
                 {
-                    WriteHelperConstants(ref p);
+                    p.PrintBeginLine(PR_GENERATED_CODE).PrintEndLine(PR_EXCLUDE_COVERAGE);
+                    p.PrintBeginLine("static partial class ").Print(typeName).PrintEndLine("Extensions // Internals");
+                    p.OpenScope();
+                    {
+                        WriteHelperConstants(ref p);
+                    }
+                    p.CloseScope();
+                    p.PrintEndLine();
                 }
-                p.CloseScope();
-                p.PrintEndLine();
+            }
+            p = p.DecreasedIndent();
+
+            return p.Result;
+        }
+
+        public readonly string WriteNamespaceExtensionsCode(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var p = new Printer(0, 1024 * 16, token);
+
+            p.PrintEndLine();
+            p.Print("#pragma warning disable").PrintEndLine();
+            p.PrintEndLine();
+
+            p = p.IncreasedIndent();
+            {
+                WriteExtensionsClass(ref p);
             }
             p = p.DecreasedIndent();
 
@@ -2467,6 +2497,7 @@
         private readonly void WriteAccessorStructs(ref Printer p)
         {
             var count = statDataCollection.Count;
+            var staticExtensionsName = StaticExtensionsName;
 
             p.Print("#region    ACCESSOR").PrintEndLine();
             p.Print("#endregion ========").PrintEndLine();
@@ -2581,21 +2612,25 @@
                         WriteTryGetStatDataMethod(ref p, statDataCollection[i]);
                     }
 
-                    WriteTrySetBaseValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteTrySetBaseValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan(), staticExtensionsName);
 
                     for (var i = 0; i < count; i++)
                     {
                         WriteTrySetStatBaseValueMethod(ref p, statDataCollection[i]);
                     }
 
-                    WriteTrySetCurrentValueToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteTrySetCurrentValueToStatsMethod(
+                          ref p
+                        , statDataCollection.AsReadOnlySpan()
+                        , staticExtensionsName
+                    );
 
                     for (var i = 0; i < count; i++)
                     {
                         WriteTrySetStatCurrentValueMethod(ref p, statDataCollection[i]);
                     }
 
-                    WriteTrySetValuesToStatsMethod(ref p, statDataCollection.AsReadOnlySpan());
+                    WriteTrySetValuesToStatsMethod(ref p, statDataCollection.AsReadOnlySpan(), staticExtensionsName);
 
                     for (var i = 0; i < count; i++)
                     {
@@ -2961,7 +2996,11 @@
                 p.PrintEndLine();
             }
 
-            static void WriteTrySetBaseValueToStatsMethod(ref Printer p, ReadOnlySpan<StatDataSpec> statDataCollection)
+            static void WriteTrySetBaseValueToStatsMethod(
+                  ref Printer p
+                , ReadOnlySpan<StatDataSpec> statDataCollection
+                , string staticExtensionsName
+            )
             {
                 var count = statDataCollection.Length;
 
@@ -2978,7 +3017,17 @@
                             var statData = statDataCollection[i];
                             var fieldName = statData.fieldName;
 
-                            p.PrintBeginLine(comma).Print("options.").Print(fieldName).PrintEndLine(".TryGetBaseValue()");
+                            p.PrintBeginLine(comma);
+
+                            if (staticExtensionsName is null)
+                            {
+                                p.Print("options.").Print(fieldName).PrintEndLine(".TryGetBaseValue()");
+                            }
+                            else
+                            {
+                                p.Print(staticExtensionsName).Print(".TryGetBaseValue(options.")
+                                    .Print(fieldName).PrintEndLine(")");
+                            }
                         }
                     }
                     p = p.DecreasedIndent();
@@ -3023,7 +3072,8 @@
 
                         p.PrintBeginLine("paramsForStats[").Print(i).Print("] = new((")
                             .Print(fieldName).Print(".HasValue ? new ")
-                            .Print(typeName).Print(" { baseValue = ").Print(fieldName)
+                            .Print(typeName).Print(" { ").PrintIf(statData.singleValue, "value", "baseValue")
+                            .Print(" = ").Print(fieldName)
                             .Print(".GetValueOrThrow() }.ToValuePair() : g__ET.Option.None)")
                             .Print(", (g__ETES.StatHandle)handles.").Print(fieldName).PrintEndLine(");");
                     }
@@ -3057,7 +3107,11 @@
                 p.PrintEndLine();
             }
 
-            static void WriteTrySetCurrentValueToStatsMethod(ref Printer p, ReadOnlySpan<StatDataSpec> statDataCollection)
+            static void WriteTrySetCurrentValueToStatsMethod(
+                  ref Printer p
+                , ReadOnlySpan<StatDataSpec> statDataCollection
+                , string staticExtensionsName
+            )
             {
                 var count = statDataCollection.Length;
 
@@ -3074,7 +3128,17 @@
                             var statData = statDataCollection[i];
                             var fieldName = statData.fieldName;
 
-                            p.PrintBeginLine(comma).Print("options.").Print(fieldName).PrintEndLine(".TryGetCurrentValue()");
+                            p.PrintBeginLine(comma);
+
+                            if (staticExtensionsName is null)
+                            {
+                                p.Print("options.").Print(fieldName).PrintEndLine(".TryGetCurrentValue()");
+                            }
+                            else
+                            {
+                                p.Print(staticExtensionsName).Print(".TryGetCurrentValue(options.")
+                                    .Print(fieldName).PrintEndLine(")");
+                            }
                         }
                     }
                     p = p.DecreasedIndent();
@@ -3119,7 +3183,8 @@
 
                         p.PrintBeginLine("paramsForStats[").Print(i).Print("] = new((")
                             .Print(fieldName).Print(".HasValue ? new ")
-                            .Print(typeName).Print(" { currentValue = ").Print(fieldName)
+                            .Print(typeName).Print(" { ").PrintIf(statData.singleValue, "value", "currentValue")
+                            .Print(" = ").Print(fieldName)
                             .Print(".GetValueOrThrow() }.ToValuePair() :  g__ET.Option.None)")
                             .Print(", (g__ETES.StatHandle)handles.").Print(fieldName).PrintEndLine(");");
                     }
@@ -3153,7 +3218,11 @@
                 p.PrintEndLine();
             }
 
-            static void WriteTrySetValuesToStatsMethod(ref Printer p, ReadOnlySpan<StatDataSpec> statDataCollection)
+            static void WriteTrySetValuesToStatsMethod(
+                  ref Printer p
+                , ReadOnlySpan<StatDataSpec> statDataCollection
+                , string staticExtensionsName
+            )
             {
                 var count = statDataCollection.Length;
 
@@ -3208,9 +3277,18 @@
                         var statData = statDataCollection[i];
                         var fieldName = statData.fieldName;
 
-                        p.PrintBeginLine("paramsForStats[").Print(i).Print("] = new(")
-                            .Print(fieldName).Print(".TryGetValuePair(), (g__ETES.StatHandle)handles.")
-                            .Print(fieldName).PrintEndLine(");");
+                        p.PrintBeginLine("paramsForStats[").Print(i).Print("] = new(");
+
+                        if (staticExtensionsName is null)
+                        {
+                            p.Print(fieldName).Print(".TryGetValuePair()");
+                        }
+                        else
+                        {
+                            p.Print(staticExtensionsName).Print(".TryGetValuePair(").Print(fieldName).Print(")");
+                        }
+
+                        p.Print(", (g__ETES.StatHandle)handles.").Print(fieldName).PrintEndLine(");");
                     }
 
                     p.PrintEndLine();
@@ -3766,17 +3844,42 @@
         private readonly void WriteExtensionsClass(ref Printer p)
         {
             var count = statDataCollection.Count;
-            var statCollectionType = typeName;
+            var atNamespace = HasNamespaceExtensions;
+            var statCollectionType = atNamespace ? typeFullName : typeName;
+            var inlining = atNamespace ? PR_AGGRESSIVE_INLINING_LITERAL : PR_AGGRESSIVE_INLINING;
+            var isInternal = extensionsPlacement is ExtensionsPlacement.NamespaceInternal
+                or ExtensionsPlacement.BesideTopLevelInternal;
+            var member = isInternal ? "internal" : "public";
+            var @this = extensionsPlacement == ExtensionsPlacement.BesideNestedType ? string.Empty : "this ";
 
             p.Print("#region    EXTENSIONS").PrintEndLine();
             p.Print("#endregion ==========").PrintEndLine();
             p.PrintEndLine();
 
-            p.PrintBeginLine("partial struct ").Print(typeName).Print(" { }")
-                .Print(" // ").Print(typeName).PrintEndLine("Extensions");
-            p.PrintEndLine();
+            if (atNamespace == false)
+            {
+                p.PrintBeginLine("partial struct ").Print(typeName).Print(" { }")
+                    .Print(" // ").Print(typeName).PrintEndLine("Extensions");
+                p.PrintEndLine();
+            }
 
-            p.PrintBeginLine("public static partial class ").Print(typeName).PrintEndLine("Extensions");
+            switch (extensionsPlacement)
+            {
+                case ExtensionsPlacement.NamespaceInternal:
+                case ExtensionsPlacement.BesideTopLevelInternal:
+                    p.PrintBeginLine("static partial class ").Print(typeName).PrintEndLine("Extensions");
+                    break;
+
+                case ExtensionsPlacement.BesideNestedType:
+                    p.PrintBeginLine(typeAccessibility.GetKeyword()).Print(" static partial class ")
+                        .Print(typeName).PrintEndLine("Extensions");
+                    break;
+
+                default:
+                    p.PrintBeginLine("public static partial class ").Print(typeName).PrintEndLine("Extensions");
+                    break;
+            }
+
             p.OpenScope();
             {
                 for (var i = 0; i < count; i++)
@@ -3784,109 +3887,114 @@
                     var statData = statDataCollection[i];
                     var typeName = statData.typeName;
                     var valueTypeNs = statData.valueTypeNamespace;
-                    var valueType = statData.valueType;
+                    var valueType = atNamespace && string.IsNullOrEmpty(statData.valueTypeFullName) == false
+                        ? statData.valueTypeFullName
+                        : statData.valueType;
                     var hasCustomNs = string.IsNullOrEmpty(valueTypeNs) == false;
                     var singleValue = statData.singleValue;
 
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public static g__ET.Option<g__StatSystem.ValuePair> TryGetValuePair(this g__ET.Option<")
+                    p.PrintLine(inlining);
+                    p.PrintBeginLine(member).Print(" static g__ET.Option<g__StatSystem.ValuePair> TryGetValuePair(")
+                        .Print(@this).Print("g__ET.Option<")
                         .Print(statCollectionType).Print(".").Print(typeName).PrintEndLine("> value)");
                     p.WithIncreasedIndent().PrintBeginLine("=> value.TryGetValue(out var stat) ")
                         .PrintEndLine("? stat.ToValuePair() : g__ET.Option.None;");
                     p.PrintEndLine();
 
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public static g__ET.Option<")
+                    p.PrintLine(inlining);
+                    p.PrintBeginLine(member).Print(" static g__ET.Option<")
                         .PrintIf(hasCustomNs, valueTypeNs).PrintIf(hasCustomNs, ".")
-                        .Print(valueType).Print("> TryGetBaseValue(this g__ET.Option<")
+                        .Print(valueType).Print("> TryGetBaseValue(").Print(@this).Print("g__ET.Option<")
                         .Print(statCollectionType).Print(".").Print(typeName).PrintEndLine("> value)");
                     p.WithIncreasedIndent().PrintBeginLine("=> value.TryGetValue(out var stat) ")
                         .Print("? stat.").PrintIf(singleValue, "value", "baseValue").PrintEndLine(" : g__ET.Option.None;");
                     p.PrintEndLine();
 
-                    p.PrintLine(PR_AGGRESSIVE_INLINING);
-                    p.PrintBeginLine("public static g__ET.Option<")
+                    p.PrintLine(inlining);
+                    p.PrintBeginLine(member).Print(" static g__ET.Option<")
                         .PrintIf(hasCustomNs, valueTypeNs).PrintIf(hasCustomNs, ".")
-                        .Print(valueType).Print("> TryGetCurrentValue(this g__ET.Option<")
+                        .Print(valueType).Print("> TryGetCurrentValue(").Print(@this).Print("g__ET.Option<")
                         .Print(statCollectionType).Print(".").Print(typeName).PrintEndLine("> value)");
                     p.WithIncreasedIndent().PrintBeginLine("=> value.TryGetValue(out var stat) ")
                         .Print("? stat.").PrintIf(singleValue, "value", "currentValue").PrintEndLine(" : g__ET.Option.None;");
                     p.PrintEndLine();
                 }
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static TComponentData ToComponent<TComponentData>(this ")
-                    .Print(typeName).PrintEndLine(".Baker<TComponentData> baker)");
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static TComponentData ToComponent<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).PrintEndLine(".Baker<TComponentData> baker)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("return g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref baker.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref baker.statCollection);");
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static void AddComponentToEntity<TComponentData>(this ")
-                    .Print(typeName).PrintEndLine(".Baker<TComponentData> baker)");
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static void AddComponentToEntity<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).PrintEndLine(".Baker<TComponentData> baker)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("ref var component = ref g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref baker.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref baker.statCollection);");
                     p.PrintLine("var statBaker = baker.baker;");
                     p.PrintLine("statBaker.IBaker.AddComponent(statBaker.Entity, component);");
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static TComponentData ToComponent<TComponentData>(this ")
-                    .Print(typeName).PrintEndLine(".Accessor<TComponentData> accessor)");
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static TComponentData ToComponent<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).PrintEndLine(".Accessor<TComponentData> accessor)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("return g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static void SetComponentToEntity<TComponentData>(this ")
-                    .Print(typeName).PrintEndLine(".Accessor<TComponentData> accessor, g__UECS.EntityManager entityManager)");
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static void SetComponentToEntity<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).Print(".Accessor<TComponentData> accessor, ")
+                    .PrintEndLine("g__UECS.EntityManager entityManager)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("ref var component = ref g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
                     p.PrintLine("entityManager.SetComponentData(accessor.entity, component);");
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static void SetComponentToEntity<TComponentData>(this ")
-                    .Print(typeName).PrintEndLine(".Accessor<TComponentData> accessor, g__UECS.EntityCommandBuffer ecb)");
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static void SetComponentToEntity<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).Print(".Accessor<TComponentData> accessor, ")
+                    .PrintEndLine("g__UECS.EntityCommandBuffer ecb)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("ref var component = ref g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
                     p.PrintLine("ecb.SetComponent(accessor.entity, component);");
                 }
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine(PR_AGGRESSIVE_INLINING);
-                p.PrintBeginLine("public static void SetComponentToEntity<TComponentData>(this ")
-                    .Print(typeName).Print(".Accessor<TComponentData> accessor, ")
+                p.PrintLine(inlining);
+                p.PrintBeginLine(member).Print(" static void SetComponentToEntity<TComponentData>(").Print(@this)
+                    .Print(statCollectionType).Print(".Accessor<TComponentData> accessor, ")
                     .PrintEndLine("g__UECS.EntityCommandBuffer.ParallelWriter ecb, int sortKey)");
                 p.WithIncreasedIndent().PrintLine("where TComponentData : unmanaged, g__UECS.IComponentData");
                 p.OpenScope();
                 {
                     p.PrintBeginLine("ref var component = ref g__UCLU.UnsafeUtility.As<")
-                        .Print(typeName).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
+                        .Print(statCollectionType).PrintEndLine(", TComponentData>(ref accessor.statCollection);");
                     p.PrintLine("ecb.SetComponent(sortKey, accessor.entity, component);");
                 }
                 p.CloseScope();

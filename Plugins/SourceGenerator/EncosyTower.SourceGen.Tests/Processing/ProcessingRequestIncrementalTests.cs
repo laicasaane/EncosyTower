@@ -135,10 +135,17 @@ public sealed class ProcessingRequestIncrementalTests
         );
 
         AssertDistinct(declaration, new ProcessingTypeDeclarationSpec(
-            "changed", "closing", "Request", "class", "global::Test.Request", "Test.Request", true
+              "opening"
+            , "closing"
+            , "Request"
+            , "class"
+            , "global::Test.Request"
+            , "Test.Request"
+            , true
+            , ImmutableArray.Create(new ContainingTypeSpec("struct", "Outer", "", "")).AsEquatableArray()
         ));
         AssertDistinct(declaration, new ProcessingTypeDeclarationSpec(
-            "opening", "changed", "Request", "class", "global::Test.Request", "Test.Request", true
+            "opening", "closing", "Request", "class", "global::Test.Request", "Test.Request", true, default, "Other"
         ));
         AssertDistinct(declaration, new ProcessingTypeDeclarationSpec(
             "opening", "closing", "Changed", "class", "global::Test.Request", "Test.Request", true
@@ -198,7 +205,7 @@ public sealed class ProcessingRequestIncrementalTests
               declaration
             , "global::System.Int32"
             , "global::Test.Scope"
-            , "changed.g.cs"
+            , "scope.g.cs"
             , true
             , true
             , true
@@ -206,6 +213,7 @@ public sealed class ProcessingRequestIncrementalTests
             , true
             , false
             , false
+            , "changed"
         ));
         AssertDistinct(scopeSpec, new ProcessingScopeSpec(
             declaration, "global::System.Int32", "global::Test.Scope", "scope.g.cs"
@@ -248,9 +256,6 @@ public sealed class ProcessingRequestIncrementalTests
         ));
         AssertDistinct(request, new ProcessingRequestSpec(
             declaration, scopes, "global::System.String", "request.g.cs", true, false, true
-        ));
-        AssertDistinct(request, new ProcessingRequestSpec(
-            declaration, scopes, "global::System.Int32", "changed.g.cs", true, false, true
         ));
         AssertDistinct(request, new ProcessingRequestSpec(
             declaration, default, "global::System.Int32", "request.g.cs", true, false, true

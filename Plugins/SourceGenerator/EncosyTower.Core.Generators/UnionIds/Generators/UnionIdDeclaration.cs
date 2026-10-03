@@ -165,6 +165,7 @@ namespace EncosyTower.Core.Generators.UnionIds
 
                     var extensions = new EnumExtensionsDeclaration(unityCollections, candidate.kindEnumFixedStringBytes) {
                         GeneratedCode = GENERATED_CODE,
+                        InterfaceGeneratedCode = GENERATED_CODE,
                         Name = kindName,
                         ExtensionsName = EnumExtensionsDeclaration.GetNameExtensionsClass(kindName),
                         StructName = EnumExtensionsDeclaration.GetNameExtendedStruct(kindName),
@@ -304,6 +305,7 @@ namespace EncosyTower.Core.Generators.UnionIds
 
             KindExtensionsRef = new EnumExtensionsDeclaration(unityCollections, kindFixedStringBytes) {
                 GeneratedCode = GENERATED_CODE,
+                InterfaceGeneratedCode = GENERATED_CODE,
                 Name = kindEnumName,
                 ExtensionsName = EnumExtensionsDeclaration.GetNameExtensionsClass(kindEnumName),
                 StructName = EnumExtensionsDeclaration.GetNameExtendedStruct(kindEnumName),

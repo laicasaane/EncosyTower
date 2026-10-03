@@ -149,6 +149,7 @@ namespace TestProject
             [g__ETDBSG.GeneratedAssetNameConstant(typeof(Db), typeof(g__ETDB.DatabaseAsset))]
             public const string DATABASE = "DatabaseAsset_Db";
 
+            [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public static partial class Tables
             {
                 [g__ETDBSG.GeneratedAssetNameConstant(typeof(Db), typeof(global::TestProject.Rows))]
@@ -162,6 +163,7 @@ namespace TestProject
         {
             public static readonly g__ETAK.AssetKey<g__ETDB.DatabaseAsset> Database = new(Names.DATABASE);
 
+            [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public static partial class Tables
             {
                 public static readonly g__ETAK.AssetKey<global::TestProject.Rows> Items = new(Names.Tables.ITEMS);
@@ -185,6 +187,7 @@ namespace TestProject
                 Tables.Initialize();
             }
 
+            [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public static partial class Tables
             {
                 public static g__ETSI.StringId Items { get; private set; }
@@ -245,6 +248,7 @@ namespace TestProject
             }
 #endif
 
+            [g__SCDC.GeneratedCode("EncosyTower.Data.Generators.Databases.DatabaseGenerator", "0.1.8-preview.1")]
             public static partial class Tables
             {
                 public static global::TestProject.Rows Items

@@ -66,6 +66,11 @@ namespace EncosyTower.Core.Generators.UnionIds
                 return default;
             }
 
+            if (HasErrorTypedInlineKind(symbol, token))
+            {
+                return default;
+            }
+
             var attrib = context.Attributes[0];
             var info = new IdSpec {
                 separator = '-',
@@ -146,7 +151,8 @@ namespace EncosyTower.Core.Generators.UnionIds
             info.fileHintName = symbol.ToFileName();
             info.namespaceName = ns is { IsGlobalNamespace: false } ? ns.ToDisplayString() : string.Empty;
             info.accessibility = symbol.DeclaredAccessibility;
-            info.parentIsNamespace = context.TargetNode.Parent is BaseNamespaceDeclarationSyntax;
+            info.parentIsNamespace = context.TargetNode.Parent is BaseNamespaceDeclarationSyntax
+                or CompilationUnitSyntax;
             info.generateTryFormat = CheckTryParse(symbol, token) == false;
 
             TypeCreationHelpers.GenerateOpeningAndClosingSource(
@@ -296,6 +302,31 @@ namespace EncosyTower.Core.Generators.UnionIds
             }
 
             return builder.ToImmutable().AsEquatableArray();
+        }
+
+        private static bool HasErrorTypedInlineKind(INamedTypeSymbol idSymbol, CancellationToken token)
+        {
+            foreach (var attrib in idSymbol.GetAttributes(UNION_ID_KIND_ATTRIBUTE_FULL, token))
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (attrib == null || attrib.ConstructorArguments.Length < 1)
+                {
+                    continue;
+                }
+
+                var typeArg = attrib.ConstructorArguments[0];
+
+                if (typeArg.Kind == TypedConstantKind.Type
+                    && typeArg.Value is ITypeSymbol kindType
+                    && kindType.ContainsErrorType(token)
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static KindSpec BuildKindInfo(

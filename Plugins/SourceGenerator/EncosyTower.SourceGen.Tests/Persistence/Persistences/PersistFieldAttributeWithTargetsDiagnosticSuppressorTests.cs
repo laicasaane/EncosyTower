@@ -76,4 +76,69 @@ public sealed class PersistFieldAttributeWithTargetsDiagnosticSuppressorTests
             """,
             isSuppressed: false
         );
+
+    [DataTestMethod]
+    [DataRow("PersistAttribute")]
+    [DataRow("EncosyTower.Persistences.PersistAttribute")]
+    public Task PersistFieldWithSuffixedTypeMarker_IsSuppressed(string marker)
+        => SuppressorTestHelper.VerifyAsync<PersistFieldAttributeWithTargetsDiagnosticSuppressor>(
+              $$"""
+              using System;
+              using EncosyTower.Persistences;
+
+              [{{marker}}]
+              public partial class SaveData
+              {
+                  [{|#0:property|}: Obsolete]
+                  public string id;
+              }
+              """
+            , isSuppressed: true
+        );
+
+    [TestMethod]
+    public Task PersistFieldInUnmarkedPartialPart_IsSuppressed()
+        => SuppressorTestHelper.VerifyAsync<PersistFieldAttributeWithTargetsDiagnosticSuppressor>(
+              """
+              using System;
+              using EncosyTower.Persistences;
+
+              [Persist]
+              public partial class SaveData { }
+
+              public partial class SaveData
+              {
+                  [{|#0:property|}: Obsolete]
+                  public string id;
+              }
+              """
+            , isSuppressed: true
+        );
+
+    [TestMethod]
+    public Task SupportedFieldWithUnrelatedPersistAttribute_IsNotSuppressed()
+        => SuppressorTestHelper.VerifyAsync<PersistFieldAttributeWithTargetsDiagnosticSuppressor>(
+              """
+              using System;
+
+              namespace Unrelated
+              {
+                  [AttributeUsage(AttributeTargets.Class)]
+                  public sealed class PersistAttribute : Attribute { }
+              }
+
+              namespace TestProject
+              {
+                  using Unrelated;
+
+                  [PersistAttribute]
+                  public partial class SaveData
+                  {
+                      [{|#0:property|}: Obsolete]
+                      public string id;
+                  }
+              }
+              """
+            , isSuppressed: false
+        );
 }

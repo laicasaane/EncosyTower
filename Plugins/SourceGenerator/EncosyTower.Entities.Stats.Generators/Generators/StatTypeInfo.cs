@@ -132,6 +132,28 @@ namespace EncosyTower.Entities.Stats.Generators
             return typeName != null;
         }
 
+        public static bool TryGetEnumStatType(
+              ITypeSymbol type
+            , out INamedTypeSymbol enumType
+            , out string underlyingTypeName
+            , out string valueTypeName
+        )
+        {
+            if (type is not INamedTypeSymbol namedType
+                || StatDataRules.IsAcceptedEnumType(namedType) == false
+            )
+            {
+                enumType = null;
+                underlyingTypeName = null;
+                valueTypeName = null;
+                return false;
+            }
+
+            enumType = namedType;
+            underlyingTypeName = namedType.EnumUnderlyingType.ToFullNameNoGlobal();
+            return TryGetEnumTypeName(underlyingTypeName, out valueTypeName);
+        }
+
         public readonly bool Equals(StatTypeInfo other)
             => string.Equals(type, other.type, StringComparison.Ordinal)
             && string.Equals(typeName, other.typeName, StringComparison.Ordinal)

@@ -57,9 +57,6 @@ namespace EncosyTower.Data.Analyzers.Data
                     || attributeTarget.Parent.Parent is not FieldDeclarationSyntax fieldDeclaration
                     || fieldDeclaration.Declaration.Variables.Count < 1
                     || attributeTarget.Identifier.Kind() is not SyntaxKind.PropertyKeyword
-                    || fieldDeclaration.Parent is not TypeDeclarationSyntax typeDeclaration
-                    || typeDeclaration.AttributeLists.Count < 1
-                    || typeDeclaration.HasAttribute(NAMESPACE, "Data", token) == false
                 )
                 {
                     continue;

@@ -271,4 +271,115 @@ public class PolyEnumFactoryAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("Case")
         );
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct Factory(int Id, Target {|#0:Value|});")]
+    [DataRow("public partial record class Factory(int Id, Target {|#0:Value|});")]
+    [DataRow(
+          "public readonly partial record struct Factory;\n\n"
+            + "public readonly partial record struct Factory(int Id, Target {|#0:Value|});"
+    )]
+    [DataRow(
+          "public readonly partial record struct Factory(int Id, Target {|#0:Value|}) "
+            + "{ public Target Value => default; public Factory(Target value) : this(0, value) { } }"
+    )]
+    public Task RecordFactory_EnumStructNotFirstParameter_ReportsEnumStructMustBeFirstParameter(string factory)
+        => RunAsync(
+              TargetFactoryBody(factory)
+            , new DiagnosticResult(PolyEnumFactoryAnalyzer.EnumStructMustBeFirstParameter)
+                .WithLocation(0)
+                .WithArguments("Factory", "Target", "Value")
+        );
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct Factory{|#0:(int Id)|};")]
+    [DataRow("public readonly partial record struct Factory{|#0:()|};")]
+    [DataRow("public partial record class Factory{|#0:(int Id)|};")]
+    [DataRow("public readonly partial record struct Factory{|#0:(Target First, Target Second)|};")]
+    [DataRow(
+          "public readonly partial record struct Factory;\n\n"
+            + "public readonly partial record struct Factory{|#0:(int Id)|};"
+    )]
+    [DataRow("public readonly partial struct Factory { public Factory{|#0:(int id, Target value)|} { } }")]
+    [DataRow("public partial struct Factory { public Factory{|#0:()|} { } }")]
+    [DataRow("public partial class Factory { public Factory{|#0:(Target value, int id)|} { } }")]
+    [DataRow("public partial class Factory { public Factory{|#0:(ref Target value)|} { } }")]
+    public Task Factory_ConstructorBlocksFactory_ReportsWrapperNeedsEnumStructConstructor(string factory)
+        => RunAsync(
+              TargetFactoryBody(factory)
+            , new DiagnosticResult(PolyEnumFactoryAnalyzer.WrapperNeedsEnumStructConstructor)
+                .WithLocation(0)
+                .WithArguments("Factory", "Target")
+        );
+
+    [DataTestMethod]
+    [DataRow("public readonly partial record struct Factory;")]
+    [DataRow("public readonly partial record struct Factory(Target Value);")]
+    [DataRow("public readonly partial record struct Factory(Target Value, int Id = 0);")]
+    [DataRow(
+          "public readonly partial record struct Factory(Target First, Target Second) "
+            + "{ public Factory(Target value) : this(value, default) { } }"
+    )]
+    [DataRow(
+          "public partial record class Factory(int Id) "
+            + "{ private readonly Target _value; public Factory(Target value) : this(0) { _value = value; } }"
+    )]
+    [DataRow(
+          "public readonly partial struct Factory "
+            + "{ private readonly Target _value; public Factory(Target value) { _value = value; } }"
+    )]
+    [DataRow(
+          "public partial class Factory "
+            + "{ public Target Value { get; } public Factory(Target value) { Value = value; } }"
+    )]
+    [DataRow("public readonly partial struct Factory { public Factory(int id) : this() { } }")]
+    [DataRow("public partial class Factory { public Factory(int id, Target value) { } }")]
+    [DataRow(
+          "public partial class Factory "
+            + "{ private readonly Target _value; public Factory(in Target value) { _value = value; } }"
+    )]
+    [DataRow(
+          "public partial class Factory { private readonly Target _value; "
+            + "public Factory(Target value, int id) { _value = value; } public Factory(object value) { } }"
+    )]
+    public Task Factory_SupportedConstructorShape_NoDiagnostics(string factory)
+        => RunAsync(TargetFactoryBody(factory));
+
+    [DataTestMethod]
+    [DataRow(
+          "public partial class Factory "
+            + "{ private readonly object _boxed; public Factory{|#0:(Target value)|} { _boxed = value; } }"
+    )]
+    [DataRow(
+          "public readonly partial struct Factory "
+            + "{ public static Target Default { get; } public Factory{|#0:(Target value)|} { } }"
+    )]
+    [DataRow(
+          "public partial class Factory "
+            + "{ public Target Value => default; public Factory{|#0:(in Target value)|} { } }"
+    )]
+    [DataRow("public partial record class Factory(int Id) { public Factory{|#0:(Target value)|} : this(0) { } }")]
+    [DataRow(
+          "public partial class Factory "
+            + "{ public Factory{|#0:(Target value, int id)|} { } public Factory(object value) { } }"
+    )]
+    public Task Factory_EnumStructNotStored_ReportsWrapperNeedsEnumStructStorage(string factory)
+        => RunAsync(
+              TargetFactoryBody(factory)
+            , new DiagnosticResult(PolyEnumFactoryAnalyzer.WrapperNeedsEnumStructStorage)
+                .WithLocation(0)
+                .WithArguments("Factory", "Target")
+        );
+
+    private static string TargetFactoryBody(string factory)
+        => $$"""
+                [EncosyTower.PolyEnumStructs.PolyEnumStruct]
+                public partial struct Target
+                {
+                    public partial struct Case { }
+                }
+
+                [EncosyTower.PolyEnumStructs.PolyEnumFactoryFor(typeof(Target))]
+                {{factory}}
+            """;
 }

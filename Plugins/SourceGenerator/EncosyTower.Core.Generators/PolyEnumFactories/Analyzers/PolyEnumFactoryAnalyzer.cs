@@ -75,6 +75,45 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
               "substitution."
         );
 
+        public static readonly DiagnosticDescriptor EnumStructMustBeFirstParameter = new(
+              id: "SG_POLY_ENUM_FACTORY_0007"
+            , title: "[PolyEnumFactoryFor] record must take the poly-enum struct as its first parameter"
+            , messageFormat: "Record \"{0}\" takes \"{1}\" as positional parameter \"{2}\", which is not the first. " +
+              "Make it the first positional parameter; no factory code is generated until then."
+            , category: CATEGORY
+            , defaultSeverity: DiagnosticSeverity.Error
+            , isEnabledByDefault: true
+            , description: "A positional record decorated with [PolyEnumFactoryFor] stores the poly-enum struct in " +
+              "its first positional parameter. The generator skips a record that declares it at a later position."
+        );
+
+        public static readonly DiagnosticDescriptor WrapperNeedsEnumStructConstructor = new(
+              id: "SG_POLY_ENUM_FACTORY_0008"
+            , title: "[PolyEnumFactoryFor] wrapper needs a constructor that takes only the poly-enum struct"
+            , messageFormat: "\"{0}\" has no constructor that takes \"{1}\" as its only required argument, and this " +
+              "constructor keeps the generator from adding one. Add such a constructor; no factory code is generated " +
+              "until then."
+            , category: CATEGORY
+            , defaultSeverity: DiagnosticSeverity.Error
+            , isEnabledByDefault: true
+            , description: "The factory creates the wrapper from the poly-enum struct alone. The generator cannot " +
+              "add that constructor to a positional record or next to struct constructors that leave its field " +
+              "unassigned, and skips the wrapper."
+        );
+
+        public static readonly DiagnosticDescriptor WrapperNeedsEnumStructStorage = new(
+              id: "SG_POLY_ENUM_FACTORY_0009"
+            , title: "[PolyEnumFactoryFor] wrapper needs a field or auto-property of the poly-enum struct type"
+            , messageFormat: "\"{0}\" has a constructor that takes \"{1}\" but no field or auto-property of type " +
+              "\"{1}\" to store it in. Store the value in such a member; no factory code is generated until then."
+            , category: CATEGORY
+            , defaultSeverity: DiagnosticSeverity.Error
+            , isEnabledByDefault: true
+            , description: "When the wrapper declares a constructor whose first parameter is the poly-enum struct, " +
+              "the generated members read the value from the wrapper's first instance field or auto-property of " +
+              "that type. The generator skips a wrapper that declares none."
+        );
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(
                   MustBePartial
@@ -83,6 +122,9 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
                 , CaseCtorOutParameterIgnored
                 , TargetArityMismatch
                 , TargetConstraintMismatch
+                , EnumStructMustBeFirstParameter
+                , WrapperNeedsEnumStructConstructor
+                , WrapperNeedsEnumStructStorage
             );
 
         public override void Initialize(AnalysisContext context)
@@ -186,6 +228,45 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
 
             enumStructSymbol = resolution.Target;
 
+            var wrapperShape = FactoryWrapperRules.GetWrapperShape(
+                  typeSymbol
+                , enumStructSymbol
+                , token
+                , out var recordParameter
+                , out var blockingConstructor
+                , out _
+            );
+
+            if (wrapperShape == WrapperShape.LaterRecordParameter)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                      EnumStructMustBeFirstParameter
+                    , recordParameter.Locations[0]
+                    , typeSymbol.Name
+                    , enumStructSymbol.Name
+                    , recordParameter.Name
+                ));
+            }
+            else if (wrapperShape == WrapperShape.BlockingConstructor)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                      WrapperNeedsEnumStructConstructor
+                    , GetParameterListLocation(blockingConstructor, token)
+                    , typeSymbol.Name
+                    , enumStructSymbol.Name
+                ));
+            }
+            else if (wrapperShape == WrapperShape.MissingStorage)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                      WrapperNeedsEnumStructStorage
+                    , GetParameterListLocation(blockingConstructor, token)
+                    , typeSymbol.Name
+                    , enumStructSymbol.Name
+                ));
+            }
+
+
             token.ThrowIfCancellationRequested();
 
             var hasCase = false;
@@ -213,6 +294,26 @@ namespace EncosyTower.Core.Analyzers.PolyEnumFactories
             {
                 context.ReportDiagnostic(Diagnostic.Create(MustHaveCaseStructs, attribLocation, enumStructSymbol.Name));
             }
+        }
+
+        private static Location GetParameterListLocation(IMethodSymbol constructor, CancellationToken token)
+        {
+            foreach (var reference in constructor.DeclaringSyntaxReferences)
+            {
+                var syntax = reference.GetSyntax(token);
+
+                if (syntax is RecordDeclarationSyntax recordSyntax && recordSyntax.ParameterList is not null)
+                {
+                    return recordSyntax.ParameterList.GetLocation();
+                }
+
+                if (syntax is ConstructorDeclarationSyntax constructorSyntax)
+                {
+                    return constructorSyntax.ParameterList.GetLocation();
+                }
+            }
+
+            return constructor.Locations[0];
         }
 
         private static bool IsDeclaredPartial(INamedTypeSymbol typeSymbol, CancellationToken token)

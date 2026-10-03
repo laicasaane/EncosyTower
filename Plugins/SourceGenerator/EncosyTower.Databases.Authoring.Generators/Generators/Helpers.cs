@@ -60,7 +60,9 @@
 
         public const string PR_AGGRESSIVE_INLINING = "[g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]";
         public const string PR_EXCLUDE_COVERAGE = "[g__SDCA.ExcludeFromCodeCoverage]";
-        public const string PR_GENERATED_CODE = $"[g__SCDC.GeneratedCode(\"EncosyTower.Data.Generators.Databases.DatabaseGenerator\", \"{SourceGenVersion.VALUE}\")]";
+        public const string PR_GENERATED_CODE = "[g__SCDC.GeneratedCode("
+            + "\"EncosyTower.Databases.Authoring.Generators.DatabaseAuthoringGenerator\", "
+            + $"\"{SourceGenVersion.VALUE}\")]";
         public const string PR_SERIALIZABLE = "[g__S.Serializable]";
         public const string PR_STRUCT_LAYOUT_AUTO = "[g__SRIS.StructLayout(g__SRIS.LayoutKind.Auto)]";
 

@@ -28,7 +28,7 @@ namespace EncosyTower.Databases.Authoring.Generators
             ;
 
         public readonly override bool Equals(object obj)
-            => obj is SheetGroupSpec other && Equals(other);
+            => obj is SheetInfoSpec other && Equals(other);
 
         public readonly override int GetHashCode()
             => HashValue.Combine(tableName, propertyName);

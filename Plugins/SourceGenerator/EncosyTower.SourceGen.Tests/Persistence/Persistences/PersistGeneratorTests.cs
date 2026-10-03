@@ -140,6 +140,57 @@ public class PersistGeneratorTests
             }
             """, "PlayerData.Persist.2fcae2e2e2ba9a22.g.cs");
 
+    [DataTestMethod]
+    [DataRow("GeneratedBaseMembers")]
+    [DataRow("HandWrittenBaseMembers")]
+    [DataRow("FieldBackedBaseMembers")]
+    public Task PersistBase_DerivedReusesBaseMembers(string baseMembersCase)
+    {
+        var baseMembers = baseMembersCase switch {
+            "HandWrittenBaseMembers" => "public string Id { get; set; } = \"\";\n    public int Version { get; set; }",
+            "FieldBackedBaseMembers" => "protected string _id = \"\";\n    protected int _version = 1;",
+            _ => string.Empty,
+        };
+
+        return GeneratorTestHelper.VerifyGeneratedSourcesAsync<PersistGenerator>(
+              Wrap($$"""
+                  [Persist]
+                  public partial class BaseData
+                  {
+                      {{baseMembers}}
+                  }
+
+                  [Persist]
+                  public partial class PlayerData : BaseData { }
+                  """)
+            , new[] {
+                ExpectedGeneratedSource.Create<PersistGenerator>("PlayerData.Persist.ac287e605579fe1f.g.cs"),
+                ExpectedGeneratedSource.Create<PersistGenerator>(
+                      "BaseData.Persist.4ac35334e9e0fe02.g.cs"
+                    , caseName: baseMembersCase
+                ),
+            }
+        );
+    }
+
+    [TestMethod]
+    public Task PersistMarkerAddedToBase_RemovesDerivedMembers()
+        => GeneratorTestHelper.VerifyCrossFileEditAsync(
+              new IIncrementalGenerator[] { new PersistGenerator() }
+            , new[] {
+                new NamedSource("BaseData.cs", Wrap("public partial class BaseData { }")),
+                new NamedSource("PlayerData.cs", Wrap("[Persist] public partial class PlayerData : BaseData { }")),
+            }
+            , new[] {
+                new NamedSource("BaseData.cs", Wrap("[Persist] public partial class BaseData { }")),
+                new NamedSource("PlayerData.cs", Wrap("[Persist] public partial class PlayerData : BaseData { }")),
+            }
+            , new[] {
+                "BaseData.Persist.4ac35334e9e0fe02.g.cs",
+                "PlayerData.Persist.ac287e605579fe1f.g.cs",
+            }
+        );
+
     private static Task VerifyGeneratedAsync(
           string declaration
         , string hintName

@@ -106,6 +106,7 @@ namespace EncosyTower.Entities.Stats.Generators
                 hintName = hintName,
                 openingSource = openingSource,
                 closingSource = closingSource,
+                containingTypes = TypeCreationHelpers.GetContainingTypeSpecs(syntax, token),
                 maxDataSize = Math.Max((int)maxDataSize, 1),
                 maxUserDataSize = maxUserDataSize,
                 isStatic = typeSymbol.IsStatic,

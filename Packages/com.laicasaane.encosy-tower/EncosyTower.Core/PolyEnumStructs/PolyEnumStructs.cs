@@ -196,6 +196,15 @@ namespace EncosyTower.PolyEnumStructs
     /// <summary>
     /// Specifies a factory type for a poly enum struct.
     /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item>The wrapper either declares no constructor that accepts the enum-struct type as its first parameter,
+    /// in which case the source generator will generate a private one, along with a private field to hold the
+    /// enum-struct instance, or declares a constructor that accepts the enum-struct type as a single parameter.</item>
+    /// <item>That constructor must store the value in a field or auto-property of the enum-struct type,
+    /// which the generated code reads.</item>
+    /// </list>
+    /// </remarks>
     /// <example>
     /// <code>
     /// [PolyEnumStruct]
@@ -211,7 +220,8 @@ namespace EncosyTower.PolyEnumStructs
     /// {
     ///     private Task _task;
     ///
-    ///     // User should define a constructor that accepts the enum-struct type as a single parameter.
+    ///     // User should define a constructor that accepts the enum-struct type as a single parameter,
+    ///     // and store the value in a field or auto-property of the enum-struct type, such as '_task'.
     ///     // When undefined, the source generator will generate a private one, along with a private field
     ///     // to hold the enum-struct instance.
     ///

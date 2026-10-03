@@ -31,6 +31,7 @@
             , INamedTypeSymbol fieldTypeSymbol
             , bool wrapperIsStruct
             , bool wrapperIsReadOnly
+            , bool storageMembersAreReadOnly
             , CancellationToken token
         )
         {
@@ -97,6 +98,7 @@
                 isSetterRO = setter.IsReadOnly;
 
                 withoutSetter = setter.IsInitOnly
+                    || storageMembersAreReadOnly
                     || (fieldTypeSymbol.IsReadOnly == false && wrapperIsStruct && wrapperIsReadOnly);
             }
             else
@@ -149,12 +151,53 @@
             => string.Equals(name, other.name, StringComparison.Ordinal)
             && string.Equals(typeName, other.typeName, StringComparison.Ordinal)
             && string.Equals(parameters, other.parameters, StringComparison.Ordinal)
-            && refKind == other.refKind;
+            && string.Equals(arguments, other.arguments, StringComparison.Ordinal)
+            && explicitInterfaceImplementationsLength == other.explicitInterfaceImplementationsLength
+            && refKind == other.refKind
+            && sameType == other.sameType
+            && isPublic == other.isPublic
+            && isReadOnly == other.isReadOnly
+            && isStatic == other.isStatic
+            && isIndexer == other.isIndexer
+            && hasGetter == other.hasGetter
+            && getterSetterCanBeReadOnly == other.getterSetterCanBeReadOnly
+            && getterCanBeReadOnly == other.getterCanBeReadOnly
+            && isGetterRef == other.isGetterRef
+            && isGetterRefRO == other.isGetterRefRO
+            && isGetterRO == other.isGetterRO
+            && hasSetter == other.hasSetter
+            && isSetterRO == other.isSetterRO
+            && withoutSetter == other.withoutSetter
+            && isUnsafe == other.isUnsafe
+            ;
 
         public readonly override bool Equals(object obj)
             => obj is PropertySpec other && Equals(other);
 
         public readonly override int GetHashCode()
-            => HashValue.Combine(name, typeName, parameters, refKind);
+            => HashValue.Combine(
+                  name
+                , typeName
+                , parameters
+                , arguments
+                , explicitInterfaceImplementationsLength
+                , refKind
+                , sameType
+                , isPublic
+            )
+            .Add(isReadOnly)
+            .Add(isStatic)
+            .Add(isIndexer)
+            .Add(hasGetter)
+            .Add(getterSetterCanBeReadOnly)
+            .Add(getterCanBeReadOnly)
+            .Add(isGetterRef)
+            .Add(isGetterRefRO)
+            .Add(isGetterRO)
+            .Add(hasSetter)
+            .Add(isSetterRO)
+            .Add(withoutSetter)
+            .Add(isUnsafe)
+            ;
     }
 }

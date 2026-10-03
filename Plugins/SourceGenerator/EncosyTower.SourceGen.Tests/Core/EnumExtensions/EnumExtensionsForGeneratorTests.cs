@@ -27,4 +27,27 @@ public class EnumExtensionsForGeneratorTests
                 ),
             }
         );
+
+    [TestMethod]
+    public Task GlobalNamespaceClass_GeneratesExtensionMethods()
+        => GeneratorTestHelper.VerifyGeneratedSourcesAsync<EnumExtensionsForGenerator>(
+              """
+              using System;
+              using EncosyTower.EnumExtensions;
+
+              [EnumExtensionsFor(typeof(DayOfWeek))]
+              public static partial class DayOfWeekExtensions { }
+
+              internal static class Usage
+              {
+                  public static string Name(DayOfWeek value)
+                      => value.ToStringFast();
+              }
+              """
+            , new[] {
+                ExpectedGeneratedSource.Create<EnumExtensionsForGenerator>(
+                    "DayOfWeekExtensions.EnumExtensionsFor.74293e8af73dc5cd.g.cs"
+                ),
+            }
+        );
 }
