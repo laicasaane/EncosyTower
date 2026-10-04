@@ -137,24 +137,91 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
-        public async Task CancellationBeforeAndAfterSuspension_Propagates()
+        public async Task CancellationBeforeAndAfterSuspension_RethrowsSameInstance()
         {
-            using var beforeCancellation = new CancellationTokenSource();
-            using var afterCancellation = new CancellationTokenSource();
-            beforeCancellation.Cancel();
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
 
-            var before = AwaitAsync(Task.Delay(Timeout.Infinite, beforeCancellation.Token));
-            var after = AwaitAsync(Task.Delay(Timeout.Infinite, afterCancellation.Token));
+            foreach (var expected in CreateCancellations(cancellation.Token))
+            {
+                var completion = new TaskCompletionSource<object>();
+                var before = ThrowInstanceBeforeSuspensionAsync(expected.before);
+                var after = ThrowInstanceAfterSuspensionAsync(completion.Task, expected.after);
 
-            await CaptureExpectedExceptionAsync<OperationCanceledException>(
-                async () => await before
-            );
+                var beforeException = await CaptureUnityTaskExceptionAsync(before);
+                Assert.IsFalse(after.IsCompleted);
+
+                completion.SetResult(null);
+                var afterException = await CaptureUnityTaskExceptionAsync(after);
+
+                AssertSameCancellation(expected.before, beforeException);
+                AssertSameCancellation(expected.after, afterException);
+            }
+        }
+
+        [Test]
+        public async Task GenericCancellationBeforeAndAfterSuspension_RethrowsSameInstance()
+        {
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            foreach (var expected in CreateCancellations(cancellation.Token))
+            {
+                var completion = new TaskCompletionSource<object>();
+                var before = ThrowGenericInstanceBeforeSuspensionAsync(expected.before);
+                var after = ThrowGenericInstanceAfterSuspensionAsync(completion.Task, expected.after);
+
+                var beforeException = await CaptureUnityTaskExceptionAsync(before);
+                Assert.IsFalse(after.IsCompleted);
+
+                completion.SetResult(null);
+                var afterException = await CaptureUnityTaskExceptionAsync(after);
+
+                AssertSameCancellation(expected.before, beforeException);
+                AssertSameCancellation(expected.after, afterException);
+            }
+        }
+
+        [Test]
+        public async Task FaultBeforeAndAfterSuspension_RethrowsSameInstanceAndStack()
+        {
+            var beforeFault = new InvalidOperationException("before");
+            var afterFault = new InvalidOperationException("after");
+            var completion = new TaskCompletionSource<object>();
+            var before = ThrowInstanceBeforeSuspensionAsync(beforeFault);
+            var after = ThrowInstanceAfterSuspensionAsync(completion.Task, afterFault);
+
+            var beforeException = await CaptureUnityTaskExceptionAsync(before);
             Assert.IsFalse(after.IsCompleted);
 
-            afterCancellation.Cancel();
-            await CaptureExpectedExceptionAsync<OperationCanceledException>(
-                async () => await after
-            );
+            completion.SetResult(null);
+            var afterException = await CaptureUnityTaskExceptionAsync(after);
+
+            Assert.That(beforeException, Is.SameAs(beforeFault));
+            Assert.That(afterException, Is.SameAs(afterFault));
+            StringAssert.Contains(nameof(ThrowInstanceBeforeSuspensionAsync), beforeException.StackTrace);
+            StringAssert.Contains(nameof(ThrowInstanceAfterSuspensionAsync), afterException.StackTrace);
+        }
+
+        [Test]
+        public async Task GenericFaultBeforeAndAfterSuspension_RethrowsSameInstanceAndStack()
+        {
+            var beforeFault = new InvalidOperationException("before generic");
+            var afterFault = new InvalidOperationException("after generic");
+            var completion = new TaskCompletionSource<object>();
+            var before = ThrowGenericInstanceBeforeSuspensionAsync(beforeFault);
+            var after = ThrowGenericInstanceAfterSuspensionAsync(completion.Task, afterFault);
+
+            var beforeException = await CaptureUnityTaskExceptionAsync(before);
+            Assert.IsFalse(after.IsCompleted);
+
+            completion.SetResult(null);
+            var afterException = await CaptureUnityTaskExceptionAsync(after);
+
+            Assert.That(beforeException, Is.SameAs(beforeFault));
+            Assert.That(afterException, Is.SameAs(afterFault));
+            StringAssert.Contains(nameof(ThrowGenericInstanceBeforeSuspensionAsync), beforeException.StackTrace);
+            StringAssert.Contains(nameof(ThrowGenericInstanceAfterSuspensionAsync), afterException.StackTrace);
         }
 
         [Test]
@@ -577,6 +644,84 @@ namespace EncosyTower.Tests.Tasks
 
         private static void ThrowExpected(string message)
             => throw new InvalidOperationException(message);
+
+        private static async UnityTask ThrowInstanceBeforeSuspensionAsync(Exception exception)
+        {
+            ThrowInstance(exception);
+            await Task.Yield();
+        }
+
+        private static async UnityTask ThrowInstanceAfterSuspensionAsync(Task source, Exception exception)
+        {
+            await source;
+            ThrowInstance(exception);
+        }
+
+        private static async UnityTask<int> ThrowGenericInstanceBeforeSuspensionAsync(Exception exception)
+        {
+            ThrowInstance(exception);
+            await Task.Yield();
+            return 0;
+        }
+
+        private static async UnityTask<int> ThrowGenericInstanceAfterSuspensionAsync(Task source, Exception exception)
+        {
+            await source;
+            ThrowInstance(exception);
+            return 0;
+        }
+
+        private static void ThrowInstance(Exception exception)
+            => throw exception;
+
+        private static (OperationCanceledException before, OperationCanceledException after)[] CreateCancellations(
+            CancellationToken token
+        )
+            => new[] {
+                (
+                      (OperationCanceledException)new TaskCanceledException("stop")
+                    , (OperationCanceledException)new TaskCanceledException("stop")
+                ),
+                (new OperationCanceledException(token), new OperationCanceledException(token)),
+            };
+
+        private static void AssertSameCancellation(OperationCanceledException expected, Exception actual)
+        {
+            Assert.That(actual, Is.SameAs(expected));
+            Assert.AreEqual(expected.GetType(), actual.GetType());
+            Assert.AreEqual(expected.Message, actual.Message);
+            Assert.AreEqual(expected.CancellationToken, ((OperationCanceledException)actual).CancellationToken);
+        }
+
+        private static async Task<Exception> CaptureUnityTaskExceptionAsync(UnityTask task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception exception)
+            {
+                return exception;
+            }
+
+            Assert.Fail("Expected the task to throw.");
+            return null;
+        }
+
+        private static async Task<Exception> CaptureUnityTaskExceptionAsync<T>(UnityTask<T> task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception exception)
+            {
+                return exception;
+            }
+
+            Assert.Fail("Expected the task to throw.");
+            return null;
+        }
 
         private static async Task AssertContinuationInvokedOnceAsync(bool unsafeContinuation)
         {

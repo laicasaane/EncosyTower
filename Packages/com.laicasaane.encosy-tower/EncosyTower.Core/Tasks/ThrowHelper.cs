@@ -72,6 +72,21 @@ namespace EncosyTower.Tasks
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowTokenMismatch()
+            => throw new InvalidOperationException("The token does not match the current task operation.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowNotCompleted()
+            => throw new InvalidOperationException("The task has not completed yet.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowContinuationAlreadyRegistered()
+            => throw new InvalidOperationException("A task can be awaited only once.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         internal static void LogUnobservedException(Exception exception)
         {
