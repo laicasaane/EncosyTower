@@ -1,0 +1,27 @@
+.test-enter-from {
+    opacity: 0;
+}
+
+.test-enter-to {
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.1s;
+}
+
+.test-plain-from {
+    opacity: 0.5;
+}
+
+.test-plain-to {
+    opacity: 1;
+}
+
+.test-slow-from {
+    opacity: 0;
+}
+
+.test-slow-to {
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 5s;
+}

@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <EncosyTower.Tests.PageFlows.UitkPages.TestElementPage name="page">
+        <ui:Button name="first-button" text="First" />
+        <ui:Button name="named-button" text="Named" />
+    </EncosyTower.Tests.PageFlows.UitkPages.TestElementPage>
+</ui:UXML>

@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <EncosyTower.Tests.PageFlows.UitkPages.TestElementPage name="first" />
+    <EncosyTower.Tests.PageFlows.UitkPages.TestElementPage name="second" />
+</ui:UXML>
