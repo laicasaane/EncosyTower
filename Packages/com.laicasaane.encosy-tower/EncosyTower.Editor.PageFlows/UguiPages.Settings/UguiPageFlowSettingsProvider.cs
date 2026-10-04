@@ -17,7 +17,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages.Settings
         private static SettingsProvider GetSettingsProvider()
         {
             var provider = UguiPageFlowSettings.Instance.GetSettingsProvider(useImgui: false);
-            provider.label = "uGUI Page Flow";
+            provider.label = PageFlowsViewResources.Get().Settings.UguiTitle;
             provider.activateHandler = (_, r) => Create(provider, r);
             provider.inspectorUpdateHandler = Update;
             provider.deactivateHandler = Dispose;

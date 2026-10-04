@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows
 {
-    internal readonly record struct ContextRow(string FieldName, string Label, string GroupHeading = null);
+    internal readonly record struct ContextRow(string FieldName, string LabelKey, string GroupHeadingKey = null);
 
     internal static class PageFlowContextSection
     {
@@ -29,13 +29,14 @@ namespace EncosyTower.Editor.PageFlows
             , IReadOnlyList<ContextRow> rows
         )
         {
-            var section = CreateSection("Context", out var header);
-            var openButton = new Button(openSettings) { text = "Open Project Settings" };
+            var texts = PageFlowsViewResources.Get().Context;
+            var section = CreateSection(texts.Heading, out var header);
+            var openButton = new Button(openSettings) { text = texts.OpenSettings };
             openButton.AddToClassList(HEADER_BUTTON_USS_CLASS_NAME);
             header.Add(openButton);
 
             var autoInitialize = context.FindPropertyRelative(AUTO_INITIALIZE_ON_AWAKE);
-            section.Add(new PropertyField(autoInitialize, "Auto Initialize On Awake"));
+            section.Add(new PropertyField(autoInitialize, texts.AutoInitialize));
 
             var count = rows.Count;
 
@@ -43,14 +44,15 @@ namespace EncosyTower.Editor.PageFlows
             {
                 var row = rows[i];
 
-                if (string.IsNullOrEmpty(row.GroupHeading) == false)
+                if (string.IsNullOrEmpty(row.GroupHeadingKey) == false)
                 {
-                    var heading = new Label(row.GroupHeading);
+                    var heading = new Label(texts.GetText(row.GroupHeadingKey));
                     heading.AddToClassList(GROUP_HEADING_USS_CLASS_NAME);
                     section.Add(heading);
                 }
 
-                section.Add(new PropertyField(context.FindPropertyRelative(row.FieldName), row.Label));
+                var label = texts.GetText(row.LabelKey);
+                section.Add(new PropertyField(context.FindPropertyRelative(row.FieldName), label));
             }
 
             return section;

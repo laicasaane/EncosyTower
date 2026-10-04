@@ -30,38 +30,44 @@ namespace EncosyTower.Editor.PageFlows
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public string ToProblem()
-            => Kind switch {
-                RowProblemKind.EmptyIdentifier
-                    => "This row has no identifier, so the codex cannot match it to a scope.",
-                RowProblemKind.UnknownIdentifier => $"'{Value}' is not a scope of {TypeName}.",
-                RowProblemKind.DuplicateIdentifier => $"'{Value}' is also used by row {JoinRows(OtherRows)}. "
-                    + "Each scope can have only one flow.",
-                RowProblemKind.ContainerNotInLayout => $"'{Value}' is not an element of Layout Asset {AssetName}. "
-                    + "Unless code creates it before the codex initializes, the flow goes under the codex root.",
-                RowProblemKind.ContainerMatchesMany => $"'{Value}' matches {MatchCount} elements of Layout Asset "
-                    + $"{AssetName}; the first one ({FirstPath}) is used.",
-                RowProblemKind.ContainerWithoutLayout => $"No Layout Asset is assigned, so the container '{Value}' "
-                    + "must be created by code before the codex initializes; otherwise the flow goes under the "
-                    + "codex root.",
+        {
+            var problems = PageFlowsViewResources.Get().Problems;
+
+            return Kind switch {
+                RowProblemKind.EmptyIdentifier => problems.EmptyIdentifier,
+                RowProblemKind.UnknownIdentifier => problems.UnknownIdentifier(Value, TypeName),
+                RowProblemKind.DuplicateIdentifier => problems.DuplicateIdentifier(Value, JoinRows(OtherRows)),
+                RowProblemKind.ContainerNotInLayout => problems.ContainerNotInLayout(Value, AssetName),
+                RowProblemKind.ContainerMatchesMany => problems.ContainerMatchesMany(
+                      Value
+                    , MatchCount
+                    , AssetName
+                    , FirstPath
+                ),
+                RowProblemKind.ContainerWithoutLayout => problems.ContainerWithoutLayout(Value),
                 _ => string.Empty,
             };
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public string ToFix()
-            => Kind switch {
-                RowProblemKind.EmptyIdentifier => "Choose a scope from the Identifier dropdown, or press Sync Scopes.",
-                RowProblemKind.UnknownIdentifier => $"Choose one of {string.Join(", ", Scopes)}, add a PageFlowScope "
-                    + $"property named {Value} to {TypeName}, or press Sync Scopes.",
-                RowProblemKind.DuplicateIdentifier => "Choose another scope for one of these rows, "
-                    + "or press Sync Scopes (it keeps the first row).",
-                RowProblemKind.ContainerNotInLayout => $"Press ⋯ and pick an element, or name an element of "
-                    + $"{AssetName} '{Value}'.",
-                RowProblemKind.ContainerMatchesMany => $"Give the intended element a unique name in {AssetName}, "
-                    + "then pick it with ⋯.",
-                RowProblemKind.ContainerWithoutLayout => $"Assign a Layout Asset that contains an element named "
-                    + $"'{Value}', or clear the field to use the codex root.",
+        {
+            var problems = PageFlowsViewResources.Get().Problems;
+
+            return Kind switch {
+                RowProblemKind.EmptyIdentifier => problems.EmptyIdentifierFix,
+                RowProblemKind.UnknownIdentifier => problems.UnknownIdentifierFix(
+                      string.Join(", ", Scopes)
+                    , Value
+                    , TypeName
+                ),
+                RowProblemKind.DuplicateIdentifier => problems.DuplicateIdentifierFix,
+                RowProblemKind.ContainerNotInLayout => problems.ContainerNotInLayoutFix(AssetName, Value),
+                RowProblemKind.ContainerMatchesMany => problems.ContainerMatchesManyFix(AssetName),
+                RowProblemKind.ContainerWithoutLayout => problems.ContainerWithoutLayoutFix(Value),
                 _ => string.Empty,
             };
+        }
 
         private static string JoinRows(int[] rows)
         {
@@ -82,13 +88,14 @@ namespace EncosyTower.Editor.PageFlows
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public string ToProblem()
-            => MissingScopes.Length > 1
-                ? $"{string.Join(", ", MissingScopes)} have no flow definition, so the codex cannot create those flows."
-                : $"{string.Join(", ", MissingScopes)} has no flow definition, so the codex cannot create that flow.";
+            => PageFlowsViewResources.Get().Problems.MissingScopes(
+                  string.Join(", ", MissingScopes)
+                , MissingScopes.Length
+            );
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public string ToFix()
-            => "Press Sync Scopes.";
+            => PageFlowsViewResources.Get().Problems.MissingScopesFix;
     }
 
     internal readonly record struct IdentifierChoice(
@@ -103,7 +110,7 @@ namespace EncosyTower.Editor.PageFlows
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static string ToTooltip(string problem, string fix)
-            => $"{problem}\nFix: {fix}";
+            => PageFlowsViewResources.Get().Problems.Tooltip(problem, fix);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static string ToTooltip(ReadOnlySpan<RowProblem> problems)

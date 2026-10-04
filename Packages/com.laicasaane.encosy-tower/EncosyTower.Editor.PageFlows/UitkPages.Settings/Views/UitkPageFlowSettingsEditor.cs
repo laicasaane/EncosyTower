@@ -33,9 +33,10 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
             root.WithEditorBuiltInStyleSheet(EditorStyleSheetPaths.PROJECT_SETTINGS_STYLE_SHEET);
             root.WithEditorStyleSheet(Constants.THEME_STYLE_SHEET);
 
+            var texts = PageFlowsViewResources.Get().Settings;
             var titleBar = new VisualElement();
             var titleLabel = new Label() {
-                text = "UI Toolkit Page Flow",
+                text = texts.UitkTitle,
             };
 
             titleBar.AddToClassList(ProjectSettingsTitleBarUssClassName);
@@ -50,11 +51,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
 
             var contentContainer = container.Q("unity-content-container");
 
-            var warnNoSubscriber = new Toggle("Warn No Subscriber");
-            var loaderStrategy = new EnumField("Loader Strategy", default(PageLoaderStrategy));
-            var logEnvironment = new EnumField("Log Environment", default(LogEnvironment));
-            var forceUIDocument = new Toggle("Force UI Document") {
-                tooltip = "Use UI Document instead of Panel Renderer on Unity 6000.5 or newer.",
+            var warnNoSubscriber = new Toggle(texts.WarnNoSubscriber);
+            var loaderStrategy = new EnumField(texts.LoaderStrategy, default(PageLoaderStrategy));
+            var logEnvironment = new EnumField(texts.LogEnvironment, default(LogEnvironment));
+            var forceUIDocument = new Toggle(texts.ForceUIDocument) {
+                tooltip = texts.ForceUIDocumentTooltip,
             };
 
             var callerInfoFoldout = PageFlowCallerInfoSection.Create();
@@ -142,7 +143,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
                 root.WithEditorStyleSheet(Constants.THEME_STYLE_SHEET);
 
                 var button = new Button(OpenSettingsWindow) {
-                    text = "Open UI Toolkit Page Flow Settings Window",
+                    text = PageFlowsViewResources.Get().Settings.OpenUitkWindow,
                 };
 
                 button.AddToClassList("button-open-settings-window");

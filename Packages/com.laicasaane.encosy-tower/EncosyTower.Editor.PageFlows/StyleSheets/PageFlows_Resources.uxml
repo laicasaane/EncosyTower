@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+>
+    <engine:Label name="context__heading" text="Context" />
+    <engine:Label name="context__open-settings" text="Open Project Settings" />
+    <engine:Label name="context__auto-initialize" text="Auto Initialize On Awake" />
+    <engine:Label name="context__warn-no-subscriber" text="Warn No Subscriber" />
+    <engine:Label name="context__load-strategy" text="Load Strategy" />
+    <engine:Label name="context__message-scope" text="Message Scope" />
+    <engine:Label name="context__log-environment" text="Log Environment" />
+    <engine:Label name="context__pooling" text="GameObject Pooling" />
+    <engine:Label name="context__renting-strategy" text="Renting Strategy" />
+    <engine:Label name="context__returning-strategy" text="Returning Strategy" />
+
+    <engine:Label name="flows__heading" text="Flow Definitions" />
+    <engine:Label name="flows__sync" text="Sync Scopes" />
+    <engine:Label name="flows__scope-collection" text="Scope Collection" />
+    <engine:Label name="flows__multi-edit" text="Flow Definitions can be edited on one codex at a time." />
+    <engine:Label name="flows__sync-no-collection" text="No scope collection was found." />
+    <engine:Label name="flows__sync-matches" text="The list already matches {0}." />
+    <engine:Label name="flows__sync-rule"
+                  text="Make the list match {0}: keep the first row of each scope; give each row with an unknown, empty or repeated identifier the next missing scope (its other settings are kept); remove such rows when no scope is missing; add rows for scopes still missing. One Undo step." />
+    <engine:Label name="flows__note-in-use" text="in use" />
+    <engine:Label name="flows__note-not-a-scope" text="not a scope" />
+
+    <engine:Label name="column__identifier" text="Identifier" />
+    <engine:Label name="column__kind" text="Kind" />
+    <engine:Label name="column__container-name" text="Container Name" />
+    <engine:Label name="column__override" text="Override" />
+    <engine:Label name="column__sorting-layer" text="Sorting Layer" />
+    <engine:Label name="column__order" text="Order" />
+
+    <engine:Label name="scope__no-initializer" text="No initializer component found" />
+    <engine:Label name="scope__null-applier" text="Initializer returns no applier" />
+    <engine:Label name="scope__no-initializer-tooltip"
+                  text="No component on this GameObject implements {0}, so the codex has no scope collection: it cannot initialize, and identifiers cannot be checked.&#10;Fix: Add a component that implements {0} and returns a PageFlowScopeCollectionApplier&lt;T&gt; for a [PageFlowScopeCollection] struct." />
+    <engine:Label name="scope__null-applier-tooltip"
+                  text="The {0} component returns a null PageFlowScopeCollectionApplier, so the codex has no scope collection.&#10;Fix: Return a PageFlowScopeCollectionApplier&lt;T&gt; instance from its PageFlowScopeCollectionApplier property." />
+
+    <engine:Label name="problem__tooltip" text="{0}&#10;Fix: {1}" />
+    <engine:Label name="problem__empty-identifier" text="This row has no identifier, so the codex cannot match it to a scope." />
+    <engine:Label name="problem__empty-identifier-fix" text="Choose a scope from the Identifier dropdown, or press Sync Scopes." />
+    <engine:Label name="problem__unknown-identifier" text="'{0}' is not a scope of {1}." />
+    <engine:Label name="problem__unknown-identifier-fix"
+                  text="Choose one of {0}, add a PageFlowScope property named {1} to {2}, or press Sync Scopes." />
+    <engine:Label name="problem__duplicate-identifier" text="'{0}' is also used by row {1}. Each scope can have only one flow." />
+    <engine:Label name="problem__duplicate-identifier-fix"
+                  text="Choose another scope for one of these rows, or press Sync Scopes (it keeps the first row)." />
+    <engine:Label name="problem__container-not-in-layout"
+                  text="'{0}' is not an element of Layout Asset {1}. Unless code creates it before the codex initializes, the flow goes under the codex root." />
+    <engine:Label name="problem__container-not-in-layout-fix" text="Press ⋯ and pick an element, or name an element of {0} '{1}'." />
+    <engine:Label name="problem__container-matches-many"
+                  text="'{0}' matches {1} elements of Layout Asset {2}; the first one ({3}) is used." />
+    <engine:Label name="problem__container-matches-many-fix" text="Give the intended element a unique name in {0}, then pick it with ⋯." />
+    <engine:Label name="problem__container-without-layout"
+                  text="No Layout Asset is assigned, so the container '{0}' must be created by code before the codex initializes; otherwise the flow goes under the codex root." />
+    <engine:Label name="problem__container-without-layout-fix"
+                  text="Assign a Layout Asset that contains an element named '{0}', or clear the field to use the codex root." />
+    <engine:Label name="problem__missing-scope" text="{0} has no flow definition, so the codex cannot create that flow." />
+    <engine:Label name="problem__missing-scopes" text="{0} have no flow definition, so the codex cannot create those flows." />
+    <engine:Label name="problem__missing-scopes-fix" text="Press Sync Scopes." />
+
+    <engine:Label name="panel__heading" text="Panel" />
+    <engine:Label name="panel__panel-settings" text="Panel Settings" />
+    <engine:Label name="panel__sorting-order" text="Sorting Order" />
+    <engine:Label name="panel__layout-asset" text="Layout Asset" />
+    <engine:Label name="panel__layout-asset-tooltip"
+                  text="UXML loaded into the panel root. Flow containers are picked from its named elements." />
+    <engine:Label name="panel__layout-asset-empty" text="Optional. Flows go under the codex root." />
+    <engine:Label name="panel__layout-asset-one" text="1 named element available as a container" />
+    <engine:Label name="panel__layout-asset-many" text="{0} named elements available as containers" />
+    <engine:Label name="panel__existing-document" text="Taken from the existing UI Document" />
+    <engine:Label name="panel__existing-renderer" text="Taken from the existing Panel Renderer" />
+    <engine:Label name="panel__component" text="Panel Component" />
+    <engine:Label name="panel__panel-renderer" text="Panel Renderer" />
+    <engine:Label name="panel__ui-document" text="UI Document" />
+    <engine:Label name="panel__added" text="Added to this GameObject at runtime." />
+    <engine:Label name="panel__added-document"
+                  text="Added to this GameObject at runtime. Panel Renderer is used on Unity 6000.5 or newer." />
+    <engine:Label name="panel__forced" text="Added at runtime. Project Settings force UI Document instead of Panel Renderer." />
+    <engine:Label name="panel__existing" text="Uses the existing component on this GameObject." />
+
+    <engine:Label name="picker__tooltip" text="Pick a named element of the Layout Asset." />
+    <engine:Label name="picker__codex-root" text="(Codex Root)" />
+    <engine:Label name="picker__no-layout-asset" text="No Layout Asset assigned" />
+    <engine:Label name="picker__no-match" text="No matching element" />
+    <engine:Label name="picker__no-identifier" text="(no identifier)" />
+    <engine:Label name="picker__used-by" text="used by {0}" />
+
+    <engine:Label name="settings__ugui-title" text="uGUI Page Flow" />
+    <engine:Label name="settings__uitk-title" text="UI Toolkit Page Flow" />
+    <engine:Label name="settings__warn-no-subscriber" text="Warn No Subscriber" />
+    <engine:Label name="settings__loader-strategy" text="Loader Strategy" />
+    <engine:Label name="settings__message-scope" text="Message Scope" />
+    <engine:Label name="settings__log-environment" text="Log Environment" />
+    <engine:Label name="settings__pooling" text="GameObject Pooling Strategies" />
+    <engine:Label name="settings__renting" text="Renting" />
+    <engine:Label name="settings__returning" text="Returning" />
+    <engine:Label name="settings__force-ui-document" text="Force UI Document" />
+    <engine:Label name="settings__force-ui-document-tooltip" text="Use UI Document instead of Panel Renderer on Unity 6000.5 or newer." />
+    <engine:Label name="settings__open-ugui-window" text="Open uGUI Page Flow Settings Window" />
+    <engine:Label name="settings__open-uitk-window" text="Open UI Toolkit Page Flow Settings Window" />
+
+    <engine:Label name="caller-info__heading" text="Caller Info Option For Publishing Page Flow Messages" />
+    <engine:Label name="caller-info__option" text="Option" />
+    <engine:Label name="caller-info__help"
+                  text="Choose whether to include caller info when publishing page flow messages.&#10;Including caller info can be useful for debugging purposes, but may increase build size.&#10;- &lt;b&gt;Never:&lt;/b&gt; Do not include caller info.&#10;- &lt;b&gt;For Development:&lt;/b&gt; Include only for Editor and Development builds.&#10;&#9;Symbol '{0}' will be added to Player Settings.&#10;- &lt;b&gt;Always:&lt;/b&gt; Include for all environments.&#10;&#9;Symbol '{1}' will be added to Player Settings." />
+</engine:UXML>

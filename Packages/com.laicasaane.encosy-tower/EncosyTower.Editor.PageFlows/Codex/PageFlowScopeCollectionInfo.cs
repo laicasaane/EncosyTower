@@ -27,24 +27,26 @@ namespace EncosyTower.Editor.PageFlows
             => new(string.Empty, Array.Empty<string>(), problem, initializerInterface.Name);
 
         public string ToProblemText()
-            => Problem switch {
-                ScopeCollectionProblem.NoInitializer => "No initializer component found",
-                ScopeCollectionProblem.NullApplier => "Initializer returns no applier",
+        {
+            var scope = PageFlowsViewResources.Get().Scope;
+
+            return Problem switch {
+                ScopeCollectionProblem.NoInitializer => scope.NoInitializer,
+                ScopeCollectionProblem.NullApplier => scope.NullApplier,
                 _ => string.Empty,
             };
+        }
 
         public string ToTooltip()
-            => Problem switch {
-                ScopeCollectionProblem.NoInitializer => $"No component on this GameObject implements "
-                    + $"{InitializerInterfaceName}, so the codex has no scope collection: it cannot initialize, "
-                    + $"and identifiers cannot be checked.\nFix: Add a component that implements "
-                    + $"{InitializerInterfaceName} and returns a PageFlowScopeCollectionApplier<T> for a "
-                    + "[PageFlowScopeCollection] struct.",
-                ScopeCollectionProblem.NullApplier => $"The {InitializerInterfaceName} component returns a null "
-                    + "PageFlowScopeCollectionApplier, so the codex has no scope collection.\nFix: Return a "
-                    + "PageFlowScopeCollectionApplier<T> instance from its PageFlowScopeCollectionApplier property.",
+        {
+            var scope = PageFlowsViewResources.Get().Scope;
+
+            return Problem switch {
+                ScopeCollectionProblem.NoInitializer => scope.NoInitializerTooltip(InitializerInterfaceName),
+                ScopeCollectionProblem.NullApplier => scope.NullApplierTooltip(InitializerInterfaceName),
                 _ => string.Empty,
             };
+        }
     }
 }
 

@@ -34,7 +34,6 @@ namespace EncosyTower.Editor.PageFlows
         private const string STATUS_ICON_USS_CLASS_NAME = ROOT + "__status-icon";
         private const string POPUP_USS_CLASS_NAME = ROOT + "__popup";
         private const string WARNING_ICON = "console.warnicon.sml";
-        private const string MULTI_EDIT_NOTE = "Flow Definitions can be edited on one codex at a time.";
         private const float ROW_HEIGHT = 22f;
         private const float STATUS_WIDTH = 22f;
 
@@ -67,7 +66,7 @@ namespace EncosyTower.Editor.PageFlows
             _listWarning = CreateWarningIcon();
             header.Add(_listWarning);
 
-            _syncButton = new Button(OnSync) { text = "Sync Scopes" };
+            _syncButton = new Button(OnSync) { text = PageFlowsViewResources.Get().Flows.Sync };
             _syncButton.AddToClassList(PageFlowContextSection.HEADER_BUTTON_USS_CLASS_NAME);
             header.Add(_syncButton);
 
@@ -105,11 +104,12 @@ namespace EncosyTower.Editor.PageFlows
             , Func<SerializedProperty, int, RowProblem[]> getExtraRowProblems = null
         )
         {
-            var section = PageFlowContextSection.CreateSection("Flow Definitions", out var header);
+            var flowsTexts = PageFlowsViewResources.Get().Flows;
+            var section = PageFlowContextSection.CreateSection(flowsTexts.Heading, out var header);
 
             if (serializedObject.isEditingMultipleObjects)
             {
-                var note = new Label(MULTI_EDIT_NOTE);
+                var note = new Label(flowsTexts.MultiEdit);
                 note.AddToClassList(NOTE_USS_CLASS_NAME);
                 section.Add(note);
                 return section;
@@ -148,7 +148,7 @@ namespace EncosyTower.Editor.PageFlows
 
         private static VisualElement CreateScopeCollectionRow(in PageFlowScopeCollectionInfo info)
         {
-            var field = new ReadOnlyField("Scope Collection");
+            var field = new ReadOnlyField(PageFlowsViewResources.Get().Flows.ScopeCollection);
             field.AddToClassList(BaseField<string>.alignedFieldUssClassName);
 
             if (info.IsValid)
@@ -470,16 +470,14 @@ namespace EncosyTower.Editor.PageFlows
 
         private string GetSyncTooltip(bool canSync)
         {
+            var flows = PageFlowsViewResources.Get().Flows;
+
             if (_info.IsValid == false)
             {
-                return "No scope collection was found.";
+                return flows.SyncNoCollection;
             }
 
-            return canSync
-                ? $"Make the list match {_info.TypeName}: keep the first row of each scope; give each row with an "
-                    + "unknown, empty or repeated identifier the next missing scope (its other settings are kept); "
-                    + "remove such rows when no scope is missing; add rows for scopes still missing. One Undo step."
-                : $"The list already matches {_info.TypeName}.";
+            return canSync ? flows.SyncRule(_info.TypeName) : flows.SyncMatches(_info.TypeName);
         }
 
         private static void UnbindManualCell(VisualElement element, int index)

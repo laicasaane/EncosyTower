@@ -51,8 +51,6 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
     internal static class LayoutAssetContainerModel
     {
-        public const string CODEX_ROOT_LABEL = "(Codex Root)";
-
         private const string PATH_SEPARATOR = " / ";
 
         private static readonly Dictionary<VisualTreeAsset, CacheEntry> s_cache = new();
@@ -122,7 +120,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             var choices = new List<ContainerChoice>(items.Length + 1) {
                 new(
                       Value: string.Empty
-                    , Label: CODEX_ROOT_LABEL
+                    , Label: PageFlowsViewResources.Get().Picker.CodexRoot
                     , Path: string.Empty
                     , Checked: string.IsNullOrEmpty(current)
                     , Note: string.Empty
@@ -174,6 +172,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 return string.Empty;
             }
 
+            var picker = PageFlowsViewResources.Get().Picker;
             var users = new List<string>();
             var count = otherRows.Count;
 
@@ -183,11 +182,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
                 if (string.Equals(row.ContainerName, name, StringComparison.Ordinal))
                 {
-                    users.Add(string.IsNullOrEmpty(row.Identifier) ? "(no identifier)" : row.Identifier);
+                    users.Add(string.IsNullOrEmpty(row.Identifier) ? picker.NoIdentifier : row.Identifier);
                 }
             }
 
-            return users.Count > 0 ? $"used by {string.Join(", ", users)}" : string.Empty;
+            return users.Count > 0 ? picker.UsedBy(string.Join(", ", users)) : string.Empty;
         }
 
         private static void Collect(VisualElement element, string parentPath, List<LayoutAssetContainer> items)

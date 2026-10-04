@@ -11,8 +11,6 @@ namespace EncosyTower.Editor.PageFlows
     {
         public const string IDENTIFIER = "identifier";
 
-        private const string NOTE_IN_USE = "in use";
-        private const string NOTE_NOT_A_SCOPE = "not a scope";
 
         private readonly string[] _identifiers;
         private readonly PageFlowScopeCollectionInfo _info;
@@ -88,7 +86,7 @@ namespace EncosyTower.Editor.PageFlows
                       Value: current
                     , Checked: true
                     , Disabled: true
-                    , Note: NOTE_NOT_A_SCOPE
+                    , Note: PageFlowsViewResources.Get().Flows.NoteNotAScope
                     , SeparatorAfter: true
                 ));
             }
@@ -103,7 +101,7 @@ namespace EncosyTower.Editor.PageFlows
                       Value: scope
                     , Checked: isChecked
                     , Disabled: inUse
-                    , Note: inUse ? NOTE_IN_USE : string.Empty
+                    , Note: inUse ? PageFlowsViewResources.Get().Flows.NoteInUse : string.Empty
                     , SeparatorAfter: false
                 ));
             }

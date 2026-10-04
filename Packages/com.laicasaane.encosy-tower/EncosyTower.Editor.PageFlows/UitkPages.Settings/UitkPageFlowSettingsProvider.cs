@@ -17,7 +17,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings
         private static SettingsProvider GetSettingsProvider()
         {
             var provider = UitkPageFlowSettings.Instance.GetSettingsProvider(useImgui: false);
-            provider.label = "UI Toolkit Page Flow";
+            provider.label = PageFlowsViewResources.Get().Settings.UitkTitle;
             provider.activateHandler = (_, r) => Create(provider, r);
             provider.inspectorUpdateHandler = Update;
             provider.deactivateHandler = Dispose;

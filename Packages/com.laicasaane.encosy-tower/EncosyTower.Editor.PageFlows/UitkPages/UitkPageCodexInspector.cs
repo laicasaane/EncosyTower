@@ -32,19 +32,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private const string PICK_DOT_USS_CLASS_NAME = ROOT + "__pick-dot";
         private const int PICK_DOT_COUNT = 3;
 
-        private const string PICK_BUTTON_TOOLTIP = "Pick a named element of the Layout Asset.";
-        private const string LAYOUT_ASSET_TOOLTIP =
-            "UXML loaded into the panel root. Flow containers are picked from its named elements.";
-        private const string LAYOUT_ASSET_EMPTY_NOTE = "Optional. Flows go under the codex root.";
-        private const string EXISTING_UI_DOCUMENT_NOTE = "Taken from the existing UI Document";
-        private const string EXISTING_PANEL_RENDERER_NOTE = "Taken from the existing Panel Renderer";
-        private const string PANEL_RENDERER = "Panel Renderer";
-        private const string UI_DOCUMENT = "UI Document";
 
         private static readonly ContextRow[] s_contextRows = {
-            new(nameof(UitkPageFlowContext.warnNoSubscriber), "Warn No Subscriber"),
-            new(nameof(UitkPageFlowContext.loadStrategy), "Load Strategy"),
-            new(nameof(UitkPageFlowContext.logEnvironment), "Log Environment"),
+            new(nameof(UitkPageFlowContext.warnNoSubscriber), "warn-no-subscriber"),
+            new(nameof(UitkPageFlowContext.loadStrategy), "load-strategy"),
+            new(nameof(UitkPageFlowContext.logEnvironment), "log-environment"),
         };
 
         private SerializedProperty _flows;
@@ -98,10 +90,13 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         }
 
         private FlowDefinitionColumn[] CreateColumns()
-            => new FlowDefinitionColumn[] {
+        {
+            var titles = PageFlowsViewResources.Get().Columns;
+
+            return new FlowDefinitionColumn[] {
                 new(
                       Name: IDENTIFIER
-                    , Title: "Identifier"
+                    , Title: titles.Identifier
                     , Width: 16f
                     , Grow: 1.1f
                     , MakeCell: null
@@ -109,7 +104,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 ),
                 new(
                       Name: KIND
-                    , Title: "Kind"
+                    , Title: titles.Kind
                     , Width: 0f
                     , Grow: 1.25f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new EnumField())
@@ -117,21 +112,22 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 ),
                 new(
                       Name: CONTAINER_NAME
-                    , Title: "Container Name"
+                    , Title: titles.ContainerName
                     , Width: 0f
                     , Grow: 1.4f
                     , MakeCell: MakeContainerCell
                     , BindCell: BindContainerCell
                 ),
             };
+        }
 
         private VisualElement MakeContainerCell()
         {
             var field = new TextField();
-            field.textEdition.placeholder = LayoutAssetContainerModel.CODEX_ROOT_LABEL;
+            field.textEdition.placeholder = PageFlowsViewResources.Get().Picker.CodexRoot;
 
             var button = new Button {
-                tooltip = PICK_BUTTON_TOOLTIP,
+                tooltip = PageFlowsViewResources.Get().Picker.Tooltip,
             };
 
             button.AddToClassList(PICK_BUTTON_USS_CLASS_NAME);
@@ -227,18 +223,19 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
         private VisualElement CreatePanelSection()
         {
-            var section = PageFlowContextSection.CreateSection("Panel", out _);
+            var texts = PageFlowsViewResources.Get().Panel;
+            var section = PageFlowContextSection.CreateSection(texts.Heading, out _);
             var existingNote = _panelMode switch {
-                PanelMode.ExistingDocument => EXISTING_UI_DOCUMENT_NOTE,
-                PanelMode.ExistingRenderer => EXISTING_PANEL_RENDERER_NOTE,
+                PanelMode.ExistingDocument => texts.ExistingDocument,
+                PanelMode.ExistingRenderer => texts.ExistingRenderer,
                 _ => null,
             };
 
             var isExisting = existingNote != null;
-            var panelSettings = new PropertyField(serializedObject.FindProperty(PANEL_SETTINGS), "Panel Settings");
-            var sortingOrder = new PropertyField(serializedObject.FindProperty(SORTING_ORDER), "Sorting Order");
-            var layoutAsset = new PropertyField(_layoutAsset, "Layout Asset") {
-                tooltip = LAYOUT_ASSET_TOOLTIP,
+            var panelSettings = new PropertyField(serializedObject.FindProperty(PANEL_SETTINGS), texts.PanelSettings);
+            var sortingOrder = new PropertyField(serializedObject.FindProperty(SORTING_ORDER), texts.SortingOrder);
+            var layoutAsset = new PropertyField(_layoutAsset, texts.LayoutAsset) {
+                tooltip = texts.LayoutAssetTooltip,
             };
 
             panelSettings.SetEnabled(isExisting == false);
@@ -265,7 +262,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             section.Add(_layoutNote);
 
             var (componentName, componentNote) = GetPanelComponentTexts(_panelMode);
-            var component = new ReadOnlyField("Panel Component");
+            var component = new ReadOnlyField(texts.Component);
             component.SetText(componentName);
 
             section.Add(component);
@@ -290,12 +287,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             }
 
             var containers = LayoutAssetContainerModel.Get(GetEffectiveLayoutAsset());
+            var texts = PageFlowsViewResources.Get().Panel;
 
-            var count = containers.Items.Length;
-
-            _layoutNote.text = containers.HasAsset == false ? LAYOUT_ASSET_EMPTY_NOTE
-                : count == 1 ? "1 named element available as a container"
-                : $"{count} named elements available as containers";
+            _layoutNote.text = containers.HasAsset
+                ? texts.LayoutAssetCount(containers.Items.Length)
+                : texts.LayoutAssetEmpty;
         }
 
         private VisualTreeAsset GetEffectiveLayoutAsset()
@@ -346,19 +342,17 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         }
 
         private static (string Name, string Note) GetPanelComponentTexts(PanelMode mode)
-            => mode switch {
-                PanelMode.AddRenderer => (PANEL_RENDERER, "Added to this GameObject at runtime."),
-                PanelMode.AddDocument => (
-                      UI_DOCUMENT
-                    , "Added to this GameObject at runtime. Panel Renderer is used on Unity 6000.5 or newer."
-                ),
-                PanelMode.Forced => (
-                      UI_DOCUMENT
-                    , "Added at runtime. Project Settings force UI Document instead of Panel Renderer."
-                ),
-                PanelMode.ExistingRenderer => (PANEL_RENDERER, "Uses the existing component on this GameObject."),
-                _ => (UI_DOCUMENT, "Uses the existing component on this GameObject."),
+        {
+            var texts = PageFlowsViewResources.Get().Panel;
+
+            return mode switch {
+                PanelMode.AddRenderer => (texts.PanelRenderer, texts.Added),
+                PanelMode.AddDocument => (texts.UIDocument, texts.AddedDocument),
+                PanelMode.Forced => (texts.UIDocument, texts.Forced),
+                PanelMode.ExistingRenderer => (texts.PanelRenderer, texts.Existing),
+                _ => (texts.UIDocument, texts.Existing),
             };
+        }
 
         private enum PanelMode
         {

@@ -57,10 +57,13 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
         }
 
         private static FlowDefinitionColumn[] CreateColumns()
-            => new FlowDefinitionColumn[] {
+        {
+            var titles = PageFlowsViewResources.Get().Columns;
+
+            return new FlowDefinitionColumn[] {
                 new(
                       Name: FlowDefinitionsSection.IDENTIFIER_COLUMN
-                    , Title: "Identifier"
+                    , Title: titles.Identifier
                     , Width: 16f
                     , Grow: 1.15f
                     , MakeCell: null
@@ -68,7 +71,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                 ),
                 new(
                       Name: KIND
-                    , Title: "Kind"
+                    , Title: titles.Kind
                     , Width: 0f
                     , Grow: 1.3f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new EnumField())
@@ -76,7 +79,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                 ),
                 new(
                       Name: OVERRIDE_SORTING_LAYER
-                    , Title: "Override"
+                    , Title: titles.Override
                     , Width: 62f
                     , Grow: 0f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCenteredCell(new Toggle())
@@ -85,7 +88,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                 ),
                 new(
                       Name: SORTING_LAYER
-                    , Title: "Sorting Layer"
+                    , Title: titles.SortingLayer
                     , Width: 0f
                     , Grow: 1f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(
@@ -95,7 +98,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                 ),
                 new(
                       Name: SORTING_ORDER_IN_LAYER
-                    , Title: "Order"
+                    , Title: titles.Order
                     , Width: 54f
                     , Grow: 0f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new IntegerField())
@@ -106,6 +109,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                     )
                 ),
             };
+        }
 
         private static void BindWhileOverridden<TField>(VisualElement cell, SerializedProperty row, string name)
             where TField : VisualElement, IBindable

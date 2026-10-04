@@ -21,8 +21,6 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private const string NOTE_USS_CLASS_NAME = ROOT + "__picker-note";
         private const string EMPTY_USS_CLASS_NAME = ROOT + "__picker-empty";
         private const string SEPARATOR_USS_CLASS_NAME = ROOT + "__picker-separator";
-        private const string NO_LAYOUT_ASSET = "No Layout Asset assigned";
-        private const string NO_MATCH = "No matching element";
         private const string CHECK_MARK = "✓";
         private const float ITEM_HEIGHT = 20f;
         private const float CHROME_HEIGHT = 36f;
@@ -90,7 +88,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
             if (_hasAsset == false)
             {
-                _items.Add(CreateEmpty(NO_LAYOUT_ASSET));
+                _items.Add(CreateEmpty(PageFlowsViewResources.Get().Picker.NoLayoutAsset));
                 return;
             }
 
@@ -111,7 +109,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
             if (count < 1)
             {
-                _items.Add(CreateEmpty(NO_MATCH));
+                _items.Add(CreateEmpty(PageFlowsViewResources.Get().Picker.NoMatch));
             }
         }
 

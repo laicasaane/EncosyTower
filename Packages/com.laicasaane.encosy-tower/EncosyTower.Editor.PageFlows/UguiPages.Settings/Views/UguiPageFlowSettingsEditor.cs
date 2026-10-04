@@ -35,10 +35,11 @@ namespace EncosyTower.Editor.PageFlows.UguiPages.Settings.Views
             root.WithEditorBuiltInStyleSheet(EditorStyleSheetPaths.PROJECT_SETTINGS_STYLE_SHEET);
             root.WithEditorStyleSheet(Constants.THEME_STYLE_SHEET);
 
+            var texts = PageFlowsViewResources.Get().Settings;
             var context = _context = new SerializedContext(settings, serializedSettings);
             var titleBar = new VisualElement();
             var titleLabel = new Label() {
-                text = "uGUI Page Flow",
+                text = texts.UguiTitle,
             };
 
             titleBar.AddToClassList(ProjectSettingsTitleBarUssClassName);
@@ -53,13 +54,13 @@ namespace EncosyTower.Editor.PageFlows.UguiPages.Settings.Views
 
             var contentContainer = container.Q("unity-content-container");
 
-            var warnNoSubscriber = new Toggle("Warn No Subscriber");
-            var loaderStrategy = new EnumField("Loader Strategy", default(PageLoaderStrategy));
-            var messageScope = new EnumField("Message Scope", default(UguiMessageScope));
-            var logEnvironment = new EnumField("Log Environment", default(LogEnvironment));
-            var poolFoldout = new Foldout { text = "GameObject Pooling Strategies" };
-            var poolRentingStrategy = new EnumField("Renting", default(RentingStrategy));
-            var poolReturningStrategy = new EnumField("Returning", default(ReturningStrategy));
+            var warnNoSubscriber = new Toggle(texts.WarnNoSubscriber);
+            var loaderStrategy = new EnumField(texts.LoaderStrategy, default(PageLoaderStrategy));
+            var messageScope = new EnumField(texts.MessageScope, default(UguiMessageScope));
+            var logEnvironment = new EnumField(texts.LogEnvironment, default(LogEnvironment));
+            var poolFoldout = new Foldout { text = texts.Pooling };
+            var poolRentingStrategy = new EnumField(texts.Renting, default(RentingStrategy));
+            var poolReturningStrategy = new EnumField(texts.Returning, default(ReturningStrategy));
             var callerInfoFoldout = PageFlowCallerInfoSection.Create();
 
             contentContainer.Add(warnNoSubscriber.WithAlignFieldClass());
@@ -152,7 +153,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages.Settings.Views
                 root.WithEditorStyleSheet(Constants.THEME_STYLE_SHEET);
 
                 var button = new Button(OpenSettingsWindow) {
-                    text = "Open uGUI Page Flow Settings Window",
+                    text = PageFlowsViewResources.Get().Settings.OpenUguiWindow,
                 };
 
                 button.AddToClassList("button-open-settings-window");

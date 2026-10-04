@@ -17,21 +17,15 @@ namespace EncosyTower.Editor.PageFlows
 
         public static Foldout Create()
         {
-            var foldout = new Foldout { text = "Caller Info Option For Publishing Page Flow Messages" };
-            var option = new EnumField("Option", default(PubSubCallerInfoOption)) {
+            var texts = PageFlowsViewResources.Get().CallerInfo;
+            var foldout = new Foldout { text = texts.Heading };
+            var option = new EnumField(texts.Option, default(PubSubCallerInfoOption)) {
                 value = default(PageFlowPublishingContext).CallerInfoOption,
             };
 
             var helpBox = new HelpBox {
                 messageType = HelpBoxMessageType.Info,
-                text =
-                    "Choose whether to include caller info when publishing page flow messages.\n" +
-                    "Including caller info can be useful for debugging purposes, but may increase build size.\n" +
-                    "- <b>Never:</b> Do not include caller info.\n" +
-                    "- <b>For Development:</b> Include only for Editor and Development builds.\n" +
-                    $"\tSymbol '{SYMBOL_FOR_DEV}' will be added to Player Settings.\n" +
-                    "- <b>Always:</b> Include for all environments.\n" +
-                    $"\tSymbol '{SYMBOL_ALWAYS}' will be added to Player Settings.",
+                text = texts.Help(SYMBOL_FOR_DEV, SYMBOL_ALWAYS),
             };
 
             foldout.Add(option.WithAlignFieldClass());

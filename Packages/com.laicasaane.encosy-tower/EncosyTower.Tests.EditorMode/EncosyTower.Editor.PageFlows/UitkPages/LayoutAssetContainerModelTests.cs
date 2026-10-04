@@ -177,7 +177,7 @@ namespace EncosyTower.Tests.Editor.PageFlows.UitkPages
 
             Assert.AreEqual(containers.Items.Length + 1, choices.Length);
             Assert.AreEqual(string.Empty, choices[0].Value);
-            Assert.AreEqual(LayoutAssetContainerModel.CODEX_ROOT_LABEL, choices[0].Label);
+            Assert.AreEqual("(Codex Root)", choices[0].Label);
             Assert.IsFalse(choices[0].Checked);
             Assert.IsTrue(choices[2].Checked);
             Assert.IsFalse(choices[4].Checked);
