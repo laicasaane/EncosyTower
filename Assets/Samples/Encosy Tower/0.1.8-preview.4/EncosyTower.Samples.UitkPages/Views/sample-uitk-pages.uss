@@ -1,0 +1,78 @@
+.sample-screen {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(38, 56, 84);
+}
+
+.sample-screen__title {
+    font-size: 36px;
+    color: rgb(240, 240, 240);
+    margin-bottom: 24px;
+}
+
+.sample-screen__button {
+    width: 240px;
+    height: 48px;
+    font-size: 20px;
+    margin: 6px;
+}
+
+.sample-popup {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.sample-popup__panel {
+    width: 420px;
+    padding: 24px;
+    align-items: center;
+    border-radius: 8px;
+    background-color: rgb(236, 236, 236);
+}
+
+.sample-popup__title {
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.sample-popup__text {
+    font-size: 18px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-bottom: 18px;
+}
+
+.sample-popup__button {
+    width: 160px;
+    height: 40px;
+    font-size: 18px;
+}
+
+.sample-popup-enter-from {
+    opacity: 0;
+    scale: 0.9 0.9;
+}
+
+.sample-popup-enter-to {
+    opacity: 1;
+    scale: 1 1;
+    transition-property: opacity, scale;
+    transition-duration: 0.2s, 0.2s;
+    transition-timing-function: ease-out, ease-out;
+}
+
+.sample-popup-exit-from {
+    opacity: 1;
+    scale: 1 1;
+}
+
+.sample-popup-exit-to {
+    opacity: 0;
+    scale: 0.9 0.9;
+    transition-property: opacity, scale;
+    transition-duration: 0.15s, 0.15s;
+    transition-timing-function: ease-in, ease-in;
+}

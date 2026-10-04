@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:et="EncosyTower.UIElements">
+    <ui:Style src="sample-uitk-pages.uss" />
+    <et:SafeArea name="safe-area" />
+</ui:UXML>

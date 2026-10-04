@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:sample="EncosyTower.Samples.UitkPages">
+    <ui:Style src="../Views/sample-uitk-pages.uss" />
+    <sample:ScreenMain name="screen-main" class="sample-screen">
+        <ui:Label text="Main Screen" class="sample-screen__title" />
+        <ui:Button name="show-popup-button" text="Show Popup" class="sample-screen__button" />
+        <ui:Button name="hide-screen-button" text="Hide Screen" class="sample-screen__button" />
+    </sample:ScreenMain>
+</ui:UXML>

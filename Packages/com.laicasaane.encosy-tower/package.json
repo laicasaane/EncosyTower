@@ -27,6 +27,11 @@
       "path": "Samples~/EncosyTower.Samples.UguiPages"
     },
     {
+      "displayName": "EncosyTower.Samples.UitkPages",
+      "description": "Contains sample setup for Encosy UI Toolkit Pages",
+      "path": "Samples~/EncosyTower.Samples.UitkPages"
+    },
+    {
       "displayName": "EncosyTower.Samples.Mvvm",
       "description": "Contains sample setup for Encosy MVVM",
       "path": "Samples~/EncosyTower.Samples.Mvvm"
