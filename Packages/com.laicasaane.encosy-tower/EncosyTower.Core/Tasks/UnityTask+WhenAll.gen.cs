@@ -54,12 +54,7 @@ namespace EncosyTower.Tasks
         /// </description></item>
         /// </list>
         /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-        )
-        > WhenAll<T1, T2>(
+        public static UnityTask<(T1, T2)> WhenAll<T1, T2>(
               UnityTask<T1> task1
             , UnityTask<T2> task2
         )
@@ -68,6 +63,1046 @@ namespace EncosyTower.Tasks
 
             PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2>>.Observe(task1, state);
             PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2>>.Observe(task2, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 3 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3)> WhenAll<T1, T2, T3>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3>>.Observe(task3, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 4 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4)> WhenAll<T1, T2, T3, T4>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task4, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 5 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5)> WhenAll<T1, T2, T3, T4, T5>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task5, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 6 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6)> WhenAll<T1, T2, T3, T4, T5, T6>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task6, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 7 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7)> WhenAll<T1, T2, T3, T4, T5, T6, T7>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task7, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 8 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task8, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 9 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task9, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 10 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task10, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 11 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <param name="task11">The task at argument position 11.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+            , UnityTask<T11> task11
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task10, state);
+            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task11, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 12 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
+        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <param name="task11">The task at argument position 11.</param>
+        /// <param name="task12">The task at argument position 12.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+            , UnityTask<T11> task11
+            , UnityTask<T12> task12
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task10, state);
+            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task11, state);
+            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task12, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 13 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
+        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
+        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <param name="task11">The task at argument position 11.</param>
+        /// <param name="task12">The task at argument position 12.</param>
+        /// <param name="task13">The task at argument position 13.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+            , UnityTask<T11> task11
+            , UnityTask<T12> task12
+            , UnityTask<T13> task13
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task10, state);
+            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task11, state);
+            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task12, state);
+            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task13, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 14 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
+        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
+        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
+        /// <typeparam name="T14">The result type of <paramref name="task14"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <param name="task11">The task at argument position 11.</param>
+        /// <param name="task12">The task at argument position 12.</param>
+        /// <param name="task13">The task at argument position 13.</param>
+        /// <param name="task14">The task at argument position 14.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+            , UnityTask<T11> task11
+            , UnityTask<T12> task12
+            , UnityTask<T13> task13
+            , UnityTask<T14> task14
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task10, state);
+            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task11, state);
+            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task12, state);
+            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task13, state);
+            PooledUnityTaskObserver<T14, UnityTaskPosition14, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task14, state);
+
+            return state.WaitAsync();
+        }
+
+        /// <summary>
+        /// Creates a task that completes with the results of all 15 tasks.
+        /// </summary>
+        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
+        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
+        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
+        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
+        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
+        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
+        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
+        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
+        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
+        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
+        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
+        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
+        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
+        /// <typeparam name="T14">The result type of <paramref name="task14"/>.</typeparam>
+        /// <typeparam name="T15">The result type of <paramref name="task15"/>.</typeparam>
+        /// <param name="task1">The task at argument position 1.</param>
+        /// <param name="task2">The task at argument position 2.</param>
+        /// <param name="task3">The task at argument position 3.</param>
+        /// <param name="task4">The task at argument position 4.</param>
+        /// <param name="task5">The task at argument position 5.</param>
+        /// <param name="task6">The task at argument position 6.</param>
+        /// <param name="task7">The task at argument position 7.</param>
+        /// <param name="task8">The task at argument position 8.</param>
+        /// <param name="task9">The task at argument position 9.</param>
+        /// <param name="task10">The task at argument position 10.</param>
+        /// <param name="task11">The task at argument position 11.</param>
+        /// <param name="task12">The task at argument position 12.</param>
+        /// <param name="task13">The task at argument position 13.</param>
+        /// <param name="task14">The task at argument position 14.</param>
+        /// <param name="task15">The task at argument position 15.</param>
+        /// <returns>A task whose result holds each input result at its argument position.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
+        /// position. The first observed fault or cancellation completes the task immediately and is
+        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
+        /// thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
+        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
+        /// return a stale result, never complete, or observe another operation's result because sources
+        /// are pooled.
+        /// </description></item>
+        /// <item><description>
+        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
+        /// </description></item>
+        /// <item><description>
+        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
+        /// Unity throws or corrupts state, per Unity rules.
+        /// </description></item>
+        /// <item><description>
+        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
+        /// input follows native-library behaviour.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
+        public static UnityTask<(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)> WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
+              UnityTask<T1> task1
+            , UnityTask<T2> task2
+            , UnityTask<T3> task3
+            , UnityTask<T4> task4
+            , UnityTask<T5> task5
+            , UnityTask<T6> task6
+            , UnityTask<T7> task7
+            , UnityTask<T8> task8
+            , UnityTask<T9> task9
+            , UnityTask<T10> task10
+            , UnityTask<T11> task11
+            , UnityTask<T12> task12
+            , UnityTask<T13> task13
+            , UnityTask<T14> task14
+            , UnityTask<T15> task15
+        )
+        {
+            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>.Rent();
+
+            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task1, state);
+            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task2, state);
+            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task3, state);
+            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task4, state);
+            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task5, state);
+            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task6, state);
+            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task7, state);
+            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task8, state);
+            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task9, state);
+            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task10, state);
+            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task11, state);
+            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task12, state);
+            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task13, state);
+            PooledUnityTaskObserver<T14, UnityTaskPosition14, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task14, state);
+            PooledUnityTaskObserver<T15, UnityTaskPosition15, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task15, state);
 
             return state.WaitAsync();
         }
@@ -85,9 +1120,7 @@ namespace EncosyTower.Tasks
             private T2 _result2;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -115,9 +1148,7 @@ namespace EncosyTower.Tasks
                 state._result2 = default;
                 state._remaining = 2;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -129,8 +1160,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -192,16 +1222,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -219,68 +1245,6 @@ namespace EncosyTower.Tasks
             }
         }
 
-        /// <summary>
-        /// Creates a task that completes with the results of all 3 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-        )
-        > WhenAll<T1, T2, T3>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3>>.Observe(task3, state);
-
-            return state.WaitAsync();
-        }
-
         private sealed class FixedWhenAllState<T1, T2, T3>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -296,9 +1260,7 @@ namespace EncosyTower.Tasks
             private T3 _result3;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -327,9 +1289,7 @@ namespace EncosyTower.Tasks
                 state._result3 = default;
                 state._remaining = 3;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -341,8 +1301,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -423,16 +1382,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -449,73 +1404,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 4 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-        )
-        > WhenAll<T1, T2, T3, T4>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4>>.Observe(task4, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4>
@@ -535,9 +1423,7 @@ namespace EncosyTower.Tasks
             private T4 _result4;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -567,9 +1453,7 @@ namespace EncosyTower.Tasks
                 state._result4 = default;
                 state._remaining = 4;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -581,8 +1465,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -682,16 +1565,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -709,78 +1588,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 5 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-        )
-        > WhenAll<T1, T2, T3, T4, T5>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5>>.Observe(task5, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5>
@@ -802,9 +1609,7 @@ namespace EncosyTower.Tasks
             private T5 _result5;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -835,9 +1640,7 @@ namespace EncosyTower.Tasks
                 state._result5 = default;
                 state._remaining = 5;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -849,8 +1652,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -969,16 +1771,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -997,83 +1795,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 6 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6>>.Observe(task6, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6>
@@ -1097,9 +1818,7 @@ namespace EncosyTower.Tasks
             private T6 _result6;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -1131,9 +1850,7 @@ namespace EncosyTower.Tasks
                 state._result6 = default;
                 state._remaining = 6;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -1145,8 +1862,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -1284,16 +2000,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -1313,88 +2025,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 7 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>>.Observe(task7, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7>
@@ -1420,9 +2050,7 @@ namespace EncosyTower.Tasks
             private T7 _result7;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -1455,9 +2083,7 @@ namespace EncosyTower.Tasks
                 state._result7 = default;
                 state._remaining = 7;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -1469,8 +2095,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -1627,16 +2252,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -1657,93 +2278,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 8 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>>.Observe(task8, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8>
@@ -1771,9 +2305,7 @@ namespace EncosyTower.Tasks
             private T8 _result8;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -1807,9 +2339,7 @@ namespace EncosyTower.Tasks
                 state._result8 = default;
                 state._remaining = 8;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -1821,8 +2351,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -1998,16 +2527,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -2029,98 +2554,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 9 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>>.Observe(task9, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9>
@@ -2150,9 +2583,7 @@ namespace EncosyTower.Tasks
             private T9 _result9;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -2187,9 +2618,7 @@ namespace EncosyTower.Tasks
                 state._result9 = default;
                 state._remaining = 9;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -2201,8 +2630,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -2397,16 +2825,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -2429,103 +2853,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 10 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>.Observe(task10, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
@@ -2557,9 +2884,7 @@ namespace EncosyTower.Tasks
             private T10 _result10;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -2595,9 +2920,7 @@ namespace EncosyTower.Tasks
                 state._result10 = default;
                 state._remaining = 10;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -2609,8 +2932,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -2824,16 +3146,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -2857,108 +3175,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 11 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <param name="task11">The task at argument position 11.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-            , T11
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-            , UnityTask<T11> task11
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task10, state);
-            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>.Observe(task11, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
@@ -2992,9 +3208,7 @@ namespace EncosyTower.Tasks
             private T11 _result11;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -3031,9 +3245,7 @@ namespace EncosyTower.Tasks
                 state._result11 = default;
                 state._remaining = 11;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -3045,8 +3257,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -3279,16 +3490,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10, _result11));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -3313,113 +3520,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 12 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
-        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <param name="task11">The task at argument position 11.</param>
-        /// <param name="task12">The task at argument position 12.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-            , T11
-            , T12
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-            , UnityTask<T11> task11
-            , UnityTask<T12> task12
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task10, state);
-            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task11, state);
-            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>.Observe(task12, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
@@ -3455,9 +3555,7 @@ namespace EncosyTower.Tasks
             private T12 _result12;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -3495,9 +3593,7 @@ namespace EncosyTower.Tasks
                 state._result12 = default;
                 state._remaining = 12;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -3509,8 +3605,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -3762,16 +3857,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10, _result11, _result12));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -3797,118 +3888,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 13 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
-        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
-        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <param name="task11">The task at argument position 11.</param>
-        /// <param name="task12">The task at argument position 12.</param>
-        /// <param name="task13">The task at argument position 13.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-            , T11
-            , T12
-            , T13
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-            , UnityTask<T11> task11
-            , UnityTask<T12> task12
-            , UnityTask<T13> task13
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task10, state);
-            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task11, state);
-            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task12, state);
-            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>.Observe(task13, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
@@ -3946,9 +3925,7 @@ namespace EncosyTower.Tasks
             private T13 _result13;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -3987,9 +3964,7 @@ namespace EncosyTower.Tasks
                 state._result13 = default;
                 state._remaining = 13;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -4001,8 +3976,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -4273,16 +4247,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10, _result11, _result12, _result13));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -4309,123 +4279,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 14 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
-        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
-        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
-        /// <typeparam name="T14">The result type of <paramref name="task14"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <param name="task11">The task at argument position 11.</param>
-        /// <param name="task12">The task at argument position 12.</param>
-        /// <param name="task13">The task at argument position 13.</param>
-        /// <param name="task14">The task at argument position 14.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-            , T11
-            , T12
-            , T13
-            , T14
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-            , UnityTask<T11> task11
-            , UnityTask<T12> task12
-            , UnityTask<T13> task13
-            , UnityTask<T14> task14
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task10, state);
-            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task11, state);
-            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task12, state);
-            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task13, state);
-            PooledUnityTaskObserver<T14, UnityTaskPosition14, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>.Observe(task14, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
@@ -4465,9 +4318,7 @@ namespace EncosyTower.Tasks
             private T14 _result14;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -4507,9 +4358,7 @@ namespace EncosyTower.Tasks
                 state._result14 = default;
                 state._remaining = 14;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -4521,8 +4370,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -4812,16 +4660,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10, _result11, _result12, _result13, _result14));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -4849,128 +4693,6 @@ namespace EncosyTower.Tasks
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Creates a task that completes with the results of all 15 tasks.
-        /// </summary>
-        /// <typeparam name="T1">The result type of <paramref name="task1"/>.</typeparam>
-        /// <typeparam name="T2">The result type of <paramref name="task2"/>.</typeparam>
-        /// <typeparam name="T3">The result type of <paramref name="task3"/>.</typeparam>
-        /// <typeparam name="T4">The result type of <paramref name="task4"/>.</typeparam>
-        /// <typeparam name="T5">The result type of <paramref name="task5"/>.</typeparam>
-        /// <typeparam name="T6">The result type of <paramref name="task6"/>.</typeparam>
-        /// <typeparam name="T7">The result type of <paramref name="task7"/>.</typeparam>
-        /// <typeparam name="T8">The result type of <paramref name="task8"/>.</typeparam>
-        /// <typeparam name="T9">The result type of <paramref name="task9"/>.</typeparam>
-        /// <typeparam name="T10">The result type of <paramref name="task10"/>.</typeparam>
-        /// <typeparam name="T11">The result type of <paramref name="task11"/>.</typeparam>
-        /// <typeparam name="T12">The result type of <paramref name="task12"/>.</typeparam>
-        /// <typeparam name="T13">The result type of <paramref name="task13"/>.</typeparam>
-        /// <typeparam name="T14">The result type of <paramref name="task14"/>.</typeparam>
-        /// <typeparam name="T15">The result type of <paramref name="task15"/>.</typeparam>
-        /// <param name="task1">The task at argument position 1.</param>
-        /// <param name="task2">The task at argument position 2.</param>
-        /// <param name="task3">The task at argument position 3.</param>
-        /// <param name="task4">The task at argument position 4.</param>
-        /// <param name="task5">The task at argument position 5.</param>
-        /// <param name="task6">The task at argument position 6.</param>
-        /// <param name="task7">The task at argument position 7.</param>
-        /// <param name="task8">The task at argument position 8.</param>
-        /// <param name="task9">The task at argument position 9.</param>
-        /// <param name="task10">The task at argument position 10.</param>
-        /// <param name="task11">The task at argument position 11.</param>
-        /// <param name="task12">The task at argument position 12.</param>
-        /// <param name="task13">The task at argument position 13.</param>
-        /// <param name="task14">The task at argument position 14.</param>
-        /// <param name="task15">The task at argument position 15.</param>
-        /// <returns>A task whose result holds each input result at its argument position.</returns>
-        /// <remarks>
-        /// <para>
-        /// <b>Behaviour:</b> completes when every input succeeds, with each result at its argument
-        /// position. The first observed fault or cancellation completes the task immediately and is
-        /// rethrown as the same instance. Later inputs are still observed and their faults are discarded.
-        /// </para>
-        /// <para>
-        /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
-        /// thread when called on the main thread, a thread-pool thread otherwise.
-        /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Awaiting the task or a copy more than once, calling <c>GetResult</c> twice, or passing the
-        /// same task (or a copy) more than once: may throw <see cref="InvalidOperationException"/>,
-        /// return a stale result, never complete, or observe another operation's result because sources
-        /// are pooled.
-        /// </description></item>
-        /// <item><description>
-        /// Calling <c>GetAwaiter().GetResult()</c> before completion: may throw or block indefinitely.
-        /// </description></item>
-        /// <item><description>
-        /// Calling Unity APIs after resuming on a thread-pool thread (task created off the main thread):
-        /// Unity throws or corrupts state, per Unity rules.
-        /// </description></item>
-        /// <item><description>
-        /// An input obtained from <c>UniTask</c> or <c>Awaitable</c> through an interop conversion: that
-        /// input follows native-library behaviour.
-        /// </description></item>
-        /// </list>
-        /// </remarks>
-        public static UnityTask<
-        (
-              T1
-            , T2
-            , T3
-            , T4
-            , T5
-            , T6
-            , T7
-            , T8
-            , T9
-            , T10
-            , T11
-            , T12
-            , T13
-            , T14
-            , T15
-        )
-        > WhenAll<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
-              UnityTask<T1> task1
-            , UnityTask<T2> task2
-            , UnityTask<T3> task3
-            , UnityTask<T4> task4
-            , UnityTask<T5> task5
-            , UnityTask<T6> task6
-            , UnityTask<T7> task7
-            , UnityTask<T8> task8
-            , UnityTask<T9> task9
-            , UnityTask<T10> task10
-            , UnityTask<T11> task11
-            , UnityTask<T12> task12
-            , UnityTask<T13> task13
-            , UnityTask<T14> task14
-            , UnityTask<T15> task15
-        )
-        {
-            var state = FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>.Rent();
-
-            PooledUnityTaskObserver<T1, UnityTaskPosition1, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task1, state);
-            PooledUnityTaskObserver<T2, UnityTaskPosition2, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task2, state);
-            PooledUnityTaskObserver<T3, UnityTaskPosition3, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task3, state);
-            PooledUnityTaskObserver<T4, UnityTaskPosition4, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task4, state);
-            PooledUnityTaskObserver<T5, UnityTaskPosition5, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task5, state);
-            PooledUnityTaskObserver<T6, UnityTaskPosition6, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task6, state);
-            PooledUnityTaskObserver<T7, UnityTaskPosition7, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task7, state);
-            PooledUnityTaskObserver<T8, UnityTaskPosition8, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task8, state);
-            PooledUnityTaskObserver<T9, UnityTaskPosition9, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task9, state);
-            PooledUnityTaskObserver<T10, UnityTaskPosition10, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task10, state);
-            PooledUnityTaskObserver<T11, UnityTaskPosition11, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task11, state);
-            PooledUnityTaskObserver<T12, UnityTaskPosition12, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task12, state);
-            PooledUnityTaskObserver<T13, UnityTaskPosition13, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task13, state);
-            PooledUnityTaskObserver<T14, UnityTaskPosition14, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task14, state);
-            PooledUnityTaskObserver<T15, UnityTaskPosition15, FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>.Observe(task15, state);
-
-            return state.WaitAsync();
         }
 
         private sealed class FixedWhenAllState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
@@ -5012,9 +4734,7 @@ namespace EncosyTower.Tasks
             private T15 _result15;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private FixedWhenAllState()
             {
@@ -5055,9 +4775,7 @@ namespace EncosyTower.Tasks
                 state._result15 = default;
                 state._remaining = 15;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -5069,8 +4787,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -5379,16 +5096,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult((_result1, _result2, _result3, _result4, _result5, _result6, _result7, _result8, _result9, _result10, _result11, _result12, _result13, _result14, _result15));
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }

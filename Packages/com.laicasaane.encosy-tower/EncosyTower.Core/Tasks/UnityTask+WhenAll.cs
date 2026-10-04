@@ -376,9 +376,7 @@ namespace EncosyTower.Tasks
             private UnityTaskCompletionSource _source;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private WhenAllState() { }
 
@@ -402,9 +400,7 @@ namespace EncosyTower.Tasks
 
                 state._remaining = count;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -416,8 +412,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -443,16 +438,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult();
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -477,9 +468,7 @@ namespace EncosyTower.Tasks
             private T[] _results;
             private int _remaining;
             private int _signaled;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private WhenAllState() { }
 
@@ -504,9 +493,7 @@ namespace EncosyTower.Tasks
                 state._results = new T[count];
                 state._remaining = count;
                 state._signaled = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -518,8 +505,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -547,16 +533,12 @@ namespace EncosyTower.Tasks
                     _source.TrySetResult(_results);
                 }
 
-                Volatile.Write(location: ref _detached, value: 1);
-                TryRecycle();
+                Release();
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }

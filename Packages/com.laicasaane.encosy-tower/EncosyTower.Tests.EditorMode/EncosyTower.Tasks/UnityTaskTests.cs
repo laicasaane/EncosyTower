@@ -601,6 +601,21 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task Delay_CancelImmediately_CompletesBeforeSchedulerTick()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var delay = UnityTask.Delay(millisecondsDelay: 10_000, cancelImmediately: true, token: cancellation.Token);
+
+            cancellation.Cancel();
+            var isCompletedAfterCancel = delay.IsCompleted;
+            var exception = await CaptureUnityTaskExceptionAsync(delay);
+
+            Assert.IsTrue(isCompletedAfterCancel);
+            Assert.IsInstanceOf<OperationCanceledException>(exception);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)exception).CancellationToken);
+        }
+
+        [Test]
         public async Task WaitUntil_PredicateTrue_CompletesSynchronously()
         {
             var task = UnityTask.WaitUntil(static () => true);
@@ -902,6 +917,45 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task WhenEach_CancellationWhileMovePending_Throws()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var source = new UnityTaskCompletionSource<int>();
+            var enumerator = UnityTask.WhenEach(source.Task).GetAsyncEnumerator(cancellation.Token);
+
+            var pending = enumerator.MoveNextAsync();
+            var wasPending = pending.IsCompleted == false;
+
+            cancellation.Cancel();
+            var pendingException = await CaptureUnityTaskExceptionAsync(pending);
+            var laterException = await CaptureUnityTaskExceptionAsync(enumerator.MoveNextAsync());
+
+            source.SetResult(1);
+            await enumerator.DisposeAsync();
+
+            Assert.IsTrue(wasPending);
+            Assert.IsInstanceOf<OperationCanceledException>(pendingException);
+            Assert.IsInstanceOf<OperationCanceledException>(laterException);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)pendingException).CancellationToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)laterException).CancellationToken);
+        }
+
+        [Test]
+        public async Task WhenEach_DisposeCompletesPendingMoveWithFalse()
+        {
+            var source = new UnityTaskCompletionSource<int>();
+            var enumerator = UnityTask.WhenEach(source.Task).GetAsyncEnumerator();
+
+            var pending = enumerator.MoveNextAsync();
+            await enumerator.DisposeAsync();
+            var moved = await pending;
+
+            source.SetResult(1);
+
+            Assert.IsFalse(moved);
+        }
+
+        [Test]
         public async Task WhenEach_ConcurrentCompletion_NoResultLost()
         {
             const int COUNT = 64;
@@ -952,7 +1006,12 @@ namespace EncosyTower.Tests.Tasks
 
             void CompleteInParallel()
             {
-                Parallel.For(0, COUNT, i => sources[i].SetResult(i));
+                Parallel.For(0, COUNT, Complete);
+            }
+
+            void Complete(int index)
+            {
+                sources[index].SetResult(index);
             }
         }
 

@@ -51,6 +51,7 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
         /// </summary>
+        /// <param name="exception">The exception that faulted the asynchronous method.</param>
         public void SetException(Exception exception)
         {
             EnsureRunner();
@@ -60,6 +61,7 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Associates the builder with a boxed state machine.
         /// </summary>
+        /// <param name="stateMachine">The boxed state machine.</param>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
@@ -67,6 +69,8 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Runs the state machine until its first suspension.
         /// </summary>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="stateMachine">The state machine to run.</param>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
@@ -77,6 +81,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -89,6 +97,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -131,6 +143,7 @@ namespace EncosyTower.Tasks
     /// Builds the <see cref="UnityTask{T}"/> returned by an <c>async</c> method. Used by the compiler; not
     /// intended for direct use.
     /// </summary>
+    /// <typeparam name="T">The result type of the task.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder<T>
     {
@@ -158,6 +171,7 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Completes the task successfully.
         /// </summary>
+        /// <param name="result">The result of the task.</param>
         public void SetResult(T result)
         {
             EnsureRunner();
@@ -167,6 +181,7 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
         /// </summary>
+        /// <param name="exception">The exception that faulted the asynchronous method.</param>
         public void SetException(Exception exception)
         {
             EnsureRunner();
@@ -176,6 +191,7 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Associates the builder with a boxed state machine.
         /// </summary>
+        /// <param name="stateMachine">The boxed state machine.</param>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
@@ -183,6 +199,8 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Runs the state machine until its first suspension.
         /// </summary>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="stateMachine">The state machine to run.</param>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
@@ -193,6 +211,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -205,6 +227,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -279,18 +305,22 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
         /// </summary>
+        /// <param name="exception">The exception that faulted the asynchronous method.</param>
         public void SetException(Exception exception)
             => _builder.SetException(exception);
 
         /// <summary>
         /// Associates the builder with a boxed state machine.
         /// </summary>
+        /// <param name="stateMachine">The boxed state machine.</param>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
             => _builder.SetStateMachine(stateMachine);
 
         /// <summary>
         /// Runs the state machine until its first suspension.
         /// </summary>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="stateMachine">The state machine to run.</param>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
             => _builder.Start(ref stateMachine);
@@ -298,6 +328,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -310,6 +344,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -323,6 +361,7 @@ namespace EncosyTower.Tasks
     /// Builds the <see cref="UnityTask{T}"/> returned by an <c>async</c> method. Used by the compiler; not
     /// intended for direct use.
     /// </summary>
+    /// <typeparam name="T">The result type of the task.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder<T>
     {
@@ -349,24 +388,29 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Completes the task successfully.
         /// </summary>
+        /// <param name="result">The result of the task.</param>
         public void SetResult(T result)
             => _builder.SetResult(result);
 
         /// <summary>
         /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
         /// </summary>
+        /// <param name="exception">The exception that faulted the asynchronous method.</param>
         public void SetException(Exception exception)
             => _builder.SetException(exception);
 
         /// <summary>
         /// Associates the builder with a boxed state machine.
         /// </summary>
+        /// <param name="stateMachine">The boxed state machine.</param>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
             => _builder.SetStateMachine(stateMachine);
 
         /// <summary>
         /// Runs the state machine until its first suspension.
         /// </summary>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="stateMachine">The state machine to run.</param>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
             => _builder.Start(ref stateMachine);
@@ -374,6 +418,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -386,6 +434,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
+        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
+        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
+        /// <param name=\"awaiter\">The awaiter to wait on.</param>
+        /// <param name=\"stateMachine\">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine

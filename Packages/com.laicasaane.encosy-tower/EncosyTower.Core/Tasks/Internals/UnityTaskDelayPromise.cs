@@ -25,9 +25,7 @@ namespace EncosyTower.Tasks
         private int _startFrame;
         private bool _startCaptured;
         private int _completed;
-        private int _consumed;
-        private int _scheduled;
-        private int _returned;
+        private int _releases;
 
         private UnityTaskDelayPromise()
         {
@@ -52,8 +50,7 @@ namespace EncosyTower.Tasks
             promise._remaining = delay.TotalSeconds;
             promise._startCaptured = false;
             promise._completed = 0;
-            promise._consumed = 0;
-            promise._returned = 0;
+            promise._releases = 0;
 
             if (UnityTaskThreadContext.CurrentAffinity == UnityTaskThreadAffinity.MainThread)
             {
@@ -62,13 +59,11 @@ namespace EncosyTower.Tasks
 
             if (token.IsCancellationRequested)
             {
-                promise._scheduled = 0;
                 promise.Cancel();
+                promise.Release();
             }
             else
             {
-                promise._scheduled = 1;
-
                 if (cancelImmediately && token.CanBeCanceled)
                 {
                     promise._registration = AwaitableCancellation.Register(
@@ -113,8 +108,7 @@ namespace EncosyTower.Tasks
             }
             finally
             {
-                Interlocked.Exchange(location1: ref promise._consumed, value: 1);
-                promise.TryReturn();
+                promise.Release();
             }
         }
 
@@ -129,16 +123,14 @@ namespace EncosyTower.Tasks
         {
             if (Volatile.Read(ref _completed) != 0)
             {
-                Interlocked.Exchange(location1: ref _scheduled, value: 0);
-                TryReturn();
+                Release();
                 return;
             }
 
             if (_token.IsCancellationRequested)
             {
-                Interlocked.Exchange(location1: ref _scheduled, value: 0);
                 Cancel();
-                TryReturn();
+                Release();
                 return;
             }
 
@@ -149,14 +141,12 @@ namespace EncosyTower.Tasks
 
             if (IsComplete())
             {
-                Interlocked.Exchange(location1: ref _scheduled, value: 0);
-
                 if (Interlocked.Exchange(location1: ref _completed, value: 1) == 0)
                 {
                     _source.TrySetResult();
                 }
 
-                TryReturn();
+                Release();
                 return;
             }
 
@@ -221,18 +211,11 @@ namespace EncosyTower.Tasks
             {
                 _source.TrySetException(new OperationCanceledException(_token));
             }
-
-            TryReturn();
         }
 
-        private void TryReturn()
+        private void Release()
         {
-            if (Volatile.Read(ref _consumed) == 0 || Volatile.Read(ref _scheduled) != 0)
-            {
-                return;
-            }
-
-            if (Interlocked.Exchange(location1: ref _returned, value: 1) != 0)
+            if (Interlocked.Increment(ref _releases) != 2)
             {
                 return;
             }

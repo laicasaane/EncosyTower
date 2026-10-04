@@ -23,6 +23,13 @@ namespace EncosyTower.Tasks
         /// </summary>
         public UnityTask<T> Task => new(new UniTask<T>(this, _core.Version));
 
+        internal static UnityTaskCompletionSource<T> CreateInline()
+        {
+            var source = new UnityTaskCompletionSource<T>();
+            source._core.Prepare(UnityTaskThreadAffinity.None);
+            return source;
+        }
+
         /// <summary>
         /// Attempts to complete <see cref="Task"/> successfully with <paramref name="result"/>.
         /// </summary>
@@ -41,13 +48,6 @@ namespace EncosyTower.Tasks
         {
             Debugging.ThrowHelper.ThrowIfNull(exception);
             return _core.TrySetException(exception);
-        }
-
-        internal static UnityTaskCompletionSource<T> CreateInline()
-        {
-            var source = new UnityTaskCompletionSource<T>();
-            source._core.Prepare(UnityTaskThreadAffinity.None);
-            return source;
         }
 
         internal void Reset()

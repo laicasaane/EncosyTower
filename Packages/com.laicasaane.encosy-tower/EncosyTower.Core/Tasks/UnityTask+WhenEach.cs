@@ -98,9 +98,7 @@ namespace EncosyTower.Tasks
         /// </list>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
-        public static IUnityTaskAsyncEnumerable<UnityTaskWhenEachResult<T>> WhenEach<T>(
-            IEnumerable<UnityTask<T>> tasks
-        )
+        public static IUnityTaskAsyncEnumerable<UnityTaskWhenEachResult<T>> WhenEach<T>(IEnumerable<UnityTask<T>> tasks)
         {
             Debugging.ThrowHelper.ThrowIfNull(tasks);
             return new WhenEachEnumerable<T>(tasks);
@@ -144,8 +142,9 @@ namespace EncosyTower.Tasks
             private bool _disposed;
             private bool _canceled;
             private bool _cleaned;
+            private bool _released;
+            private bool _returned;
             private int _version;
-            private int _returned;
 
             private WhenEachEnumerator() { }
 
@@ -163,27 +162,31 @@ namespace EncosyTower.Tasks
                     enumerator = s_pool.Count > 0 ? s_pool.Pop() : new();
                 }
 
-                enumerator._source = source;
-                enumerator._token = token;
-                enumerator._canceledToken = default;
-                enumerator._tasks = null;
-                enumerator._ring = null;
-                enumerator._pending = null;
-                enumerator._registration = default;
-                enumerator._count = 0;
-                enumerator._completed = 0;
-                enumerator._head = 0;
-                enumerator._queued = 0;
-                enumerator._ownsTasks = false;
-                enumerator._started = false;
-                enumerator._disposed = false;
-                enumerator._canceled = false;
-                enumerator._cleaned = false;
-                enumerator._returned = 0;
-                enumerator.Current = default;
-                enumerator._version = unchecked(enumerator._version + 1);
+                lock (enumerator._lock)
+                {
+                    enumerator._source = source;
+                    enumerator._token = token;
+                    enumerator._canceledToken = default;
+                    enumerator._tasks = null;
+                    enumerator._ring = null;
+                    enumerator._pending = null;
+                    enumerator._registration = default;
+                    enumerator._count = 0;
+                    enumerator._completed = 0;
+                    enumerator._head = 0;
+                    enumerator._queued = 0;
+                    enumerator._ownsTasks = false;
+                    enumerator._started = false;
+                    enumerator._disposed = false;
+                    enumerator._canceled = false;
+                    enumerator._cleaned = false;
+                    enumerator._released = false;
+                    enumerator._returned = false;
+                    enumerator.Current = default;
+                    enumerator._version = unchecked(enumerator._version + 1);
 
-                return new EnumeratorLease(enumerator, enumerator._version);
+                    return new EnumeratorLease(enumerator, enumerator._version);
+                }
             }
 
             void IUnityTaskResultSink<T, UnityTaskPosition1>.Complete(
@@ -224,6 +227,8 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T, UnityTaskPosition1>.Detach()
             {
                 UnityTaskCompletionSource<bool> pending = null;
+                CancellationTokenRegistration registration = default;
+                bool returnToPool;
 
                 lock (_lock)
                 {
@@ -233,20 +238,26 @@ namespace EncosyTower.Tasks
                     {
                         pending = _pending;
                         _pending = null;
-                        Cleanup();
+                        registration = Cleanup();
                     }
                     else if (_disposed)
                     {
-                        CleanupIfDetached();
+                        registration = CleanupIfDetached();
                     }
+
+                    returnToPool = ClaimReturn();
                 }
 
+                Release(registration, returnToPool);
                 pending?.TrySetResult(false);
             }
 
             private UnityTask<bool> MoveNextAsync(int version)
             {
                 ThrowIfInvalidVersion(version);
+
+                UnityTask<bool> result;
+                CancellationTokenRegistration registration = default;
 
                 lock (_lock)
                 {
@@ -260,15 +271,16 @@ namespace EncosyTower.Tasks
                         return FromResult(false);
                     }
 
+                    if (_started == false && _token.IsCancellationRequested)
+                    {
+                        MarkCanceled();
+                        registration = Cleanup();
+                        result = FromCanceled<bool>(_canceledToken);
+                        goto RELEASE;
+                    }
+
                     if (_started == false)
                     {
-                        if (_token.IsCancellationRequested)
-                        {
-                            MarkCanceled();
-                            Cleanup();
-                            return FromCanceled<bool>(_canceledToken);
-                        }
-
                         Start();
                     }
 
@@ -283,15 +295,17 @@ namespace EncosyTower.Tasks
 
                     if (_completed == _count)
                     {
-                        Cleanup();
-                        return FromResult(false);
+                        registration = Cleanup();
+                        result = FromResult(false);
+                        goto RELEASE;
                     }
 
                     if (_token.IsCancellationRequested)
                     {
                         MarkCanceled();
-                        CleanupIfDetached();
-                        return FromCanceled<bool>(_canceledToken);
+                        registration = CleanupIfDetached();
+                        result = FromCanceled<bool>(_canceledToken);
+                        goto RELEASE;
                     }
 
                     ThrowHelper.ThrowIfConcurrentMoveNext(_pending != null);
@@ -299,27 +313,36 @@ namespace EncosyTower.Tasks
                     _pending = new();
                     return _pending.Task;
                 }
+
+            RELEASE:
+                registration.Dispose();
+                return result;
             }
 
             private UnityTask DisposeAsync(int version)
             {
                 ThrowIfInvalidVersion(version);
 
-                UnityTaskCompletionSource<bool> pending;
+                UnityTaskCompletionSource<bool> pending = null;
+                CancellationTokenRegistration registration = default;
+                bool returnToPool;
 
                 lock (_lock)
                 {
-                    if (_disposed)
+                    _released = true;
+
+                    if (_disposed == false)
                     {
-                        return CompletedTask;
+                        _disposed = true;
+                        pending = _pending;
+                        _pending = null;
+                        registration = CleanupIfDetached();
                     }
 
-                    _disposed = true;
-                    pending = _pending;
-                    _pending = null;
-                    CleanupIfDetached();
+                    returnToPool = ClaimReturn();
                 }
 
+                Release(registration, returnToPool);
                 pending?.TrySetResult(false);
                 return CompletedTask;
             }
@@ -365,7 +388,9 @@ namespace EncosyTower.Tasks
             private void CancelEnumeration()
             {
                 UnityTaskCompletionSource<bool> pending;
+                CancellationTokenRegistration registration;
                 CancellationToken token;
+                bool returnToPool;
 
                 lock (_lock)
                 {
@@ -378,9 +403,11 @@ namespace EncosyTower.Tasks
                     token = _canceledToken;
                     pending = _pending;
                     _pending = null;
-                    CleanupIfDetached();
+                    registration = CleanupIfDetached();
+                    returnToPool = ClaimReturn();
                 }
 
+                Release(registration, returnToPool);
                 pending?.TrySetException(new OperationCanceledException(token));
             }
 
@@ -391,23 +418,19 @@ namespace EncosyTower.Tasks
                 _canceledToken = _token;
             }
 
-            private void CleanupIfDetached()
-            {
-                if (_started == false || _completed == _count)
-                {
-                    Cleanup();
-                }
-            }
+            private CancellationTokenRegistration CleanupIfDetached()
+                => _started == false || _completed == _count ? Cleanup() : default;
 
-            private void Cleanup()
+            private CancellationTokenRegistration Cleanup()
             {
                 if (_cleaned)
                 {
-                    return;
+                    return default;
                 }
 
                 _cleaned = true;
-                _registration.Dispose();
+
+                var registration = _registration;
                 _registration = default;
 
                 if (_ring is { Length: > 0 })
@@ -427,23 +450,41 @@ namespace EncosyTower.Tasks
 
                 _source = null;
                 _token = default;
-                Current = default;
+                return registration;
+            }
 
-                if (Interlocked.Exchange(location1: ref _returned, value: 1) == 0)
+            private bool ClaimReturn()
+            {
+                if (_cleaned == false || _released == false || _returned)
                 {
-                    lock (s_pool)
+                    return false;
+                }
+
+                _returned = true;
+                return true;
+            }
+
+            private void Release(CancellationTokenRegistration registration, bool returnToPool)
+            {
+                registration.Dispose();
+
+                if (returnToPool == false)
+                {
+                    return;
+                }
+
+                lock (s_pool)
+                {
+                    if (s_pool.Count < MAX_POOL_SIZE)
                     {
-                        if (s_pool.Count < MAX_POOL_SIZE)
-                        {
-                            s_pool.Push(this);
-                        }
+                        s_pool.Push(this);
                     }
                 }
             }
 
             private void ThrowIfInvalidVersion(int version)
             {
-                if (version != _version)
+                if (version != Volatile.Read(ref _version))
                 {
                     ThrowHelper.ThrowEnumeratorDisposed();
                 }

@@ -40,6 +40,10 @@ namespace EncosyTower.Tasks
         public static implicit operator UnityTask(UniTask task)
             => new(task);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static UnityTask<T> CreateFromResult<T>(T value)
+            => new(UniTask.FromResult(value));
+
         /// <summary>
         /// Returns an awaiter for this task.
         /// </summary>
@@ -59,10 +63,6 @@ namespace EncosyTower.Tasks
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UniTask AsUniTask()
             => _task;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static UnityTask<T> CreateFromResult<T>(T value)
-            => new(UniTask.FromResult(value));
 
         /// <summary>
         /// Awaits a <see cref="UnityTask"/>.

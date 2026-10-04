@@ -19,7 +19,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is rethrown as the
         /// same instance. Losers are observed and not cancelled, and their faults are discarded. When several inputs
-        /// are already complete, <paramref name="leftTask"/> wins.
+        /// are already complete when observed on the calling thread kind, <paramref name="leftTask"/> wins.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
@@ -45,10 +45,7 @@ namespace EncosyTower.Tasks
         /// </description></item>
         /// </list>
         /// </remarks>
-        public static UnityTask<(bool hasResultLeft, T result)> WhenAny<T>(
-              UnityTask<T> leftTask
-            , UnityTask rightTask
-        )
+        public static UnityTask<(bool hasResultLeft, T result)> WhenAny<T>(UnityTask<T> leftTask, UnityTask rightTask)
         {
             var state = WhenAnyLeftRightState<T>.Rent();
             PooledUnityTaskObserver<T, UnityTaskPosition1, WhenAnyLeftRightState<T>>.Observe(leftTask, state);
@@ -66,7 +63,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is rethrown as the
         /// same instance. Losers are observed and not cancelled, and their faults are discarded. When several inputs
-        /// are already complete, the lowest index wins.
+        /// are already complete when observed on the calling thread kind, the lowest index wins.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
@@ -115,7 +112,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is rethrown as the
         /// same instance. Losers are observed and not cancelled, and their faults are discarded. When several inputs
-        /// are already complete, the lowest index wins.
+        /// are already complete when observed on the calling thread kind, the lowest index wins.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
@@ -174,7 +171,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is rethrown as the
         /// same instance. Losers are observed and not cancelled, and their faults are discarded. When several inputs
-        /// are already complete, the lowest index wins.
+        /// are already complete when observed on the calling thread kind, the lowest index wins.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
@@ -222,7 +219,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is rethrown as the
         /// same instance. Losers are observed and not cancelled, and their faults are discarded. When several inputs
-        /// are already complete, the lowest index wins.
+        /// are already complete when observed on the calling thread kind, the lowest index wins.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
@@ -309,9 +306,7 @@ namespace EncosyTower.Tasks
             private UnityTaskCompletionSource<int> _source;
             private int _remaining;
             private int _won;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private WhenAnyState() { }
 
@@ -335,9 +330,7 @@ namespace EncosyTower.Tasks
 
                 state._remaining = count;
                 state._won = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -349,8 +342,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -378,17 +370,13 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(location: ref _detached, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -412,9 +400,7 @@ namespace EncosyTower.Tasks
             private UnityTaskCompletionSource<(int winArgumentIndex, T result)> _source;
             private int _remaining;
             private int _won;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private WhenAnyState() { }
 
@@ -438,9 +424,7 @@ namespace EncosyTower.Tasks
 
                 state._remaining = count;
                 state._won = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -452,8 +436,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -481,17 +464,13 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(location: ref _detached, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }
@@ -517,9 +496,7 @@ namespace EncosyTower.Tasks
             private UnityTaskCompletionSource<(bool hasResultLeft, T result)> _source;
             private int _remaining;
             private int _won;
-            private int _consumed;
-            private int _detached;
-            private int _returned;
+            private int _releases;
 
             private WhenAnyLeftRightState() { }
 
@@ -543,9 +520,7 @@ namespace EncosyTower.Tasks
 
                 state._remaining = 2;
                 state._won = 0;
-                state._consumed = 0;
-                state._detached = 0;
-                state._returned = 0;
+                state._releases = 0;
                 return state;
             }
 
@@ -557,8 +532,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(location: ref _consumed, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
@@ -599,17 +573,13 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(location: ref _detached, value: 1);
-                    TryRecycle();
+                    Release();
                 }
             }
 
-            private void TryRecycle()
+            private void Release()
             {
-                if (Volatile.Read(ref _consumed) == 0
-                    || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
-                )
+                if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
                 }

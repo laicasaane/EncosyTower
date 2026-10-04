@@ -25,7 +25,8 @@ namespace EncosyTower.Editor.Tasks
             "/// <para>",
             "/// <b>Behaviour:</b> the first observed completion wins; a winner's fault or cancellation is",
             "/// rethrown as the same instance. Losers are observed and not cancelled, and their faults are",
-            "/// discarded. When several inputs are already complete, the lowest argument index wins.",
+            "/// discarded. When several inputs are already complete when observed on the calling thread",
+            "/// kind, the lowest argument index wins.",
             "/// </para>",
         };
 
@@ -85,6 +86,11 @@ namespace EncosyTower.Editor.Tasks
                     {
                         PrintWhenAll(ref p, arity);
                     }
+
+                    for (var arity = MIN_ARITY; arity <= MAX_ARITY; arity++)
+                    {
+                        PrintWhenAllState(ref p, arity);
+                    }
                 }
                 p.CloseScope();
             }
@@ -97,23 +103,27 @@ namespace EncosyTower.Editor.Tasks
             var stateType = $"FixedWhenAllState<{typeParameters}>";
 
             PrintWhenAllDoc(ref p, arity);
-            p.PrintLine("public static UnityTask<");
-            PrintTupleType(ref p, arity, includeWinner: false);
-            p.PrintBeginLine("> WhenAll<").Print(typeParameters).PrintEndLine(">(");
+            p.PrintBeginLine("public static UnityTask<(")
+                .Print(typeParameters)
+                .Print(")> WhenAll<")
+                .Print(typeParameters)
+                .PrintEndLine(">(");
+
             PrintParameters(ref p, arity);
             p.PrintLine(")");
             PrintMethodBody(ref p, arity, stateType);
-            PrintWhenAllState(ref p, arity, stateType);
         }
 
-        private static void PrintWhenAllState(ref Printer p, int arity, string stateType)
+        private static void PrintWhenAllState(ref Printer p, int arity)
         {
+            var stateType = $"FixedWhenAllState<{GetTypeParameters(arity)}>";
+
             PrintStateDeclaration(ref p, arity, stateType);
             p.OpenScope();
             {
-                PrintStateFields(ref p, arity, stateType, includeWinner: false);
+                PrintStateFields(p: ref p, arity: arity, stateType: stateType, includeWinner: false);
                 PrintConstructor(ref p, "FixedWhenAllState");
-                PrintRent(ref p, arity, stateType, includeWinner: false);
+                PrintRent(p: ref p, arity: arity, stateType: stateType, includeWinner: false);
 
                 p.PrintBeginLine("internal async UnityTask<(")
                     .Print(GetTypeParameters(arity))
@@ -128,7 +138,7 @@ namespace EncosyTower.Editor.Tasks
 
                 PrintSignalFailure(ref p);
                 PrintWhenAllDetach(ref p, arity);
-                PrintTryRecycle(ref p, arity);
+                PrintRelease(ref p, arity);
             }
             p.CloseScope();
             PrintMemberSeparator(ref p, arity);
@@ -195,8 +205,7 @@ namespace EncosyTower.Editor.Tasks
                 p.CloseScope();
                 p.PrintEndLine();
 
-                p.PrintLine("Volatile.Write(location: ref _detached, value: 1);");
-                p.PrintLine("TryRecycle();");
+                p.PrintLine("Release();");
             }
             p.CloseScope();
             p.PrintEndLine();
@@ -215,6 +224,11 @@ namespace EncosyTower.Editor.Tasks
                     {
                         PrintWhenAny(ref p, arity);
                     }
+
+                    for (var arity = MIN_ARITY; arity <= MAX_ARITY; arity++)
+                    {
+                        PrintWhenAnyState(ref p, arity);
+                    }
                 }
                 p.CloseScope();
             }
@@ -227,23 +241,27 @@ namespace EncosyTower.Editor.Tasks
             var stateType = $"FixedWhenAnyState<{typeParameters}>";
 
             PrintWhenAnyDoc(ref p, arity);
-            p.PrintLine("public static UnityTask<");
-            PrintTupleType(ref p, arity, includeWinner: true);
-            p.PrintBeginLine("> WhenAny<").Print(typeParameters).PrintEndLine(">(");
+            p.PrintBeginLine("public static UnityTask<(int winArgumentIndex, ")
+                .Print(GetNamedResults(arity))
+                .Print(")> WhenAny<")
+                .Print(typeParameters)
+                .PrintEndLine(">(");
+
             PrintParameters(ref p, arity);
             p.PrintLine(")");
             PrintMethodBody(ref p, arity, stateType);
-            PrintWhenAnyState(ref p, arity, stateType);
         }
 
-        private static void PrintWhenAnyState(ref Printer p, int arity, string stateType)
+        private static void PrintWhenAnyState(ref Printer p, int arity)
         {
+            var stateType = $"FixedWhenAnyState<{GetTypeParameters(arity)}>";
+
             PrintStateDeclaration(ref p, arity, stateType);
             p.OpenScope();
             {
-                PrintStateFields(ref p, arity, stateType, includeWinner: true);
+                PrintStateFields(p: ref p, arity: arity, stateType: stateType, includeWinner: true);
                 PrintConstructor(ref p, "FixedWhenAnyState");
-                PrintRent(ref p, arity, stateType, includeWinner: true);
+                PrintRent(p: ref p, arity: arity, stateType: stateType, includeWinner: true);
 
                 p.PrintBeginLine("internal async UnityTask<(int winArgumentIndex, ")
                     .Print(GetNamedResults(arity))
@@ -257,7 +275,7 @@ namespace EncosyTower.Editor.Tasks
                 }
 
                 PrintWhenAnyDetach(ref p);
-                PrintTryRecycle(ref p, arity);
+                PrintRelease(ref p, arity);
             }
             p.CloseScope();
             PrintMemberSeparator(ref p, arity);
@@ -308,8 +326,7 @@ namespace EncosyTower.Editor.Tasks
                 p.PrintLine("if (Interlocked.Decrement(ref _remaining) == 0)");
                 p.OpenScope();
                 {
-                    p.PrintLine("Volatile.Write(location: ref _detached, value: 1);");
-                    p.PrintLine("TryRecycle();");
+                    p.PrintLine("Release();");
                 }
                 p.CloseScope();
             }
@@ -381,27 +398,6 @@ namespace EncosyTower.Editor.Tasks
             {
                 p.PrintLine($"/// <param name=\"task{i}\">The task at argument position {i}.</param>");
             }
-        }
-
-        private static void PrintTupleType(ref Printer p, int arity, bool includeWinner)
-        {
-            p.PrintLine("(");
-            p = p.IncreasedIndent();
-
-            if (includeWinner)
-            {
-                p.PrintLine("  int winArgumentIndex");
-            }
-
-            for (var i = 1; i <= arity; i++)
-            {
-                var prefix = includeWinner || i > 1 ? ", " : "  ";
-                var name = includeWinner ? $" result{i}" : "";
-                p.PrintLine($"{prefix}T{i}{name}");
-            }
-
-            p = p.DecreasedIndent();
-            p.PrintLine(")");
         }
 
         private static void PrintParameters(ref Printer p, int arity)
@@ -480,9 +476,7 @@ namespace EncosyTower.Editor.Tasks
 
             p.PrintLine("private int _remaining;");
             p.PrintLine(includeWinner ? "private int _won;" : "private int _signaled;");
-            p.PrintLine("private int _consumed;");
-            p.PrintLine("private int _detached;");
-            p.PrintLine("private int _returned;");
+            p.PrintLine("private int _releases;");
             p.PrintEndLine();
         }
 
@@ -531,9 +525,7 @@ namespace EncosyTower.Editor.Tasks
 
                 p.PrintLine($"state._remaining = {arity};");
                 p.PrintLine(includeWinner ? "state._won = 0;" : "state._signaled = 0;");
-                p.PrintLine("state._consumed = 0;");
-                p.PrintLine("state._detached = 0;");
-                p.PrintLine("state._returned = 0;");
+                p.PrintLine("state._releases = 0;");
                 p.PrintLine("return state;");
             }
             p.CloseScope();
@@ -553,8 +545,7 @@ namespace EncosyTower.Editor.Tasks
                 p.PrintLine("finally");
                 p.OpenScope();
                 {
-                    p.PrintLine("Volatile.Write(location: ref _consumed, value: 1);");
-                    p.PrintLine("TryRecycle();");
+                    p.PrintLine("Release();");
                 }
                 p.CloseScope();
             }
@@ -591,16 +582,12 @@ namespace EncosyTower.Editor.Tasks
             p.PrintEndLine();
         }
 
-        private static void PrintTryRecycle(ref Printer p, int arity)
+        private static void PrintRelease(ref Printer p, int arity)
         {
-            p.PrintLine("private void TryRecycle()");
+            p.PrintLine("private void Release()");
             p.OpenScope();
             {
-                p.PrintLine("if (Volatile.Read(ref _consumed) == 0");
-                p.WithIncreasedIndent().PrintLine("|| Volatile.Read(ref _detached) == 0");
-                p.WithIncreasedIndent()
-                    .PrintLine("|| Interlocked.Exchange(location1: ref _returned, value: 1) != 0");
-                p.PrintLine(")");
+                p.PrintLine("if (Interlocked.Increment(ref _releases) != 2)");
                 p.OpenScope();
                 {
                     p.PrintLine("return;");

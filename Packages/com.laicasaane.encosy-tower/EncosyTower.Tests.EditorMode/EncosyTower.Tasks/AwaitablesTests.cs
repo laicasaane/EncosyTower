@@ -115,7 +115,12 @@ namespace EncosyTower.Tests.Tasks
 
             void CompleteInParallel()
             {
-                Parallel.For(0, COUNT, i => sources[i].SetResult(i));
+                Parallel.For(0, COUNT, Complete);
+            }
+
+            void Complete(int index)
+            {
+                sources[index].SetResult(index);
             }
         }
 

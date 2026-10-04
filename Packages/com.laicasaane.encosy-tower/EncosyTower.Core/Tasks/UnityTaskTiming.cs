@@ -5,8 +5,8 @@ namespace EncosyTower.Tasks
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <c>Yield</c>, <c>Delay</c>, <c>NextFrameAsync</c>, <c>WaitUntil</c>, <c>WaitWhile</c> and
-    /// <c>RunOnThreadPool</c> share one Encosy player-loop scheduler.
+    /// <c>Yield</c>, <c>Delay</c>, <c>NextFrameAsync</c>, <c>WaitUntil</c> and <c>WaitWhile</c> share one Encosy
+    /// player-loop scheduler.
     /// </para>
     /// <para>
     /// A request resumes at the next run of its phase. A request made while that phase is running resumes in the

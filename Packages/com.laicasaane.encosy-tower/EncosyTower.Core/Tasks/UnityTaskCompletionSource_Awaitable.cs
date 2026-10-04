@@ -29,6 +29,14 @@ namespace EncosyTower.Tasks
         /// </summary>
         public UnityTask Task => _task;
 
+        internal static UnityTaskCompletionSource CreateInline()
+            => new(relay: false);
+
+        private static async Awaitable RelayAsync(Awaitable inner)
+        {
+            await inner;
+        }
+
         /// <summary>
         /// Attempts to complete <see cref="Task"/> successfully.
         /// </summary>
@@ -46,14 +54,6 @@ namespace EncosyTower.Tasks
         {
             Debugging.ThrowHelper.ThrowIfNull(exception);
             return _source.TrySetException(exception);
-        }
-
-        internal static UnityTaskCompletionSource CreateInline()
-            => new(relay: false);
-
-        private static async Awaitable RelayAsync(Awaitable inner)
-        {
-            await inner;
         }
 
         internal void Reset()

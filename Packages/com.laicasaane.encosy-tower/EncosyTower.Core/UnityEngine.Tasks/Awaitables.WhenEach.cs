@@ -41,7 +41,9 @@ namespace UnityEngine.Tasks
             : IAwaitableResultSink<T, AwaitablePosition1>
         {
             private const int MAX_POOL_SIZE = 256;
+
             private static readonly Stack<WhenEachEnumerator<T>> s_pool = new();
+
             private readonly object _lock = new();
             private IEnumerable<Awaitable<T>> _source;
             private CancellationToken _token;
@@ -59,10 +61,13 @@ namespace UnityEngine.Tasks
             private bool _disposed;
             private bool _canceled;
             private bool _cleaned;
+            private bool _released;
+            private bool _returned;
             private int _version;
-            private int _returned;
 
             private WhenEachEnumerator() { }
+
+            private AwaitableWhenEachResult<T> Current { get; set; }
 
             internal static IAwaitableAsyncEnumerator<AwaitableWhenEachResult<T>> Rent(
                   IEnumerable<Awaitable<T>> source
@@ -73,116 +78,34 @@ namespace UnityEngine.Tasks
 
                 lock (s_pool)
                 {
-                    enumerator = s_pool.Count > 0 ? s_pool.Pop() : new WhenEachEnumerator<T>();
+                    enumerator = s_pool.Count > 0 ? s_pool.Pop() : new();
                 }
 
-                enumerator._source = source;
-                enumerator._token = token;
-                enumerator._canceledToken = default;
-                enumerator._tasks = null;
-                enumerator._ring = null;
-                enumerator._pending = null;
-                enumerator._registration = default;
-                enumerator._count = 0;
-                enumerator._completed = 0;
-                enumerator._head = 0;
-                enumerator._queued = 0;
-                enumerator._ownsTasks = false;
-                enumerator._started = false;
-                enumerator._disposed = false;
-                enumerator._canceled = false;
-                enumerator._cleaned = false;
-                enumerator._returned = 0;
-                enumerator.Current = default;
-                enumerator._version = unchecked(enumerator._version + 1);
-
-                return new EnumeratorLease(enumerator, enumerator._version);
-            }
-
-            private AwaitableWhenEachResult<T> Current { get; set; }
-
-            private Awaitable<bool> MoveNextAsync(int version)
-            {
-                ThrowIfInvalidVersion(version);
-
-                lock (_lock)
+                lock (enumerator._lock)
                 {
-                    if (_canceled)
-                    {
-                        return FromCanceled<bool>(_canceledToken);
-                    }
+                    enumerator._source = source;
+                    enumerator._token = token;
+                    enumerator._canceledToken = default;
+                    enumerator._tasks = null;
+                    enumerator._ring = null;
+                    enumerator._pending = null;
+                    enumerator._registration = default;
+                    enumerator._count = 0;
+                    enumerator._completed = 0;
+                    enumerator._head = 0;
+                    enumerator._queued = 0;
+                    enumerator._ownsTasks = false;
+                    enumerator._started = false;
+                    enumerator._disposed = false;
+                    enumerator._canceled = false;
+                    enumerator._cleaned = false;
+                    enumerator._released = false;
+                    enumerator._returned = false;
+                    enumerator.Current = default;
+                    enumerator._version = unchecked(enumerator._version + 1);
 
-                    if (_disposed)
-                    {
-                        return FromResult(false);
-                    }
-
-                    if (_started == false)
-                    {
-                        if (_token.IsCancellationRequested)
-                        {
-                            MarkCanceled();
-                            Cleanup();
-                            return FromCanceled<bool>(_canceledToken);
-                        }
-
-                        Start();
-                    }
-
-                    if (_queued > 0)
-                    {
-                        Current = _ring[_head];
-                        _ring[_head] = default;
-                        _head = (_head + 1) % _ring.Length;
-                        _queued--;
-                        return FromResult(true);
-                    }
-
-                    if (_completed == _count)
-                    {
-                        Cleanup();
-                        return FromResult(false);
-                    }
-
-                    if (_token.IsCancellationRequested)
-                    {
-                        MarkCanceled();
-                        CleanupIfDetached();
-                        return FromCanceled<bool>(_canceledToken);
-                    }
-
-                    if (_pending != null)
-                    {
-                        throw new InvalidOperationException(
-                            "MoveNextAsync cannot be called again before the previous call completes."
-                        );
-                    }
-
-                    _pending = new();
-                    return _pending.Awaitable;
+                    return new EnumeratorLease(enumerator, enumerator._version);
                 }
-            }
-
-            private Awaitable DisposeAsync(int version)
-            {
-                ThrowIfInvalidVersion(version);
-                AwaitableCompletionSource<bool> pending;
-
-                lock (_lock)
-                {
-                    if (_disposed)
-                    {
-                        return CompletedTask;
-                    }
-
-                    _disposed = true;
-                    pending = _pending;
-                    _pending = null;
-                    CleanupIfDetached();
-                }
-
-                pending?.TrySetResult(false);
-                return CompletedTask;
             }
 
             void IAwaitableResultSink<T, AwaitablePosition1>.Complete(
@@ -223,6 +146,8 @@ namespace UnityEngine.Tasks
             void IAwaitableResultSink<T, AwaitablePosition1>.Detach()
             {
                 AwaitableCompletionSource<bool> pending = null;
+                CancellationTokenRegistration registration = default;
+                bool returnToPool;
 
                 lock (_lock)
                 {
@@ -232,15 +157,118 @@ namespace UnityEngine.Tasks
                     {
                         pending = _pending;
                         _pending = null;
-                        Cleanup();
+                        registration = Cleanup();
                     }
                     else if (_disposed)
                     {
-                        CleanupIfDetached();
+                        registration = CleanupIfDetached();
                     }
+
+                    returnToPool = ClaimReturn();
                 }
 
+                Release(registration, returnToPool);
                 pending?.TrySetResult(false);
+            }
+
+            private Awaitable<bool> MoveNextAsync(int version)
+            {
+                ThrowIfInvalidVersion(version);
+
+                Awaitable<bool> result;
+                CancellationTokenRegistration registration = default;
+
+                lock (_lock)
+                {
+                    if (_canceled)
+                    {
+                        return FromCanceled<bool>(_canceledToken);
+                    }
+
+                    if (_disposed)
+                    {
+                        return FromResult(false);
+                    }
+
+                    if (_started == false && _token.IsCancellationRequested)
+                    {
+                        MarkCanceled();
+                        registration = Cleanup();
+                        result = FromCanceled<bool>(_canceledToken);
+                        goto RELEASE;
+                    }
+
+                    if (_started == false)
+                    {
+                        Start();
+                    }
+
+                    if (_queued > 0)
+                    {
+                        Current = _ring[_head];
+                        _ring[_head] = default;
+                        _head = (_head + 1) % _ring.Length;
+                        _queued--;
+                        return FromResult(true);
+                    }
+
+                    if (_completed == _count)
+                    {
+                        registration = Cleanup();
+                        result = FromResult(false);
+                        goto RELEASE;
+                    }
+
+                    if (_token.IsCancellationRequested)
+                    {
+                        MarkCanceled();
+                        registration = CleanupIfDetached();
+                        result = FromCanceled<bool>(_canceledToken);
+                        goto RELEASE;
+                    }
+
+                    if (_pending != null)
+                    {
+                        throw new InvalidOperationException(
+                            "MoveNextAsync cannot be called again before the previous call completes."
+                        );
+                    }
+
+                    _pending = new();
+                    return _pending.Awaitable;
+                }
+
+            RELEASE:
+                registration.Dispose();
+                return result;
+            }
+
+            private Awaitable DisposeAsync(int version)
+            {
+                ThrowIfInvalidVersion(version);
+
+                AwaitableCompletionSource<bool> pending = null;
+                CancellationTokenRegistration registration = default;
+                bool returnToPool;
+
+                lock (_lock)
+                {
+                    _released = true;
+
+                    if (_disposed == false)
+                    {
+                        _disposed = true;
+                        pending = _pending;
+                        _pending = null;
+                        registration = CleanupIfDetached();
+                    }
+
+                    returnToPool = ClaimReturn();
+                }
+
+                Release(registration, returnToPool);
+                pending?.TrySetResult(false);
+                return CompletedTask;
             }
 
             private void Start()
@@ -289,7 +317,9 @@ namespace UnityEngine.Tasks
             private void CancelEnumeration()
             {
                 AwaitableCompletionSource<bool> pending;
+                CancellationTokenRegistration registration;
                 CancellationToken token;
+                bool returnToPool;
 
                 lock (_lock)
                 {
@@ -302,9 +332,11 @@ namespace UnityEngine.Tasks
                     token = _canceledToken;
                     pending = _pending;
                     _pending = null;
-                    CleanupIfDetached();
+                    registration = CleanupIfDetached();
+                    returnToPool = ClaimReturn();
                 }
 
+                Release(registration, returnToPool);
                 pending?.TrySetException(new OperationCanceledException(token));
             }
 
@@ -315,23 +347,19 @@ namespace UnityEngine.Tasks
                 _canceledToken = _token;
             }
 
-            private void CleanupIfDetached()
-            {
-                if (_started == false || _completed == _count)
-                {
-                    Cleanup();
-                }
-            }
+            private CancellationTokenRegistration CleanupIfDetached()
+                => _started == false || _completed == _count ? Cleanup() : default;
 
-            private void Cleanup()
+            private CancellationTokenRegistration Cleanup()
             {
                 if (_cleaned)
                 {
-                    return;
+                    return default;
                 }
 
                 _cleaned = true;
-                _registration.Dispose();
+
+                var registration = _registration;
                 _registration = default;
 
                 if (_ring is { Length: > 0 })
@@ -351,23 +379,41 @@ namespace UnityEngine.Tasks
 
                 _source = null;
                 _token = default;
-                Current = default;
+                return registration;
+            }
 
-                if (Interlocked.Exchange(ref _returned, 1) == 0)
+            private bool ClaimReturn()
+            {
+                if (_cleaned == false || _released == false || _returned)
                 {
-                    lock (s_pool)
+                    return false;
+                }
+
+                _returned = true;
+                return true;
+            }
+
+            private void Release(CancellationTokenRegistration registration, bool returnToPool)
+            {
+                registration.Dispose();
+
+                if (returnToPool == false)
+                {
+                    return;
+                }
+
+                lock (s_pool)
+                {
+                    if (s_pool.Count < MAX_POOL_SIZE)
                     {
-                        if (s_pool.Count < MAX_POOL_SIZE)
-                        {
-                            s_pool.Push(this);
-                        }
+                        s_pool.Push(this);
                     }
                 }
             }
 
             private void ThrowIfInvalidVersion(int version)
             {
-                if (version != _version)
+                if (version != Volatile.Read(ref _version))
                 {
                     throw new ObjectDisposedException(nameof(WhenEachEnumerator<T>));
                 }
