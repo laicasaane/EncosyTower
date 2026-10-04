@@ -225,6 +225,88 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task AsyncMethodCreatedOnMain_CompletedOnWorker_ResumesOnMain()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            var source = new UnityTaskCompletionSource();
+            var task = AwaitAndGetThreadIdAsync(source.Task);
+
+            await CompleteOnWorkerAsync(source);
+            var resumedThreadId = await task;
+
+            Assert.AreEqual(mainThreadId, resumedThreadId);
+            Assert.AreEqual(mainThreadId, Thread.CurrentThread.ManagedThreadId);
+        }
+
+        [Test]
+        public async Task CompletionSourceCreatedOnWorker_ResumesOnWorker()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            var resumedThreadId = await Task.Run<int>(CreateAndAwaitOnWorkerAsync);
+
+            Assert.AreNotEqual(mainThreadId, resumedThreadId);
+
+            static async Task<int> CreateAndAwaitOnWorkerAsync()
+            {
+                var source = new UnityTaskCompletionSource();
+                var completion = CompleteOnWorkerAsync(source);
+
+                await source.Task;
+                var threadId = Thread.CurrentThread.ManagedThreadId;
+
+                await completion;
+                return threadId;
+            }
+        }
+
+        [Test]
+        public async Task IsCompleted_FalseWhenDoneButCurrentThreadKindDiffers()
+        {
+            var source = new UnityTaskCompletionSource();
+            source.SetResult();
+            var task = source.Task;
+
+            var isCompletedOnWorker = await Task.Factory.StartNew(
+                  static state => ((UnityTask)state).IsCompleted
+                , task
+                , CancellationToken.None
+                , TaskCreationOptions.DenyChildAttach
+                , TaskScheduler.Default
+            );
+
+            Assert.IsTrue(task.IsCompleted);
+            Assert.IsFalse(isCompletedOnWorker);
+            await task;
+        }
+
+        [Test]
+        public async Task CompletionSource_SetTwiceThrows_TrySetTwiceReturnsFalse()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var source = new UnityTaskCompletionSource();
+            source.SetResult();
+
+            Assert.Throws<InvalidOperationException>(source.SetResult);
+            Assert.Throws<InvalidOperationException>(() => source.SetException(new InvalidOperationException()));
+            Assert.Throws<InvalidOperationException>(() => source.SetCanceled(cancellation.Token));
+            Assert.IsFalse(source.TrySetResult());
+            Assert.IsFalse(source.TrySetException(new InvalidOperationException()));
+            Assert.IsFalse(source.TrySetCanceled(cancellation.Token));
+            await source.Task;
+
+            var genericSource = new UnityTaskCompletionSource<int>();
+            genericSource.SetResult(1);
+
+            Assert.Throws<InvalidOperationException>(() => genericSource.SetResult(2));
+            Assert.Throws<InvalidOperationException>(() => genericSource.SetException(new InvalidOperationException()));
+            Assert.Throws<InvalidOperationException>(() => genericSource.SetCanceled(cancellation.Token));
+            Assert.IsFalse(genericSource.TrySetResult(3));
+            Assert.IsFalse(genericSource.TrySetException(new InvalidOperationException()));
+            Assert.IsFalse(genericSource.TrySetCanceled(cancellation.Token));
+            Assert.AreEqual(1, await genericSource.Task);
+        }
+
+        [Test]
         public async Task OnCompletedAndUnsafeOnCompleted_InvokeExactlyOnce()
         {
             await AssertContinuationInvokedOnceAsync(unsafeContinuation: false);
@@ -673,6 +755,21 @@ namespace EncosyTower.Tests.Tasks
 
         private static void ThrowInstance(Exception exception)
             => throw exception;
+
+        private static async UnityTask<int> AwaitAndGetThreadIdAsync(UnityTask task)
+        {
+            await task;
+            return Thread.CurrentThread.ManagedThreadId;
+        }
+
+        private static Task CompleteOnWorkerAsync(UnityTaskCompletionSource source)
+            => Task.Factory.StartNew(
+                  static state => ((UnityTaskCompletionSource)state).TrySetResult()
+                , source
+                , CancellationToken.None
+                , TaskCreationOptions.DenyChildAttach
+                , TaskScheduler.Default
+            );
 
         private static (OperationCanceledException before, OperationCanceledException after)[] CreateCancellations(
             CancellationToken token

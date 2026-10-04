@@ -87,6 +87,11 @@ namespace EncosyTower.Tasks
             => throw new InvalidOperationException("A task can be awaited only once.");
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowAlreadyCompleted()
+            => throw new InvalidOperationException("The completion source has already been completed.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         internal static void LogUnobservedException(Exception exception)
         {
