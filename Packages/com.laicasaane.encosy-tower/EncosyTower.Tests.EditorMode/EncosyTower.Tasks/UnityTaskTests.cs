@@ -1034,6 +1034,111 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task WhenAll_Arity2And15_ReturnResultsInOrder()
+        {
+            var first = new UnityTaskCompletionSource<int>();
+            var second = new UnityTaskCompletionSource<string>();
+            var all2 = UnityTask.WhenAll(first.Task, second.Task);
+
+            second.SetResult("second");
+            first.SetResult(1);
+
+            var (firstResult, secondResult) = await all2;
+            var sources = CreateIntSources(15);
+
+            var all15Task = UnityTask.WhenAll(
+                  sources[0].Task
+                , sources[1].Task
+                , sources[2].Task
+                , sources[3].Task
+                , sources[4].Task
+                , sources[5].Task
+                , sources[6].Task
+                , sources[7].Task
+                , sources[8].Task
+                , sources[9].Task
+                , sources[10].Task
+                , sources[11].Task
+                , sources[12].Task
+                , sources[13].Task
+                , sources[14].Task
+            );
+
+            for (var i = sources.Length - 1; i >= 0; i--)
+            {
+                sources[i].SetResult(i * 10);
+            }
+
+            var all15 = await all15Task;
+
+            Assert.AreEqual(1, firstResult);
+            Assert.AreEqual("second", secondResult);
+            Assert.AreEqual(0, all15.Item1);
+            Assert.AreEqual(10, all15.Item2);
+            Assert.AreEqual(20, all15.Item3);
+            Assert.AreEqual(30, all15.Item4);
+            Assert.AreEqual(40, all15.Item5);
+            Assert.AreEqual(50, all15.Item6);
+            Assert.AreEqual(60, all15.Item7);
+            Assert.AreEqual(70, all15.Item8);
+            Assert.AreEqual(80, all15.Item9);
+            Assert.AreEqual(90, all15.Item10);
+            Assert.AreEqual(100, all15.Item11);
+            Assert.AreEqual(110, all15.Item12);
+            Assert.AreEqual(120, all15.Item13);
+            Assert.AreEqual(130, all15.Item14);
+            Assert.AreEqual(140, all15.Item15);
+        }
+
+        [Test]
+        public async Task WhenAny_Arity2And15_ReturnWinnerIndexAndResult()
+        {
+            var first = new UnityTaskCompletionSource<int>();
+            var second = new UnityTaskCompletionSource<string>();
+            var any2 = UnityTask.WhenAny(first.Task, second.Task);
+
+            second.SetResult("second");
+            first.SetResult(1);
+
+            var winner2 = await any2;
+            var sources = CreateIntSources(15);
+
+            var any15Task = UnityTask.WhenAny(
+                  sources[0].Task
+                , sources[1].Task
+                , sources[2].Task
+                , sources[3].Task
+                , sources[4].Task
+                , sources[5].Task
+                , sources[6].Task
+                , sources[7].Task
+                , sources[8].Task
+                , sources[9].Task
+                , sources[10].Task
+                , sources[11].Task
+                , sources[12].Task
+                , sources[13].Task
+                , sources[14].Task
+            );
+
+            sources[9].SetResult(90);
+
+            for (var i = 0; i < sources.Length; i++)
+            {
+                sources[i].TrySetResult(i);
+            }
+
+            var winner15 = await any15Task;
+
+            Assert.AreEqual(1, winner2.winArgumentIndex);
+            Assert.AreEqual("second", winner2.result2);
+            Assert.AreEqual(default(int), winner2.result1);
+            Assert.AreEqual(9, winner15.winArgumentIndex);
+            Assert.AreEqual(90, winner15.result10);
+            Assert.AreEqual(default(int), winner15.result1);
+        }
+
+        [Test]
         public async Task Forget_CompletedAndSuspendedSuccessProduceNoLog()
         {
             default(UnityTask).Forget();
@@ -1154,6 +1259,18 @@ namespace EncosyTower.Tests.Tasks
         {
             await Task.Run(static () => { }).ConfigureAwait(false);
             return Thread.CurrentThread.ManagedThreadId;
+        }
+
+        private static UnityTaskCompletionSource<int>[] CreateIntSources(int count)
+        {
+            var sources = new UnityTaskCompletionSource<int>[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                sources[i] = new UnityTaskCompletionSource<int>();
+            }
+
+            return sources;
         }
 
         private static async UnityTask<int> AwaitAndGetThreadIdAsync(UnityTask task)
