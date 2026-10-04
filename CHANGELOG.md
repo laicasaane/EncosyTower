@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.3
+
+### Core
+
+- Added `TypeFlag<T>`, a process-wide ready flag per type, with a read-only view, in the `EncosyTower.TypeFlags` namespace
+- Added `[TypeFlag]` to generate a type flag API in a partial type, with `WriteAccess`, `Api`, and `UseExtensions` options
+- Added `TypeFlagLink<TOwner, TLinked>` and type flag extensions to store one global object or value per owner type
+- Added `TryAdd` to value vaults and a same-instance `TryRemove` to object vaults
+- Changed `ObjectVault.TryAdd` to be atomic, and to log a destroyed object only once
+- Changed async vault waits to always throw `OperationCanceledException`, and `TryGetAsync` to no longer return `None` when cancelled (breaking)
+- Changed `SingletonVault` registration and disposal to be safe when called at the same time; `TryGetOrAdd` no longer replaces a mismatched entry
+- Changed `StringVault`: ids from before `Clear` are undefined, enumeration and the indexer stop at `Count`, and failed interning uses no id
+- Changed vault documentation to describe thread safety and copy behavior
+- Fixed one type getting a different `TypeId` depending on registration order
+- Fixed global value vaults keyed by `Id2` keeping their values when entering Play Mode; global object and singleton vaults now reset in place
+- Fixed `StringVaultUnsafe.Clear` leaving old ranges and hashes behind
+- Removed `TypeRelation` of every arity (breaking)
+
+### SourceGen
+
+- Added the `[TypeFlag]` generator, which adds a `TypeFlag` field and a `TypeFlagAPI` type to the owner and hides inherited flag members
+- Added type flag checks: unsupported owners (`SG_TYPE_FLAG_0001`), member names already in use (`SG_TYPE_FLAG_0002`), owners that derive from a generated type (`SG_TYPE_FLAG_0003`), undefined option values (`SG_TYPE_FLAG_0004`), and `Api` used with `UseExtensions` (`SG_TYPE_FLAG_0005`)
+- Added documentation to generated type flag members, taken from the runtime members they call
+- Rebuilt all source generators for `0.1.8-preview.3`
+
+### Tests
+
+- Added Unity tests for type flags, string vaults, `TypeIdVault`, object, singleton, and value vaults, and global vault resets
+- Added SourceGen tests for the type flag generator and its checks
+
+### Samples
+
+- Added a type flag compiler-host sample for SourceGen
+- Updated sample paths for `0.1.8-preview.3`
+
+### Versioning
+
+- `EncosyTower.SourceGen.*` to `0.1.8-preview.3`
+- Package and sample references to `0.1.8-preview.3`
+
 ## 0.1.8-preview.2
 
 ### Core
