@@ -92,6 +92,11 @@ namespace EncosyTower.Tasks
             => throw new InvalidOperationException("The completion source has already been completed.");
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowEnumeratorDisposed()
+            => throw new ObjectDisposedException("IUnityTaskAsyncEnumerator");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         internal static void LogUnobservedException(Exception exception)
         {

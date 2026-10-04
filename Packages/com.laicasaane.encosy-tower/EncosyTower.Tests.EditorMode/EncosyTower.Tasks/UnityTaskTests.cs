@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -818,6 +819,88 @@ namespace EncosyTower.Tests.Tasks
 
             await Task.Yield();
             LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        public async Task WhenEach_CancellationBetweenMoves_Throws()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var first = new UnityTaskCompletionSource<int>();
+            var second = new UnityTaskCompletionSource<int>();
+            var enumerator = UnityTask.WhenEach(first.Task, second.Task).GetAsyncEnumerator(cancellation.Token);
+
+            first.SetResult(1);
+            var moved = await enumerator.MoveNextAsync();
+            var current = enumerator.Current.Result;
+
+            cancellation.Cancel();
+            var nextException = await CaptureUnityTaskExceptionAsync(enumerator.MoveNextAsync());
+            var furtherException = await CaptureUnityTaskExceptionAsync(enumerator.MoveNextAsync());
+
+            second.SetResult(2);
+            await enumerator.DisposeAsync();
+
+            Assert.IsTrue(moved);
+            Assert.AreEqual(1, current);
+            Assert.IsInstanceOf<OperationCanceledException>(nextException);
+            Assert.IsInstanceOf<OperationCanceledException>(furtherException);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)nextException).CancellationToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)furtherException).CancellationToken);
+        }
+
+        [Test]
+        public async Task WhenEach_ConcurrentCompletion_NoResultLost()
+        {
+            const int COUNT = 64;
+
+            var sources = await Task.Run<UnityTaskCompletionSource<int>[]>(CreateSourcesOnWorker);
+            var tasks = new UnityTask<int>[COUNT];
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                tasks[i] = sources[i].Task;
+            }
+
+            var enumerator = UnityTask.WhenEach(tasks).GetAsyncEnumerator();
+            var firstMove = enumerator.MoveNextAsync();
+            var completion = Task.Run(CompleteInParallel);
+            var values = new HashSet<int>();
+            var yielded = 0;
+
+            if (await firstMove)
+            {
+                values.Add(enumerator.Current.Result);
+                yielded++;
+            }
+
+            while (await enumerator.MoveNextAsync())
+            {
+                values.Add(enumerator.Current.Result);
+                yielded++;
+            }
+
+            await completion;
+            await enumerator.DisposeAsync();
+
+            Assert.AreEqual(COUNT, yielded);
+            Assert.AreEqual(COUNT, values.Count);
+
+            static UnityTaskCompletionSource<int>[] CreateSourcesOnWorker()
+            {
+                var result = new UnityTaskCompletionSource<int>[COUNT];
+
+                for (var i = 0; i < COUNT; i++)
+                {
+                    result[i] = new UnityTaskCompletionSource<int>();
+                }
+
+                return result;
+            }
+
+            void CompleteInParallel()
+            {
+                Parallel.For(0, COUNT, i => sources[i].SetResult(i));
+            }
         }
 
         [Test]
