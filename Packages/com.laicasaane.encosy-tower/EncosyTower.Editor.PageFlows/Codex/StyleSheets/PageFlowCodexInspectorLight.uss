@@ -1,0 +1,15 @@
+.encosy-page-flows {
+    --encosy-page-flows-panel: #e2e2e2;
+    --encosy-page-flows-line: #b4b4b4;
+    --encosy-page-flows-label: #090909;
+    --encosy-page-flows-secondary: #535353;
+    --encosy-page-flows-list: #c1c1c1;
+    --encosy-page-flows-list-border: #7f7f7f;
+    --encosy-page-flows-list-header: #cbcbcb;
+    --encosy-page-flows-list-header-line: #999999;
+    --encosy-page-flows-list-alt: #aeaeae;
+    --encosy-page-flows-button-text: #090909;
+    --encosy-page-flows-menu: #f0f0f0;
+    --encosy-page-flows-menu-border: #a0a0a0;
+    --encosy-page-flows-selection: #3a72b0;
+}

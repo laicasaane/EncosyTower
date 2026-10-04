@@ -8,6 +8,7 @@ using EncosyTower.PageFlows.UitkPages;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows.UitkPages
@@ -26,12 +27,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private const string CONTAINER_NAME = FlowDefinitionsSection.CONTAINER_NAME_COLUMN;
 
         private const string ROOT = PageFlowContextSection.ROOT_USS_CLASS_NAME;
-        private const string NOTE_USS_CLASS_NAME = ROOT + "__note";
-        private const string FIELD_NOTE_USS_CLASS_NAME = ROOT + "__field-note";
         private const string CONTAINER_CELL_USS_CLASS_NAME = ROOT + "__container-cell";
         private const string PICK_BUTTON_USS_CLASS_NAME = ROOT + "__pick-button";
+        private const string PICK_DOT_USS_CLASS_NAME = ROOT + "__pick-dot";
+        private const int PICK_DOT_COUNT = 3;
 
-        private const string PICK_BUTTON_TEXT = "⋯";
         private const string PICK_BUTTON_TOOLTIP = "Pick a named element of the Layout Asset.";
         private const string LAYOUT_ASSET_TOOLTIP =
             "UXML loaded into the panel root. Flow containers are picked from its named elements.";
@@ -102,24 +102,24 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 new(
                       Name: IDENTIFIER
                     , Title: "Identifier"
-                    , Width: Length.Percent(30f)
-                    , Stretchable: true
+                    , Width: 16f
+                    , Grow: 1.1f
                     , MakeCell: null
                     , BindCell: null
                 ),
                 new(
                       Name: KIND
                     , Title: "Kind"
-                    , Width: Length.Percent(30f)
-                    , Stretchable: true
+                    , Width: 0f
+                    , Grow: 1.25f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new EnumField())
                     , BindCell: static (cell, row) => cell.Q<EnumField>().BindProperty(row.FindPropertyRelative(KIND))
                 ),
                 new(
                       Name: CONTAINER_NAME
                     , Title: "Container Name"
-                    , Width: Length.Percent(40f)
-                    , Stretchable: true
+                    , Width: 0f
+                    , Grow: 1.4f
                     , MakeCell: MakeContainerCell
                     , BindCell: BindContainerCell
                 ),
@@ -131,12 +131,18 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             field.textEdition.placeholder = LayoutAssetContainerModel.CODEX_ROOT_LABEL;
 
             var button = new Button {
-                text = PICK_BUTTON_TEXT,
                 tooltip = PICK_BUTTON_TOOLTIP,
             };
 
             button.AddToClassList(PICK_BUTTON_USS_CLASS_NAME);
             button.clicked += OnClicked;
+
+            for (var i = 0; i < PICK_DOT_COUNT; i++)
+            {
+                var dot = new VisualElement { pickingMode = PickingMode.Ignore };
+                dot.AddToClassList(PICK_DOT_USS_CLASS_NAME);
+                button.Add(dot);
+            }
 
             var content = new VisualElement();
             content.AddToClassList(CONTAINER_CELL_USS_CLASS_NAME);
@@ -171,7 +177,15 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 , GetOtherRows(row.propertyPath)
             );
 
-            UnityEditor.PopupWindow.Show(anchor.worldBound, new ContainerPickerPopup(
+            var bounds = anchor.worldBound;
+            var activator = new Rect(
+                  bounds.xMax - ContainerPickerPopup.WIDTH
+                , bounds.y
+                , ContainerPickerPopup.WIDTH
+                , bounds.height
+            );
+
+            UnityEditor.PopupWindow.Show(activator, new ContainerPickerPopup(
                   container
                 , choices
                 , containers.HasAsset
@@ -235,31 +249,27 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
             if (isExisting)
             {
-                section.Add(CreateFieldNote(existingNote));
+                section.Add(PageFlowContextSection.CreateFieldNote(panelSettings, existingNote));
             }
 
             section.Add(sortingOrder);
 
             if (isExisting)
             {
-                section.Add(CreateFieldNote(existingNote));
+                section.Add(PageFlowContextSection.CreateFieldNote(sortingOrder, existingNote));
             }
 
             section.Add(layoutAsset);
 
-            _layoutNote = CreateFieldNote(existingNote ?? string.Empty);
+            _layoutNote = PageFlowContextSection.CreateFieldNote(layoutAsset, existingNote ?? string.Empty);
             section.Add(_layoutNote);
 
             var (componentName, componentNote) = GetPanelComponentTexts(_panelMode);
-            var component = new TextField("Panel Component") {
-                value = componentName,
-                isReadOnly = true,
-                focusable = false,
-            };
+            var component = new ReadOnlyField("Panel Component");
+            component.SetText(componentName);
 
-            component.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             section.Add(component);
-            section.Add(CreateFieldNote(componentNote));
+            section.Add(PageFlowContextSection.CreateFieldNote(component, componentNote));
 
             UpdateLayoutNote();
             section.TrackPropertyValue(_layoutAsset, OnLayoutAssetChanged);
@@ -309,14 +319,6 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
             serializedObject.UpdateIfRequiredOrScript();
             return _layoutAsset.objectReferenceValue as VisualTreeAsset;
-        }
-
-        private static Label CreateFieldNote(string text)
-        {
-            var label = new Label(text);
-            label.AddToClassList(NOTE_USS_CLASS_NAME);
-            label.AddToClassList(FIELD_NOTE_USS_CLASS_NAME);
-            return label;
         }
 
         private static bool IsExisting(PanelMode mode)

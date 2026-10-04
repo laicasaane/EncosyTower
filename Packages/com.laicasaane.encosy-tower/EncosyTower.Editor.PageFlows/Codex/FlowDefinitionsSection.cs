@@ -12,8 +12,8 @@ namespace EncosyTower.Editor.PageFlows
     internal sealed record FlowDefinitionColumn(
           string Name
         , string Title
-        , Length Width
-        , bool Stretchable
+        , float Width
+        , float Grow
         , Func<VisualElement> MakeCell
         , Action<VisualElement, SerializedProperty> BindCell
     );
@@ -25,11 +25,10 @@ namespace EncosyTower.Editor.PageFlows
 
         private const string ROOT = PageFlowContextSection.ROOT_USS_CLASS_NAME;
         private const string WARNING_USS_CLASS_NAME = ROOT + "__warning";
-        private const string READONLY_USS_CLASS_NAME = ROOT + "__readonly";
-        private const string READONLY_VALUE_USS_CLASS_NAME = ROOT + "__readonly-value";
         private const string NOTE_USS_CLASS_NAME = ROOT + "__note";
         private const string LIST_USS_CLASS_NAME = ROOT + "__list";
         private const string CELL_USS_CLASS_NAME = ROOT + "__cell";
+        private const string CENTERED_CELL_USS_CLASS_NAME = ROOT + "__cell--centered";
         private const string INVALID_CELL_USS_CLASS_NAME = ROOT + "__cell--invalid";
         private const string STATUS_USS_CLASS_NAME = ROOT + "__status";
         private const string STATUS_ICON_USS_CLASS_NAME = ROOT + "__status-icon";
@@ -46,6 +45,7 @@ namespace EncosyTower.Editor.PageFlows
         private readonly Image _listWarning;
         private readonly Button _syncButton;
         private readonly MultiColumnListView _list;
+        private readonly IReadOnlyList<FlowDefinitionColumn> _columns;
 
         private FlowDefinitionListModel _model;
 
@@ -82,10 +82,13 @@ namespace EncosyTower.Editor.PageFlows
                 virtualizationMethod = CollectionVirtualizationMethod.FixedHeight,
                 fixedItemHeight = ROW_HEIGHT,
                 selectionType = SelectionType.Single,
+                horizontalScrollingEnabled = false,
             };
 
+            _columns = columns;
             _list.AddToClassList(LIST_USS_CLASS_NAME);
             AddColumns(columns);
+            _list.Q<ScrollView>().contentViewport.RegisterCallback<GeometryChangedEvent>(OnListGeometryChanged);
             section.Add(_list);
 
             _list.BindProperty(flows);
@@ -121,6 +124,13 @@ namespace EncosyTower.Editor.PageFlows
             var cell = new VisualElement();
             cell.AddToClassList(CELL_USS_CLASS_NAME);
             cell.Add(content);
+            return cell;
+        }
+
+        public static VisualElement CreateCenteredCell(VisualElement content)
+        {
+            var cell = CreateCell(content);
+            cell.AddToClassList(CENTERED_CELL_USS_CLASS_NAME);
             return cell;
         }
 
@@ -173,7 +183,8 @@ namespace EncosyTower.Editor.PageFlows
                     name = source.Name,
                     title = source.Title,
                     width = source.Width,
-                    stretchable = source.Stretchable,
+                    stretchable = false,
+                    resizable = false,
                     makeCell = source.MakeCell,
                     bindCell = Bind,
                     unbindCell = static (element, _) => element.Unbind(),
@@ -189,6 +200,9 @@ namespace EncosyTower.Editor.PageFlows
                 name = "status",
                 title = string.Empty,
                 width = STATUS_WIDTH,
+                minWidth = STATUS_WIDTH,
+                maxWidth = STATUS_WIDTH,
+                stretchable = false,
                 resizable = false,
                 makeCell = MakeStatusCell,
                 bindCell = BindStatusCell,
@@ -204,7 +218,8 @@ namespace EncosyTower.Editor.PageFlows
                     name = source.Name,
                     title = source.Title,
                     width = source.Width,
-                    stretchable = source.Stretchable,
+                    stretchable = false,
+                    resizable = false,
                     makeCell = static () => CreateCell(new TextField()),
                     bindCell = BindIdentifierTextCell,
                     unbindCell = static (element, _) => element.Unbind(),
@@ -215,11 +230,35 @@ namespace EncosyTower.Editor.PageFlows
                 name = source.Name,
                 title = source.Title,
                 width = source.Width,
-                stretchable = source.Stretchable,
+                stretchable = false,
+                resizable = false,
                 makeCell = MakeIdentifierPopupCell,
                 bindCell = BindIdentifierPopupCell,
                 unbindCell = UnbindManualCell,
             };
+        }
+
+        private void OnListGeometryChanged(GeometryChangedEvent evt)
+        {
+            var available = evt.newRect.width - STATUS_WIDTH;
+            var totalGrow = 0f;
+            var count = _columns.Count;
+
+            for (var i = 0; i < count; i++)
+            {
+                var column = _columns[i];
+                available -= column.Width;
+                totalGrow += column.Grow;
+            }
+
+            available = Mathf.Max(available, 0f);
+
+            for (var i = 0; i < count; i++)
+            {
+                var source = _columns[i];
+                var share = totalGrow > 0f ? available * source.Grow / totalGrow : 0f;
+                _list.columns[source.Name].width = Mathf.Floor(source.Width + share);
+            }
         }
 
         private void BindCell(FlowDefinitionColumn column, VisualElement element, int index)
@@ -246,27 +285,35 @@ namespace EncosyTower.Editor.PageFlows
 
         private VisualElement MakeIdentifierPopupCell()
         {
-            var button = new Button();
-            button.AddToClassList(POPUP_USS_CLASS_NAME);
-            button.AddToClassList(BasePopupField<string, string>.inputUssClassName);
-            button.AddToClassList(PopupField<string>.inputUssClassName);
+            var field = new VisualElement();
+            field.AddToClassList(POPUP_USS_CLASS_NAME);
+            field.AddToClassList(BaseField<string>.ussClassName);
+            field.AddToClassList(BaseField<string>.noLabelVariantUssClassName);
+            field.AddToClassList(BasePopupField<string, string>.ussClassName);
+            field.AddToClassList(PopupField<string>.ussClassName);
+
+            var input = new VisualElement();
+            input.AddToClassList(BaseField<string>.inputUssClassName);
+            input.AddToClassList(BasePopupField<string, string>.inputUssClassName);
+            input.AddToClassList(PopupField<string>.inputUssClassName);
+            input.AddManipulator(new Clickable(OnClicked));
+            field.Add(input);
 
             var text = new TextElement { pickingMode = PickingMode.Ignore };
             text.AddToClassList(BasePopupField<string, string>.textUssClassName);
-            button.Add(text);
+            input.Add(text);
 
             var arrow = new VisualElement { pickingMode = PickingMode.Ignore };
             arrow.AddToClassList(BasePopupField<string, string>.arrowUssClassName);
-            button.Add(arrow);
+            input.Add(arrow);
 
-            button.clicked += OnClicked;
-            return CreateCell(button);
+            return CreateCell(field);
 
             void OnClicked()
             {
-                if (button.userData is int row)
+                if (input.userData is int row)
                 {
-                    ShowIdentifierMenu(button, row);
+                    ShowIdentifierMenu(input, row);
                 }
             }
         }
@@ -278,11 +325,12 @@ namespace EncosyTower.Editor.PageFlows
                 return;
             }
 
-            var button = element.Q<Button>();
+            var input = element.Q(className: BaseField<string>.inputUssClassName);
+            var text = element.Q<TextElement>(className: BasePopupField<string, string>.textUssClassName);
             var identifier = _flows.GetArrayElementAtIndex(index).FindPropertyRelative(IDENTIFIER_COLUMN).stringValue;
 
-            button.userData = index;
-            button.Q<TextElement>().text = identifier;
+            input.userData = index;
+            text.text = identifier;
             SetInvalid(element, HasProblemInColumn(index, IDENTIFIER_COLUMN));
         }
 
@@ -440,34 +488,6 @@ namespace EncosyTower.Editor.PageFlows
 
         private static void SetInvalid(VisualElement element, bool invalid)
             => element.EnableInClassList(INVALID_CELL_USS_CLASS_NAME, invalid);
-
-        private sealed class ReadOnlyField : BaseField<string>
-        {
-            private readonly VisualElement _input;
-            private readonly Label _text;
-
-            public ReadOnlyField(string label) : this(label, new VisualElement()) { }
-
-            private ReadOnlyField(string label, VisualElement input) : base(label, input)
-            {
-                _input = input;
-                _input.AddToClassList(READONLY_USS_CLASS_NAME);
-
-                _text = new Label();
-                _text.AddToClassList(READONLY_VALUE_USS_CLASS_NAME);
-                _input.Add(_text);
-            }
-
-            public void SetText(string text, VisualElement icon = null)
-            {
-                if (icon != null)
-                {
-                    _input.Insert(0, icon);
-                }
-
-                _text.text = text;
-            }
-        }
     }
 }
 

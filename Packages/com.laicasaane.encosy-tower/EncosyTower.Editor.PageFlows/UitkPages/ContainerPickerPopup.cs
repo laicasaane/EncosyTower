@@ -10,6 +10,8 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 {
     internal sealed class ContainerPickerPopup : PopupWindowContent
     {
+        public const float WIDTH = 300f;
+
         private const string ROOT = PageFlowContextSection.ROOT_USS_CLASS_NAME;
         private const string PICKER_USS_CLASS_NAME = ROOT + "__picker";
         private const string SEARCH_USS_CLASS_NAME = ROOT + "__picker-search";
@@ -22,8 +24,8 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private const string NO_LAYOUT_ASSET = "No Layout Asset assigned";
         private const string NO_MATCH = "No matching element";
         private const string CHECK_MARK = "✓";
-        private const float WIDTH = 300f;
-        private const float ITEM_HEIGHT = 22f;
+        private const float ITEM_HEIGHT = 20f;
+        private const float CHROME_HEIGHT = 36f;
         private const float MAX_HEIGHT = 360f;
 
         private readonly SerializedProperty _container;
@@ -41,8 +43,8 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
         public override Vector2 GetWindowSize()
         {
-            var rows = Math.Max(_choices.Length, 2) + 2;
-            return new Vector2(WIDTH, Mathf.Min(rows * ITEM_HEIGHT + 12f, MAX_HEIGHT));
+            var rows = Math.Max(_choices.Length, 2);
+            return new Vector2(WIDTH, Mathf.Min(rows * ITEM_HEIGHT + CHROME_HEIGHT, MAX_HEIGHT));
         }
 
         public override void OnGUI(Rect rect)
@@ -51,10 +53,13 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
         public override VisualElement CreateGUI()
         {
+            var size = GetWindowSize();
             var root = new VisualElement();
             root.AddToClassList(ROOT);
             root.AddToClassList(PICKER_USS_CLASS_NAME);
-            root.styleSheets.Add(PageFlowCodexStyleSheetPaths.StyleSheet);
+            root.style.width = size.x;
+            root.style.height = size.y;
+            PageFlowCodexStyleSheetPaths.AddTo(root);
 
             var search = new ToolbarSearchField();
             search.AddToClassList(SEARCH_USS_CLASS_NAME);

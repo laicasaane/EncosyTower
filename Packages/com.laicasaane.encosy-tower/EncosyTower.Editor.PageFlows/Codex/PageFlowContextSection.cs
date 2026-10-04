@@ -18,6 +18,8 @@ namespace EncosyTower.Editor.PageFlows
         public const string HEADING_USS_CLASS_NAME = ROOT_USS_CLASS_NAME + "__heading";
         public const string GROUP_HEADING_USS_CLASS_NAME = ROOT_USS_CLASS_NAME + "__group-heading";
         public const string HEADER_BUTTON_USS_CLASS_NAME = ROOT_USS_CLASS_NAME + "__header-button";
+        public const string NOTE_USS_CLASS_NAME = ROOT_USS_CLASS_NAME + "__note";
+        public const string FIELD_NOTE_USS_CLASS_NAME = ROOT_USS_CLASS_NAME + "__field-note";
 
         private const string AUTO_INITIALIZE_ON_AWAKE = "autoInitializeOnAwake";
 
@@ -70,11 +72,44 @@ namespace EncosyTower.Editor.PageFlows
             return section;
         }
 
+        public static Label CreateFieldNote(VisualElement field, string text)
+        {
+            var note = new Label(text);
+            note.AddToClassList(NOTE_USS_CLASS_NAME);
+            note.AddToClassList(FIELD_NOTE_USS_CLASS_NAME);
+
+            VisualElement trackedInput = null;
+            field.RegisterCallback<GeometryChangedEvent>(OnFieldGeometryChanged);
+            return note;
+
+            void OnFieldGeometryChanged(GeometryChangedEvent _)
+            {
+                var input = field.Q(className: BaseField<int>.inputUssClassName);
+                var parent = note.parent;
+
+                if (input == null || parent == null)
+                {
+                    return;
+                }
+
+                if (trackedInput != input)
+                {
+                    trackedInput?.UnregisterCallback<GeometryChangedEvent>(OnFieldGeometryChanged);
+                    trackedInput = input;
+                    trackedInput.RegisterCallback<GeometryChangedEvent>(OnFieldGeometryChanged);
+                }
+
+                var parentStyle = parent.resolvedStyle;
+                var contentLeft = parent.worldBound.xMin + parentStyle.borderLeftWidth + parentStyle.paddingLeft;
+                note.style.marginLeft = input.worldBound.xMin - contentLeft;
+            }
+        }
+
         public static VisualElement CreateRoot()
         {
             var root = new VisualElement();
             root.AddToClassList(ROOT_USS_CLASS_NAME);
-            root.styleSheets.Add(PageFlowCodexStyleSheetPaths.StyleSheet);
+            PageFlowCodexStyleSheetPaths.AddTo(root);
             return root;
         }
     }

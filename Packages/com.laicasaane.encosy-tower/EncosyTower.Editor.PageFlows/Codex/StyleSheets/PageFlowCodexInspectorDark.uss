@@ -1,0 +1,15 @@
+.encosy-page-flows {
+    --encosy-page-flows-panel: #303030;
+    --encosy-page-flows-line: #454545;
+    --encosy-page-flows-label: #c4c4c4;
+    --encosy-page-flows-secondary: #bdbdbd;
+    --encosy-page-flows-list: #464646;
+    --encosy-page-flows-list-border: #1a1a1a;
+    --encosy-page-flows-list-header: #3c3c3c;
+    --encosy-page-flows-list-header-line: #232323;
+    --encosy-page-flows-list-alt: #3f3f3f;
+    --encosy-page-flows-button-text: #eeeeee;
+    --encosy-page-flows-menu: #282828;
+    --encosy-page-flows-menu-border: #191919;
+    --encosy-page-flows-selection: #2c5d87;
+}

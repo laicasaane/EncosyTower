@@ -61,16 +61,16 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                 new(
                       Name: FlowDefinitionsSection.IDENTIFIER_COLUMN
                     , Title: "Identifier"
-                    , Width: Length.Percent(30f)
-                    , Stretchable: true
+                    , Width: 16f
+                    , Grow: 1.15f
                     , MakeCell: null
                     , BindCell: null
                 ),
                 new(
                       Name: KIND
                     , Title: "Kind"
-                    , Width: Length.Percent(30f)
-                    , Stretchable: true
+                    , Width: 0f
+                    , Grow: 1.3f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new EnumField())
                     , BindCell: static (cell, row) => cell.Q<EnumField>().BindProperty(row.FindPropertyRelative(KIND))
                 ),
@@ -78,16 +78,16 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                       Name: OVERRIDE_SORTING_LAYER
                     , Title: "Override"
                     , Width: 62f
-                    , Stretchable: false
-                    , MakeCell: static () => FlowDefinitionsSection.CreateCell(new Toggle())
+                    , Grow: 0f
+                    , MakeCell: static () => FlowDefinitionsSection.CreateCenteredCell(new Toggle())
                     , BindCell: static (cell, row) => cell.Q<Toggle>()
                         .BindProperty(row.FindPropertyRelative(OVERRIDE_SORTING_LAYER))
                 ),
                 new(
                       Name: SORTING_LAYER
                     , Title: "Sorting Layer"
-                    , Width: Length.Percent(25f)
-                    , Stretchable: true
+                    , Width: 0f
+                    , Grow: 1f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(
                           new PropertyField(property: null, label: string.Empty)
                     )
@@ -97,7 +97,7 @@ namespace EncosyTower.Editor.PageFlows.UguiPages
                       Name: SORTING_ORDER_IN_LAYER
                     , Title: "Order"
                     , Width: 54f
-                    , Stretchable: false
+                    , Grow: 0f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new IntegerField())
                     , BindCell: static (cell, row) => BindWhileOverridden<IntegerField>(
                           cell
