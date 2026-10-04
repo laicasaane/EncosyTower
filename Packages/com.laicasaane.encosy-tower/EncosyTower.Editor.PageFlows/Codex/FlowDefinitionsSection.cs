@@ -192,6 +192,7 @@ namespace EncosyTower.Editor.PageFlows
                 resizable = false,
                 makeCell = MakeStatusCell,
                 bindCell = BindStatusCell,
+                unbindCell = UnbindManualCell,
             });
         }
 
@@ -217,6 +218,7 @@ namespace EncosyTower.Editor.PageFlows
                 stretchable = source.Stretchable,
                 makeCell = MakeIdentifierPopupCell,
                 bindCell = BindIdentifierPopupCell,
+                unbindCell = UnbindManualCell,
             };
         }
 
@@ -430,6 +432,10 @@ namespace EncosyTower.Editor.PageFlows
                     + "unknown, empty or repeated identifier the next missing scope (its other settings are kept); "
                     + "remove such rows when no scope is missing; add rows for scopes still missing. One Undo step."
                 : $"The list already matches {_info.TypeName}.";
+        }
+
+        private static void UnbindManualCell(VisualElement element, int index)
+        {
         }
 
         private static void SetInvalid(VisualElement element, bool invalid)
