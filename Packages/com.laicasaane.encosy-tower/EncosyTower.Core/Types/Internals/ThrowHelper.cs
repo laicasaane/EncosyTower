@@ -24,5 +24,19 @@ namespace EncosyTower.Types.Internals
             static InvalidOperationException CreateException()
                 => new("RuntimeTypeCache is not initialized correctly.");
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowGlobalObjectNotFound<TOwner, TObject>()
+            => throw new InvalidOperationException(
+                $"No global object of type '{Type<TObject>.FriendlyName}' is stored for '{Type<TOwner>.FriendlyName}'."
+            );
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowGlobalValueNotFound<TOwner, TValue>()
+            => throw new InvalidOperationException(
+                $"No global value of type '{Type<TValue>.FriendlyName}' is stored for '{Type<TOwner>.FriendlyName}'."
+            );
     }
 }
