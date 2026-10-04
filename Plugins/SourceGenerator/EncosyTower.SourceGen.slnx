@@ -12,6 +12,7 @@
     <Project Path="Samples/Samples.Formatters/Samples.Formatters.csproj" />
     <Project Path="Samples/Samples.Mvvm/Samples.Mvvm.csproj" />
     <Project Path="Samples/Samples.NewtonsoftAotHelpers/Samples.NewtonsoftAotHelpers.csproj" />
+    <Project Path="Samples/Samples.PageFlows/Samples.PageFlows.csproj" />
     <Project Path="Samples/Samples.PolyEnumStructs/Samples.PolyEnumStructs.csproj" />
     <Project Path="Samples/Samples.Processing/Samples.Processing.csproj" />
     <Project Path="Samples/Samples.PubSub/Samples.PubSub.csproj" />
@@ -41,6 +42,7 @@
     <Project Path="EncosyTower.Mvvm.Generators/EncosyTower.Mvvm.Generators.csproj" />
     <Project Path="EncosyTower.Persistence.Generators/EncosyTower.Persistence.Generators.csproj" />
     <Project Path="EncosyTower.Processing.Generators/EncosyTower.Processing.Generators.csproj" />
+    <Project Path="EncosyTower.PageFlows.Generators/EncosyTower.PageFlows.Generators.csproj" />
     <Project Path="EncosyTower.PubSub.Generators/EncosyTower.PubSub.Generators.csproj" />
     <Project Path="EncosyTower.SourceGen.Tests/EncosyTower.SourceGen.Tests.csproj" />
   </Folder>

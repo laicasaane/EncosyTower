@@ -41,6 +41,7 @@
         <ProjectReference Include="../EncosyTower.Mvvm.CodeRefactors/EncosyTower.Mvvm.CodeRefactors.csproj" ReferenceOutputAssembly="true" OutputItemType="" />
         <ProjectReference Include="../EncosyTower.Persistence.Generators/EncosyTower.Persistence.Generators.csproj" />
         <ProjectReference Include="../EncosyTower.Processing.Generators/EncosyTower.Processing.Generators.csproj" />
+        <ProjectReference Include="../EncosyTower.PageFlows.Generators/EncosyTower.PageFlows.Generators.csproj" />
         <ProjectReference Include="../EncosyTower.PubSub.Generators/EncosyTower.PubSub.Generators.csproj" />
     </ItemGroup>
 

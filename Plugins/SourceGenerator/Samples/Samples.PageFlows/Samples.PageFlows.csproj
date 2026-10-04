@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Samples.PageFlows</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.PageFlows.dll" Private="false" />
+        <Reference Include="$(UnityScriptAssembliesPath)/EncosyTower.PubSub.dll" Private="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../EncosyTower.PageFlows.Generators/EncosyTower.PageFlows.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+    </ItemGroup>
+
+</Project>
