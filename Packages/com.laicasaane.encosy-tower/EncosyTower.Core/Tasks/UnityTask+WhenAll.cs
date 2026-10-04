@@ -416,14 +416,16 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(ref _consumed, 1);
+                    Volatile.Write(location: ref _consumed, value: 1);
                     TryRecycle();
                 }
             }
 
             void IIndexedUnityTaskSink.Complete(int index, Exception exception)
             {
-                if (exception != null && Interlocked.CompareExchange(ref _signaled, 1, 0) == 0)
+                if (exception != null
+                    && Interlocked.CompareExchange(location1: ref _signaled, value: 1, comparand: 0) == 0
+                )
                 {
                     _source.TrySetException(exception);
                 }
@@ -436,12 +438,12 @@ namespace EncosyTower.Tasks
                     return;
                 }
 
-                if (Interlocked.CompareExchange(ref _signaled, 1, 0) == 0)
+                if (Interlocked.CompareExchange(location1: ref _signaled, value: 1, comparand: 0) == 0)
                 {
                     _source.TrySetResult();
                 }
 
-                Volatile.Write(ref _detached, 1);
+                Volatile.Write(location: ref _detached, value: 1);
                 TryRecycle();
             }
 
@@ -449,7 +451,7 @@ namespace EncosyTower.Tasks
             {
                 if (Volatile.Read(ref _consumed) == 0
                     || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(ref _returned, 1) != 0
+                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
                 )
                 {
                     return;
@@ -516,7 +518,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(ref _consumed, 1);
+                    Volatile.Write(location: ref _consumed, value: 1);
                     TryRecycle();
                 }
             }
@@ -527,7 +529,7 @@ namespace EncosyTower.Tasks
                 {
                     _results[index] = result;
                 }
-                else if (Interlocked.CompareExchange(ref _signaled, 1, 0) == 0)
+                else if (Interlocked.CompareExchange(location1: ref _signaled, value: 1, comparand: 0) == 0)
                 {
                     _source.TrySetException(exception);
                 }
@@ -540,12 +542,12 @@ namespace EncosyTower.Tasks
                     return;
                 }
 
-                if (Interlocked.CompareExchange(ref _signaled, 1, 0) == 0)
+                if (Interlocked.CompareExchange(location1: ref _signaled, value: 1, comparand: 0) == 0)
                 {
                     _source.TrySetResult(_results);
                 }
 
-                Volatile.Write(ref _detached, 1);
+                Volatile.Write(location: ref _detached, value: 1);
                 TryRecycle();
             }
 
@@ -553,7 +555,7 @@ namespace EncosyTower.Tasks
             {
                 if (Volatile.Read(ref _consumed) == 0
                     || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(ref _returned, 1) != 0
+                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
                 )
                 {
                     return;

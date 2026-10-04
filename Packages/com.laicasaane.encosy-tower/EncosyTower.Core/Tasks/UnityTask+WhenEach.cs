@@ -429,7 +429,7 @@ namespace EncosyTower.Tasks
                 _token = default;
                 Current = default;
 
-                if (Interlocked.Exchange(ref _returned, 1) == 0)
+                if (Interlocked.Exchange(location1: ref _returned, value: 1) == 0)
                 {
                     lock (s_pool)
                     {

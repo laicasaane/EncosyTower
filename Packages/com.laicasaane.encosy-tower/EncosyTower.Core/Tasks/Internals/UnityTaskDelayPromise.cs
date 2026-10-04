@@ -113,7 +113,7 @@ namespace EncosyTower.Tasks
             }
             finally
             {
-                Interlocked.Exchange(ref promise._consumed, 1);
+                Interlocked.Exchange(location1: ref promise._consumed, value: 1);
                 promise.TryReturn();
             }
         }
@@ -129,14 +129,14 @@ namespace EncosyTower.Tasks
         {
             if (Volatile.Read(ref _completed) != 0)
             {
-                Interlocked.Exchange(ref _scheduled, 0);
+                Interlocked.Exchange(location1: ref _scheduled, value: 0);
                 TryReturn();
                 return;
             }
 
             if (_token.IsCancellationRequested)
             {
-                Interlocked.Exchange(ref _scheduled, 0);
+                Interlocked.Exchange(location1: ref _scheduled, value: 0);
                 Cancel();
                 TryReturn();
                 return;
@@ -149,9 +149,9 @@ namespace EncosyTower.Tasks
 
             if (IsComplete())
             {
-                Interlocked.Exchange(ref _scheduled, 0);
+                Interlocked.Exchange(location1: ref _scheduled, value: 0);
 
-                if (Interlocked.Exchange(ref _completed, 1) == 0)
+                if (Interlocked.Exchange(location1: ref _completed, value: 1) == 0)
                 {
                     _source.TrySetResult();
                 }
@@ -217,7 +217,7 @@ namespace EncosyTower.Tasks
 
         private void Cancel()
         {
-            if (Interlocked.Exchange(ref _completed, 1) == 0)
+            if (Interlocked.Exchange(location1: ref _completed, value: 1) == 0)
             {
                 _source.TrySetException(new OperationCanceledException(_token));
             }
@@ -232,7 +232,7 @@ namespace EncosyTower.Tasks
                 return;
             }
 
-            if (Interlocked.Exchange(ref _returned, 1) != 0)
+            if (Interlocked.Exchange(location1: ref _returned, value: 1) != 0)
             {
                 return;
             }

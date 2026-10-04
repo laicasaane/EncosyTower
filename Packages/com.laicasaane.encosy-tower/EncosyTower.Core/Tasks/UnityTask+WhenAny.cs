@@ -349,14 +349,14 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(ref _consumed, 1);
+                    Volatile.Write(location: ref _consumed, value: 1);
                     TryRecycle();
                 }
             }
 
             void IIndexedUnityTaskSink.Complete(int index, Exception exception)
             {
-                if (Interlocked.CompareExchange(ref _won, 1, 0) != 0)
+                if (Interlocked.CompareExchange(location1: ref _won, value: 1, comparand: 0) != 0)
                 {
                     return;
                 }
@@ -378,7 +378,7 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(ref _detached, 1);
+                    Volatile.Write(location: ref _detached, value: 1);
                     TryRecycle();
                 }
             }
@@ -387,7 +387,7 @@ namespace EncosyTower.Tasks
             {
                 if (Volatile.Read(ref _consumed) == 0
                     || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(ref _returned, 1) != 0
+                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
                 )
                 {
                     return;
@@ -452,14 +452,14 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(ref _consumed, 1);
+                    Volatile.Write(location: ref _consumed, value: 1);
                     TryRecycle();
                 }
             }
 
             void IIndexedUnityTaskResultSink<T>.Complete(int index, T result, Exception exception)
             {
-                if (Interlocked.CompareExchange(ref _won, 1, 0) != 0)
+                if (Interlocked.CompareExchange(location1: ref _won, value: 1, comparand: 0) != 0)
                 {
                     return;
                 }
@@ -481,7 +481,7 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(ref _detached, 1);
+                    Volatile.Write(location: ref _detached, value: 1);
                     TryRecycle();
                 }
             }
@@ -490,7 +490,7 @@ namespace EncosyTower.Tasks
             {
                 if (Volatile.Read(ref _consumed) == 0
                     || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(ref _returned, 1) != 0
+                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
                 )
                 {
                     return;
@@ -557,7 +557,7 @@ namespace EncosyTower.Tasks
                 }
                 finally
                 {
-                    Volatile.Write(ref _consumed, 1);
+                    Volatile.Write(location: ref _consumed, value: 1);
                     TryRecycle();
                 }
             }
@@ -580,7 +580,7 @@ namespace EncosyTower.Tasks
 
             private void Complete(bool hasResultLeft, T result, Exception exception)
             {
-                if (Interlocked.CompareExchange(ref _won, 1, 0) != 0)
+                if (Interlocked.CompareExchange(location1: ref _won, value: 1, comparand: 0) != 0)
                 {
                     return;
                 }
@@ -599,7 +599,7 @@ namespace EncosyTower.Tasks
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
                 {
-                    Volatile.Write(ref _detached, 1);
+                    Volatile.Write(location: ref _detached, value: 1);
                     TryRecycle();
                 }
             }
@@ -608,7 +608,7 @@ namespace EncosyTower.Tasks
             {
                 if (Volatile.Read(ref _consumed) == 0
                     || Volatile.Read(ref _detached) == 0
-                    || Interlocked.Exchange(ref _returned, 1) != 0
+                    || Interlocked.Exchange(location1: ref _returned, value: 1) != 0
                 )
                 {
                     return;
