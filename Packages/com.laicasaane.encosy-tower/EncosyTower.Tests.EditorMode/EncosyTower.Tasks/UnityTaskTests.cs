@@ -792,6 +792,35 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task WhenAny_TieResolvedByLowestIndex()
+        {
+            var tasks = new[] { UnityTask.FromResult(1), UnityTask.FromResult(2) };
+
+            var (winArgumentIndex, result) = await UnityTask.WhenAny(tasks);
+
+            Assert.AreEqual(0, winArgumentIndex);
+            Assert.AreEqual(1, result);
+        }
+
+        [Test]
+        public async Task WhenAny_LoserObservedNotCanceled()
+        {
+            var winner = new UnityTaskCompletionSource<int>();
+            var loser = new UnityTaskCompletionSource<int>();
+            var any = UnityTask.WhenAny(new[] { winner.Task, loser.Task });
+
+            winner.SetResult(7);
+            var (winArgumentIndex, result) = await any;
+
+            Assert.AreEqual(0, winArgumentIndex);
+            Assert.AreEqual(7, result);
+            Assert.IsTrue(loser.TrySetException(new InvalidOperationException("loser fault")));
+
+            await Task.Yield();
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
         public async Task Forget_CompletedAndSuspendedSuccessProduceNoLog()
         {
             default(UnityTask).Forget();
