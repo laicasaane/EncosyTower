@@ -18,26 +18,31 @@ namespace MyGame.UIs
             [g__SDCA.ExcludeFromCodeCoverage]
             public readonly struct TypeFlagAPI
             {
+                /// <inheritdoc cref="g__ETT.TypeFlag{T}.TypeId"/>
                 public g__ETT.TypeId<global::MyGame.UIs.MenuScreen.Initialized> TypeId
                 {
                     [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
                     get => default(g__ETT.TypeFlag<global::MyGame.UIs.MenuScreen.Initialized>).TypeId;
                 }
 
+                /// <inheritdoc cref="g__ETT.TypeFlag{T}.IsEnabled"/>
                 public bool IsEnabled
                 {
                     [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
                     get => default(g__ETT.TypeFlag<global::MyGame.UIs.MenuScreen.Initialized>).IsEnabled;
                 }
 
+                /// <inheritdoc cref="g__ETT.TypeFlag{T}.WaitUntilEnabledAsync"/>
                 [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
                 public g__ETTs.UnityTask WaitUntilEnabledAsync(g__ST.CancellationToken token = default)
                     => default(g__ETT.TypeFlag<global::MyGame.UIs.MenuScreen.Initialized>).WaitUntilEnabledAsync(token);
 
+                /// <inheritdoc cref="g__ETT.TypeFlag{T}.Enable"/>
                 [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
                 internal bool Enable()
                     => default(g__ETT.TypeFlag<global::MyGame.UIs.MenuScreen.Initialized>).Enable();
 
+                /// <inheritdoc cref="g__ETT.TypeFlag{T}.Disable"/>
                 [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
                 internal bool Disable()
                     => default(g__ETT.TypeFlag<global::MyGame.UIs.MenuScreen.Initialized>).Disable();

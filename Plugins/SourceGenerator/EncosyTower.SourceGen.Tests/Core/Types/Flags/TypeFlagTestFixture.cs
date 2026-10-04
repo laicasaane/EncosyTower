@@ -303,10 +303,14 @@ internal static class TypeFlagTestFixture
         , LanguageVersion languageVersion = LanguageVersion.CSharp10
         , IEnumerable<MetadataReference>? additionalReferences = null
         , string assemblyName = ASSEMBLY_NAME
+        , DocumentationMode documentationMode = DocumentationMode.Parse
         , CancellationToken token = default
     )
     {
-        var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(languageVersion);
+        var parseOptions = CSharpParseOptions.Default
+            .WithLanguageVersion(languageVersion)
+            .WithDocumentationMode(documentationMode);
+
         var references = await GetReferencesAsync(token);
         var allSources = new List<NamedSource>(sources.Count + 1) { new("TypeFlagRuntime.cs", runtimeSource) };
 

@@ -248,6 +248,15 @@ public sealed class TypeFlagGeneratorTests
         }
         """;
 
+    private static readonly string[] s_crefDiagnosticIds = {
+        "CS1574",
+        "CS1580",
+        "CS1581",
+        "CS1584",
+        "CS1658",
+        "CS1723",
+    };
+
     [TestMethod]
     public async Task ClassOwner()
     {
@@ -1023,6 +1032,39 @@ public sealed class TypeFlagGeneratorTests
             .GetAnalyzerDiagnosticsAsync();
 
         Assert.AreEqual(0, diagnostics.Length, string.Join(Environment.NewLine, diagnostics));
+    }
+
+    [TestMethod]
+    [DataRow(CLASS_OWNER)]
+    [DataRow(STRUCT_OWNER_PUBLIC)]
+    [DataRow(RELATED_ONLY)]
+    [DataRow(INTERNAL_SELF)]
+    [DataRow(NESTED_STATE_MARKER)]
+    [DataRow(USE_EXTENSIONS_CLASS)]
+    [DataRow(USE_EXTENSIONS_INTERNAL_STRUCT)]
+    [DataRow(USE_EXTENSIONS_PUBLIC)]
+    [DataRow(NESTED_GENERIC_OWNER)]
+    [DataRow(DERIVED_HIDING)]
+    [DataRow(HAND_WRITTEN_GENERIC_BASE)]
+    [DataRow(PRIVATE_BASE_MEMBERS)]
+    public async Task GeneratedDocumentationResolves(string source)
+    {
+        var run = await TypeFlagTestFixture.RunAsync(
+              [new NamedSource("Owner.cs", source)]
+            , documentationMode: DocumentationMode.Diagnose
+        );
+
+        Assert.AreNotEqual(0, run.Result.GeneratedSources.Length);
+
+        var crefDiagnostics = run.OutputCompilation.GetDiagnostics()
+            .Where(static diagnostic => s_crefDiagnosticIds.Contains(diagnostic.Id))
+            .ToArray();
+
+        Assert.AreEqual(
+              0
+            , crefDiagnostics.Length
+            , string.Join(Environment.NewLine, crefDiagnostics.Select(static diagnostic => diagnostic.ToString()))
+        );
     }
 
     internal static string GetHintName(string metadataName)

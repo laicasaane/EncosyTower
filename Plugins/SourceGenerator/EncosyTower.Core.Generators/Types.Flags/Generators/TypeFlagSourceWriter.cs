@@ -195,11 +195,25 @@ namespace EncosyTower.Core.Generators.Types.Flags
             var hasSelf = (api & TypeFlagApi.Self) != 0;
             var hasAsync = hasSelf && (api & TypeFlagApi.Async) != 0;
 
-            WriteProperty(ref printer, $"public g__ETT.TypeId<{owner}> TypeId", $"{flag}.TypeId", separate: false);
-            WriteProperty(ref printer, "public bool IsEnabled", $"{flag}.IsEnabled", separate: true);
+            WriteProperty(
+                  printer: ref printer
+                , documentation: FlagDoc("TypeId")
+                , signature: $"public g__ETT.TypeId<{owner}> TypeId"
+                , body: $"{flag}.TypeId"
+                , separate: false
+            );
+
+            WriteProperty(
+                  printer: ref printer
+                , documentation: FlagDoc("IsEnabled")
+                , signature: "public bool IsEnabled"
+                , body: $"{flag}.IsEnabled"
+                , separate: true
+            );
 
             WriteMethod(
                   ref printer
+                , FlagDoc("WaitUntilEnabledAsync")
                 , "public g__ETTs.UnityTask WaitUntilEnabledAsync(g__ST.CancellationToken token = default)"
                 , $"{flag}.WaitUntilEnabledAsync(token)"
             );
@@ -208,12 +222,14 @@ namespace EncosyTower.Core.Generators.Types.Flags
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("TryGetInstance")
                     , $"public bool TryGetInstance([g__SDCA.MaybeNullWhen(false)] out {owner} instance)"
                     , $"{LINK_EXTENSIONS}.TryGetObject({self}, out instance)"
                 );
 
                 WriteMethod(
                       ref printer
+                    , SelfDoc("GetInstanceOrThrow")
                     , $"public {owner} GetInstanceOrThrow()"
                     , $"{LINK_EXTENSIONS}.GetObjectOrThrow({self})"
                 );
@@ -223,6 +239,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("GetInstanceAsync")
                     , $"public g__ETTs.UnityTask<{owner}> GetInstanceAsync(g__ST.CancellationToken token = default)"
                     , $"{LINK_EXTENSIONS}.GetObjectAsync({self}, token)"
                 );
@@ -232,12 +249,14 @@ namespace EncosyTower.Core.Generators.Types.Flags
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("TryGetValue")
                     , $"public bool TryGetValue(out {owner} value)"
                     , $"{LINK_EXTENSIONS}.TryGetValue({self}, out value)"
                 );
 
                 WriteMethod(
                       ref printer
+                    , SelfDoc("GetValueOrThrow")
                     , $"public {owner} GetValueOrThrow()"
                     , $"{LINK_EXTENSIONS}.GetValueOrThrow({self})"
                 );
@@ -247,6 +266,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("GetValueAsync")
                     , $"public g__ETTs.UnityTask<{owner}> GetValueAsync(g__ST.CancellationToken token = default)"
                     , $"{LINK_EXTENSIONS}.GetValueAsync({self}, token)"
                 );
@@ -264,6 +284,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ObjectDoc("TryGetObject")
                 , $"public bool TryGetObject<{obj}>([g__SDCA.MaybeNullWhen(false)] out {obj} obj)"
                 , $"where {obj} : class"
                 , $"{LINK_EXTENSIONS}.TryGetObject({objectLink}, out obj)"
@@ -271,6 +292,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ObjectDoc("GetObjectOrThrow")
                 , $"public {obj} GetObjectOrThrow<{obj}>()"
                 , $"where {obj} : class"
                 , $"{LINK_EXTENSIONS}.GetObjectOrThrow({objectLink})"
@@ -278,6 +300,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ValueDoc("TryGetValue")
                 , $"public bool TryGetValue<{value}>(out {value} value)"
                 , $"where {value} : struct"
                 , $"{LINK_EXTENSIONS}.TryGetValue({valueLink}, out value)"
@@ -285,6 +308,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ValueDoc("GetValueOrThrow")
                 , $"public {value} GetValueOrThrow<{value}>()"
                 , $"where {value} : struct"
                 , $"{LINK_EXTENSIONS}.GetValueOrThrow({valueLink})"
@@ -304,19 +328,21 @@ namespace EncosyTower.Core.Generators.Types.Flags
             var api = spec.Options.Api;
             var hasSelf = (api & TypeFlagApi.Self) != 0;
 
-            WriteMethod(ref printer, $"{access} bool Enable()", $"{flag}.Enable()");
-            WriteMethod(ref printer, $"{access} bool Disable()", $"{flag}.Disable()");
+            WriteMethod(ref printer, FlagDoc("Enable"), $"{access} bool Enable()", $"{flag}.Enable()");
+            WriteMethod(ref printer, FlagDoc("Disable"), $"{access} bool Disable()", $"{flag}.Disable()");
 
             if (hasSelf && spec.IsValueType == false)
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("TryRegister")
                     , $"{access} bool TryRegister([g__SDCA.NotNull] {owner} instance)"
                     , $"{FLAG_EXTENSIONS}.TryRegister({flag}, instance)"
                 );
 
                 WriteMethod(
                       ref printer
+                    , SelfDoc("TryUnregister")
                     , $"{access} bool TryUnregister({owner} instance)"
                     , $"{FLAG_EXTENSIONS}.TryUnregister({flag}, instance)"
                 );
@@ -326,12 +352,14 @@ namespace EncosyTower.Core.Generators.Types.Flags
             {
                 WriteMethod(
                       ref printer
+                    , SelfDoc("SetValue")
                     , $"{access} void SetValue({owner} value)"
                     , $"{LINK_EXTENSIONS}.SetValue({self}, value)"
                 );
 
                 WriteMethod(
                       ref printer
+                    , SelfDoc("TryRemoveValue")
                     , $"{access} bool TryRemoveValue(out {owner} value)"
                     , $"{LINK_EXTENSIONS}.TryRemoveValue({self}, out value)"
                 );
@@ -349,6 +377,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ObjectDoc("TryAddObject")
                 , $"{access} bool TryAddObject<{obj}>([g__SDCA.NotNull] {obj} obj)"
                 , $"where {obj} : class"
                 , $"{LINK_EXTENSIONS}.TryAddObject({objectLink}, obj)"
@@ -356,6 +385,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ObjectDoc("TryRemoveObject")
                 , $"{access} bool TryRemoveObject<{obj}>({obj} expected)"
                 , $"where {obj} : class"
                 , $"{LINK_EXTENSIONS}.TryRemoveObject({objectLink}, expected)"
@@ -363,6 +393,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ValueDoc("SetValue")
                 , $"{access} void SetValue<{value}>({value} value)"
                 , $"where {value} : struct"
                 , $"{LINK_EXTENSIONS}.SetValue({valueLink}, value)"
@@ -370,19 +401,27 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             WriteMethod(
                   ref printer
+                , ValueDoc("TryRemoveValue")
                 , $"{access} bool TryRemoveValue<{value}>(out {value} value)"
                 , $"where {value} : struct"
                 , $"{LINK_EXTENSIONS}.TryRemoveValue({valueLink}, out value)"
             );
         }
 
-        private static void WriteProperty(ref Printer printer, string signature, string body, bool separate)
+        private static void WriteProperty(
+              ref Printer printer
+            , string documentation
+            , string signature
+            , string body
+            , bool separate
+        )
         {
             if (separate)
             {
                 printer.PrintEndLine();
             }
 
+            printer.PrintLine($"/// <inheritdoc cref=\"{documentation}\"/>");
             printer.PrintLine(signature);
             printer.OpenScope();
             {
@@ -392,17 +431,25 @@ namespace EncosyTower.Core.Generators.Types.Flags
             printer.CloseScope();
         }
 
-        private static void WriteMethod(ref Printer printer, string signature, string body)
+        private static void WriteMethod(ref Printer printer, string documentation, string signature, string body)
         {
             printer.PrintEndLine();
+            printer.PrintLine($"/// <inheritdoc cref=\"{documentation}\"/>");
             printer.PrintLine(INLINE);
             printer.PrintLine(signature);
             printer.WithIncreasedIndent().PrintLine($"=> {body};");
         }
 
-        private static void WriteMethod(ref Printer printer, string signature, string constraint, string body)
+        private static void WriteMethod(
+              ref Printer printer
+            , string documentation
+            , string signature
+            , string constraint
+            , string body
+        )
         {
             printer.PrintEndLine();
+            printer.PrintLine($"/// <inheritdoc cref=\"{documentation}\"/>");
             printer.PrintLine(INLINE);
             printer.PrintLine(signature);
 
@@ -410,6 +457,18 @@ namespace EncosyTower.Core.Generators.Types.Flags
             bodyPrinter.PrintLine(constraint);
             bodyPrinter.PrintLine($"=> {body};");
         }
+
+        private static string FlagDoc(string member)
+            => $"g__ETT.TypeFlag{{T}}.{member}";
+
+        private static string SelfDoc(string member)
+            => $"{FLAG_EXTENSIONS}.{member}{{T}}";
+
+        private static string ObjectDoc(string member)
+            => $"{LINK_EXTENSIONS}.{member}{{TOwner, TObject}}";
+
+        private static string ValueDoc(string member)
+            => $"{LINK_EXTENSIONS}.{member}{{TOwner, TValue}}";
 
         private static string GetFieldModifiers(string accessibility, bool hide)
             => hide ? $"{accessibility} static new readonly" : $"{accessibility} static readonly";
