@@ -1,6 +1,6 @@
 using System;
 
-namespace EncosyTower.Types
+namespace EncosyTower.TypeFlags
 {
     /// <summary>
     /// Generates a type flag API in the annotated partial type: a public <c>TypeFlag</c> field and a nested

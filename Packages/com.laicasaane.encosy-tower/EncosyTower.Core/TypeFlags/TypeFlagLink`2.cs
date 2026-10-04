@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
+using EncosyTower.Types;
 
-namespace EncosyTower.Types
+namespace EncosyTower.TypeFlags
 {
     /// <summary>
     /// The link from type flag owner <typeparamref name="TOwner"/> to <typeparamref name="TLinked"/>. It keys at

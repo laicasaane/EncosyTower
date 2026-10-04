@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Tasks;
 
-namespace EncosyTower.Types
+namespace EncosyTower.TypeFlags
 {
     /// <summary>
     /// Stores and reads the instance or value of a type flag owner, keyed by the owner itself.

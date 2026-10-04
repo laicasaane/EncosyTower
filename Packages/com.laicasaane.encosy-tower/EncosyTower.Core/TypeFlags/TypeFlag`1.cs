@@ -2,9 +2,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Ids;
 using EncosyTower.Tasks;
+using EncosyTower.Types;
 using EncosyTower.Vaults;
 
-namespace EncosyTower.Types
+namespace EncosyTower.TypeFlags
 {
     internal readonly struct TypeFlagState { }
 

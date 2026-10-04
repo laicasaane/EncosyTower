@@ -1,10 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using EncosyTower.TypeFlags;
 using EncosyTower.Types;
 using NUnit.Framework;
 
-namespace EncosyTower.Tests.Core.Types;
+namespace EncosyTower.Tests.Core.TypeFlags;
 
 public sealed partial class TypeFlagTests
 {

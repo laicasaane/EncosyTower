@@ -5,9 +5,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using EncosyTower.Ids;
 using EncosyTower.Tasks;
+using EncosyTower.Types;
 using EncosyTower.Vaults;
 
-namespace EncosyTower.Types
+namespace EncosyTower.TypeFlags
 {
     /// <summary>
     /// Stores and reads the global object or value that a <see cref="TypeFlagLink{TOwner, TLinked}"/> keys.
