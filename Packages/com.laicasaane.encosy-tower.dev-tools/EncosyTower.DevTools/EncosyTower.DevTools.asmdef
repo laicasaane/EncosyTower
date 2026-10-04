@@ -40,6 +40,11 @@
     ],
     "versionDefines": [
         {
+            "name": "com.needle.console",
+            "expression": "",
+            "define": "NEEDLE_CONSOLE"
+        },
+        {
             "name": "com.unity.2d.sprite",
             "expression": "",
             "define": "UNITY_2D_SPRITE"
