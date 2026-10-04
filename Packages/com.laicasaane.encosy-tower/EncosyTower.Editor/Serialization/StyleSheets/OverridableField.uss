@@ -1,0 +1,37 @@
+.encosy-overridable {
+    flex-direction: column;
+}
+
+.encosy-overridable__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.encosy-overridable__row > .unity-base-field,
+.encosy-overridable__row > .unity-property-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.encosy-overridable__override {
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.encosy-overridable__reset {
+    min-width: 48px;
+    margin-left: 4px;
+    margin-right: 0;
+    flex-shrink: 0;
+}
+
+.encosy-overridable__effective {
+    color: var(--unity-colors-label-text);
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 2px;
+}
