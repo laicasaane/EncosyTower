@@ -957,6 +957,83 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task ContinueWith_SkippedOnFaultAndCancellation()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var fault = new InvalidOperationException("antecedent");
+            var canceled = new OperationCanceledException(cancellation.Token);
+            var calls = 0;
+
+            var faultException = await CaptureUnityTaskExceptionAsync(
+                UnityTask.FromException<int>(fault).ContinueWith(CountResult)
+            );
+
+            var canceledException = await CaptureUnityTaskExceptionAsync(
+                UnityTask.FromException<int>(canceled).ContinueWith(CountResult)
+            );
+
+            var nonGenericException = await CaptureUnityTaskExceptionAsync(
+                UnityTask.FromException(fault).ContinueWith(Count)
+            );
+
+            var doubled = await UnityTask.FromResult(20).ContinueWith(Double);
+            await UnityTask.CompletedTask.ContinueWith(Count);
+
+            Assert.That(faultException, Is.SameAs(fault));
+            Assert.That(canceledException, Is.SameAs(canceled));
+            Assert.That(nonGenericException, Is.SameAs(fault));
+            Assert.AreEqual(40, doubled);
+            Assert.AreEqual(1, calls);
+
+            void CountResult(int value)
+            {
+                calls++;
+            }
+
+            void Count()
+            {
+                calls++;
+            }
+
+            static int Double(int value)
+                => value * 2;
+        }
+
+        [Test]
+        public async Task Forget_FaultLogsOnce_CancellationSilent()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var fault = UnityTask.FromException(new InvalidOperationException("forget once"));
+            var canceled = UnityTask.FromCanceled(cancellation.Token);
+
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException: forget once"));
+            fault.Forget();
+            canceled.Forget();
+
+            await Task.Yield();
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        [Test]
+        public async Task Scheduler_ThrowingContinuation_LoggedAndLaterContinuationsRun()
+        {
+            var first = UnityTask.Yield();
+            var second = UnityTask.Yield();
+            var third = UnityTask.Yield();
+
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException: scheduler isolation"));
+            second.GetAwaiter().UnsafeOnCompleted(ThrowFromScheduler);
+
+            await first;
+            await third;
+
+            LogAssert.NoUnexpectedReceived();
+
+            static void ThrowFromScheduler()
+                => throw new InvalidOperationException("scheduler isolation");
+        }
+
+        [Test]
         public async Task Forget_CompletedAndSuspendedSuccessProduceNoLog()
         {
             default(UnityTask).Forget();

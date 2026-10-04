@@ -36,6 +36,28 @@ namespace EncosyTower.Tasks
     [AsyncMethodBuilder(typeof(UnityTaskAsyncMethodBuilder<>))]
     public readonly partial struct UnityTask<T>
     {
+        /// <summary>
+        /// Returns a <see cref="UnityTask"/> that completes when this task completes and discards its result.
+        /// </summary>
+        /// <returns>A task without a result.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> a fault or cancellation of this task propagates unchanged, as the same exception
+        /// instance.
+        /// </para>
+        /// <para>
+        /// <b>Thread:</b> the returned task resumes its awaiter on the kind of thread that called this method: the
+        /// main thread when called on the main thread, a thread-pool thread otherwise.
+        /// </para>
+        /// <para><b>Undefined behaviour:</b></para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// Awaiting this task elsewhere as well, or awaiting the returned task or a copy more than once: may throw
+        /// <see cref="System.InvalidOperationException"/>, return a stale result, or observe another operation's
+        /// result because sources are pooled.
+        /// </description></item>
+        /// </list>
+        /// </remarks>
         public async UnityTask AsUnityTask()
             => _ = await this;
     }
