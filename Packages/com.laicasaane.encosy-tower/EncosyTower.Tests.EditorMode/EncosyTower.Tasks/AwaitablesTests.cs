@@ -83,6 +83,7 @@ namespace EncosyTower.Tests.Tasks
             var enumerator = Awaitables.WhenEach(source.Awaitable).GetAsyncEnumerator(cancellation.Token);
 
             var pending = enumerator.MoveNextAsync();
+            var wasPending = pending.GetAwaiter().IsCompleted == false;
 
             cancellation.Cancel();
             var pendingException = await CaptureAwaitableExceptionAsync(pending);
@@ -91,6 +92,7 @@ namespace EncosyTower.Tests.Tasks
             source.SetResult(1);
             await enumerator.DisposeAsync();
 
+            Assert.IsTrue(wasPending);
             Assert.IsInstanceOf<OperationCanceledException>(pendingException);
             Assert.IsInstanceOf<OperationCanceledException>(laterException);
             Assert.AreEqual(cancellation.Token, ((OperationCanceledException)pendingException).CancellationToken);
@@ -110,6 +112,54 @@ namespace EncosyTower.Tests.Tasks
             source.SetResult(1);
 
             Assert.IsFalse(moved);
+        }
+
+        [Test]
+        public async Task WhenEach_ResultDeliveredToPendingMove_IsCurrent()
+        {
+            var source = new AwaitableCompletionSource<int>();
+            var enumerator = Awaitables.WhenEach(source.Awaitable).GetAsyncEnumerator();
+
+            var pending = enumerator.MoveNextAsync();
+            source.SetResult(5);
+
+            var moved = await pending;
+            var current = enumerator.Current.Result;
+            var movedAfterEnd = await enumerator.MoveNextAsync();
+            await enumerator.DisposeAsync();
+
+            Assert.IsTrue(moved);
+            Assert.AreEqual(5, current);
+            Assert.IsFalse(movedAfterEnd);
+        }
+
+        [Test]
+        public async Task WhenEach_DisposedEnumerator_IgnoresLaterUseAfterReuse()
+        {
+            var first = Awaitables.WhenEach(Awaitables.FromResult(1)).GetAsyncEnumerator();
+            var drained = 0;
+
+            while (await first.MoveNextAsync())
+            {
+                drained++;
+            }
+
+            await first.DisposeAsync();
+
+            var second = Awaitables.WhenEach(Awaitables.FromResult(2)).GetAsyncEnumerator();
+            var firstMoved = await first.MoveNextAsync();
+            var firstCurrent = first.Current.Result;
+            await first.DisposeAsync();
+
+            var secondMoved = await second.MoveNextAsync();
+            var secondCurrent = second.Current.Result;
+            await second.DisposeAsync();
+
+            Assert.AreEqual(1, drained);
+            Assert.IsFalse(firstMoved);
+            Assert.AreEqual(default(int), firstCurrent);
+            Assert.IsTrue(secondMoved);
+            Assert.AreEqual(2, secondCurrent);
         }
 
         [Test]

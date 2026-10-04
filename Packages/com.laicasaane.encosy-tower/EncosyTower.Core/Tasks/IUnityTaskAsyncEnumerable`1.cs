@@ -21,7 +21,7 @@ namespace EncosyTower.Tasks
         /// <para>
         /// <b>Behaviour:</b> cancelling <paramref name="token"/> makes the pending and every later
         /// <see cref="IUnityTaskAsyncEnumerator{T}.MoveNextAsync"/> call throw
-        /// <c>new OperationCanceledException(token)</c>.
+        /// <c>new OperationCanceledException(token)</c>, until the sequence has ended or the enumerator is disposed.
         /// </para>
         /// <para>
         /// After <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/>, further

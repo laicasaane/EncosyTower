@@ -21,8 +21,8 @@ namespace EncosyTower.Tasks
         /// results in completion order; a fault or cancellation of an input appears as
         /// <see cref="UnityTaskWhenEachResult{T}.Exception"/> and does not end the sequence. Cancelling the
         /// enumeration token makes the pending and every later <c>MoveNextAsync</c> throw
-        /// <c>new OperationCanceledException(token)</c>. <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/>
-        /// completes a pending move with <c>false</c>.
+        /// <c>new OperationCanceledException(token)</c>, until the sequence has ended or the enumerator is disposed.
+        /// <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/> completes a pending move with <c>false</c>.
         /// </para>
         /// <para>
         /// <b>Thread:</b> each <c>MoveNextAsync</c> awaiter resumes on the kind of thread that called it: the main
@@ -69,8 +69,8 @@ namespace EncosyTower.Tasks
         /// results in completion order; a fault or cancellation of an input appears as
         /// <see cref="UnityTaskWhenEachResult{T}.Exception"/> and does not end the sequence. Cancelling the
         /// enumeration token makes the pending and every later <c>MoveNextAsync</c> throw
-        /// <c>new OperationCanceledException(token)</c>. <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/>
-        /// completes a pending move with <c>false</c>.
+        /// <c>new OperationCanceledException(token)</c>, until the sequence has ended or the enumerator is disposed.
+        /// <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/> completes a pending move with <c>false</c>.
         /// </para>
         /// <para>
         /// <b>Thread:</b> each <c>MoveNextAsync</c> awaiter resumes on the kind of thread that called it: the main
@@ -248,11 +248,16 @@ namespace EncosyTower.Tasks
                     }
                 }
 
-                pending?.TrySetResult(false);
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetResult(false);
+                }
+                finally
+                {
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
                 }
             }
 
@@ -343,7 +348,7 @@ namespace EncosyTower.Tasks
                 return result;
             }
 
-            private void DisposeAsync(int version)
+            private void Dispose(int version)
             {
                 UnityTaskCompletionSource<bool> pending = null;
                 CancellationTokenRegistration registration = default;
@@ -367,15 +372,20 @@ namespace EncosyTower.Tasks
                     returnToPool = ClaimReturn();
                 }
 
-                pending?.TrySetResult(false);
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetResult(false);
                 }
-                else if (returnToPool)
+                finally
                 {
-                    ReturnToPool();
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
+                    else if (returnToPool)
+                    {
+                        ReturnToPool();
+                    }
                 }
             }
 
@@ -438,11 +448,16 @@ namespace EncosyTower.Tasks
                     cleaned = CleanupIfDetached(out registration);
                 }
 
-                pending?.TrySetException(new OperationCanceledException(token));
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetException(new OperationCanceledException(token));
+                }
+                finally
+                {
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
                 }
             }
 
@@ -577,7 +592,7 @@ namespace EncosyTower.Tasks
                 {
                     if (Interlocked.Exchange(location1: ref _disposed, value: 1) == 0)
                     {
-                        _enumerator.DisposeAsync(_version);
+                        _enumerator.Dispose(_version);
                     }
 
                     return CompletedTask;

@@ -167,11 +167,16 @@ namespace UnityEngine.Tasks
                     }
                 }
 
-                pending?.TrySetResult(false);
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetResult(false);
+                }
+                finally
+                {
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
                 }
             }
 
@@ -267,7 +272,7 @@ namespace UnityEngine.Tasks
                 return result;
             }
 
-            private void DisposeAsync(int version)
+            private void Dispose(int version)
             {
                 AwaitableCompletionSource<bool> pending = null;
                 CancellationTokenRegistration registration = default;
@@ -291,15 +296,20 @@ namespace UnityEngine.Tasks
                     returnToPool = ClaimReturn();
                 }
 
-                pending?.TrySetResult(false);
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetResult(false);
                 }
-                else if (returnToPool)
+                finally
                 {
-                    ReturnToPool();
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
+                    else if (returnToPool)
+                    {
+                        ReturnToPool();
+                    }
                 }
             }
 
@@ -367,11 +377,16 @@ namespace UnityEngine.Tasks
                     cleaned = CleanupIfDetached(out registration);
                 }
 
-                pending?.TrySetException(new OperationCanceledException(token));
-
-                if (cleaned)
+                try
                 {
-                    FinishCleanup(registration);
+                    pending?.TrySetException(new OperationCanceledException(token));
+                }
+                finally
+                {
+                    if (cleaned)
+                    {
+                        FinishCleanup(registration);
+                    }
                 }
             }
 
@@ -507,7 +522,7 @@ namespace UnityEngine.Tasks
                 {
                     if (Interlocked.Exchange(location1: ref _disposed, value: 1) == 0)
                     {
-                        _enumerator.DisposeAsync(_version);
+                        _enumerator.Dispose(_version);
                     }
 
                     return CompletedTask;

@@ -22,7 +22,8 @@ namespace EncosyTower.Tasks
         /// <remarks>
         /// <para>
         /// <b>Behaviour:</b> after the token passed to <see cref="IUnityTaskAsyncEnumerable{T}.GetAsyncEnumerator"/>
-        /// is cancelled, the pending and every later call throw <c>new OperationCanceledException(token)</c>.
+        /// is cancelled, the pending and every later call throw <c>new OperationCanceledException(token)</c>,
+        /// until the sequence has ended or the enumerator is disposed.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main thread when
