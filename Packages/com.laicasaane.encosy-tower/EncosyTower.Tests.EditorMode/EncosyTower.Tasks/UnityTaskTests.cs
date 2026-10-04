@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EncosyTower.Tasks;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 
 #if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
@@ -449,46 +450,52 @@ namespace EncosyTower.Tests.Tasks
             var genericNative = UniTask.FromResult(42);
 
             ConsumeSelectedNative(native, genericNative);
-            var before = GC.GetAllocatedBytesForCurrentThread();
+            var recorder = Recorder.Get("GC.Alloc");
+            recorder.enabled = false;
+            recorder.FilterToCurrentThread();
+            recorder.enabled = true;
 
             for (var i = 0; i < 1_000; i++)
             {
                 ConsumeSelectedNative(native, genericNative);
             }
 
-            var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+            recorder.enabled = false;
+            recorder.CollectFromAllThreads();
+            var allocated = recorder.sampleBlockCount;
 #else
-            var warmupSource = new AwaitableCompletionSource();
-            var genericWarmupSource = new AwaitableCompletionSource<int>();
-            warmupSource.SetResult();
-            genericWarmupSource.SetResult(42);
-            ConsumeSelectedNative(warmupSource.Awaitable, genericWarmupSource.Awaitable);
-
             const int COUNT = 128;
+
+            var warmupTasks = new Awaitable[COUNT];
+            var genericWarmupTasks = new Awaitable<int>[COUNT];
             var nativeTasks = new Awaitable[COUNT];
             var genericNativeTasks = new Awaitable<int>[COUNT];
 
+            FillCompletedNative(warmupTasks, genericWarmupTasks);
+
             for (var i = 0; i < COUNT; i++)
             {
-                var source = new AwaitableCompletionSource();
-                var genericSource = new AwaitableCompletionSource<int>();
-                source.SetResult();
-                genericSource.SetResult(42);
-                nativeTasks[i] = source.Awaitable;
-                genericNativeTasks[i] = genericSource.Awaitable;
+                ConsumeSelectedNative(warmupTasks[i], genericWarmupTasks[i]);
             }
 
-            var before = GC.GetAllocatedBytesForCurrentThread();
+            FillCompletedNative(nativeTasks, genericNativeTasks);
+
+            var recorder = Recorder.Get("GC.Alloc");
+            recorder.enabled = false;
+            recorder.FilterToCurrentThread();
+            recorder.enabled = true;
 
             for (var i = 0; i < COUNT; i++)
             {
                 ConsumeSelectedNative(nativeTasks[i], genericNativeTasks[i]);
             }
 
-            var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+            recorder.enabled = false;
+            recorder.CollectFromAllThreads();
+            var allocated = recorder.sampleBlockCount;
 #endif
 
-            Assert.AreEqual(0L, allocated);
+            Assert.AreEqual(0, allocated);
         }
 
         [Test]
@@ -1519,6 +1526,19 @@ namespace EncosyTower.Tests.Tasks
             s_allocationBoolSink ^= genericCopy.AsUniTask().GetAwaiter().IsCompleted;
         }
 #else
+        private static void FillCompletedNative(Awaitable[] tasks, Awaitable<int>[] genericTasks)
+        {
+            for (var i = 0; i < tasks.Length; i++)
+            {
+                var source = new AwaitableCompletionSource();
+                var genericSource = new AwaitableCompletionSource<int>();
+                source.SetResult();
+                genericSource.SetResult(42);
+                tasks[i] = source.Awaitable;
+                genericTasks[i] = genericSource.Awaitable;
+            }
+        }
+
         private static void ConsumeSelectedNative(Awaitable native, Awaitable<int> genericNative)
         {
             UnityTask wrapper = native;
