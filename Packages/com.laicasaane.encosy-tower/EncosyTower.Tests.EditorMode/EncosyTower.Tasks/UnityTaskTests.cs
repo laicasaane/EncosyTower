@@ -567,6 +567,29 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task RunOnThreadPool_RunsOnWorker_ResumesOnMain()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            using var cancellation = new CancellationTokenSource();
+
+            var workThreadId = await UnityTask.RunOnThreadPool(static () => Thread.CurrentThread.ManagedThreadId);
+            var resumedThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            var canceled = UnityTask.RunOnThreadPool(
+                  static state => ((CancellationTokenSource)state).Cancel()
+                , cancellation
+                , cancellation.Token
+            );
+
+            var exception = await CaptureUnityTaskExceptionAsync(canceled);
+
+            Assert.AreNotEqual(mainThreadId, workThreadId);
+            Assert.AreEqual(mainThreadId, resumedThreadId);
+            Assert.IsInstanceOf<OperationCanceledException>(exception);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)exception).CancellationToken);
+        }
+
+        [Test]
         public async Task GenericAsUnityTask_DiscardsResult()
         {
             await UnityTask.FromResult(42).AsUnityTask();
