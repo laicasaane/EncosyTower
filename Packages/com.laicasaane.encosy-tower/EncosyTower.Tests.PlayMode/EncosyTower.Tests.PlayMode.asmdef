@@ -3,6 +3,9 @@
     "rootNamespace": "EncosyTower.Tests",
     "references": [
         "EncosyTower.Core",
+        "EncosyTower.PageFlows",
+        "EncosyTower.Processing",
+        "EncosyTower.PubSub",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",
@@ -19,7 +22,8 @@
         "Unity.ResourceManager",
         "Unity.TextMeshPro",
         "UnityEditor.TestRunner",
-        "UnityEngine.TestRunner"
+        "UnityEngine.TestRunner",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

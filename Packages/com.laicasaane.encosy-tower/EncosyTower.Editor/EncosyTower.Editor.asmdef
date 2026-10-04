@@ -3,8 +3,6 @@
     "rootNamespace": "EncosyTower.Editor",
     "references": [
         "EncosyTower.Core",
-        "EncosyTower.PageFlows",
-        "EncosyTower.PageFlows.MonoPages",
         "EncosyTower.VisualToolkit",
         "Latios.Core",
         "Latios.Psyshock",

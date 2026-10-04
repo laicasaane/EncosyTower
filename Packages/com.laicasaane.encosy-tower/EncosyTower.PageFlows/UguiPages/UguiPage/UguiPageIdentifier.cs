@@ -1,0 +1,31 @@
+#if UNITY_UGUI
+
+using System.Diagnostics.CodeAnalysis;
+using EncosyTower.StringIds;
+using EncosyTower.UnityExtensions;
+using UnityEngine;
+
+namespace EncosyTower.PageFlows.UguiPages
+{
+    public class UguiPageIdentifier : MonoBehaviour
+    {
+        public string AssetKey { get; internal set; }
+
+        public StringId KeyId { get; internal set; }
+
+        public UnityEntityId<GameObject> GameObjectId { get; internal set; }
+
+        [NotNull]
+        public Transform Transform { get; internal set; }
+
+        [NotNull]
+        public GameObject GameObject { get; internal set; }
+
+        [AllowNull]
+        public CanvasGroup CanvasGroup { get; internal set; }
+
+        public IUguiPage Page { get; internal set; }
+    }
+}
+
+#endif

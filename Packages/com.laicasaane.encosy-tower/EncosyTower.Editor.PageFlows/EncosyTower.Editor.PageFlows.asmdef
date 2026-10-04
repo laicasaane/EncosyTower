@@ -1,0 +1,26 @@
+{
+    "name": "EncosyTower.Editor.PageFlows",
+    "rootNamespace": "EncosyTower.Editor.PageFlows",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.Editor",
+        "EncosyTower.PageFlows"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.ugui",
+            "expression": "",
+            "define": "UNITY_UGUI"
+        }
+    ],
+    "noEngineReferences": false
+}

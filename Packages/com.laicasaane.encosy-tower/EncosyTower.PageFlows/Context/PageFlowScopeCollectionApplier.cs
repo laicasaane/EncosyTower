@@ -13,12 +13,16 @@ namespace EncosyTower.PageFlows
     /// <see cref="PageFlowScopeCollectionApplier{TFlowScopes}"/> should be used
     /// instead to minimize the user code.
     /// </remarks>
-    public interface IPageFlowScopeCollectionApplier : ITrySet<IPageFlowScopeCollection>
+    public interface IPageFlowScopeCollectionApplier
     {
         /// <summary>
         /// The type of struct that implements <see cref="IPageFlowScopeCollection"/>.
         /// </summary>
         Type CollectionType { get; }
+
+        ReadOnlyMemory<string> ScopeIdentifiers { get; }
+
+        bool TryBuild(ArrayMap<string, PageFlowScope> scopes, out string missingIdentifier);
 
         /// <summary>
         /// Applies a value of <see cref="IPageFlowScopeCollection"/> to an <see cref="IPage"/>
@@ -44,6 +48,11 @@ namespace EncosyTower.PageFlows
     {
         private Option<TCollection> _value;
 
+        public ReadOnlyMemory<string> ScopeIdentifiers => new TCollection().ScopeIdentifiers;
+
+        /// <inheritdoc/>
+        Type IPageFlowScopeCollectionApplier.CollectionType => typeof(TCollection);
+
         /// <summary>
         /// Attempts to retrieve a value of <typeparamref name="TCollection"/>.
         /// </summary>
@@ -57,8 +66,28 @@ namespace EncosyTower.PageFlows
         public bool TryGet(out TCollection result)
             => _value.TryGetValue(out result);
 
-        /// <inheritdoc/>
-        Type IPageFlowScopeCollectionApplier.CollectionType => typeof(TCollection);
+        public bool TryBuild(ArrayMap<string, PageFlowScope> scopes, out string missingIdentifier)
+        {
+            var value = new TCollection();
+            var identifiers = value.ScopeIdentifiers.Span;
+
+            for (var i = 0; i < identifiers.Length; i++)
+            {
+                var identifier = identifiers[i];
+
+                if (scopes.TryGetValue(identifier, out var scope) == false)
+                {
+                    missingIdentifier = identifier;
+                    return false;
+                }
+
+                value.TrySetScope(identifier, scope);
+            }
+
+            _value = value;
+            missingIdentifier = null;
+            return true;
+        }
 
         /// <inheritdoc/>
         void IPageFlowScopeCollectionApplier.ApplyTo(IPage page)
@@ -67,12 +96,6 @@ namespace EncosyTower.PageFlows
             {
                 collection.FlowScopeCollection = _value;
             }
-        }
-
-        bool ITrySet<IPageFlowScopeCollection>.TrySet(IPageFlowScopeCollection value)
-        {
-            _value = value.TryCastTo(GenericT.T<TCollection>());
-            return _value.HasValue;
         }
     }
 }

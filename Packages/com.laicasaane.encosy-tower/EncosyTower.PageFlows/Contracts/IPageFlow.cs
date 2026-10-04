@@ -14,33 +14,30 @@ namespace EncosyTower.PageFlows
     }
 
     /// <summary>
-    /// The type implements this interface must also define writable properties
-    /// whose return type is <see cref="PageFlowScope"/>.
+    /// A collection of <see cref="PageFlowScope"/> values, one for each page flow.
     /// </summary>
     /// <remarks>
-    /// Because the system uses reflection mechanism to retrieve property information from this type,
-    /// the type and all of its properties should be annotated with <c>[UnityEngine.Scripting.Preserve]</c>
-    /// so their code will not be stripped away at build time.
+    /// Declare a <c>partial struct</c> with <see cref="PageFlowScopeCollectionAttribute"/>;
+    /// the source generator implements this interface.
     /// </remarks>
-    /// <seealso cref="UnityEngine.Scripting.PreserveAttribute"/>
     /// <example>
     /// <code>
-    /// [UnityEngine.Scripting.Preserve]
-    /// public struct GameFlowScopes : IPageFlowScopeCollection
+    /// [PageFlowScopeCollection]
+    /// public partial struct GamePageFlowScopes
     /// {
-    ///     [UnityEngine.Scripting.Preserve]
-    ///     public PageFlowScope Screen { get; set; }
+    ///     public PageFlowScope Screen { get; private set; }
     ///
-    ///     [UnityEngine.Scripting.Preserve]
-    ///     public PageFlowScope Popup { get; set; }
+    ///     public PageFlowScope Popup { get; private set; }
     ///
-    ///     [UnityEngine.Scripting.Preserve]
-    ///     public PageFlowScope FreeTop { get; set; }
+    ///     public PageFlowScope FreeTop { get; private set; }
     /// }
     /// </code>
     /// </example>
     public interface IPageFlowScopeCollection
     {
+        ReadOnlyMemory<string> ScopeIdentifiers { get; }
+
+        bool TrySetScope(string identifier, PageFlowScope scope);
     }
 
     public interface ISinglePageStack<TPage> : IPageFlow

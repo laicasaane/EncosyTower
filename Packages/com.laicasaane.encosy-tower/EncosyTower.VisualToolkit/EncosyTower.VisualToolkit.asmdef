@@ -5,7 +5,6 @@
         "EncosyTower.Core",
         "EncosyTower.Mvvm",
         "EncosyTower.PageFlows",
-        "EncosyTower.PageFlows.MonoPages",
         "Latios.Core",
         "Latios.Psyshock",
         "Latios.Transforms",

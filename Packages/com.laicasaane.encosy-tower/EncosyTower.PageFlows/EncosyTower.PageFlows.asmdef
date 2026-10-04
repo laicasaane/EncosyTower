@@ -3,8 +3,11 @@
     "rootNamespace": "EncosyTower.PageFlows",
     "references": [
         "EncosyTower.Core",
+        "EncosyTower.Processing",
         "EncosyTower.PubSub",
-        "UniTask"
+        "UniTask",
+        "Unity.Collections",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -17,6 +20,17 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "UNITY_ADDRESSABLES"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "",
+            "define": "UNITY_UGUI"
+        }
+    ],
     "noEngineReferences": false
 }

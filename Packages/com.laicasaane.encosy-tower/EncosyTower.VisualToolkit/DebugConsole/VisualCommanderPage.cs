@@ -1,12 +1,14 @@
+#if UNITY_UGUI
+
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.MonoPages;
+using EncosyTower.PageFlows.UguiPages;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace EncosyTower.VisualToolkit.Commands
 {
     [RequireComponent(typeof(UIDocument))]
-    public partial class VisualCommanderPage : MonoPageBase, IPageOnAfterShow, IPageOnBeforeHide
+    public partial class VisualCommanderPage : UguiPageBase, IPageOnAfterShow, IPageOnBeforeHide
     {
         [SerializeField] private float _directoryListWidth = 200f;
         [SerializeField] private bool _showOnAwake;
@@ -46,3 +48,5 @@ namespace EncosyTower.VisualToolkit.Commands
         }
     }
 }
+
+#endif
