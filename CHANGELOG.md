@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.4
+
+### Core
+
+- Added `UnityTaskCompletionSource` and `UnityTaskCompletionSource<T>`, which work on both the UniTask and `Awaitable` backends
+- Added `UnityTaskTiming` and `UnityTaskDelayType` to choose when `Delay`, `Yield`, `NextFrameAsync`, `WaitUntil`, and `WaitWhile` resume
+- Added `IUnityTaskAsyncEnumerable<T>`, `IUnityTaskAsyncEnumerator<T>`, and `UnityTaskWhenEachResult<T>` for `UnityTask.WhenEach`
+- Added the `ENCOSY_UNITYTASK_AWAITABLE` symbol to use the `Awaitable` backend even when UniTask is installed
+- Changed `UnityTask` timing, thread-pool, `WhenAll`, `WhenAny`, `WhenEach`, `ContinueWith`, and `Forget` to behave the same on both backends
+- Changed `Delay` and `Yield` to take `UnityTaskTiming` and `UnityTaskDelayType` (breaking: use `UnityTaskDelayType.UnscaledDeltaTime` instead of `ignoreTimeScale: true`)
+- Changed `UnityTask.WhenEach` to return `IUnityTaskAsyncEnumerable<UnityTaskWhenEachResult<T>>` (breaking)
+- Changed `UnityTask.WhenAll` to fail on the first fault, and `WhenAny` to pick the lowest index on ties without cancelling the other tasks
+- Changed `ContinueWith` to run only after success, and `Forget` to log faults in every build and ignore cancellation
+- Changed `UnityTask` async methods, `FromException`, and completion sources to rethrow the original exception instance, including cancellations
+- Changed `UnityTask` async methods and completion sources to resume on the kind of thread that created the task
+- Changed the player-loop scheduler to log a throwing continuation and keep running the rest
+- Changed `FromResult`, `GetCompleted`, and completed tasks to not allocate on the `Awaitable` backend
+- Fixed `Awaitables.FromException` replacing the original `OperationCanceledException`
+- Fixed `Awaitables.Forget` not logging faults in release builds
+- Fixed `WhenEach` losing results that complete at the same time, on both `UnityTask` and `Awaitables`
+- Fixed `WhenEach` cancellation: it throws `OperationCanceledException(token)`, ignores a cancellation after the sequence ends, and no longer risks a deadlock across threads
+- Fixed `WhenEach` enumerators: `DisposeAsync` can be called more than once, and after it `MoveNextAsync` returns `false`
+- Removed the backend-typed `Delay` and `Yield` overloads and the `ignoreTimeScale` parameter (breaking)
+- Removed the `configureAwait` parameter from `UnityTask.RunOnThreadPool` (breaking)
+
+### SourceGen
+
+- Rebuilt all source generators for `0.1.8-preview.4`
+
+### Tests
+
+- Added Unity tests for `UnityTask` and `Awaitables` behavior on both backends, including steady-state allocation tests
+
+### Samples
+
+- Updated sample paths for `0.1.8-preview.4`
+
+### Versioning
+
+- `EncosyTower.SourceGen.*` to `0.1.8-preview.4`
+- Package and sample references to `0.1.8-preview.4`
+
 ## 0.1.8-preview.3
 
 ### Core
