@@ -1,0 +1,111 @@
+.encosy-page-flows {
+    padding-top: 2px;
+}
+
+.encosy-page-flows__section {
+    margin-top: 8px;
+    padding: 6px;
+    background-color: var(--unity-colors-helpbox-background);
+    border-radius: 3px;
+}
+
+.encosy-page-flows__section-header {
+    flex-direction: row;
+    align-items: center;
+    min-height: 24px;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-default-border);
+}
+
+.encosy-page-flows__heading {
+    flex-grow: 1;
+    -unity-font-style: bold;
+    margin-left: 3px;
+}
+
+.encosy-page-flows__group-heading {
+    -unity-font-style: bold;
+    margin: 8px 3px 3px 3px;
+}
+
+.encosy-page-flows__header-button {
+    margin-right: 0;
+}
+
+.encosy-page-flows__warning {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin: 0 4px 0 0;
+}
+
+.encosy-page-flows__readonly {
+    flex-direction: row;
+    align-items: center;
+}
+
+.encosy-page-flows__readonly-value {
+    flex-grow: 1;
+    margin-left: 0;
+    padding-left: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.encosy-page-flows__note {
+    color: var(--unity-colors-label-text);
+    opacity: 0.75;
+    margin: 4px 3px;
+    white-space: normal;
+}
+
+.encosy-page-flows__list {
+    margin-top: 4px;
+}
+
+.encosy-page-flows__cell {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 3px;
+    min-width: 0;
+}
+
+.encosy-page-flows__cell > * {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.encosy-page-flows__cell--invalid {
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: rgb(217, 181, 82);
+}
+
+.encosy-page-flows__status {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.encosy-page-flows__status-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.encosy-page-flows__popup {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.encosy-page-flows__popup .unity-base-popup-field__text {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
