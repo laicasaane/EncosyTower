@@ -18,7 +18,7 @@ namespace EncosyTower.Editor.Tasks
             var p = Printer.DefaultLarge;
             PrintBackend(
                   ref p
-                , guard: "#if !UNITASK"
+                , guard: "#if !UNITASK || ENCOSY_UNITYTASK_AWAITABLE"
                 , backendUsing: "using UnityEngine;\nusing UnityEngine.Tasks;"
                 , backendType: "Awaitables"
                 , unwrapMethod: "AsAwaitable"
@@ -28,7 +28,7 @@ namespace EncosyTower.Editor.Tasks
             p = Printer.DefaultLarge;
             PrintBackend(
                   ref p
-                , guard: "#if UNITASK"
+                , guard: "#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE"
                 , backendUsing: "using Cysharp.Threading.Tasks;"
                 , backendType: "UniTask"
                 , unwrapMethod: "AsUniTask"

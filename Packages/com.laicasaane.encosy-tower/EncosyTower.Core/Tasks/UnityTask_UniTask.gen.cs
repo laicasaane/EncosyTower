@@ -7,7 +7,7 @@
 ///***************************************************///
 /// </auto-generated>
 
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
 
 #pragma warning disable
 

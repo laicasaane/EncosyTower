@@ -1,4 +1,4 @@
-#if !UNITASK
+#if !UNITASK || ENCOSY_UNITYTASK_AWAITABLE
 
 using System;
 using System.Collections;
@@ -308,7 +308,7 @@ namespace EncosyTower.Tasks
         public static UnityTask WhenAll(UnityTask[] tasks, int count)
         {
             DebuggingThrowHelper.ThrowIfNull(tasks);
-            global::EncosyTower.Tasks.ThrowHelper.ThrowIfCountOutOfRange(count, tasks.Length);
+            global::EncosyTower.Tasks.ThrowHelper.ThrowIfCountOutOfRange((uint)count <= (uint)tasks.Length);
             var adapter = AwaitableEnumerable.Rent(tasks, count);
             return new(WhenAllAndReturn(adapter));
         }
@@ -329,7 +329,7 @@ namespace EncosyTower.Tasks
         public static UnityTask<T[]> WhenAll<T>(UnityTask<T>[] tasks, int count)
         {
             DebuggingThrowHelper.ThrowIfNull(tasks);
-            global::EncosyTower.Tasks.ThrowHelper.ThrowIfCountOutOfRange(count, tasks.Length);
+            global::EncosyTower.Tasks.ThrowHelper.ThrowIfCountOutOfRange((uint)count <= (uint)tasks.Length);
             var adapter = AwaitableEnumerable<T>.Rent(tasks, count);
             return new(WhenAllAndReturn(adapter));
         }

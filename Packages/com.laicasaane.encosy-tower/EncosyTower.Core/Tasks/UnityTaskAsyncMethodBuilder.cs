@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
 using Cysharp.Threading.Tasks.CompilerServices;
 #else
 using UnityEngine;
@@ -13,7 +13,7 @@ namespace EncosyTower.Tasks
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder
     {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
         private AsyncUniTaskMethodBuilder _builder;
 
         private UnityTaskAsyncMethodBuilder(AsyncUniTaskMethodBuilder builder)
@@ -26,7 +26,7 @@ namespace EncosyTower.Tasks
 
         public static UnityTaskAsyncMethodBuilder Create()
         {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             return new(AsyncUniTaskMethodBuilder.Create());
 #else
             return new(Awaitable.AwaitableAsyncMethodBuilder.Create());
@@ -72,7 +72,7 @@ namespace EncosyTower.Tasks
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder<T>
     {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
         private AsyncUniTaskMethodBuilder<T> _builder;
 
         private UnityTaskAsyncMethodBuilder(AsyncUniTaskMethodBuilder<T> builder)
@@ -85,7 +85,7 @@ namespace EncosyTower.Tasks
 
         public static UnityTaskAsyncMethodBuilder<T> Create()
         {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             return new(AsyncUniTaskMethodBuilder<T>.Create());
 #else
             return new(Awaitable.AwaitableAsyncMethodBuilder<T>.Create());

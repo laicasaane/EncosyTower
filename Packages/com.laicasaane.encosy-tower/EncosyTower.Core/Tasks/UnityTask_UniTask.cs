@@ -1,4 +1,4 @@
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
 
 using System;
 using System.Collections;
@@ -308,7 +308,7 @@ namespace EncosyTower.Tasks
         public static UnityTask WhenAll(UnityTask[] tasks, int count)
         {
             DebuggingThrowHelper.ThrowIfNull(tasks);
-            ThrowHelper.ThrowIfCountOutOfRange(count, tasks.Length);
+            ThrowHelper.ThrowIfCountOutOfRange((uint)count <= (uint)tasks.Length);
             var adapter = UniTaskEnumerable.Rent(tasks, count);
 
             try
@@ -345,7 +345,7 @@ namespace EncosyTower.Tasks
         public static UnityTask<T[]> WhenAll<T>(UnityTask<T>[] tasks, int count)
         {
             DebuggingThrowHelper.ThrowIfNull(tasks);
-            ThrowHelper.ThrowIfCountOutOfRange(count, tasks.Length);
+            ThrowHelper.ThrowIfCountOutOfRange((uint)count <= (uint)tasks.Length);
             var adapter = UniTaskEnumerable<T>.Rent(tasks, count);
 
             try

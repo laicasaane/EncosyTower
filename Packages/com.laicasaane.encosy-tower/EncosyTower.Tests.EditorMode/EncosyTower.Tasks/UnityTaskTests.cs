@@ -7,7 +7,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
 using Cysharp.Threading.Tasks;
 #else
 using EncosyTower.UnityExtensions;
@@ -167,7 +167,7 @@ namespace EncosyTower.Tests.Tasks
         [Test]
         public async Task SelectedNativeBridge_PreservesIdentityAndResult()
         {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             var native = UniTask.CompletedTask;
             var genericNative = UniTask.FromResult(42);
             UnityTask wrapper = native;
@@ -202,7 +202,7 @@ namespace EncosyTower.Tests.Tasks
             cancellation.Cancel();
             var canceledWrapper = AwaitAsync(Task.FromCanceled(cancellation.Token));
 
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             UnityTask faultRoundTrip = faultWrapper.AsUniTask();
             UnityTask canceledRoundTrip = canceledWrapper.AsUniTask();
 #else
@@ -219,7 +219,7 @@ namespace EncosyTower.Tests.Tasks
             );
         }
 
-#if !UNITASK
+#if !UNITASK || ENCOSY_UNITYTASK_AWAITABLE
         [Test]
         public void NullAwaitableInputs_ThrowWithTaskParameter()
         {
@@ -241,7 +241,7 @@ namespace EncosyTower.Tests.Tasks
         [Test]
         public void SelectedNativeOperations_AddNoManagedAllocation()
         {
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             var native = UniTask.CompletedTask;
             var genericNative = UniTask.FromResult(42);
 
@@ -635,7 +635,7 @@ namespace EncosyTower.Tests.Tasks
             return null;
         }
 
-#if UNITASK
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
         private static void ConsumeSelectedNative(UniTask native, UniTask<int> genericNative)
         {
             UnityTask wrapper = native;
