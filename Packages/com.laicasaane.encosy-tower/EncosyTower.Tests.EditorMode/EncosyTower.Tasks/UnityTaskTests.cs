@@ -261,6 +261,59 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task AsyncMethodCompletedOnWorker_ResumesOnCreatorMain()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            var completedThreadId = await CompleteOnWorkerAndGetThreadIdAsync();
+            var resumedThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            Assert.AreNotEqual(mainThreadId, completedThreadId);
+            Assert.AreEqual(mainThreadId, resumedThreadId);
+        }
+
+        [Test]
+        public async Task SynchronousAsyncMethod_IsCompletedFalseOnOtherThreadKind()
+        {
+            var task = CompleteSynchronouslyAsync();
+
+            var isCompletedOnWorker = await Task.Factory.StartNew(
+                  static state => ((UnityTask)state).IsCompleted
+                , task
+                , CancellationToken.None
+                , TaskCreationOptions.DenyChildAttach
+                , TaskScheduler.Default
+            );
+
+            Assert.IsTrue(task.IsCompleted);
+            Assert.IsFalse(isCompletedOnWorker);
+            await task;
+        }
+
+        [Test]
+        public async Task CompletionSourceCreatedOnWorker_AwaitedOnMain_ResumesOnWorker()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            var source = await Task.Run<UnityTaskCompletionSource>(CreateCompletedSourceOnWorker);
+
+            Assert.AreEqual(mainThreadId, Thread.CurrentThread.ManagedThreadId);
+
+            var isCompletedOnMain = source.Task.IsCompleted;
+            await source.Task;
+            var resumedThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            Assert.IsFalse(isCompletedOnMain);
+            Assert.AreNotEqual(mainThreadId, resumedThreadId);
+
+            static UnityTaskCompletionSource CreateCompletedSourceOnWorker()
+            {
+                var result = new UnityTaskCompletionSource();
+                result.SetResult();
+                return result;
+            }
+        }
+
+        [Test]
         public async Task IsCompleted_FalseWhenDoneButCurrentThreadKindDiffers()
         {
             var source = new UnityTaskCompletionSource();
@@ -1020,6 +1073,12 @@ namespace EncosyTower.Tests.Tasks
         private static void ThrowInstance(Exception exception)
             => throw exception;
 
+        private static async UnityTask<int> CompleteOnWorkerAndGetThreadIdAsync()
+        {
+            await Task.Run(static () => { }).ConfigureAwait(false);
+            return Thread.CurrentThread.ManagedThreadId;
+        }
+
         private static async UnityTask<int> AwaitAndGetThreadIdAsync(UnityTask task)
         {
             await task;
@@ -1036,7 +1095,7 @@ namespace EncosyTower.Tests.Tasks
             );
 
         private static (OperationCanceledException before, OperationCanceledException after)[] CreateCancellations(
-            CancellationToken token
+              CancellationToken token
         )
             => new[] {
                 (

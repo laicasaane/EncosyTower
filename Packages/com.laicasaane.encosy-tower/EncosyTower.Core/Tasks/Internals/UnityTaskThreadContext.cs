@@ -18,9 +18,21 @@ namespace EncosyTower.Tasks
         private static SynchronizationContext s_mainContext;
 
         internal static UnityTaskThreadAffinity CurrentAffinity
-            => Thread.CurrentThread.ManagedThreadId == s_mainThreadId
-                ? UnityTaskThreadAffinity.MainThread
-                : UnityTaskThreadAffinity.ThreadPool;
+        {
+            get
+            {
+                var mainThreadId = Volatile.Read(ref s_mainThreadId);
+
+                if (mainThreadId == 0)
+                {
+                    return UnityTaskThreadAffinity.None;
+                }
+
+                return Thread.CurrentThread.ManagedThreadId == mainThreadId
+                    ? UnityTaskThreadAffinity.MainThread
+                    : UnityTaskThreadAffinity.ThreadPool;
+            }
+        }
 
         internal static bool Matches(UnityTaskThreadAffinity affinity)
             => affinity == UnityTaskThreadAffinity.None || affinity == CurrentAffinity;
@@ -33,23 +45,28 @@ namespace EncosyTower.Tasks
                 return;
             }
 
-            var box = ContinuationBox.Rent(continuation, state);
-
             if (affinity == UnityTaskThreadAffinity.MainThread)
             {
                 var context = s_mainContext;
 
                 if (context == null)
                 {
-                    box.InvokeAndReturn();
+                    continuation(state);
                     return;
                 }
 
-                context.Post(static state => ((ContinuationBox)state).InvokeAndReturn(), box);
+                context.Post(
+                      static box => ((ContinuationBox)box).InvokeAndReturn()
+                    , ContinuationBox.Rent(continuation, state)
+                );
+
                 return;
             }
 
-            ThreadPool.UnsafeQueueUserWorkItem(static state => ((ContinuationBox)state).InvokeAndReturn(), box);
+            ThreadPool.UnsafeQueueUserWorkItem(
+                  static box => ((ContinuationBox)box).InvokeAndReturn()
+                , ContinuationBox.Rent(continuation, state)
+            );
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -68,8 +85,8 @@ namespace EncosyTower.Tasks
 
         private static void Capture()
         {
-            s_mainThreadId = Thread.CurrentThread.ManagedThreadId;
             s_mainContext = SynchronizationContext.Current;
+            Volatile.Write(ref s_mainThreadId, Thread.CurrentThread.ManagedThreadId);
         }
 
         private sealed class ContinuationBox

@@ -17,9 +17,6 @@ namespace EncosyTower.Tasks
         private IUnityTaskRunner _runner;
         private UnityTaskThreadAffinity _affinity;
 
-        public static UnityTaskAsyncMethodBuilder Create()
-            => default;
-
         public UnityTask Task
         {
             get
@@ -28,6 +25,9 @@ namespace EncosyTower.Tasks
                 return new(new UniTask(_runner, _runner.Version));
             }
         }
+
+        public static UnityTaskAsyncMethodBuilder Create()
+            => default;
 
         public void SetResult()
         {
@@ -52,10 +52,7 @@ namespace EncosyTower.Tasks
             stateMachine.MoveNext();
         }
 
-        public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-              ref TAwaiter awaiter
-            , ref TStateMachine stateMachine
-        )
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
@@ -107,9 +104,6 @@ namespace EncosyTower.Tasks
         private IUnityTaskRunner<T> _runner;
         private UnityTaskThreadAffinity _affinity;
 
-        public static UnityTaskAsyncMethodBuilder<T> Create()
-            => default;
-
         public UnityTask<T> Task
         {
             get
@@ -118,6 +112,9 @@ namespace EncosyTower.Tasks
                 return new(new UniTask<T>(_runner, _runner.Version));
             }
         }
+
+        public static UnityTaskAsyncMethodBuilder<T> Create()
+            => default;
 
         public void SetResult(T result)
         {
@@ -142,10 +139,7 @@ namespace EncosyTower.Tasks
             stateMachine.MoveNext();
         }
 
-        public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-              ref TAwaiter awaiter
-            , ref TStateMachine stateMachine
-        )
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {

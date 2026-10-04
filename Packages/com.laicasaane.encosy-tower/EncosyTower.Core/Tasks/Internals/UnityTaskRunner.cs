@@ -33,11 +33,15 @@ namespace EncosyTower.Tasks
         void SetException(Exception exception);
     }
 
-    internal struct UnityTaskNoStateMachine : IAsyncStateMachine
+    internal readonly struct UnityTaskNoStateMachine : IAsyncStateMachine
     {
-        public void MoveNext() { }
+        public readonly void MoveNext()
+        {
+        }
 
-        public void SetStateMachine(IAsyncStateMachine stateMachine) { }
+        public readonly void SetStateMachine(IAsyncStateMachine stateMachine)
+        {
+        }
     }
 
     internal sealed class UnityTaskRunner<TStateMachine> : IUnityTaskRunner
@@ -49,12 +53,18 @@ namespace EncosyTower.Tasks
         private static readonly Stack<UnityTaskRunner<TStateMachine>> s_pool = new();
 
         private readonly Action _moveNextAction;
+#if ENABLE_IL2CPP
+        private readonly Action _returnAction;
+#endif
         private UnityTaskSourceCore<object> _core;
         private TStateMachine _stateMachine;
 
         private UnityTaskRunner()
         {
             _moveNextAction = MoveNext;
+#if ENABLE_IL2CPP
+            _returnAction = Return;
+#endif
         }
 
         public short Version => _core.Version;
@@ -102,7 +112,11 @@ namespace EncosyTower.Tasks
             }
             finally
             {
+#if ENABLE_IL2CPP
+                PlayerLoopScheduler.Schedule(UnityTaskTiming.LastPostLateUpdate, _returnAction);
+#else
                 Return();
+#endif
             }
         }
 
@@ -133,12 +147,18 @@ namespace EncosyTower.Tasks
         private static readonly Stack<UnityTaskRunner<TStateMachine, T>> s_pool = new();
 
         private readonly Action _moveNextAction;
+#if ENABLE_IL2CPP
+        private readonly Action _returnAction;
+#endif
         private UnityTaskSourceCore<T> _core;
         private TStateMachine _stateMachine;
 
         private UnityTaskRunner()
         {
             _moveNextAction = MoveNext;
+#if ENABLE_IL2CPP
+            _returnAction = Return;
+#endif
         }
 
         public short Version => _core.Version;
@@ -186,7 +206,11 @@ namespace EncosyTower.Tasks
             }
             finally
             {
+#if ENABLE_IL2CPP
+                PlayerLoopScheduler.Schedule(UnityTaskTiming.LastPostLateUpdate, _returnAction);
+#else
                 Return();
+#endif
             }
         }
 

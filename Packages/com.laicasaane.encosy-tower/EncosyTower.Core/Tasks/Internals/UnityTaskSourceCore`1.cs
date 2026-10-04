@@ -89,7 +89,12 @@ namespace EncosyTower.Tasks
             if (previous == null)
             {
                 _state = state;
-                previous = Interlocked.CompareExchange(ref _continuation, continuation, null);
+
+                previous = Interlocked.CompareExchange(
+                      location1: ref _continuation
+                    , value: continuation
+                    , comparand: null
+                );
             }
 
             if (previous == null)
@@ -149,7 +154,11 @@ namespace EncosyTower.Tasks
         private void SignalCompletion()
         {
             if (Volatile.Read(ref _continuation) == null
-                && Interlocked.CompareExchange(ref _continuation, s_completedSentinel, null) == null
+                && Interlocked.CompareExchange(
+                      location1: ref _continuation
+                    , value: s_completedSentinel
+                    , comparand: null
+                ) == null
             )
             {
                 return;

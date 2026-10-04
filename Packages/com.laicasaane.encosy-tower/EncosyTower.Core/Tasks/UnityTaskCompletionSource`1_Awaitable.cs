@@ -52,14 +52,14 @@ namespace EncosyTower.Tasks
         internal static UnityTaskCompletionSource<T> CreateInline()
             => new(relay: false);
 
+        private static async Awaitable<T> RelayAsync(Awaitable<T> inner)
+            => await inner;
+
         internal void Reset()
         {
             _source.Reset();
             _task = new(RelayAsync(_source.Awaitable));
         }
-
-        private static async Awaitable<T> RelayAsync(Awaitable<T> inner)
-            => await inner;
     }
 }
 
