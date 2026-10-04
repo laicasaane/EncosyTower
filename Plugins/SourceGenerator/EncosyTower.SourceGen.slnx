@@ -16,6 +16,7 @@
     <Project Path="Samples/Samples.Processing/Samples.Processing.csproj" />
     <Project Path="Samples/Samples.PubSub/Samples.PubSub.csproj" />
     <Project Path="Samples/Samples.RuntimeTypeCaches/Samples.RuntimeTypeCaches.csproj" />
+    <Project Path="Samples/Samples.TypeFlags/Samples.TypeFlags.csproj" />
     <Project Path="Samples/Samples.TypeWraps/Samples.TypeWraps.csproj" />
     <Project Path="Samples/Samples.UnionIds/Samples.UnionIds.csproj" />
     <Project Path="Samples/Samples.Persistences/Samples.Persistences.csproj" />
