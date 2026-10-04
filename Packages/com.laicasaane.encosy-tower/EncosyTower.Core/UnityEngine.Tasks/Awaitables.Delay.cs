@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using EncosyTower.Tasks;
 using UnityEngine;
 
 namespace UnityEngine.Tasks
@@ -120,6 +121,27 @@ namespace UnityEngine.Tasks
             return delayTimeSpan;
         }
 
+        private static UnityTaskTiming ToUnityTaskTiming(AwaitablePlayerLoopTiming timing)
+            => timing switch {
+                AwaitablePlayerLoopTiming.Initialization => UnityTaskTiming.Initialization,
+                AwaitablePlayerLoopTiming.LastInitialization => UnityTaskTiming.LastInitialization,
+                AwaitablePlayerLoopTiming.EarlyUpdate => UnityTaskTiming.EarlyUpdate,
+                AwaitablePlayerLoopTiming.LastEarlyUpdate => UnityTaskTiming.LastEarlyUpdate,
+                AwaitablePlayerLoopTiming.FixedUpdate => UnityTaskTiming.FixedUpdate,
+                AwaitablePlayerLoopTiming.LastFixedUpdate => UnityTaskTiming.LastFixedUpdate,
+                AwaitablePlayerLoopTiming.PreUpdate => UnityTaskTiming.PreUpdate,
+                AwaitablePlayerLoopTiming.LastPreUpdate => UnityTaskTiming.LastPreUpdate,
+                AwaitablePlayerLoopTiming.Update => UnityTaskTiming.Update,
+                AwaitablePlayerLoopTiming.LastUpdate => UnityTaskTiming.LastUpdate,
+                AwaitablePlayerLoopTiming.PreLateUpdate => UnityTaskTiming.PreLateUpdate,
+                AwaitablePlayerLoopTiming.LastPreLateUpdate => UnityTaskTiming.LastPreLateUpdate,
+                AwaitablePlayerLoopTiming.PostLateUpdate => UnityTaskTiming.PostLateUpdate,
+                AwaitablePlayerLoopTiming.LastPostLateUpdate => UnityTaskTiming.LastPostLateUpdate,
+                AwaitablePlayerLoopTiming.TimeUpdate => UnityTaskTiming.TimeUpdate,
+                AwaitablePlayerLoopTiming.LastTimeUpdate => UnityTaskTiming.LastTimeUpdate,
+                _ => UnityTaskTiming.Update,
+            };
+
         private sealed class DelayPromise
         {
             private const int MAX_POOL_SIZE = 256;
@@ -190,7 +212,7 @@ namespace UnityEngine.Tasks
                         );
                     }
 
-                    AwaitablePlayerLoopScheduler.Schedule(timing, promise._tick);
+                    PlayerLoopScheduler.Schedule(ToUnityTaskTiming(timing), promise._tick);
                 }
 
                 return AwaitAndRelease(promise);
@@ -239,7 +261,7 @@ namespace UnityEngine.Tasks
                     return;
                 }
 
-                AwaitablePlayerLoopScheduler.Schedule(_timing, _tick);
+                PlayerLoopScheduler.Schedule(ToUnityTaskTiming(_timing), _tick);
             }
 
             private bool IsDelayComplete()

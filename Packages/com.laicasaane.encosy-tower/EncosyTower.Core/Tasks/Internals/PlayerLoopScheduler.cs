@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.LowLevel;
 using UnityEngine.PlayerLoop;
 
@@ -7,9 +8,9 @@ using UnityEngine.PlayerLoop;
 using UnityEditor;
 #endif
 
-namespace UnityEngine.Tasks
+namespace EncosyTower.Tasks
 {
-    internal static class AwaitablePlayerLoopScheduler
+    internal static class PlayerLoopScheduler
     {
         private static readonly PhaseQueue[] s_queues = CreateQueues();
         private static readonly object s_initializeLock = new();
@@ -38,7 +39,7 @@ namespace UnityEngine.Tasks
 #endif
         }
 
-        internal static void Schedule(AwaitablePlayerLoopTiming timing, Action continuation)
+        internal static void Schedule(UnityTaskTiming timing, Action continuation)
         {
             EnsureInitialized();
             s_queues[(int)timing].Enqueue(continuation);
@@ -70,11 +71,19 @@ namespace UnityEngine.Tasks
                     return;
                 }
 
-                var playerLoop = LowLevel.PlayerLoop.GetCurrentPlayerLoop();
-                Inject(ref playerLoop, typeof(Initialization), typeof(InitializationRunner), RunInitialization, false);
+                var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+
                 Inject(
                       ref playerLoop
-                    , typeof(Initialization)
+                    , typeof(UnityEngine.PlayerLoop.Initialization)
+                    , typeof(InitializationRunner)
+                    , RunInitialization
+                    , false
+                );
+
+                Inject(
+                      ref playerLoop
+                    , typeof(UnityEngine.PlayerLoop.Initialization)
                     , typeof(LastInitializationRunner)
                     , RunLastInitialization
                     , true
@@ -105,7 +114,7 @@ namespace UnityEngine.Tasks
                 );
                 Inject(ref playerLoop, typeof(TimeUpdate), typeof(TimeUpdateRunner), RunTimeUpdate, false);
                 Inject(ref playerLoop, typeof(TimeUpdate), typeof(LastTimeUpdateRunner), RunLastTimeUpdate, true);
-                LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+                UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
 
 #if UNITY_EDITOR
                 EditorApplication.update -= RunEditorLoop;
@@ -283,7 +292,15 @@ namespace UnityEngine.Tasks
                 {
                     var continuation = _running[i];
                     _running[i] = null;
-                    continuation();
+
+                    try
+                    {
+                        continuation();
+                    }
+                    catch (Exception exception)
+                    {
+                        ThrowHelper.LogUnobservedException(exception);
+                    }
                 }
             }
         }
