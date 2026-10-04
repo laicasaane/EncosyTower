@@ -509,6 +509,64 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task Yield_DoesNotCompleteSynchronously_AndCompletes()
+        {
+            var task = UnityTask.Yield();
+
+            Assert.IsFalse(task.IsCompleted);
+            await task;
+        }
+
+        [Test]
+        public async Task NextFrameAsync_Completes()
+        {
+            await UnityTask.NextFrameAsync();
+        }
+
+        [Test]
+        public async Task Delay_ImmediateAndPolledCancellation_PreserveToken()
+        {
+            using var canceled = new CancellationTokenSource();
+            using var later = new CancellationTokenSource();
+            canceled.Cancel();
+
+            var immediate = UnityTask.Delay(millisecondsDelay: 10_000, token: canceled.Token);
+            var polled = UnityTask.Delay(millisecondsDelay: 10_000, token: later.Token);
+
+            Assert.IsTrue(immediate.IsCompleted);
+            Assert.IsFalse(polled.IsCompleted);
+
+            var immediateException = await CaptureUnityTaskExceptionAsync(immediate);
+            later.Cancel();
+            var polledException = await CaptureUnityTaskExceptionAsync(polled);
+
+            Assert.IsInstanceOf<OperationCanceledException>(immediateException);
+            Assert.IsInstanceOf<OperationCanceledException>(polledException);
+            Assert.AreEqual(canceled.Token, ((OperationCanceledException)immediateException).CancellationToken);
+            Assert.AreEqual(later.Token, ((OperationCanceledException)polledException).CancellationToken);
+        }
+
+        [Test]
+        public async Task WaitUntil_PredicateTrue_CompletesSynchronously()
+        {
+            var task = UnityTask.WaitUntil(static () => true);
+
+            Assert.IsTrue(task.IsCompleted);
+            await task;
+        }
+
+        [Test]
+        public async Task WaitUntil_PredicateThrows_Faults()
+        {
+            var fault = new InvalidOperationException("predicate");
+            var task = UnityTask.WaitUntil(fault, static state => throw state);
+
+            var exception = await CaptureUnityTaskExceptionAsync(task);
+
+            Assert.That(exception, Is.SameAs(fault));
+        }
+
+        [Test]
         public async Task GenericAsUnityTask_DiscardsResult()
         {
             await UnityTask.FromResult(42).AsUnityTask();

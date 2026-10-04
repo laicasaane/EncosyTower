@@ -133,72 +133,6 @@ namespace EncosyTower.Tasks
     public readonly partial struct UnityTask
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Delay(
-              int millisecondsDelay
-            , bool ignoreTimeScale = false
-            , AwaitablePlayerLoopTiming delayTiming = AwaitablePlayerLoopTiming.Update
-            , CancellationToken cancellationToken = default
-            , bool cancelImmediately = false
-        )
-            => new(Awaitables.Delay(
-                  millisecondsDelay
-                , ignoreTimeScale
-                , delayTiming
-                , cancellationToken
-                , cancelImmediately
-            ));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Delay(
-              TimeSpan delayTimeSpan
-            , bool ignoreTimeScale = false
-            , AwaitablePlayerLoopTiming delayTiming = AwaitablePlayerLoopTiming.Update
-            , CancellationToken cancellationToken = default
-            , bool cancelImmediately = false
-        )
-            => new(Awaitables.Delay(delayTimeSpan, ignoreTimeScale, delayTiming, cancellationToken, cancelImmediately));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Delay(
-              int millisecondsDelay
-            , AwaitableDelayType delayType
-            , AwaitablePlayerLoopTiming delayTiming = AwaitablePlayerLoopTiming.Update
-            , CancellationToken cancellationToken = default
-            , bool cancelImmediately = false
-        )
-            => new(Awaitables.Delay(millisecondsDelay, delayType, delayTiming, cancellationToken, cancelImmediately));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Delay(
-              TimeSpan delayTimeSpan
-            , AwaitableDelayType delayType
-            , AwaitablePlayerLoopTiming delayTiming = AwaitablePlayerLoopTiming.Update
-            , CancellationToken cancellationToken = default
-            , bool cancelImmediately = false
-        )
-            => new(Awaitables.Delay(delayTimeSpan, delayType, delayTiming, cancellationToken, cancelImmediately));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Yield()
-            => new(Awaitables.Yield());
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Yield(AwaitablePlayerLoopTiming timing)
-            => new(Awaitables.Yield(timing));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Yield(CancellationToken cancellationToken, bool cancelImmediately = false)
-            => new(Awaitables.Yield(cancellationToken, cancelImmediately));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask Yield(
-              AwaitablePlayerLoopTiming timing
-            , CancellationToken cancellationToken
-            , bool cancelImmediately = false
-        )
-            => new(Awaitables.Yield(timing, cancellationToken, cancelImmediately));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask RunOnThreadPool(
               Action action
             , bool configureAwait = true
@@ -383,22 +317,6 @@ namespace EncosyTower.Tasks
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IAwaitableAsyncEnumerable<AwaitableWhenEachResult<T>> WhenEach<T>(IEnumerable<UnityTask<T>> tasks)
             => Awaitables.WhenEach(AwaitableEnumerable<T>.CreatePersistent(tasks));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask NextFrameAsync(CancellationToken token)
-            => new(Awaitable.NextFrameAsync(token));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask WaitUntil(Func<bool> predicate, CancellationToken token)
-            => new(Awaitables.WaitUntil(predicate, token));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask WaitUntil<T>(T state, Func<T, bool> predicate, CancellationToken token)
-            => new(Awaitables.WaitUntil(state, predicate, token));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask WaitWhile<T>(T state, Func<T, bool> predicate, CancellationToken token)
-            => new(Awaitables.WaitWhile(state, predicate, token));
 
         private static async Awaitable WhenAllAndReturn(AwaitableEnumerable adapter)
         {
