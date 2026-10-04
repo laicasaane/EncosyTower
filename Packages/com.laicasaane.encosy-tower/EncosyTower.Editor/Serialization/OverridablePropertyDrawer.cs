@@ -29,6 +29,8 @@ namespace EncosyTower.Editor.Serialization
         private static readonly GUIContent s_overrideContent = new(OVERRIDE_TEXT);
 
         private static StyleSheet s_styleSheet;
+        private static StyleSheet s_darkStyleSheet;
+        private static StyleSheet s_lightStyleSheet;
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -39,6 +41,7 @@ namespace EncosyTower.Editor.Serialization
 
             var root = new VisualElement();
             root.AddToClassList(USS_CLASS_NAME);
+            root.styleSheets.Add(GetThemeStyleSheet());
             root.styleSheets.Add(EditorAPI.GetOrLoadAsset(ref s_styleSheet, OverridableStyleSheetPaths.USS_PATH));
 
             var row = new VisualElement();
@@ -54,6 +57,7 @@ namespace EncosyTower.Editor.Serialization
             OverridableChoiceField choiceField = null;
             PropertyField valueField = null;
             VisualElement alignedField;
+            VisualElement alignedInput = null;
 
             if (OverridableDrawerModel.GetMode(valueType) == OverridableMode.Dropdown)
             {
@@ -121,10 +125,19 @@ namespace EncosyTower.Editor.Serialization
             {
                 var input = alignedField.Q(className: BaseField<int>.inputUssClassName);
 
-                if (input != null)
+                if (input == null)
                 {
-                    effective.style.marginLeft = input.worldBound.xMin - root.worldBound.xMin;
+                    return;
                 }
+
+                if (alignedInput != input)
+                {
+                    alignedInput?.UnregisterCallback<GeometryChangedEvent>(OnAlignedFieldGeometryChanged);
+                    alignedInput = input;
+                    alignedInput.RegisterCallback<GeometryChangedEvent>(OnAlignedFieldGeometryChanged);
+                }
+
+                effective.style.marginLeft = input.worldBound.xMin - root.worldBound.xMin;
             }
 
             void Refresh()
@@ -281,6 +294,11 @@ namespace EncosyTower.Editor.Serialization
                 isOverriddenProperty.boolValue = isOverridden;
             }
         }
+
+        private static StyleSheet GetThemeStyleSheet()
+            => EditorGUIUtility.isProSkin
+                ? EditorAPI.GetOrLoadAsset(ref s_darkStyleSheet, OverridableStyleSheetPaths.DARK_USS_PATH)
+                : EditorAPI.GetOrLoadAsset(ref s_lightStyleSheet, OverridableStyleSheetPaths.LIGHT_USS_PATH);
 
         private static string[] GetChoices(Type valueType, OverridableDefaultAttribute attribute)
         {
