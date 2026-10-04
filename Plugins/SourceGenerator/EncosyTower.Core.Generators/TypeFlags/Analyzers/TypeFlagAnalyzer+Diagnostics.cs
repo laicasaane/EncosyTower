@@ -1,4 +1,4 @@
-namespace EncosyTower.Core.Analyzers.Types.Flags
+namespace EncosyTower.Core.Analyzers.TypeFlags
 {
     internal sealed partial class TypeFlagAnalyzer
     {

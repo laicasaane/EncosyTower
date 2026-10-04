@@ -1,7 +1,7 @@
-using EncosyTower.Core.Generators.Types.Flags;
+using EncosyTower.Core.Generators.TypeFlags;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 [TestClass]
 public sealed class TypeFlagGeneratorIncrementalTests
@@ -10,7 +10,7 @@ public sealed class TypeFlagGeneratorIncrementalTests
     private const string OUTPUTS = "TypeFlagGenerator.Outputs";
 
     private const string NESTED_OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {
@@ -23,7 +23,7 @@ public sealed class TypeFlagGeneratorIncrementalTests
         """;
 
     private const string NAMESPACED_OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         {{EDIT}}
         {
@@ -33,7 +33,7 @@ public sealed class TypeFlagGeneratorIncrementalTests
         """;
 
     private const string MARKED_OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {
@@ -43,7 +43,7 @@ public sealed class TypeFlagGeneratorIncrementalTests
         """;
 
     private const string OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {
@@ -70,7 +70,7 @@ public sealed class TypeFlagGeneratorIncrementalTests
         """;
 
     private const string HIERARCHY = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {

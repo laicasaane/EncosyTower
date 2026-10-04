@@ -1,6 +1,6 @@
-using EncosyTower.Core.Analyzers.Types.Flags;
+using EncosyTower.Core.Analyzers.TypeFlags;
 
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 [TestClass]
 public sealed class TypeFlagAnalyzerTests
@@ -22,7 +22,7 @@ public sealed class TypeFlagAnalyzerTests
     private const string TOOL = "EncosyTower.Fake.Generators.BaseGenerator";
 
     private const string OWN_GENERATED_CODE = "System.CodeDom.Compiler.GeneratedCode("
-        + "\"EncosyTower.Core.Generators.Types.Flags.TypeFlagGenerator\", \"1.0\")";
+        + "\"EncosyTower.Core.Generators.TypeFlags.TypeFlagGenerator\", \"1.0\")";
 
     private static readonly NamedSource[] s_stubSources = {
         new("TypeFlagRuntime.cs", TypeFlagTestFixture.RUNTIME_STUB_SOURCE),
@@ -407,9 +407,9 @@ public sealed class TypeFlagAnalyzerTests
     public Task SkippedOrMissingRuntime_ModuleSkip()
         => AnalyzerTestHelper.VerifyAsync<TypeFlagAnalyzer>(
               """
-              using EncosyTower.Types;
+              using EncosyTower.TypeFlags;
 
-              [assembly: EncosyTower.Types.SkipSourceGeneratorsForAssembly]
+              [assembly: EncosyTower.TypeFlags.SkipSourceGeneratorsForAssembly]
 
               namespace TestProject
               {
@@ -513,7 +513,7 @@ public sealed class TypeFlagAnalyzerTests
         );
 
     private static string Wrap(string declarations)
-        => $"using EncosyTower.Types;\n\nnamespace TestProject\n{{\n{declarations}\n}}\n";
+        => $"using EncosyTower.TypeFlags;\n\nnamespace TestProject\n{{\n{declarations}\n}}\n";
 
     private static Task RunAsync(string declarations, params DiagnosticResult[] expected)
         => AnalyzerTestHelper.VerifyAsync<TypeFlagAnalyzer>(

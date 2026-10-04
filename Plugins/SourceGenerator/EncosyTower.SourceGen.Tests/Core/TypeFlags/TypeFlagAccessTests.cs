@@ -1,10 +1,10 @@
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 [TestClass]
 public sealed class TypeFlagAccessTests
 {
     private const string OWNERS = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame
         {
@@ -76,7 +76,7 @@ public sealed class TypeFlagAccessTests
     [DataRow("_ = ScoreBoard.TypeFlag.TryGetInstance(out _);", false, new[] { "CS1061" })]
     [DataRow("_ = ScoreBoard.TypeFlag.TryGetInstance(out _);", true, new string[0])]
     [DataRow("_ = ScoreBoard.TypeFlag.Enable();", true, new[] { "CS1061" })]
-    [DataRow("_ = default(EncosyTower.Types.TypeFlag<ScoreBoard>).Enable();", false, new string[0])]
+    [DataRow("_ = default(EncosyTower.TypeFlags.TypeFlag<ScoreBoard>).Enable();", false, new string[0])]
     public async Task UseExtensionsNeedsImport(string statement, bool withImport, string[] expectedIds)
     {
         var run = await RunAsync(new NamedSource("Probe.cs", WrapProbe(statement, withImport)));
@@ -111,7 +111,7 @@ public sealed class TypeFlagAccessTests
 
     private static string WrapProbe(string statement, bool withImport)
     {
-        var import = withImport ? "using EncosyTower.Types;\n\n" : string.Empty;
+        var import = withImport ? "using EncosyTower.TypeFlags;\n\n" : string.Empty;
 
         return $$"""
             {{import}}namespace MyGame

@@ -1,6 +1,6 @@
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.TypeFlags;
 
-namespace EncosyTower.Core.Generators.Types.Flags
+namespace EncosyTower.Core.Generators.TypeFlags
 {
     internal readonly partial struct TypeFlagSpec : IEquatable<TypeFlagSpec>
     {

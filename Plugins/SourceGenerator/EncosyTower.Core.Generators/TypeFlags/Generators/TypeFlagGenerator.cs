@@ -1,6 +1,6 @@
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.TypeFlags;
 
-namespace EncosyTower.Core.Generators.Types.Flags
+namespace EncosyTower.Core.Generators.TypeFlags
 {
     [Generator]
     internal sealed class TypeFlagGenerator : IIncrementalGenerator

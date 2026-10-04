@@ -1,7 +1,7 @@
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.TypeFlags;
 using Microsoft.CodeAnalysis.Text;
 
-namespace EncosyTower.Core.Generators.Types.Flags
+namespace EncosyTower.Core.Generators.TypeFlags
 {
     internal static class TypeFlagSourceWriter
     {
@@ -10,8 +10,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
         private const string EXCLUDE_FROM_CODE_COVERAGE = "[g__SDCA.ExcludeFromCodeCoverage]";
         private const string INLINE = "[g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]";
-        private const string LINK_EXTENSIONS = "g__ETT.TypeFlagLinkExtensions";
-        private const string FLAG_EXTENSIONS = "g__ETT.TypeFlagExtensions";
+        private const string LINK_EXTENSIONS = "g__ETTF.TypeFlagLinkExtensions";
+        private const string FLAG_EXTENSIONS = "g__ETTF.TypeFlagExtensions";
         private const string OBJECT_TYPE_PARAMETER = "TObject";
         private const string VALUE_TYPE_PARAMETER = "TValue";
         private const string DISABLE_CS0414 = "#pragma warning disable CS0414";
@@ -68,7 +68,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
         private static void WriteAliases(ref Printer printer, bool useExtensions)
         {
-            printer.PrintLine("using g__ETT = global::EncosyTower.Types;");
+            printer.PrintLineIf(useExtensions == false, "using g__ETT = global::EncosyTower.Types;");
+            printer.PrintLine("using g__ETTF = global::EncosyTower.TypeFlags;");
             printer.PrintLineIf(useExtensions == false, "using g__ETTs = global::EncosyTower.Tasks;");
             printer.PrintLine("using g__SCDC = global::System.CodeDom.Compiler;");
 
@@ -83,7 +84,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
         private static void WriteExtensionFields(ref Printer printer, in TypeFlagSpec spec)
         {
             var writeAccess = spec.Options.WriteAccess;
-            var flagType = $"g__ETT.TypeFlag<{spec.FullTypeName}>";
+            var flagType = $"g__ETTF.TypeFlag<{spec.FullTypeName}>";
             var publicType = writeAccess == TypeFlagAccess.Public ? flagType : $"{flagType}.ReadOnly";
             var publicModifiers = GetFieldModifiers("public", IsHidden(spec, TypeFlagMember.TypeFlagField));
 
@@ -189,8 +190,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
         private static void WriteReadMembers(ref Printer printer, in TypeFlagSpec spec, in TypeParameterNames names)
         {
             var owner = spec.FullTypeName;
-            var flag = $"default(g__ETT.TypeFlag<{owner}>)";
-            var self = $"default(g__ETT.TypeFlagLink<{owner}, {owner}>)";
+            var flag = $"default(g__ETTF.TypeFlag<{owner}>)";
+            var self = $"default(g__ETTF.TypeFlagLink<{owner}, {owner}>)";
             var api = spec.Options.Api;
             var hasSelf = (api & TypeFlagApi.Self) != 0;
             var hasAsync = hasSelf && (api & TypeFlagApi.Async) != 0;
@@ -279,8 +280,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             var obj = names.Object;
             var value = names.Value;
-            var objectLink = $"default(g__ETT.TypeFlagLink<{owner}, {obj}>)";
-            var valueLink = $"default(g__ETT.TypeFlagLink<{owner}, {value}>)";
+            var objectLink = $"default(g__ETTF.TypeFlagLink<{owner}, {obj}>)";
+            var valueLink = $"default(g__ETTF.TypeFlagLink<{owner}, {value}>)";
 
             WriteMethod(
                   ref printer
@@ -323,8 +324,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
         )
         {
             var owner = spec.FullTypeName;
-            var flag = $"default(g__ETT.TypeFlag<{owner}>)";
-            var self = $"default(g__ETT.TypeFlagLink<{owner}, {owner}>)";
+            var flag = $"default(g__ETTF.TypeFlag<{owner}>)";
+            var self = $"default(g__ETTF.TypeFlagLink<{owner}, {owner}>)";
             var api = spec.Options.Api;
             var hasSelf = (api & TypeFlagApi.Self) != 0;
 
@@ -372,8 +373,8 @@ namespace EncosyTower.Core.Generators.Types.Flags
 
             var obj = names.Object;
             var value = names.Value;
-            var objectLink = $"default(g__ETT.TypeFlagLink<{owner}, {obj}>)";
-            var valueLink = $"default(g__ETT.TypeFlagLink<{owner}, {value}>)";
+            var objectLink = $"default(g__ETTF.TypeFlagLink<{owner}, {obj}>)";
+            var valueLink = $"default(g__ETTF.TypeFlagLink<{owner}, {value}>)";
 
             WriteMethod(
                   ref printer
@@ -459,7 +460,7 @@ namespace EncosyTower.Core.Generators.Types.Flags
         }
 
         private static string FlagDoc(string member)
-            => $"g__ETT.TypeFlag{{T}}.{member}";
+            => $"g__ETTF.TypeFlag{{T}}.{member}";
 
         private static string SelfDoc(string member)
             => $"{FLAG_EXTENSIONS}.{member}{{T}}";

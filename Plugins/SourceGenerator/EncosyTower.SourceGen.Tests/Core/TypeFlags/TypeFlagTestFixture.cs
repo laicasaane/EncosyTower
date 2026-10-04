@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using EncosyTower.Core.Generators.Types.Flags;
+using EncosyTower.Core.Generators.TypeFlags;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 internal static class TypeFlagTestFixture
 {
@@ -13,7 +13,7 @@ internal static class TypeFlagTestFixture
     internal const string CONSUMER_ASSEMBLY_NAME = "ConsumerProject";
 
     internal const string ATTRIBUTE_STUB_SOURCE = """
-        namespace EncosyTower.Types
+        namespace EncosyTower.TypeFlags
         {
             [System.AttributeUsage(
                   System.AttributeTargets.Class | System.AttributeTargets.Struct
@@ -74,11 +74,15 @@ internal static class TypeFlagTestFixture
 
         namespace EncosyTower.Types
         {
+            public readonly struct TypeId<T> { }
+        }
+
+        namespace EncosyTower.TypeFlags
+        {
             using System.Diagnostics.CodeAnalysis;
             using System.Threading;
             using EncosyTower.Tasks;
-
-            public readonly struct TypeId<T> { }
+            using EncosyTower.Types;
 
             public readonly struct TypeFlag<T>
             {

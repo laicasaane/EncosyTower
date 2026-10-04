@@ -1,7 +1,7 @@
 using System.Globalization;
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.TypeFlags;
 
-namespace EncosyTower.Core.Analyzers.Types.Flags
+namespace EncosyTower.Core.Analyzers.TypeFlags
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     internal sealed partial class TypeFlagAnalyzer : DiagnosticAnalyzer

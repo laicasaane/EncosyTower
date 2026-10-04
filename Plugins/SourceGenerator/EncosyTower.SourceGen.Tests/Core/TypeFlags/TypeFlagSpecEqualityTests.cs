@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
-using EncosyTower.Core.Generators.Types.Flags;
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.Generators.TypeFlags;
+using EncosyTower.Core.TypeFlags;
 
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 [TestClass]
 public sealed class TypeFlagSpecEqualityTests

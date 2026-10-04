@@ -1,16 +1,16 @@
 using System.Collections.Immutable;
-using EncosyTower.Core.Analyzers.Types.Flags;
-using EncosyTower.Core.Types.Flags;
+using EncosyTower.Core.Analyzers.TypeFlags;
+using EncosyTower.Core.TypeFlags;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace EncosyTower.SourceGen.Tests.Core.Types.Flags;
+namespace EncosyTower.SourceGen.Tests.Core.TypeFlags;
 
 [TestClass]
 public sealed class TypeFlagGeneratorTests
 {
     internal const string CLASS_OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Audio
         {
@@ -35,7 +35,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string STRUCT_OWNER_PUBLIC = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Graphics
         {
@@ -61,7 +61,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string RELATED_ONLY = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Settings
         {
@@ -80,7 +80,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string INTERNAL_SELF = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Services
         {
@@ -96,7 +96,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string NESTED_STATE_MARKER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
         using UnityEngine;
 
         namespace MyGame.UIs
@@ -127,7 +127,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string USE_EXTENSIONS_CLASS = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Scores
         {
@@ -141,7 +141,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string USE_EXTENSIONS_INTERNAL_STRUCT = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Scores
         {
@@ -151,7 +151,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string USE_EXTENSIONS_PUBLIC = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame.Scores
         {
@@ -161,7 +161,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string NESTED_GENERIC_OWNER = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace MyGame
         {
@@ -178,7 +178,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string DERIVED_HIDING = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {
@@ -199,7 +199,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string HAND_WRITTEN_GENERIC_BASE = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
         using UnityEngine;
 
         namespace MyGame.Markers
@@ -225,7 +225,7 @@ public sealed class TypeFlagGeneratorTests
         """;
 
     internal const string PRIVATE_BASE_MEMBERS = """
-        using EncosyTower.Types;
+        using EncosyTower.TypeFlags;
 
         namespace TestProject
         {
@@ -340,7 +340,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task SupportedShapes(string declaration, string expectedHeader, bool isValueType)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -368,7 +368,7 @@ public sealed class TypeFlagGeneratorTests
     {
         var run = await RunAsync(
               """
-              using EncosyTower.Types;
+              using EncosyTower.TypeFlags;
 
               namespace TestProject
               {
@@ -392,7 +392,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task GlobalNamespaceOwner()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             [TypeFlag]
             public partial class GlobalOwner
@@ -415,7 +415,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task EscapedIdentifiers()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace MyGame.@event
             {
@@ -434,7 +434,7 @@ public sealed class TypeFlagGeneratorTests
 
         AssertHasLine(source, "namespace MyGame.@event");
         AssertHasLine(source, "    partial class @class");
-        StringAssert.Contains(source, "g__ETT.TypeFlag<global::MyGame.@event.@class>");
+        StringAssert.Contains(source, "g__ETTF.TypeFlag<global::MyGame.@event.@class>");
         TypeFlagTestFixture.AssertCompilerDiagnostics(run);
     }
 
@@ -449,7 +449,7 @@ public sealed class TypeFlagGeneratorTests
     {
         var run = await RunSourcesAsync(
               new NamedSource("Owner.cs", $$"""
-                  using EncosyTower.Types;
+                  using EncosyTower.TypeFlags;
 
                   namespace TestProject
                   {
@@ -492,7 +492,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task UndefinedOption(string options, bool generates)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -542,7 +542,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task OwnMemberConflict(string members)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -562,7 +562,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task OwnMemberConflict_PositionalRecord()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -584,7 +584,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task NameFreeInOtherMode(string options, string members)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -610,7 +610,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task OwnerNamedAfterMember(string marker, string ownerName, bool generates)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -635,7 +635,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task DerivedNestedInMarkedBase()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -670,7 +670,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task ExtensionsBaseInternalWriter()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -692,12 +692,12 @@ public sealed class TypeFlagGeneratorTests
 
         AssertHasMember(
               source
-            , "public static new readonly g__ETT.TypeFlag<global::TestProject.Derived>.ReadOnly TypeFlag = default;"
+            , "public static new readonly g__ETTF.TypeFlag<global::TestProject.Derived>.ReadOnly TypeFlag = default;"
         );
 
         AssertHasMember(
               source
-            , "private static new readonly g__ETT.TypeFlag<global::TestProject.Derived> s_typeFlag = default;"
+            , "private static new readonly g__ETTF.TypeFlag<global::TestProject.Derived> s_typeFlag = default;"
         );
 
         TypeFlagTestFixture.AssertCompilerDiagnostics(run);
@@ -722,7 +722,7 @@ public sealed class TypeFlagGeneratorTests
     {
         var libraryRun = await TypeFlagTestFixture.RunAsync(
               [new NamedSource("Base.cs", """
-                  using EncosyTower.Types;
+                  using EncosyTower.TypeFlags;
 
                   namespace Library
                   {
@@ -740,7 +740,7 @@ public sealed class TypeFlagGeneratorTests
         var library = TypeFlagTestFixture.EmitReference(libraryRun);
         var run = await TypeFlagTestFixture.RunAsync(
               [new NamedSource("Derived.cs", """
-                  using EncosyTower.Types;
+                  using EncosyTower.TypeFlags;
 
                   namespace TestProject
                   {
@@ -771,7 +771,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task InheritedConflict()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -793,7 +793,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task InheritedConflictThroughMarkedBase()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -831,7 +831,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task UnmarkedDerived()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -856,7 +856,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task UnsupportedOwner(string declaration)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -890,7 +890,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task MissingPartial(string declaration, string metadataName)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -906,7 +906,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task RepeatedMarker()
     {
         var run = await RunAsync("""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -923,19 +923,19 @@ public sealed class TypeFlagGeneratorTests
     }
 
     [TestMethod]
-    [DataRow("[assembly: EncosyTower.Types.SkipSourceGeneratorsForAssembly]", false)]
+    [DataRow("[assembly: EncosyTower.TypeFlags.SkipSourceGeneratorsForAssembly]", false)]
     [DataRow("[assembly: EncosyTower.CodeGen.SkipSourceGeneratorsForAssembly]", false)]
     [DataRow(
         """
         [assembly: EncosyTower.CodeGen.SkipSourceGeneratorsForAssembly]
-        [assembly: EncosyTower.CodeGen.AllowSourceGeneratorsForAssembly("EncosyTower.Types")]
+        [assembly: EncosyTower.CodeGen.AllowSourceGeneratorsForAssembly("EncosyTower.TypeFlags")]
         """,
         true
     )]
     public async Task SkippedAssembly(string assemblyAttributes, bool generates)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             {{assemblyAttributes}}
 
@@ -963,7 +963,7 @@ public sealed class TypeFlagGeneratorTests
     {
         var run = await RunAsync(
               """
-              using EncosyTower.Types;
+              using EncosyTower.TypeFlags;
 
               namespace TestProject
               {
@@ -996,7 +996,7 @@ public sealed class TypeFlagGeneratorTests
     public async Task UnresolvedBase(string declarations)
     {
         var run = await RunAsync($$"""
-            using EncosyTower.Types;
+            using EncosyTower.TypeFlags;
 
             namespace TestProject
             {
@@ -1149,8 +1149,7 @@ public sealed class TypeFlagGeneratorTests
               FindSourceGeneratorRoot()
             , "EncosyTower.SourceGen.Tests"
             , "Core"
-            , "Types"
-            , "Flags"
+            , "TypeFlags"
             , "Snapshots"
             , $"TypeFlagGeneratorTests.{name}.verified.cs"
         );

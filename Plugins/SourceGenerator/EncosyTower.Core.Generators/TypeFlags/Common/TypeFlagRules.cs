@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace EncosyTower.Core.Types.Flags
+namespace EncosyTower.Core.TypeFlags
 {
     internal enum TypeFlagAccess : byte
     {
@@ -58,13 +58,13 @@ namespace EncosyTower.Core.Types.Flags
 
     internal static class TypeFlagRules
     {
-        public const string NAMESPACE = "EncosyTower.Types";
-        public const string ATTRIBUTE = "global::EncosyTower.Types.TypeFlagAttribute";
-        public const string ATTRIBUTE_METADATA_NAME = "EncosyTower.Types.TypeFlagAttribute";
-        public const string SKIP_ATTRIBUTE = "global::EncosyTower.Types.SkipSourceGeneratorsForAssemblyAttribute";
-        public const string TYPE_FLAG_METADATA_NAME = "EncosyTower.Types.TypeFlag`1";
+        public const string NAMESPACE = "EncosyTower.TypeFlags";
+        public const string ATTRIBUTE = "global::EncosyTower.TypeFlags.TypeFlagAttribute";
+        public const string ATTRIBUTE_METADATA_NAME = "EncosyTower.TypeFlags.TypeFlagAttribute";
+        public const string SKIP_ATTRIBUTE = "global::EncosyTower.TypeFlags.SkipSourceGeneratorsForAssemblyAttribute";
+        public const string TYPE_FLAG_METADATA_NAME = "EncosyTower.TypeFlags.TypeFlag`1";
         public const string GENERATED_CODE_ATTRIBUTE = "global::System.CodeDom.Compiler.GeneratedCodeAttribute";
-        public const string GENERATOR_METADATA_NAME = "EncosyTower.Core.Generators.Types.Flags.TypeFlagGenerator";
+        public const string GENERATOR_METADATA_NAME = "EncosyTower.Core.Generators.TypeFlags.TypeFlagGenerator";
         public const string READ_ONLY_NAME = "ReadOnly";
         public const string TYPE_FLAG_NAME = "TypeFlag";
         public const string READ_WRITE_FIELD_NAME = "s_typeFlag";
