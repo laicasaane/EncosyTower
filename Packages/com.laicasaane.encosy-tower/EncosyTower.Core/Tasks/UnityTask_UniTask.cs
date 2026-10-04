@@ -36,6 +36,10 @@ namespace EncosyTower.Tasks
         public UniTask AsUniTask()
             => _task;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static UnityTask<T> CreateFromResult<T>(T value)
+            => new(UniTask.FromResult(value));
+
         public readonly struct Awaiter : ICriticalNotifyCompletion
         {
             private readonly UniTask.Awaiter _awaiter;
@@ -103,12 +107,6 @@ namespace EncosyTower.Tasks
 
     public readonly partial struct UnityTask
     {
-        public static UnityTask CompletedTask
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(UniTask.CompletedTask);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask Delay(
               int millisecondsDelay
@@ -263,26 +261,6 @@ namespace EncosyTower.Tasks
             , CancellationToken cancellationToken = default
         )
             => new(UniTask.RunOnThreadPool(function, state, configureAwait, cancellationToken));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask FromException(Exception exception)
-            => new(UniTask.FromException(exception));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromException<T>(Exception exception)
-            => new(UniTask.FromException<T>(exception));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromResult<T>(T value)
-            => new(UniTask.FromResult(value));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask FromCanceled(CancellationToken cancellationToken = default)
-            => new(UniTask.FromCanceled(cancellationToken));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromCanceled<T>(CancellationToken cancellationToken = default)
-            => new(UniTask.FromCanceled<T>(cancellationToken));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask WhenAll(params UnityTask[] tasks)
@@ -444,18 +422,6 @@ namespace EncosyTower.Tasks
             IEnumerable<UnityTask<T>> tasks
         )
             => UniTask.WhenEach(UniTaskEnumerable<T>.CreatePersistent(tasks));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask GetCompleted()
-            => CompletedTask;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> GetCompleted<T>()
-            => FromResult<T>(default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> GetCompleted<T>(T value)
-            => FromResult(value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask NextFrameAsync(CancellationToken token)

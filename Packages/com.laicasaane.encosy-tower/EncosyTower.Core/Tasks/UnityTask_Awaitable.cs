@@ -132,12 +132,6 @@ namespace EncosyTower.Tasks
 
     public readonly partial struct UnityTask
     {
-        public static UnityTask CompletedTask
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(Awaitables.CompletedTask);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask Delay(
               int millisecondsDelay
@@ -273,26 +267,6 @@ namespace EncosyTower.Tasks
             => new(Awaitables.RunOnThreadPool(function, state, configureAwait, cancellationToken));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask FromException(Exception exception)
-            => new(Awaitables.FromException(exception));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromException<T>(Exception exception)
-            => new(Awaitables.FromException<T>(exception));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromResult<T>(T value)
-            => new(Awaitables.FromResult(value));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask FromCanceled(CancellationToken cancellationToken = default)
-            => new(Awaitables.FromCanceled(cancellationToken));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> FromCanceled<T>(CancellationToken cancellationToken = default)
-            => new(Awaitables.FromCanceled<T>(cancellationToken));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask WhenAll(params UnityTask[] tasks)
             => WhenAll(tasks, tasks?.Length ?? 0);
 
@@ -409,18 +383,6 @@ namespace EncosyTower.Tasks
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IAwaitableAsyncEnumerable<AwaitableWhenEachResult<T>> WhenEach<T>(IEnumerable<UnityTask<T>> tasks)
             => Awaitables.WhenEach(AwaitableEnumerable<T>.CreatePersistent(tasks));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask GetCompleted()
-            => CompletedTask;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> GetCompleted<T>()
-            => FromResult<T>(default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static UnityTask<T> GetCompleted<T>(T value)
-            => FromResult(value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static UnityTask NextFrameAsync(CancellationToken token)

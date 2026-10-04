@@ -438,6 +438,77 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task FromExceptionAndFromCanceled_PreserveInstanceAndToken()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var fault = new InvalidOperationException("fault");
+            var canceled = new OperationCanceledException(cancellation.Token);
+
+            var faultException = await CaptureUnityTaskExceptionAsync(UnityTask.FromException(fault));
+            var canceledException = await CaptureUnityTaskExceptionAsync(UnityTask.FromException(canceled));
+            var tokenException = await CaptureUnityTaskExceptionAsync(UnityTask.FromCanceled(cancellation.Token));
+
+            var genericFault = await CaptureUnityTaskExceptionAsync(UnityTask.FromException<int>(fault));
+            var genericCanceled = await CaptureUnityTaskExceptionAsync(UnityTask.FromException<int>(canceled));
+            var genericToken = await CaptureUnityTaskExceptionAsync(UnityTask.FromCanceled<int>(cancellation.Token));
+
+            Assert.That(faultException, Is.SameAs(fault));
+            Assert.That(canceledException, Is.SameAs(canceled));
+            Assert.That(genericFault, Is.SameAs(fault));
+            Assert.That(genericCanceled, Is.SameAs(canceled));
+            Assert.IsInstanceOf<OperationCanceledException>(tokenException);
+            Assert.IsInstanceOf<OperationCanceledException>(genericToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)tokenException).CancellationToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)genericToken).CancellationToken);
+        }
+
+        [Test]
+        public async Task CompletedFactoryTasks_CompleteInlineOnWorker()
+        {
+            var mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            var failures = await Task.Run<string>(AwaitFactoriesOnWorkerAsync);
+
+            Assert.IsEmpty(failures);
+
+            async Task<string> AwaitFactoriesOnWorkerAsync()
+            {
+                var workerThreadId = Thread.CurrentThread.ManagedThreadId;
+                var result = string.Empty;
+
+                if (workerThreadId == mainThreadId)
+                {
+                    return "The worker ran on the main thread.";
+                }
+
+                result += Check(UnityTask.CompletedTask.IsCompleted, nameof(UnityTask.CompletedTask));
+                result += Check(UnityTask.GetCompleted<int>(1).IsCompleted, nameof(UnityTask.GetCompleted));
+                result += Check(UnityTask.FromResult(2).IsCompleted, nameof(UnityTask.FromResult));
+                result += Check(UnityTask.FromException(new InvalidOperationException()).IsCompleted, "FromException");
+                result += Check(UnityTask.FromCanceled().IsCompleted, nameof(UnityTask.FromCanceled));
+
+                await UnityTask.CompletedTask;
+                result += Check(Thread.CurrentThread.ManagedThreadId == workerThreadId, "await CompletedTask");
+
+                result += Check(await UnityTask.GetCompleted<int>(1) == 1, "GetCompleted result");
+                result += Check(Thread.CurrentThread.ManagedThreadId == workerThreadId, "await GetCompleted");
+
+                result += Check(await UnityTask.FromResult(2) == 2, "FromResult result");
+                result += Check(Thread.CurrentThread.ManagedThreadId == workerThreadId, "await FromResult");
+
+                await CaptureUnityTaskExceptionAsync(UnityTask.FromException(new InvalidOperationException()));
+                result += Check(Thread.CurrentThread.ManagedThreadId == workerThreadId, "await FromException");
+
+                await CaptureUnityTaskExceptionAsync(UnityTask.FromCanceled());
+                result += Check(Thread.CurrentThread.ManagedThreadId == workerThreadId, "await FromCanceled");
+
+                return result;
+            }
+
+            static string Check(bool condition, string name)
+                => condition ? string.Empty : $"{name} failed. ";
+        }
+
+        [Test]
         public async Task GenericAsUnityTask_DiscardsResult()
         {
             await UnityTask.FromResult(42).AsUnityTask();

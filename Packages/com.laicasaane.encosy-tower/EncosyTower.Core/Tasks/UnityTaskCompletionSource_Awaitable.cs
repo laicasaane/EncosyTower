@@ -15,8 +15,13 @@ namespace EncosyTower.Tasks
         /// constructor.
         /// </summary>
         public UnityTaskCompletionSource()
+            : this(relay: true)
         {
-            _task = new(RelayAsync(_source.Awaitable));
+        }
+
+        private UnityTaskCompletionSource(bool relay)
+        {
+            _task = relay ? new(RelayAsync(_source.Awaitable)) : new(_source.Awaitable);
         }
 
         /// <summary>
@@ -42,6 +47,9 @@ namespace EncosyTower.Tasks
             Debugging.ThrowHelper.ThrowIfNull(exception);
             return _source.TrySetException(exception);
         }
+
+        internal static UnityTaskCompletionSource CreateInline()
+            => new(relay: false);
 
         internal void Reset()
         {

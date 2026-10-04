@@ -42,6 +42,13 @@ namespace EncosyTower.Tasks
             return _core.TrySetException(exception);
         }
 
+        internal static UnityTaskCompletionSource CreateInline()
+        {
+            var source = new UnityTaskCompletionSource();
+            source._core.Prepare(UnityTaskThreadAffinity.None);
+            return source;
+        }
+
         internal void Reset()
         {
             _core.Reset();
