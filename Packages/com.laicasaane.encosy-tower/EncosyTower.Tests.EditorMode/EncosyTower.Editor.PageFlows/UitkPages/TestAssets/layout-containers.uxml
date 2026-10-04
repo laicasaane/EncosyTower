@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Template name="LayoutTemplate" src="layout-template.uxml" />
+    <ui:VisualElement name="safe-area">
+        <ui:VisualElement name="content">
+            <ui:VisualElement name="overlay-root" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement>
+        <ui:Label name="content" text="Duplicate" />
+    </ui:VisualElement>
+    <ui:Instance template="LayoutTemplate" name="template-host" />
+</ui:UXML>
