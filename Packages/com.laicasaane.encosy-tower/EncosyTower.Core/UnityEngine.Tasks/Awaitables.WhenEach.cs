@@ -45,6 +45,7 @@ namespace UnityEngine.Tasks
             private readonly object _lock = new();
             private IEnumerable<Awaitable<T>> _source;
             private CancellationToken _token;
+            private CancellationToken _canceledToken;
             private Awaitable<T>[] _tasks;
             private AwaitableWhenEachResult<T>[] _ring;
             private AwaitableCompletionSource<bool> _pending;
@@ -56,8 +57,8 @@ namespace UnityEngine.Tasks
             private bool _ownsTasks;
             private bool _started;
             private bool _disposed;
+            private bool _canceled;
             private bool _cleaned;
-            private bool _pendingReady;
             private int _version;
             private int _returned;
 
@@ -77,6 +78,7 @@ namespace UnityEngine.Tasks
 
                 enumerator._source = source;
                 enumerator._token = token;
+                enumerator._canceledToken = default;
                 enumerator._tasks = null;
                 enumerator._ring = null;
                 enumerator._pending = null;
@@ -88,8 +90,8 @@ namespace UnityEngine.Tasks
                 enumerator._ownsTasks = false;
                 enumerator._started = false;
                 enumerator._disposed = false;
+                enumerator._canceled = false;
                 enumerator._cleaned = false;
-                enumerator._pendingReady = false;
                 enumerator._returned = 0;
                 enumerator.Current = default;
                 enumerator._version = unchecked(enumerator._version + 1);
@@ -105,6 +107,11 @@ namespace UnityEngine.Tasks
 
                 lock (_lock)
                 {
+                    if (_canceled)
+                    {
+                        return FromCanceled<bool>(_canceledToken);
+                    }
+
                     if (_disposed)
                     {
                         return FromResult(false);
@@ -114,9 +121,9 @@ namespace UnityEngine.Tasks
                     {
                         if (_token.IsCancellationRequested)
                         {
-                            _disposed = true;
+                            MarkCanceled();
                             Cleanup();
-                            return FromCanceled<bool>(_token);
+                            return FromCanceled<bool>(_canceledToken);
                         }
 
                         Start();
@@ -139,9 +146,9 @@ namespace UnityEngine.Tasks
 
                     if (_token.IsCancellationRequested)
                     {
-                        _disposed = true;
+                        MarkCanceled();
                         CleanupIfDetached();
-                        return FromCanceled<bool>(_token);
+                        return FromCanceled<bool>(_canceledToken);
                     }
 
                     if (_pending != null)
@@ -184,6 +191,8 @@ namespace UnityEngine.Tasks
                 , Exception exception
             )
             {
+                AwaitableCompletionSource<bool> pending = null;
+
                 lock (_lock)
                 {
                     if (_disposed)
@@ -191,22 +200,24 @@ namespace UnityEngine.Tasks
                         return;
                     }
 
+                    var outcome = exception == null
+                        ? new AwaitableWhenEachResult<T>(result)
+                        : new AwaitableWhenEachResult<T>(exception);
+
                     if (_pending != null)
                     {
-                        Current = exception == null
-                            ? new AwaitableWhenEachResult<T>(result)
-                            : new AwaitableWhenEachResult<T>(exception);
-                        _pendingReady = true;
+                        Current = outcome;
+                        pending = _pending;
+                        _pending = null;
                     }
                     else
                     {
-                        var index = (_head + _queued) % _ring.Length;
-                        _ring[index] = exception == null
-                            ? new AwaitableWhenEachResult<T>(result)
-                            : new AwaitableWhenEachResult<T>(exception);
+                        _ring[(_head + _queued) % _ring.Length] = outcome;
                         _queued++;
                     }
                 }
+
+                pending?.TrySetResult(true);
             }
 
             void IAwaitableResultSink<T, AwaitablePosition1>.Detach()
@@ -217,20 +228,19 @@ namespace UnityEngine.Tasks
                 {
                     _completed++;
 
-                    if (_pendingReady)
+                    if (_completed == _count && _queued == 0 && _pending != null)
                     {
-                        _pendingReady = false;
                         pending = _pending;
                         _pending = null;
+                        Cleanup();
                     }
-
-                    if (_disposed)
+                    else if (_disposed)
                     {
                         CleanupIfDetached();
                     }
                 }
 
-                pending?.TrySetResult(true);
+                pending?.TrySetResult(false);
             }
 
             private void Start()
@@ -279,6 +289,7 @@ namespace UnityEngine.Tasks
             private void CancelEnumeration()
             {
                 AwaitableCompletionSource<bool> pending;
+                CancellationToken token;
 
                 lock (_lock)
                 {
@@ -287,13 +298,21 @@ namespace UnityEngine.Tasks
                         return;
                     }
 
-                    _disposed = true;
+                    MarkCanceled();
+                    token = _canceledToken;
                     pending = _pending;
                     _pending = null;
                     CleanupIfDetached();
                 }
 
-                pending?.TrySetException(new OperationCanceledException(_token));
+                pending?.TrySetException(new OperationCanceledException(token));
+            }
+
+            private void MarkCanceled()
+            {
+                _canceled = true;
+                _disposed = true;
+                _canceledToken = _token;
             }
 
             private void CleanupIfDetached()

@@ -24,11 +24,6 @@ namespace UnityEngine.Tasks
         {
             DebuggingThrowHelper.ThrowIfNull(exception);
 
-            if (exception is OperationCanceledException canceledException)
-            {
-                return FromCanceled(canceledException.CancellationToken);
-            }
-
             var source = new AwaitableCompletionSource();
             source.SetException(exception);
             return source.Awaitable;
@@ -38,11 +33,6 @@ namespace UnityEngine.Tasks
         public static Awaitable<T> FromException<T>(Exception exception)
         {
             DebuggingThrowHelper.ThrowIfNull(exception);
-
-            if (exception is OperationCanceledException canceledException)
-            {
-                return FromCanceled<T>(canceledException.CancellationToken);
-            }
 
             var source = new AwaitableCompletionSource<T>();
             source.SetException(exception);

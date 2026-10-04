@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Tasks;
+using UnityEngine.TestTools;
 
 namespace EncosyTower.Tests.Tasks
 {
@@ -29,6 +31,104 @@ namespace EncosyTower.Tests.Tasks
 
             Assert.AreEqual(cancellation.Token, exception.CancellationToken);
             Assert.AreEqual(42, await Awaitables.FromResult(42));
+        }
+
+        [Test]
+        public async Task FromException_PreservesCancellationInstance()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var canceled = new OperationCanceledException(cancellation.Token);
+
+            var exception = await CaptureAwaitableExceptionAsync(Awaitables.FromException(canceled));
+            var genericException = await CaptureAwaitableExceptionAsync(Awaitables.FromException<int>(canceled));
+
+            Assert.That(exception, Is.SameAs(canceled));
+            Assert.That(genericException, Is.SameAs(canceled));
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)exception).CancellationToken);
+        }
+
+        [Test]
+        public async Task WhenEach_CancellationBetweenMoves_Throws()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var first = new AwaitableCompletionSource<int>();
+            var second = new AwaitableCompletionSource<int>();
+            var enumerator = Awaitables.WhenEach(first.Awaitable, second.Awaitable)
+                .GetAsyncEnumerator(cancellation.Token);
+
+            first.SetResult(1);
+            var moved = await enumerator.MoveNextAsync();
+            var current = enumerator.Current.Result;
+
+            cancellation.Cancel();
+            var nextException = await CaptureAwaitableExceptionAsync(enumerator.MoveNextAsync());
+            var furtherException = await CaptureAwaitableExceptionAsync(enumerator.MoveNextAsync());
+
+            second.SetResult(2);
+            await enumerator.DisposeAsync();
+
+            Assert.IsTrue(moved);
+            Assert.AreEqual(1, current);
+            Assert.IsInstanceOf<OperationCanceledException>(nextException);
+            Assert.IsInstanceOf<OperationCanceledException>(furtherException);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)nextException).CancellationToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)furtherException).CancellationToken);
+        }
+
+        [Test]
+        public async Task WhenEach_ConcurrentCompletion_NoResultLost()
+        {
+            const int COUNT = 64;
+
+            var sources = new AwaitableCompletionSource<int>[COUNT];
+            var tasks = new Awaitable<int>[COUNT];
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                sources[i] = new AwaitableCompletionSource<int>();
+                tasks[i] = sources[i].Awaitable;
+            }
+
+            var enumerator = Awaitables.WhenEach(tasks).GetAsyncEnumerator();
+            var firstMove = enumerator.MoveNextAsync();
+            var completion = Task.Run(CompleteInParallel);
+            var values = new HashSet<int>();
+            var yielded = 0;
+
+            if (await firstMove)
+            {
+                values.Add(enumerator.Current.Result);
+                yielded++;
+            }
+
+            while (await enumerator.MoveNextAsync())
+            {
+                values.Add(enumerator.Current.Result);
+                yielded++;
+            }
+
+            await completion;
+            await enumerator.DisposeAsync();
+
+            Assert.AreEqual(COUNT, yielded);
+            Assert.AreEqual(COUNT, values.Count);
+
+            void CompleteInParallel()
+            {
+                Parallel.For(0, COUNT, i => sources[i].SetResult(i));
+            }
+        }
+
+        [Test]
+        public async Task Forget_FaultLogsOnce()
+        {
+            var fault = Awaitables.FromException(new InvalidOperationException("awaitables forget"));
+
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException: awaitables forget"));
+            Awaitables.Forget(fault);
+
+            await Task.Yield();
+            LogAssert.NoUnexpectedReceived();
         }
 
         [Test]
@@ -244,6 +344,36 @@ namespace EncosyTower.Tests.Tasks
             );
 
             Assert.AreSame(expected, exception);
+        }
+
+        private static async Task<Exception> CaptureAwaitableExceptionAsync(Awaitable task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception exception)
+            {
+                return exception;
+            }
+
+            Assert.Fail("Expected the awaitable to throw.");
+            return null;
+        }
+
+        private static async Task<Exception> CaptureAwaitableExceptionAsync<T>(Awaitable<T> task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception exception)
+            {
+                return exception;
+            }
+
+            Assert.Fail("Expected the awaitable to throw.");
+            return null;
         }
 
         private static async Task<TException> CaptureExpectedExceptionAsync<TException>(

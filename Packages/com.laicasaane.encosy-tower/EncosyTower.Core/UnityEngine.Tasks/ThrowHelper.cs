@@ -1,11 +1,6 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using EncosyTower.Logging;
 
 using static EncosyTower.Debugging.ValidationDefines;
@@ -58,10 +53,8 @@ namespace UnityEngine.Tasks
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS)]
-        [Conditional("__ENCOSY_VALIDATION__")]
         internal static void LogException(Exception exception)
         {
             StaticLogger.LogException(exception);
