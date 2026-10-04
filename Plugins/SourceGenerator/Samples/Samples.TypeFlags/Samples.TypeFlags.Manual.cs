@@ -1,4 +1,4 @@
-using EncosyTower.Types;
+using EncosyTower.TypeFlags;
 using UnityEngine;
 
 namespace Samples.TypeFlags

@@ -1,6 +1,6 @@
 using System.Threading;
 using EncosyTower.Tasks;
-using EncosyTower.Types;
+using EncosyTower.TypeFlags;
 using UnityEngine;
 
 namespace Samples.TypeFlags
