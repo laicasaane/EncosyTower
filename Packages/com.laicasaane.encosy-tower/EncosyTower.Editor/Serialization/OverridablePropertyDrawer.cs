@@ -88,7 +88,10 @@ namespace EncosyTower.Editor.Serialization
 
             if (settingsAsset.IsValid())
             {
-                root.TrackSerializedObjectValue(new SerializedObject(settingsAsset), OnSettingsChanged);
+                var settingsTracker = new VisualElement { pickingMode = PickingMode.Ignore };
+                settingsTracker.style.display = DisplayStyle.None;
+                settingsTracker.TrackSerializedObjectValue(new SerializedObject(settingsAsset), OnSettingsChanged);
+                root.Add(settingsTracker);
             }
 
             Refresh();

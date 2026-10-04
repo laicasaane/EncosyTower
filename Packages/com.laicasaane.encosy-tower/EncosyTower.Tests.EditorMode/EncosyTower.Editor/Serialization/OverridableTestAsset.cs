@@ -1,4 +1,5 @@
 using System;
+using EncosyTower.PageFlows.UitkPages;
 using EncosyTower.Serialization;
 using UnityEngine;
 
@@ -43,5 +44,11 @@ namespace EncosyTower.Tests.Editor.Serialization
         public Overridable<int> intValue;
 
         public Overridable<OverridableTestFlags> flagsValue;
+    }
+
+    public sealed class OverridableSettingsTestAsset : ScriptableObject
+    {
+        [OverridableDefault(typeof(UitkPageFlowSettings), nameof(UitkPageFlowSettings.warnNoSubscriber))]
+        public Overridable<bool> warnNoSubscriber;
     }
 }
