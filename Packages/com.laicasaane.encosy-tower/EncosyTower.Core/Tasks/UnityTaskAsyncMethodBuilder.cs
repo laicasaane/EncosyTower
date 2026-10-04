@@ -11,12 +11,19 @@ using UnityEngine;
 namespace EncosyTower.Tasks
 {
 #if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
+    /// <summary>
+    /// Builds the <see cref="UnityTask"/> returned by an <c>async</c> method. Used by the compiler; not intended
+    /// for direct use.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder
     {
         private IUnityTaskRunner _runner;
         private UnityTaskThreadAffinity _affinity;
 
+        /// <summary>
+        /// Gets the task that represents the asynchronous method.
+        /// </summary>
         public UnityTask Task
         {
             get
@@ -26,25 +33,40 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Creates a builder for an asynchronous method.
+        /// </summary>
         public static UnityTaskAsyncMethodBuilder Create()
             => default;
 
+        /// <summary>
+        /// Completes the task successfully.
+        /// </summary>
         public void SetResult()
         {
             EnsureRunner();
             _runner.SetResult();
         }
 
+        /// <summary>
+        /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
+        /// </summary>
         public void SetException(Exception exception)
         {
             EnsureRunner();
             _runner.SetException(exception);
         }
 
+        /// <summary>
+        /// Associates the builder with a boxed state machine.
+        /// </summary>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
 
+        /// <summary>
+        /// Runs the state machine until its first suspension.
+        /// </summary>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
@@ -52,6 +74,9 @@ namespace EncosyTower.Tasks
             stateMachine.MoveNext();
         }
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
+        /// </summary>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -60,6 +85,10 @@ namespace EncosyTower.Tasks
             awaiter.OnCompleted(_runner.MoveNextAction);
         }
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
+        /// flowing the execution context.
+        /// </summary>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -98,12 +127,19 @@ namespace EncosyTower.Tasks
         }
     }
 
+    /// <summary>
+    /// Builds the <see cref="UnityTask{T}"/> returned by an <c>async</c> method. Used by the compiler; not
+    /// intended for direct use.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder<T>
     {
         private IUnityTaskRunner<T> _runner;
         private UnityTaskThreadAffinity _affinity;
 
+        /// <summary>
+        /// Gets the task that represents the asynchronous method.
+        /// </summary>
         public UnityTask<T> Task
         {
             get
@@ -113,25 +149,40 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Creates a builder for an asynchronous method.
+        /// </summary>
         public static UnityTaskAsyncMethodBuilder<T> Create()
             => default;
 
+        /// <summary>
+        /// Completes the task successfully.
+        /// </summary>
         public void SetResult(T result)
         {
             EnsureRunner();
             _runner.SetResult(result);
         }
 
+        /// <summary>
+        /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
+        /// </summary>
         public void SetException(Exception exception)
         {
             EnsureRunner();
             _runner.SetException(exception);
         }
 
+        /// <summary>
+        /// Associates the builder with a boxed state machine.
+        /// </summary>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
         }
 
+        /// <summary>
+        /// Runs the state machine until its first suspension.
+        /// </summary>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
         {
@@ -139,6 +190,9 @@ namespace EncosyTower.Tasks
             stateMachine.MoveNext();
         }
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
+        /// </summary>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -147,6 +201,10 @@ namespace EncosyTower.Tasks
             awaiter.OnCompleted(_runner.MoveNextAction);
         }
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
+        /// flowing the execution context.
+        /// </summary>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -185,6 +243,10 @@ namespace EncosyTower.Tasks
         }
     }
 #else
+    /// <summary>
+    /// Builds the <see cref="UnityTask"/> returned by an <c>async</c> method. Used by the compiler; not intended
+    /// for direct use.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder
     {
@@ -193,28 +255,49 @@ namespace EncosyTower.Tasks
         private UnityTaskAsyncMethodBuilder(Awaitable.AwaitableAsyncMethodBuilder builder)
             => _builder = builder;
 
+        /// <summary>
+        /// Creates a builder for an asynchronous method.
+        /// </summary>
         public static UnityTaskAsyncMethodBuilder Create()
             => new(Awaitable.AwaitableAsyncMethodBuilder.Create());
 
+        /// <summary>
+        /// Gets the task that represents the asynchronous method.
+        /// </summary>
         public UnityTask Task
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => new(_builder.Task);
         }
 
+        /// <summary>
+        /// Completes the task successfully.
+        /// </summary>
         public void SetResult()
             => _builder.SetResult();
 
+        /// <summary>
+        /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
+        /// </summary>
         public void SetException(Exception exception)
             => _builder.SetException(exception);
 
+        /// <summary>
+        /// Associates the builder with a boxed state machine.
+        /// </summary>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
             => _builder.SetStateMachine(stateMachine);
 
+        /// <summary>
+        /// Runs the state machine until its first suspension.
+        /// </summary>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
             => _builder.Start(ref stateMachine);
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
+        /// </summary>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -223,6 +306,10 @@ namespace EncosyTower.Tasks
             where TStateMachine : IAsyncStateMachine
             => _builder.AwaitOnCompleted(ref awaiter, ref stateMachine);
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
+        /// flowing the execution context.
+        /// </summary>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -232,6 +319,10 @@ namespace EncosyTower.Tasks
             => _builder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
     }
 
+    /// <summary>
+    /// Builds the <see cref="UnityTask{T}"/> returned by an <c>async</c> method. Used by the compiler; not
+    /// intended for direct use.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public struct UnityTaskAsyncMethodBuilder<T>
     {
@@ -240,28 +331,49 @@ namespace EncosyTower.Tasks
         private UnityTaskAsyncMethodBuilder(Awaitable.AwaitableAsyncMethodBuilder<T> builder)
             => _builder = builder;
 
+        /// <summary>
+        /// Creates a builder for an asynchronous method.
+        /// </summary>
         public static UnityTaskAsyncMethodBuilder<T> Create()
             => new(Awaitable.AwaitableAsyncMethodBuilder<T>.Create());
 
+        /// <summary>
+        /// Gets the task that represents the asynchronous method.
+        /// </summary>
         public UnityTask<T> Task
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => new(_builder.Task);
         }
 
+        /// <summary>
+        /// Completes the task successfully.
+        /// </summary>
         public void SetResult(T result)
             => _builder.SetResult(result);
 
+        /// <summary>
+        /// Completes the task with <paramref name="exception"/>, which awaiting the task rethrows unchanged.
+        /// </summary>
         public void SetException(Exception exception)
             => _builder.SetException(exception);
 
+        /// <summary>
+        /// Associates the builder with a boxed state machine.
+        /// </summary>
         public void SetStateMachine(IAsyncStateMachine stateMachine)
             => _builder.SetStateMachine(stateMachine);
 
+        /// <summary>
+        /// Runs the state machine until its first suspension.
+        /// </summary>
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
             => _builder.Start(ref stateMachine);
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
+        /// </summary>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -270,6 +382,10 @@ namespace EncosyTower.Tasks
             where TStateMachine : IAsyncStateMachine
             => _builder.AwaitOnCompleted(ref awaiter, ref stateMachine);
 
+        /// <summary>
+        /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
+        /// flowing the execution context.
+        /// </summary>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
