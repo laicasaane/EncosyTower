@@ -524,6 +524,25 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task FromResult_ManyOutstandingTasks_KeepDistinctResults()
+        {
+            const int COUNT = 300;
+
+            var tasks = new UnityTask<int>[COUNT];
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                tasks[i] = (i & 1) == 0 ? UnityTask.FromResult(i) : UnityTask.GetCompleted(i);
+            }
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                Assert.IsTrue(tasks[i].IsCompleted);
+                Assert.AreEqual(i, await tasks[i]);
+            }
+        }
+
+        [Test]
         public async Task CompletedFactoryTasks_CompleteInlineOnWorker()
         {
             var mainThreadId = Thread.CurrentThread.ManagedThreadId;

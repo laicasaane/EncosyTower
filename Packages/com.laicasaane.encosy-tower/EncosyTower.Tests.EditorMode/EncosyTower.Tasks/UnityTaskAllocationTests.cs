@@ -29,6 +29,14 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public void CompletedFactories_SteadyState_AllocateNothing()
+        {
+            Assert.AreEqual(0, CountAllocations(RunFromResult), nameof(UnityTask.FromResult));
+            Assert.AreEqual(0, CountAllocations(RunGetCompleted), nameof(UnityTask.GetCompleted));
+            Assert.AreEqual(0, CountAllocations(RunWhenAnyOfResults), "WhenAny<T> over FromResult inputs");
+        }
+
+        [Test]
         public void Timing_SteadyState_AllocatesNothing()
         {
             Assert.AreEqual(0, CountAllocations(RunYield), nameof(UnityTask.Yield));
@@ -104,6 +112,25 @@ namespace EncosyTower.Tests.Tasks
             var task = AwaitSuspendedAsync(s_manual);
             s_manual.Resume();
             task.GetAwaiter().GetResult();
+        }
+
+        private static void RunFromResult()
+        {
+            s_sink ^= UnityTask.FromResult(1).GetAwaiter().GetResult();
+        }
+
+        private static void RunGetCompleted()
+        {
+            s_sink ^= UnityTask.GetCompleted(2).GetAwaiter().GetResult();
+            s_sink ^= UnityTask.GetCompleted<int>().GetAwaiter().GetResult();
+        }
+
+        private static void RunWhenAnyOfResults()
+        {
+            s_sink ^= UnityTask.WhenAny(UnityTask.FromResult(1), UnityTask.FromResult(2))
+                .GetAwaiter()
+                .GetResult()
+                .winArgumentIndex;
         }
 
         private static void RunYield()

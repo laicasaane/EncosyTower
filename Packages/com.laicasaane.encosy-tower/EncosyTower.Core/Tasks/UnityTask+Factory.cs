@@ -89,9 +89,7 @@ namespace EncosyTower.Tasks
 #if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             return CreateFromResult(value);
 #else
-            var source = UnityTaskCompletionSource<T>.CreateInline();
-            source.TrySetResult(value);
-            return source.Task;
+            return new(InlineAwaitablePool<T>.FromResult(value));
 #endif
         }
 
