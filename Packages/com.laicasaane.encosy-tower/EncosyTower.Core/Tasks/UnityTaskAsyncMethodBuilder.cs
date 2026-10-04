@@ -81,10 +81,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -97,10 +97,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -211,10 +211,10 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
@@ -227,10 +227,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -328,14 +328,11 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
-        public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-              ref TAwaiter awaiter
-            , ref TStateMachine stateMachine
-        )
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
             => _builder.AwaitOnCompleted(ref awaiter, ref stateMachine);
@@ -344,10 +341,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine
@@ -418,14 +415,11 @@ namespace EncosyTower.Tasks
         /// <summary>
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
-        public void AwaitOnCompleted<TAwaiter, TStateMachine>(
-              ref TAwaiter awaiter
-            , ref TStateMachine stateMachine
-        )
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
+        public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
             => _builder.AwaitOnCompleted(ref awaiter, ref stateMachine);
@@ -434,10 +428,10 @@ namespace EncosyTower.Tasks
         /// Schedules the state machine to continue when <paramref name="awaiter"/> completes, without
         /// flowing the execution context.
         /// </summary>
-        /// <typeparam name=\"TAwaiter\">The type of the awaiter.</typeparam>
-        /// <typeparam name=\"TStateMachine\">The type of the state machine.</typeparam>
-        /// <param name=\"awaiter\">The awaiter to wait on.</param>
-        /// <param name=\"stateMachine\">The state machine to continue.</param>
+        /// <typeparam name="TAwaiter">The type of the awaiter.</typeparam>
+        /// <typeparam name="TStateMachine">The type of the state machine.</typeparam>
+        /// <param name="awaiter">The awaiter to wait on.</param>
+        /// <param name="stateMachine">The state machine to continue.</param>
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
               ref TAwaiter awaiter
             , ref TStateMachine stateMachine

@@ -23,14 +23,12 @@ namespace EncosyTower.Tasks
         /// <see cref="IUnityTaskAsyncEnumerator{T}.MoveNextAsync"/> call throw
         /// <c>new OperationCanceledException(token)</c>.
         /// </para>
-        /// <para><b>Undefined behaviour:</b></para>
-        /// <list type="bullet">
-        /// <item><description>
-        /// Using the enumerator after the enumeration has ended or after
-        /// <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/>: may throw
-        /// <see cref="System.ObjectDisposedException"/> because enumerators are pooled.
-        /// </description></item>
-        /// </list>
+        /// <para>
+        /// After <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/>, further
+        /// <see cref="IUnityTaskAsyncEnumerator{T}.MoveNextAsync"/> calls return <c>false</c>,
+        /// <see cref="IUnityTaskAsyncEnumerator{T}.Current"/> returns <c>default</c>, and further
+        /// <see cref="IUnityTaskAsyncEnumerator{T}.DisposeAsync"/> calls do nothing.
+        /// </para>
         /// </remarks>
         IUnityTaskAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken token = default);
     }

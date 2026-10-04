@@ -76,6 +76,43 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task WhenEach_CancellationWhileMovePending_Throws()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var source = new AwaitableCompletionSource<int>();
+            var enumerator = Awaitables.WhenEach(source.Awaitable).GetAsyncEnumerator(cancellation.Token);
+
+            var pending = enumerator.MoveNextAsync();
+
+            cancellation.Cancel();
+            var pendingException = await CaptureAwaitableExceptionAsync(pending);
+            var laterException = await CaptureAwaitableExceptionAsync(enumerator.MoveNextAsync());
+
+            source.SetResult(1);
+            await enumerator.DisposeAsync();
+
+            Assert.IsInstanceOf<OperationCanceledException>(pendingException);
+            Assert.IsInstanceOf<OperationCanceledException>(laterException);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)pendingException).CancellationToken);
+            Assert.AreEqual(cancellation.Token, ((OperationCanceledException)laterException).CancellationToken);
+        }
+
+        [Test]
+        public async Task WhenEach_DisposeCompletesPendingMoveWithFalse()
+        {
+            var source = new AwaitableCompletionSource<int>();
+            var enumerator = Awaitables.WhenEach(source.Awaitable).GetAsyncEnumerator();
+
+            var pending = enumerator.MoveNextAsync();
+            await enumerator.DisposeAsync();
+            var moved = await pending;
+
+            source.SetResult(1);
+
+            Assert.IsFalse(moved);
+        }
+
+        [Test]
         public async Task WhenEach_ConcurrentCompletion_NoResultLost()
         {
             const int COUNT = 64;

@@ -7,7 +7,8 @@ namespace EncosyTower.Tasks
     public interface IUnityTaskAsyncEnumerator<out T>
     {
         /// <summary>
-        /// Gets the element at the current position of the enumerator.
+        /// Gets the element at the current position of the enumerator, or <c>default</c> after
+        /// <see cref="DisposeAsync"/>.
         /// </summary>
         T Current { get; }
 
@@ -49,7 +50,7 @@ namespace EncosyTower.Tasks
         /// <returns>A task that has already completed.</returns>
         /// <remarks>
         /// <b>Behaviour:</b> a pending <see cref="MoveNextAsync"/> call completes with <c>false</c>. Inputs that have
-        /// not completed are still observed and their results are discarded.
+        /// not completed are still observed and their results are discarded. Calling this method again does nothing.
         /// </remarks>
         UnityTask DisposeAsync();
     }
