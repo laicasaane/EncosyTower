@@ -44,6 +44,15 @@ namespace EncosyTower.Editor.Serialization
             return IsSettingsType(attribute.SourceType) ? PROJECT_SETTINGS_LABEL : DEFAULT_LABEL;
         }
 
+        public static string GetDefaultChoiceLabel(OverridableDefaultAttribute attribute, Type valueType)
+        {
+            var label = GetDefaultLabel(attribute);
+
+            return TryGetDefaultValue(attribute, out var value)
+                ? $"{label} ({GetDisplayText(valueType, value)})"
+                : label;
+        }
+
         public static string[] GetValueChoices(Type valueType)
         {
             if (valueType == typeof(bool))

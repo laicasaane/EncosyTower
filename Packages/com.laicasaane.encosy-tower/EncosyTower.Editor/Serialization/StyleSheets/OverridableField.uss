@@ -20,8 +20,7 @@
 
 .encosy-overridable__reset {
     min-width: 48px;
-    margin-left: 4px;
-    margin-right: 0;
+    margin: 0 0 0 4px;
     flex-shrink: 0;
 }
 

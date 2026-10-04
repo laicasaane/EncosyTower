@@ -56,6 +56,29 @@ namespace EncosyTower.Tests.Editor.Serialization
         }
 
         [Test]
+        public void GetDefaultChoiceLabel_AppendsTheDefaultValueWhenKnown()
+        {
+            var enumDefault = new OverridableDefaultAttribute(
+                  typeof(OverridableTestDefaults)
+                , nameof(OverridableTestDefaults.EnumValue)
+            );
+
+            var boolDefault = new OverridableDefaultAttribute(
+                  typeof(OverridableTestDefaults)
+                , nameof(OverridableTestDefaults.BoolValue)
+            ) {
+                Label = "Global",
+            };
+
+            Assert.AreEqual(
+                  "Default (Third Value)"
+                , OverridableDrawerModel.GetDefaultChoiceLabel(enumDefault, typeof(OverridableTestEnum))
+            );
+            Assert.AreEqual("Global (On)", OverridableDrawerModel.GetDefaultChoiceLabel(boolDefault, typeof(bool)));
+            Assert.AreEqual("Default", OverridableDrawerModel.GetDefaultChoiceLabel(null, typeof(bool)));
+        }
+
+        [Test]
         public void GetValueChoices_UsesOffOnAndEnumDisplayNames()
         {
             CollectionAssert.AreEqual(new[] { "Off", "On" }, OverridableDrawerModel.GetValueChoices(typeof(bool)));
@@ -186,10 +209,12 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void OpenGenericDrawer_IsResolvedForOverridableFields()
         {
             using var serializedObject = new SerializedObject(_first);
-            var property = serializedObject.FindProperty(nameof(OverridableTestAsset.enumWithDefault));
-            var expected = 2 * EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            var toggleProperty = serializedObject.FindProperty(nameof(OverridableTestAsset.intValue));
+            var dropdownProperty = serializedObject.FindProperty(nameof(OverridableTestAsset.enumWithDefault));
+            var toggleHeight = 2 * EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-            Assert.AreEqual(expected, EditorGUI.GetPropertyHeight(property), 0.001f);
+            Assert.AreEqual(toggleHeight, EditorGUI.GetPropertyHeight(toggleProperty), 0.001f);
+            Assert.AreEqual(EditorGUIUtility.singleLineHeight, EditorGUI.GetPropertyHeight(dropdownProperty), 0.001f);
         }
 
         private static Overridable<OverridableTestEnum> Overridden(OverridableTestEnum value)

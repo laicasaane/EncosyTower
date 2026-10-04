@@ -83,9 +83,13 @@ namespace EncosyTower.Editor.Serialization
             }
 
             row.Add(reset);
-            root.Add(effective);
 
-            alignedField.RegisterCallback<GeometryChangedEvent>(OnAlignedFieldGeometryChanged);
+            if (valueField != null)
+            {
+                root.Add(effective);
+                alignedField.RegisterCallback<GeometryChangedEvent>(OnAlignedFieldGeometryChanged);
+            }
+
             root.TrackPropertyValue(property, OnPropertyChanged);
 
             var settingsAsset = OverridableDrawerModel.GetSettingsAsset(attribute);
@@ -148,13 +152,18 @@ namespace EncosyTower.Editor.Serialization
 
                 if (choiceField != null)
                 {
+                    choiceField.Choices = GetChoices(valueType, attribute);
                     choiceField.showMixedValue = isMixed;
                     choiceField.SetValueWithoutNotify(OverridableDrawerModel.GetSelectedIndex(property, valueType));
                 }
 
                 valueField?.SetEnabled(OverridableDrawerModel.CanReset(property));
                 reset.SetEnabled(OverridableDrawerModel.CanReset(property));
-                effective.text = OverridableDrawerModel.GetEffectiveText(property, attribute, valueType);
+
+                if (valueField != null)
+                {
+                    effective.text = OverridableDrawerModel.GetEffectiveText(property, attribute, valueType);
+                }
             }
         }
 
@@ -163,11 +172,13 @@ namespace EncosyTower.Editor.Serialization
             var valueType = OverridableDrawerModel.GetValueType(fieldInfo.FieldType);
             var lineHeight = EditorGUIUtility.singleLineHeight;
 
-            if (OverridableDrawerModel.GetMode(valueType) == OverridableMode.Toggle)
+            if (OverridableDrawerModel.GetMode(valueType) == OverridableMode.Dropdown)
             {
-                var valueProperty = property.FindPropertyRelative(OverridableDrawerModel.VALUE);
-                lineHeight = Mathf.Max(lineHeight, EditorGUI.GetPropertyHeight(valueProperty, GUIContent.none, true));
+                return lineHeight;
             }
+
+            var valueProperty = property.FindPropertyRelative(OverridableDrawerModel.VALUE);
+            lineHeight = Mathf.Max(lineHeight, EditorGUI.GetPropertyHeight(valueProperty, GUIContent.none, true));
 
             return lineHeight + EditorGUIUtility.standardVerticalSpacing + EditorGUIUtility.singleLineHeight;
         }
@@ -182,8 +193,9 @@ namespace EncosyTower.Editor.Serialization
 
             EditorGUI.BeginProperty(position, label, property);
 
-            var firstLineHeight = position.height - EditorGUIUtility.standardVerticalSpacing
-                - EditorGUIUtility.singleLineHeight;
+            var firstLineHeight = mode == OverridableMode.Dropdown
+                ? position.height
+                : position.height - EditorGUIUtility.standardVerticalSpacing - EditorGUIUtility.singleLineHeight;
 
             var firstLine = new Rect(position.x, position.y, position.width, firstLineHeight);
             var inputRect = EditorGUI.PrefixLabel(firstLine, GUIUtility.GetControlID(FocusType.Passive), label);
@@ -212,18 +224,21 @@ namespace EncosyTower.Editor.Serialization
                 }
             }
 
-            var effectiveRect = new Rect(
-                  inputRect.x
-                , firstLine.yMax + EditorGUIUtility.standardVerticalSpacing
-                , position.xMax - inputRect.x
-                , EditorGUIUtility.singleLineHeight
-            );
+            if (mode == OverridableMode.Toggle)
+            {
+                var effectiveRect = new Rect(
+                      inputRect.x
+                    , firstLine.yMax + EditorGUIUtility.standardVerticalSpacing
+                    , position.xMax - inputRect.x
+                    , EditorGUIUtility.singleLineHeight
+                );
 
-            EditorGUI.LabelField(
-                  effectiveRect
-                , OverridableDrawerModel.GetEffectiveText(property, attribute, valueType)
-                , EditorStyles.miniLabel
-            );
+                EditorGUI.LabelField(
+                      effectiveRect
+                    , OverridableDrawerModel.GetEffectiveText(property, attribute, valueType)
+                    , EditorStyles.miniLabel
+                );
+            }
 
             EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
@@ -304,7 +319,7 @@ namespace EncosyTower.Editor.Serialization
         {
             var values = OverridableDrawerModel.GetValueChoices(valueType);
             var choices = new string[values.Length + 1];
-            choices[0] = OverridableDrawerModel.GetDefaultLabel(attribute);
+            choices[0] = OverridableDrawerModel.GetDefaultChoiceLabel(attribute, valueType);
             Array.Copy(values, 0, choices, 1, values.Length);
             return choices;
         }
