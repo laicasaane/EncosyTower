@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace EncosyTower.PageFlows.UguiPages
 {
-    public abstract class UguiPageBase : MonoBehaviour
+    public abstract class UguiPageBehaviour : MonoBehaviour
         , IUguiPage
         , IPageHasOptions
         , IPageHasTransition

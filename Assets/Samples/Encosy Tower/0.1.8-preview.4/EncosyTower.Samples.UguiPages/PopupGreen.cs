@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace EncosyTower.Samples.UguiPages
 {
-    public class PopupGreen : UguiPageBase<GamePageFlowScopes>
+    public class PopupGreen : UguiPageBehaviour<GamePageFlowScopes>
     {
         [SerializeField] private Button _buttonOpen;
         [SerializeField] private Button _buttonClose;

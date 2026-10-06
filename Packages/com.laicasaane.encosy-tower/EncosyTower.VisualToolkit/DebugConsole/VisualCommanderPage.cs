@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace EncosyTower.VisualToolkit.Commands
 {
     [RequireComponent(typeof(UIDocument))]
-    public partial class VisualCommanderPage : UguiPageBase, IPageOnAfterShow, IPageOnBeforeHide
+    public partial class VisualCommanderPage : UguiPageBehaviour, IPageOnAfterShow, IPageOnBeforeHide
     {
         [SerializeField] private float _directoryListWidth = 200f;
         [SerializeField] private bool _showOnAwake;

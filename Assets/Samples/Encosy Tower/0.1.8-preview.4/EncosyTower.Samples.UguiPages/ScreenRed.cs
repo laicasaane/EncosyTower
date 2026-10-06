@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace EncosyTower.Samples.UguiPages
 {
-    public class ScreenRed : UguiPageBase<GamePageFlowScopes>
+    public class ScreenRed : UguiPageBehaviour<GamePageFlowScopes>
     {
         [SerializeField] private Button _buttonOpenScreen;
         [SerializeField] private Button _buttonOpenPopup;
