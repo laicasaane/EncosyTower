@@ -1,11 +1,11 @@
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.MonoPages;
+using EncosyTower.PageFlows.UguiPages;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace EncosyTower.Samples.MonoPages
+namespace EncosyTower.Samples.UguiPages
 {
-    public class PopupGreen : MonoPageBase<GamePageFlowScopes>
+    public class PopupGray : UguiPageBehaviour<GamePageFlowScopes>
     {
         [SerializeField] private Button _buttonOpen;
         [SerializeField] private Button _buttonClose;
@@ -18,7 +18,16 @@ namespace EncosyTower.Samples.MonoPages
 
         private void OnOpenClick()
         {
+            if (FlowScopeCollection.TryGetValue(out var scopes) == false)
+            {
+                return;
+            }
 
+            var publisher = Publisher.Scope(scopes.Popup);
+            _ = ShowPageMessage.Async.Publish(
+                  in publisher
+                , new ShowPageMessage("prefab-popup-green", new PageContext())
+            );
         }
 
         private void OnCloseClick()

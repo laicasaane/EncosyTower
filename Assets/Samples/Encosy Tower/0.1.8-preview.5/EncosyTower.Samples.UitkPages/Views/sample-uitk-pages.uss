@@ -1,0 +1,101 @@
+.sample-screen,
+.sample-popup {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.sample-screen--red {
+    background-color: rgb(0.9528302, 0.57978815, 0.57978815);
+}
+
+.sample-screen--blue {
+    background-color: rgb(0.4625756, 0.6666728, 0.990566);
+}
+
+.sample-screen__buttons {
+    align-items: center;
+}
+
+.sample-button {
+    width: 500px;
+    height: 80px;
+    min-height: 0;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: url("button-background.png");
+    -unity-background-image-tint-color: white;
+    -unity-slice-left: 10;
+    -unity-slice-right: 10;
+    -unity-slice-top: 10;
+    -unity-slice-bottom: 10;
+    -unity-slice-scale: 0.5px;
+    -unity-font-definition: initial;
+    -unity-font: url("LiberationSans.ttf");
+    -unity-font-style: normal;
+    font-size: 44px;
+    color: rgb(50, 50, 50);
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    -unity-text-outline-width: 0;
+}
+
+.sample-button:hover {
+    -unity-background-image-tint-color: rgb(245, 245, 245);
+}
+
+.sample-button:active {
+    -unity-background-image-tint-color: rgb(200, 200, 200);
+}
+
+.sample-button:disabled {
+    opacity: 1;
+    -unity-background-image-tint-color: rgba(200, 200, 200, 0.5019608);
+    color: rgb(50, 50, 50);
+}
+
+.sample-button--spaced {
+    margin-top: 50px;
+}
+
+.sample-popup__backdrop {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.sample-popup__panel {
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.sample-popup__panel--gray {
+    width: 1000px;
+    height: 800px;
+    background-color: rgb(79, 79, 79);
+}
+
+.sample-popup__panel--green {
+    width: 800px;
+    height: 600px;
+    background-color: rgb(0.42962158, 0.6792453, 0.41331434);
+}
+
+.sample-button--small,
+.sample-button--close {
+    width: 300px;
+}
+
+.sample-button--close {
+    position: absolute;
+    top: 0;
+    right: 0;
+}

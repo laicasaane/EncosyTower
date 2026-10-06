@@ -1,15 +1,12 @@
 {
-    "name": "EncosyTower.Samples.MonoPages",
-    "rootNamespace": "EncosyTower.Samples.MonoPages",
+    "name": "EncosyTower.Samples.UitkPages",
+    "rootNamespace": "EncosyTower.Samples.UitkPages",
     "references": [
         "EncosyTower.Core",
         "EncosyTower.PageFlows",
-        "EncosyTower.PageFlows.MonoPages",
         "EncosyTower.Processing",
         "EncosyTower.PubSub",
-        "UniTask",
-        "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -18,7 +15,7 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "UNITY_EDITOR || INCLUDE_ENCOSY_SAMPLES_MONO_PAGES"
+        "UNITY_EDITOR || INCLUDE_ENCOSY_SAMPLES_UITK_PAGES"
     ],
     "versionDefines": [],
     "noEngineReferences": false

@@ -326,13 +326,24 @@ MonoBehaviour:
     sortingOrderInLayer: 3000
   _flowContext:
     autoInitializeOnAwake: 1
-    useProjectSettings: 0
-    warnNoSubscriber: 0
-    loadStrategy: 1
-    poolRentingStrategy: 0
-    poolReturningStrategy: 0
-    messageScope: 0
-    logEnvironment: 0
+    warnNoSubscriber:
+      value: 0
+      isOverridden: 0
+    loadStrategy:
+      value: 1
+      isOverridden: 1
+    poolRentingStrategy:
+      value: 0
+      isOverridden: 0
+    poolReturningStrategy:
+      value: 0
+      isOverridden: 0
+    messageScope:
+      value: 0
+      isOverridden: 0
+    logEnvironment:
+      value: 0
+      isOverridden: 0
 --- !u!224 &1207036174
 RectTransform:
   m_ObjectHideFlags: 0

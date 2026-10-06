@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:sample="EncosyTower.Samples.UitkPages">
+    <ui:Style src="../Views/sample-uitk-pages.uss" />
+    <sample:ScreenRed name="screen-red" class="sample-screen sample-screen--red">
+        <ui:VisualElement class="sample-screen__buttons">
+            <ui:Button name="button-open-screen" text="Open Screen &lt;color=blue&gt;Blue&lt;/color&gt;" class="sample-button" />
+            <ui:Button name="button-open-popup" text="Open Popup &lt;color=grey&gt;Gray&lt;/color&gt;" class="sample-button sample-button--spaced" />
+        </ui:VisualElement>
+    </sample:ScreenRed>
+</ui:UXML>

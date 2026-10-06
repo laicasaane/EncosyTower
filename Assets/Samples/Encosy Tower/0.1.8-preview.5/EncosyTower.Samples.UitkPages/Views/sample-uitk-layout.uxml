@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="sample-uitk-pages.uss" />
+</ui:UXML>

@@ -1,11 +1,11 @@
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.MonoPages;
+using EncosyTower.PageFlows.UguiPages;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace EncosyTower.Samples.MonoPages
+namespace EncosyTower.Samples.UguiPages
 {
-    public class ScreenBlue : MonoPageBase<GamePageFlowScopes>
+    public class ScreenBlue : UguiPageBehaviour<GamePageFlowScopes>
     {
         [SerializeField] private Button _buttonOpenScreen;
         [SerializeField] private Button _buttonOpenPopup;
