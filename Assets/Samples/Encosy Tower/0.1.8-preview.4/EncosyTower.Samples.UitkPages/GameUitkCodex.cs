@@ -6,8 +6,10 @@ namespace EncosyTower.Samples.UitkPages
 {
     public sealed class GameUitkCodex : UitkPageCodexInitializer<GamePageFlowScopes>
     {
-        public const string SCREEN_MAIN = "uitk-screen-main";
-        public const string POPUP_INFO = "uitk-popup-info";
+        public const string SCREEN_RED = "uitk-screen-red";
+        public const string SCREEN_BLUE = "uitk-screen-blue";
+        public const string POPUP_GRAY = "uitk-popup-gray";
+        public const string POPUP_GREEN = "uitk-popup-green";
 
         protected override UnityTask OnInitializeAsync(UitkPageCodex codex, GamePageFlowScopes scopes)
         {
@@ -15,7 +17,7 @@ namespace EncosyTower.Samples.UitkPages
 
             _ = ShowPageMessage.Async.Publish(
                   in publisher
-                , new ShowPageMessage(SCREEN_MAIN, new PageContext {
+                , new ShowPageMessage(SCREEN_RED, new PageContext {
                     ShowOptions = PageTransitionOptions.NoTransition,
                 })
             );

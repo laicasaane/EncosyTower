@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce521294faf744158c541d02bdada9b2, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: EncosyTower.Samples.UitkPages::EncosyTower.Samples.UitkPages.GameUitkCodex
 --- !u!114 &395043643
 MonoBehaviour:
@@ -159,18 +159,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e77a1f8a6d214ddcb74daf961b87e9f8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: EncosyTower.PageFlows::EncosyTower.PageFlows.UitkPages.UitkPageCodex
   _flows:
   - identifier: Screen
     kind: 0
-    containerName: safe-area
+    containerName:
   - identifier: Popup
-    kind: 0
-    containerName: 
+    kind: 1
+    containerName:
   - identifier: FreeTop
     kind: 3
-    containerName: 
+    containerName:
   _flowContext:
     autoInitializeOnAwake: 1
     warnNoSubscriber:
@@ -229,7 +229,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.1, g: 0.1, b: 0.12, a: 1}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -253,9 +253,9 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -279,7 +279,7 @@ Transform:
   m_GameObject: {fileID: 1121295144}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -295,7 +295,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2

@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="sample-uitk-pages.uss" />
+    <ui:VisualElement name="popup-green" class="sample-popup">
+        <ui:VisualElement name="backdrop" class="sample-popup__backdrop" />
+        <ui:VisualElement name="root" class="sample-popup__panel sample-popup__panel--green">
+            <ui:Button name="button-open" text="Open?" enabled="false" class="sample-button sample-button--small" />
+            <ui:Button name="button-close" text="Close" class="sample-button sample-button--close" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
