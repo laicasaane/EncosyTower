@@ -27,13 +27,13 @@ namespace EncosyTower.PageFlows.UitkPages
         [OverridableDefault(typeof(UitkPageFlowSettings), nameof(UitkPageFlowSettings.logEnvironment))]
         public Overridable<LogEnvironment> logEnvironment;
 
-        private bool _warnNoSubscriber;
-        private PageLoaderStrategy _loadStrategy;
-        private LogEnvironment _logEnvironment;
-        private MessageSubscriber _subscriber;
-        private MessagePublisher _publisher;
-        private Processor _processor;
-        private ArrayPool<UnityTask> _taskArrayPool;
+        [NonSerialized] private bool _warnNoSubscriber;
+        [NonSerialized] private PageLoaderStrategy _loadStrategy;
+        [NonSerialized] private LogEnvironment _logEnvironment;
+        [NonSerialized] private MessageSubscriber _subscriber;
+        [NonSerialized] private MessagePublisher _publisher;
+        [NonSerialized] private Processor _processor;
+        [NonSerialized] private ArrayPool<UnityTask> _taskArrayPool;
 
         public Component Owner { get; set; }
 

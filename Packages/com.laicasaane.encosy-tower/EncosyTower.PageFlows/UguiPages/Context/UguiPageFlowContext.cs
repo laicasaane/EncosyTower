@@ -52,16 +52,16 @@ namespace EncosyTower.PageFlows.UguiPages
         [OverridableDefault(typeof(UguiPageFlowSettings), nameof(UguiPageFlowSettings.logEnvironment))]
         public Overridable<LogEnvironment> logEnvironment;
 
-        private bool _warnNoSubscriber;
-        private PageLoaderStrategy _loadStrategy;
-        private RentingStrategy _poolRentingStrategy;
-        private ReturningStrategy _poolReturningStrategy;
-        private UguiMessageScope _messageScope;
-        private LogEnvironment _logEnvironment;
-        private MessageSubscriber _subscriber;
-        private MessagePublisher _publisher;
-        private Processor _processor;
-        private ArrayPool<UnityTask> _taskArrayPool;
+        [NonSerialized] private bool _warnNoSubscriber;
+        [NonSerialized] private PageLoaderStrategy _loadStrategy;
+        [NonSerialized] private RentingStrategy _poolRentingStrategy;
+        [NonSerialized] private ReturningStrategy _poolReturningStrategy;
+        [NonSerialized] private UguiMessageScope _messageScope;
+        [NonSerialized] private LogEnvironment _logEnvironment;
+        [NonSerialized] private MessageSubscriber _subscriber;
+        [NonSerialized] private MessagePublisher _publisher;
+        [NonSerialized] private Processor _processor;
+        [NonSerialized] private ArrayPool<UnityTask> _taskArrayPool;
 
         public Component Owner { get; set; }
 
