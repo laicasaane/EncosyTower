@@ -4,6 +4,83 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.5
+
+### Core
+
+- Added `Overridable<T>` in `EncosyTower.Serialization` to store a local value and whether it overrides a default, with `Option<T>` conversions and `GetValueOrDefault`
+- Added `[OverridableDefault]` to declare a field's default source from a static member or a `Settings<T>` instance
+
+### Editor
+
+- Added UI Toolkit and IMGUI drawers for `Overridable<T>`, with default selection, override controls, reset, and the effective default value
+
+### PageFlows
+
+- Added `[PageFlowScopeCollection]` for generating scope collections from writable `PageFlowScope` properties
+- Added `PageFlowCodexValidator` to report empty, duplicate, missing, and unmatched flow identifiers before creating flows
+- Added `PageAssetLoader` for shared Resources and Addressables loading
+- Changed `IPageFlowScopeCollection` to require `ScopeIdentifiers` and `TrySetScope` (breaking: mark scope structs and their containing types `partial`, and use `[PageFlowScopeCollection]`)
+- Changed `IPageFlowScopeCollectionApplier` to build scopes through `TryBuild` and expose `ScopeIdentifiers`, replacing its `ITrySet<IPageFlowScopeCollection>` contract (breaking)
+- Changed `MonoPageFlowKind` and `MonoPageLoaderStrategy` to `PageFlowKind` and `PageLoaderStrategy` in `EncosyTower.PageFlows` (breaking)
+- Changed page messages and `IsInTransitionRequest` to use the shared `EncosyTower.PageFlows` namespace (breaking: update imports)
+
+### PageFlows.UguiPages
+
+- Added `UguiPageCodexInitializer<TScopes>` to initialize a codex with a typed scope collection
+- Changed MonoPages types to the `EncosyTower.PageFlows.UguiPages` namespace and `Ugui` names in the `EncosyTower.PageFlows` assembly (breaking: update imports, type names, and assembly references)
+- Changed `MonoPageBase` and `MonoPageBase<T>` to `UguiPageBehaviour` and `UguiPageBehaviour<T>` (breaking: update page base classes)
+- Changed flow context settings to individual `Overridable<T>` values instead of one `useProjectSettings` switch (breaking: reselect local overrides where needed)
+- Changed codex flow definitions to use `PageFlowKind` and validate their identifiers against the generated scope collection
+- Removed the separate `EncosyTower.PageFlows.MonoPages` assembly; uGUI page types now require the uGUI package
+
+### PageFlows.UitkPages
+
+- Added UI Toolkit page flows with single-page and multi-page lists and stacks, pooling, and shared page messages
+- Added `IUitkPage`, `UitkPageElement`, and `UitkPageBehaviour`, including typed scope-collection base classes
+- Added `UitkPageCodex`, `UitkPageCodexInitializer<TScopes>`, layout containers, and project settings with local overrides
+- Added panel support through `UIDocument` and, on Unity 6000.5 or newer, `PanelRenderer`
+- Added USS class transitions, value animation transitions, and focus selection and restoration
+
+### Editor.PageFlows
+
+- Added the `EncosyTower.Editor.PageFlows` assembly for page flow inspectors and settings
+- Added codex flow-definition tables with scope identifier choices, validation warnings, and synchronization with the scope collection
+- Added UI Toolkit layout-container selection and panel settings to the codex Inspector
+- Added UI Toolkit page flow project settings and updated the uGUI settings interface
+- Changed uGUI codex and flow inspectors to UI Toolkit, with per-setting overrides and links to project settings
+
+### VisualToolkit
+
+- Changed `VisualCommanderPage` to derive from `UguiPageBehaviour` and compile only when uGUI is available
+
+### DevTools
+
+- Fixed Needle Console settings marking the active scene as changed
+
+### SourceGen
+
+- Added the PageFlows generator to implement `IPageFlowScopeCollection`, including scope identifiers and setters
+- Added `SG_PAGEFLOWS_0001` through `SG_PAGEFLOWS_0006` for non-partial declarations, readonly or ref structs, missing writable scope properties, ignored properties or fields, and manually implemented scope collections
+- Changed shipped source generator assemblies for `0.1.8-preview.5`
+
+### Tests
+
+- Added tests for `Overridable<T>`, its Inspector drawers, scope collections, codex validation, and page flow settings and inspectors
+- Added Play Mode tests for uGUI codex initialization and UI Toolkit flows, transitions, and focus behavior
+- Added SourceGen tests for page flow scope generation, diagnostics, and incremental updates
+
+### Samples
+
+- Added a UI Toolkit page flow sample with screens, popups, transitions, and layout assets
+- Changed the MonoPages sample to uGUI pages and generated scope collections
+- Changed imported sample paths and database preset references to `0.1.8-preview.5`
+- Changed the packaged samples to include the current uGUI and UI Toolkit examples
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.8-preview.5`
+
 ## 0.1.8-preview.4
 
 ### Core
