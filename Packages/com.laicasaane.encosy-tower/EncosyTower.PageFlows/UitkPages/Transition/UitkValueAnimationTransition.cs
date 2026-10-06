@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using EncosyTower.Tasks;
-using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.UIElements.Experimental;
 
