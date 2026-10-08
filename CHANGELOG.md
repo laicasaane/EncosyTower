@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.6
+
+### Core
+
+- Added `UnityTaskStatus`, `UnityTask.Status`, and `Preserve`, available on both the UniTask and `Awaitable` backends
+- Added `AsUnityTask` to relay an `Awaitable` through a pooled `UnityTask` source
+- Added `DelayFrameAsync`, `WaitForEndOfFrameAsync`, `WaitForFixedUpdateAsync`, and `WaitForSecondsAsync`
+- Added `WaitUntil` and `WaitWhile` overloads, `WaitUntilValueChangedAsync`, and `WaitUntilCanceledAsync`
+- Added `SwitchToMainThreadAsync`, `SwitchToThreadPoolAsync`, `ReturnToMainThread`, and `Post`
+- Added `UnityTaskVoid` with its async method builder, and `Void`, `Action`, and `UnityAction` factories for async void handlers
+- Added `Forget` overloads with an exception handler and a main-thread option
+- Added `CreateAsync`, `DeferAsync`, `NeverAsync`, `UnwrapAsync`, and `SuppressCancellationThrowAsync`
+- Added `AsyncLazy` and `AsyncLazy<T>` with `Lazy` and `ToAsyncLazy`
+- Added `await` support for tuples, arrays, and sequences of tasks through `WhenAll`
+- Added `UnityTaskCancellation` with `CancelAfterSlim`, `RegisterRaiseCancelOnDestroy`, and related helpers
+- Added `PlayerLoopTimer`, `TimeoutController`, `TimeoutAsync`, `AttachExternalCancellationAsync`, and `ToCancellationToken`
+- Added `await` support for `AsyncOperation`, `ResourceRequest`, AssetBundle requests, `UnityWebRequest`, `InstantiateAsync`, `AsyncGPUReadback`, and `JobHandle`
+- Added conversions between `UnityTask` and `Task`, `ValueTask`, and coroutines
+- Added `UnityWebRequestException`, thrown for failed web requests
+- Changed the `Awaitable` backend to use the same completion source as the UniTask backend, so every `UnityTask` member works on both backends
+- Changed `AsAwaitable` to return a relay instead of the original `Awaitable` instance (breaking: do not compare the result with the original instance)
+- Fixed the player-loop scheduler resuming work queued before entering or exiting Play Mode, including when domain reload is disabled
+
+### SourceGen
+
+- Changed shipped source generator assemblies for `0.1.8-preview.6`
+
+### Tests
+
+- Added tests for `UnityTask` status, factories, timing, interop, and Unity `Awaitable` pool reuse
+- Added tests for waits pending across Play Mode transitions, and Play Mode tests against real player-loop frames, threads, and timers
+
+### Samples
+
+- Changed imported sample paths and database preset references to `0.1.8-preview.6`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.8-preview.6`
+
 ## 0.1.8-preview.5
 
 ### Core
