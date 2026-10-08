@@ -103,6 +103,21 @@ namespace EncosyTower.Tasks
             => throw new OperationCanceledException(token);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowTimeout(TimeSpan timeout)
+            => throw new TimeoutException($"The operation did not complete within {timeout}.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowTimerDisposed()
+            => throw new ObjectDisposedException(nameof(PlayerLoopTimer));
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowTimeoutControllerDisposed()
+            => throw new ObjectDisposedException(nameof(TimeoutController));
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         internal static void LogUnobservedException(Exception exception)
         {
