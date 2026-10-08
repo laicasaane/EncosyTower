@@ -10,6 +10,22 @@ using UnityEditor;
 
 namespace EncosyTower.Tasks
 {
+    /// <summary>
+    /// EncosyTower's player-loop runner: one queue of continuations per <see cref="UnityTaskTiming"/> phase, shared by
+    /// both backends.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="EnsureInitialized"/> injects sixteen runner systems into Unity's player loop: at the start of each
+    /// phase for the plain timings and at the end for the <c>Last*</c> timings. Re-injection replaces an existing
+    /// runner of the same type, so a reload never doubles it.
+    /// </para>
+    /// <para>
+    /// In the Editor outside Play Mode the player loop does not tick, so every queue also runs from
+    /// <c>EditorApplication.update</c>. <see cref="Reset"/> runs at subsystem registration, which supports entering
+    /// Play Mode without a domain reload.
+    /// </para>
+    /// </remarks>
     internal static class PlayerLoopScheduler
     {
         private static readonly PhaseQueue[] s_queues = CreateQueues();
@@ -39,6 +55,10 @@ namespace EncosyTower.Tasks
 #endif
         }
 
+        /// <summary>
+        /// Queues <paramref name="continuation"/> to run once at the next run of <paramref name="timing"/>. Safe to
+        /// call from any thread.
+        /// </summary>
         internal static void Schedule(UnityTaskTiming timing, Action continuation)
         {
             EnsureInitialized();
@@ -119,11 +139,18 @@ namespace EncosyTower.Tasks
 #if UNITY_EDITOR
                 EditorApplication.update -= RunEditorLoop;
                 EditorApplication.update += RunEditorLoop;
+                EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+                EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 #endif
                 s_initialized = true;
             }
         }
 
+        /// <summary>
+        /// Finds the subsystem of <paramref name="targetType"/> anywhere in <paramref name="system"/> and adds a runner
+        /// of <paramref name="runnerType"/> as its first or last child, or replaces the update of an existing runner of
+        /// that type.
+        /// </summary>
         private static bool Inject(
               ref PlayerLoopSystem system
             , Type targetType
@@ -200,6 +227,38 @@ namespace EncosyTower.Tasks
                 s_queues[i].Run();
             }
         }
+
+        /// <summary>
+        /// Drains the queues when the Editor enters or leaves edit mode, as UniTask's <c>PlayerLoopHelper</c> does.
+        /// </summary>
+        /// <remarks>
+        /// Without this, a continuation queued during Play Mode would keep running from <c>EditorApplication.update</c>
+        /// after Play Mode ends, and, with domain reload disabled, a continuation queued in one session would run in
+        /// the next.
+        /// </remarks>
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state is PlayModeStateChange.EnteredEditMode or PlayModeStateChange.ExitingEditMode)
+            {
+                FlushAndClear();
+            }
+        }
+
+        /// <summary>
+        /// Runs every queued continuation once, then drops whatever those continuations queued again.
+        /// </summary>
+        /// <remarks>
+        /// A promise that reschedules itself is dropped, so a wait still pending at the transition never completes;
+        /// its awaiting code stays suspended instead of resuming in the wrong mode.
+        /// </remarks>
+        internal static void FlushAndClear()
+        {
+            for (var i = 0; i < s_queues.Length; i++)
+            {
+                s_queues[i].Run();
+                s_queues[i].Clear();
+            }
+        }
 #endif
 
         private static void RunInitialization()
@@ -250,6 +309,15 @@ namespace EncosyTower.Tasks
         private static void RunLastTimeUpdate()
             => s_queues[15].Run();
 
+        /// <summary>
+        /// The continuations of one phase.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Run"/> moves only the continuations queued before it started into a reusable array, then runs
+        /// them outside the lock. A continuation queued while they run waits for the next tick, so a promise that
+        /// reschedules itself runs once per frame. An exception is logged and does not stop the remaining
+        /// continuations.
+        /// </remarks>
         private sealed class PhaseQueue
         {
             private readonly object _lock = new();
@@ -263,6 +331,16 @@ namespace EncosyTower.Tasks
                     _incoming.Enqueue(continuation);
                 }
             }
+
+#if UNITY_EDITOR
+            internal void Clear()
+            {
+                lock (_lock)
+                {
+                    _incoming.Clear();
+                }
+            }
+#endif
 
             internal void Run()
             {
