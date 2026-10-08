@@ -57,6 +57,16 @@
             "define": "UNITY_INPUT_SYSTEM"
         },
         {
+            "name": "com.unity.modules.assetbundle",
+            "expression": "",
+            "define": "UNITY_ASSETBUNDLE"
+        },
+        {
+            "name": "com.unity.modules.unitywebrequest",
+            "expression": "",
+            "define": "UNITY_WEBREQUEST"
+        },
+        {
             "name": "com.unity.localization",
             "expression": "",
             "define": "UNITY_LOCALIZATION"

@@ -118,6 +118,18 @@ namespace EncosyTower.Tasks
             => throw new ObjectDisposedException(nameof(TimeoutController));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowGPUReadbackError()
+            => throw new InvalidOperationException("The GPU readback request failed.");
+
+#if UNITY_WEBREQUEST
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowWebRequestError(UnityEngine.Networking.UnityWebRequest request)
+            => throw new UnityWebRequestException(request);
+#endif
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         internal static void LogUnobservedException(Exception exception)
         {
