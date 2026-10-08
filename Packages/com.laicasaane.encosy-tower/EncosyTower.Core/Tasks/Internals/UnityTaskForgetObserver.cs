@@ -3,6 +3,21 @@ using System.Collections.Generic;
 
 namespace EncosyTower.Tasks
 {
+    /// <summary>
+    /// Pooled observer behind <c>Forget()</c> for a <see cref="UnityTask"/>: it awaits the task once, so the pooled
+    /// source is read and returned, and logs a fault that nobody else observes.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>Observe</c> completes inline when the task is already complete. Otherwise it registers the cached
+    /// <c>_continuation</c> delegate with <c>UnsafeOnCompleted</c>, so no closure is allocated.
+    /// </para>
+    /// <para>
+    /// The continuation runs on the thread that completes the task. An <see cref="OperationCanceledException"/> is
+    /// ignored; any other exception goes to <c>ThrowHelper.LogUnobservedException</c>. The observer returns itself to
+    /// the pool in a <c>finally</c> block.
+    /// </para>
+    /// </remarks>
     internal sealed class UnityTaskForgetObserver
     {
         private const int MAX_POOL_SIZE = 256;
@@ -18,6 +33,10 @@ namespace EncosyTower.Tasks
             _continuation = Continue;
         }
 
+        /// <summary>
+        /// Starts observing <paramref name="task"/>; completes inline when it is already complete, else registers the
+        /// cached continuation.
+        /// </summary>
         internal static void Observe(UnityTask task)
         {
             UnityTaskForgetObserver observer;
@@ -39,6 +58,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the outcome, logs a fault other than <see cref="OperationCanceledException"/> and returns the
+        /// observer to the pool.
+        /// </summary>
         private void Continue()
         {
             try
@@ -67,6 +90,13 @@ namespace EncosyTower.Tasks
         }
     }
 
+    /// <summary>
+    /// Pooled observer behind <c>Forget()</c> for a <see cref="UnityTask{T}"/>; the result is read and discarded.
+    /// </summary>
+    /// <typeparam name="T">The type of the result.</typeparam>
+    /// <remarks>
+    /// Works as <see cref="UnityTaskForgetObserver"/> does.
+    /// </remarks>
     internal sealed class UnityTaskForgetObserver<T>
     {
         private const int MAX_POOL_SIZE = 256;
@@ -82,6 +112,10 @@ namespace EncosyTower.Tasks
             _continuation = Continue;
         }
 
+        /// <summary>
+        /// Starts observing <paramref name="task"/>; completes inline when it is already complete, else registers the
+        /// cached continuation.
+        /// </summary>
         internal static void Observe(UnityTask<T> task)
         {
             UnityTaskForgetObserver<T> observer;
@@ -103,6 +137,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the outcome, logs a fault other than <see cref="OperationCanceledException"/> and returns the
+        /// observer to the pool.
+        /// </summary>
         private void Continue()
         {
             try

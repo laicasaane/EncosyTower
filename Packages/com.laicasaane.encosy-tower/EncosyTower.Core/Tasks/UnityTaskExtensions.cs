@@ -6,7 +6,7 @@ namespace EncosyTower.Tasks
     /// Provides continuation and fire-and-forget operations for <see cref="UnityTask"/> and
     /// <see cref="UnityTask{T}"/>.
     /// </summary>
-    public static class UnityTaskExtensions
+    public static partial class UnityTaskExtensions
     {
         /// <summary>
         /// Runs <paramref name="continuationFunction"/> after <paramref name="task"/> completes successfully.
@@ -46,6 +46,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask ContinueWith<T>(this UnityTask<T> task, Action<T> continuationFunction)
@@ -93,6 +96,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask ContinueWith<T>(this UnityTask<T> task, Func<T, UnityTask> continuationFunction)
@@ -140,6 +146,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask<TR> ContinueWith<T, TR>(this UnityTask<T> task, Func<T, TR> continuationFunction)
@@ -188,6 +197,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask<TR> ContinueWith<T, TR>(
@@ -235,6 +247,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask ContinueWith(this UnityTask task, Action continuationFunction)
@@ -280,6 +295,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask ContinueWith(this UnityTask task, Func<UnityTask> continuationFunction)
@@ -325,6 +343,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask<T> ContinueWith<T>(this UnityTask task, Func<T> continuationFunction)
@@ -371,6 +392,9 @@ namespace EncosyTower.Tasks
         /// follows native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.ContinueWith</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="continuationFunction"/> is <c>null</c>.</exception>
         public static UnityTask<T> ContinueWith<T>(this UnityTask task, Func<UnityTask<T>> continuationFunction)
@@ -403,6 +427,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.Forget</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public static void Forget(this UnityTask task)
             => UnityTaskForgetObserver.Observe(task);
@@ -432,10 +459,24 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTaskExtensions.Forget</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public static void Forget<T>(this UnityTask<T> task)
             => UnityTaskForgetObserver<T>.Observe(task);
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then calls <paramref name="continuationFunction"/> with its result.
+        /// </summary>
+        /// <typeparam name="T">The type of the result of the antecedent task.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method to call with the result.</param>
+        /// <returns>A task that completes after the method returns.</returns>
+        /// <remarks>
+        /// If <paramref name="task"/> faults or is cancelled, the exception propagates and the continuation is not
+        /// called. The other <c>ContinueWithCoreAsync</c> overloads follow the same rule.
+        /// </remarks>
         private static async UnityTask ContinueWithCoreAsync<T>(UnityTask<T> task, Action<T> continuationFunction)
         {
             var result = await task;
@@ -443,6 +484,14 @@ namespace EncosyTower.Tasks
             continuationFunction(result);
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then awaits the task that <paramref name="continuationFunction"/> returns
+        /// for its result.
+        /// </summary>
+        /// <typeparam name="T">The type of the result of the antecedent task.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that returns the next task.</param>
+        /// <returns>A task that completes when the returned task does.</returns>
         private static async UnityTask ContinueWithCoreAsync<T>(
               UnityTask<T> task
             , Func<T, UnityTask> continuationFunction
@@ -453,6 +502,15 @@ namespace EncosyTower.Tasks
             await continuationFunction(result);
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then returns what <paramref name="continuationFunction"/> computes from its
+        /// result.
+        /// </summary>
+        /// <typeparam name="T">The type of the result of the antecedent task.</typeparam>
+        /// <typeparam name="TR">The type of the continuation result.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that computes the result.</param>
+        /// <returns>A task that completes with the computed value.</returns>
         private static async UnityTask<TR> ContinueWithCoreAsync<T, TR>(
               UnityTask<T> task
             , Func<T, TR> continuationFunction
@@ -463,6 +521,15 @@ namespace EncosyTower.Tasks
             return continuationFunction(result);
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then returns the result of the task that
+        /// <paramref name="continuationFunction"/> returns for its result.
+        /// </summary>
+        /// <typeparam name="T">The type of the result of the antecedent task.</typeparam>
+        /// <typeparam name="TR">The type of the continuation result.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that returns the next task.</param>
+        /// <returns>A task that completes with the result of the returned task.</returns>
         private static async UnityTask<TR> ContinueWithCoreAsync<T, TR>(
               UnityTask<T> task
             , Func<T, UnityTask<TR>> continuationFunction
@@ -473,6 +540,12 @@ namespace EncosyTower.Tasks
             return await continuationFunction(result);
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then calls <paramref name="continuationFunction"/>.
+        /// </summary>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method to call.</param>
+        /// <returns>A task that completes after the method returns.</returns>
         private static async UnityTask ContinueWithCoreAsync(UnityTask task, Action continuationFunction)
         {
             await task;
@@ -480,6 +553,12 @@ namespace EncosyTower.Tasks
             continuationFunction();
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then awaits the task that <paramref name="continuationFunction"/> returns.
+        /// </summary>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that returns the next task.</param>
+        /// <returns>A task that completes when the returned task does.</returns>
         private static async UnityTask ContinueWithCoreAsync(UnityTask task, Func<UnityTask> continuationFunction)
         {
             await task;
@@ -487,6 +566,13 @@ namespace EncosyTower.Tasks
             await continuationFunction();
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then returns what <paramref name="continuationFunction"/> computes.
+        /// </summary>
+        /// <typeparam name="T">The type of the continuation result.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that computes the result.</param>
+        /// <returns>A task that completes with the computed value.</returns>
         private static async UnityTask<T> ContinueWithCoreAsync<T>(UnityTask task, Func<T> continuationFunction)
         {
             await task;
@@ -494,6 +580,14 @@ namespace EncosyTower.Tasks
             return continuationFunction();
         }
 
+        /// <summary>
+        /// Awaits <paramref name="task"/>, then returns the result of the task that
+        /// <paramref name="continuationFunction"/> returns.
+        /// </summary>
+        /// <typeparam name="T">The type of the continuation result.</typeparam>
+        /// <param name="task">The antecedent task.</param>
+        /// <param name="continuationFunction">The method that returns the next task.</param>
+        /// <returns>A task that completes with the result of the returned task.</returns>
         private static async UnityTask<T> ContinueWithCoreAsync<T>(
               UnityTask task
             , Func<UnityTask<T>> continuationFunction
