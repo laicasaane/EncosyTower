@@ -1,13 +1,22 @@
-#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
-
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Cysharp.Threading.Tasks;
 
 namespace EncosyTower.Tasks
 {
-    internal interface IUnityTaskRunner : IUniTaskSource
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
+    using ITaskSource = Cysharp.Threading.Tasks.IUniTaskSource;
+    using TaskSourceStatus = Cysharp.Threading.Tasks.UniTaskStatus;
+#else
+    using ITaskSource = IUnityTaskSource;
+    using TaskSourceStatus = UnityTaskStatus;
+#endif
+
+    /// <summary>
+    /// The task source of an <c>async UnityTask</c> method, as seen by <see cref="UnityTaskAsyncMethodBuilder"/>
+    /// without its state machine type.
+    /// </summary>
+    internal interface IUnityTaskRunner : ITaskSource
     {
         short Version { get; }
 
@@ -20,7 +29,16 @@ namespace EncosyTower.Tasks
         void SetException(Exception exception);
     }
 
-    internal interface IUnityTaskRunner<T> : IUniTaskSource<T>
+    /// <summary>
+    /// The task source of an <c>async UnityTask&lt;T&gt;</c> method, as seen by
+    /// <see cref="UnityTaskAsyncMethodBuilder{T}"/> without its state machine type.
+    /// </summary>
+    /// <typeparam name="T">The type of the result.</typeparam>
+#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
+    internal interface IUnityTaskRunner<T> : Cysharp.Threading.Tasks.IUniTaskSource<T>
+#else
+    internal interface IUnityTaskRunner<T> : IUnityTaskSource<T>
+#endif
     {
         short Version { get; }
 
@@ -33,6 +51,10 @@ namespace EncosyTower.Tasks
         void SetException(Exception exception);
     }
 
+    /// <summary>
+    /// Placeholder state machine for a runner created before any <c>await</c> suspended: when the method completes or
+    /// throws synchronously, or when the compiler reads <c>Task</c> first. Such a runner only carries the outcome.
+    /// </summary>
     internal readonly struct UnityTaskNoStateMachine : IAsyncStateMachine
     {
         public readonly void MoveNext()
@@ -44,6 +66,22 @@ namespace EncosyTower.Tasks
         }
     }
 
+    /// <summary>
+    /// Pooled box that holds an async method's state machine and its <see cref="UnityTaskSourceCore{T}"/>; it is both
+    /// the continuation target and the task source.
+    /// </summary>
+    /// <typeparam name="TStateMachine">The compiler-generated state machine type.</typeparam>
+    /// <remarks>
+    /// <para>
+    /// The builder rents a runner on the first suspension and copies the state machine into it once.
+    /// <c>MoveNextAction</c> is created once per runner, so awaits do not allocate delegates.
+    /// </para>
+    /// <para>
+    /// <see cref="GetResult"/> validates the token, reads the outcome and then returns the runner to the pool. Under
+    /// IL2CPP the return is scheduled at <see cref="UnityTaskTiming.LastPostLateUpdate"/> instead, the same delay
+    /// UniTask uses to work around an IL2CPP issue with reusing a state machine box that is still on the call stack.
+    /// </para>
+    /// </remarks>
     internal sealed class UnityTaskRunner<TStateMachine> : IUnityTaskRunner
         where TStateMachine : IAsyncStateMachine
     {
@@ -93,11 +131,11 @@ namespace EncosyTower.Tasks
         public void SetException(Exception exception)
             => _core.TrySetException(exception);
 
-        public UniTaskStatus GetStatus(short token)
-            => _core.GetStatus(token);
+        public TaskSourceStatus GetStatus(short token)
+            => (TaskSourceStatus)_core.GetStatus(token);
 
-        public UniTaskStatus UnsafeGetStatus()
-            => _core.UnsafeGetStatus();
+        public TaskSourceStatus UnsafeGetStatus()
+            => (TaskSourceStatus)_core.UnsafeGetStatus();
 
         public void OnCompleted(Action<object> continuation, object state, short token)
             => _core.OnCompleted(continuation, state, token);
@@ -138,6 +176,12 @@ namespace EncosyTower.Tasks
         }
     }
 
+    /// <summary>
+    /// Pooled box that holds an <c>async UnityTask&lt;T&gt;</c> method's state machine and its
+    /// <see cref="UnityTaskSourceCore{T}"/>. Works as <see cref="UnityTaskRunner{TStateMachine}"/> does.
+    /// </summary>
+    /// <typeparam name="TStateMachine">The compiler-generated state machine type.</typeparam>
+    /// <typeparam name="T">The type of the result.</typeparam>
     internal sealed class UnityTaskRunner<TStateMachine, T> : IUnityTaskRunner<T>
         where TStateMachine : IAsyncStateMachine
     {
@@ -187,11 +231,11 @@ namespace EncosyTower.Tasks
         public void SetException(Exception exception)
             => _core.TrySetException(exception);
 
-        public UniTaskStatus GetStatus(short token)
-            => _core.GetStatus(token);
+        public TaskSourceStatus GetStatus(short token)
+            => (TaskSourceStatus)_core.GetStatus(token);
 
-        public UniTaskStatus UnsafeGetStatus()
-            => _core.UnsafeGetStatus();
+        public TaskSourceStatus UnsafeGetStatus()
+            => (TaskSourceStatus)_core.UnsafeGetStatus();
 
         public void OnCompleted(Action<object> continuation, object state, short token)
             => _core.OnCompleted(continuation, state, token);
@@ -214,7 +258,7 @@ namespace EncosyTower.Tasks
             }
         }
 
-        void IUniTaskSource.GetResult(short token)
+        void ITaskSource.GetResult(short token)
             => GetResult(token);
 
         private void MoveNext()
@@ -235,5 +279,3 @@ namespace EncosyTower.Tasks
         }
     }
 }
-
-#endif

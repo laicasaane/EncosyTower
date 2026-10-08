@@ -369,7 +369,7 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
-        public async Task SelectedNativeBridge_PreservesIdentityAndResult()
+        public async Task SelectedNativeBridge_RoundTripsResult()
         {
 #if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
             var native = UniTask.CompletedTask;
@@ -391,10 +391,11 @@ namespace EncosyTower.Tests.Tasks
             UnityTask wrapper = native;
             UnityTask<int> genericWrapper = genericNative;
 
-            Assert.AreSame(native, wrapper.AsAwaitable());
-            Assert.AreSame(genericNative, genericWrapper.AsAwaitable());
-            await wrapper.AsAwaitable();
-            Assert.AreEqual(42, await genericWrapper.AsAwaitable());
+            await wrapper;
+            Assert.AreEqual(42, await genericWrapper);
+            await UnityTask.CompletedTask.AsAwaitable();
+            Assert.AreEqual(7, await UnityTask.FromResult(7).AsAwaitable());
+            Assert.AreEqual(9, await AwaitAndReturnAsync(Task.FromResult(9)).AsAwaitable());
 #endif
         }
 
@@ -1569,8 +1570,6 @@ namespace EncosyTower.Tests.Tasks
 
             s_allocationBoolSink ^= copy.IsCompleted;
             s_allocationBoolSink ^= awaiter.IsCompleted;
-            s_allocationBoolSink ^= ReferenceEquals(native, copy.AsAwaitable());
-            s_allocationBoolSink ^= ReferenceEquals(genericNative, genericCopy.AsAwaitable());
             awaiter.GetResult();
             s_allocationIntSink ^= genericAwaiter.GetResult();
         }

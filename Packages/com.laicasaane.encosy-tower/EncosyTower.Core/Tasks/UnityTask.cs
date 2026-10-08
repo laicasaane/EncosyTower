@@ -13,6 +13,17 @@ namespace EncosyTower.Tasks
     /// <para>
     /// The default value is a successfully completed task.
     /// </para>
+    /// <para>
+    /// <b>Counterparts:</b> UniTask: <c>Cysharp.Threading.Tasks.UniTask</c>; Unity:
+    /// <see cref="UnityEngine.Awaitable"/>.
+    /// </para>
+    /// <para>
+    /// <b>Backends:</b> on the UniTask backend the task wraps a <c>Cysharp.Threading.Tasks.UniTask</c>, so its awaiter,
+    /// status and <c>Preserve</c> are UniTask's own and <c>AsUniTask()</c> returns it without allocating. On the
+    /// <c>Awaitable</c> backend the task holds an EncosyTower task source and a version token in the same shape as
+    /// <c>UniTask</c>; <c>Awaitable</c> values convert in and out through pooled relays. Tasks created by EncosyTower
+    /// code use the same completion and thread rules on both backends.
+    /// </para>
     /// </remarks>
     [AsyncMethodBuilder(typeof(UnityTaskAsyncMethodBuilder))]
     public readonly partial struct UnityTask
@@ -31,6 +42,17 @@ namespace EncosyTower.Tasks
     /// </para>
     /// <para>
     /// The default value is a successfully completed task whose result is <c>default</c>.
+    /// </para>
+    /// <para>
+    /// <b>Counterparts:</b> UniTask: <c>Cysharp.Threading.Tasks.UniTask</c>; Unity:
+    /// <see cref="UnityEngine.Awaitable"/>.
+    /// </para>
+    /// <para>
+    /// <b>Backends:</b> on the UniTask backend the task wraps a <c>Cysharp.Threading.Tasks.UniTask</c>, so its awaiter,
+    /// status and <c>Preserve</c> are UniTask's own and <c>AsUniTask()</c> returns it without allocating. On the
+    /// <c>Awaitable</c> backend the task holds an EncosyTower task source and a version token in the same shape as
+    /// <c>UniTask</c>; <c>Awaitable</c> values convert in and out through pooled relays. Tasks created by EncosyTower
+    /// code use the same completion and thread rules on both backends.
     /// </para>
     /// </remarks>
     [AsyncMethodBuilder(typeof(UnityTaskAsyncMethodBuilder<>))]
@@ -57,6 +79,9 @@ namespace EncosyTower.Tasks
         /// result because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask&lt;T&gt;.AsUniTask</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public async UnityTask AsUnityTask()
             => _ = await this;

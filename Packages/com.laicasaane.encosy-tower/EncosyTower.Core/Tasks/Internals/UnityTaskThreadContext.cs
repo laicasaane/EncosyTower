@@ -5,18 +5,35 @@ using UnityEngine;
 
 namespace EncosyTower.Tasks
 {
+    /// <summary>
+    /// The kind of thread on which a task resumes its awaiter.
+    /// </summary>
     internal enum UnityTaskThreadAffinity
     {
+        /// <summary>Resume inline on the completing thread; also reported before the main thread is captured.</summary>
         None,
+        /// <summary>Resume on Unity's main thread.</summary>
         MainThread,
+        /// <summary>Resume on any thread-pool thread.</summary>
         ThreadPool,
     }
 
+    /// <summary>
+    /// Records Unity's main thread and dispatches continuations to a task creator's thread kind.
+    /// </summary>
+    /// <remarks>
+    /// The main thread id and Unity's <see cref="SynchronizationContext"/> are captured at Editor load and at runtime
+    /// subsystem registration. Every thread that is not the main thread counts as a thread-pool thread.
+    /// </remarks>
     internal static class UnityTaskThreadContext
     {
         private static int s_mainThreadId;
         private static SynchronizationContext s_mainContext;
 
+        /// <summary>
+        /// Gets the thread kind of the calling thread, or <see cref="UnityTaskThreadAffinity.None"/> before the main
+        /// thread is captured.
+        /// </summary>
         internal static UnityTaskThreadAffinity CurrentAffinity
         {
             get
@@ -34,9 +51,18 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Returns whether a continuation for <paramref name="affinity"/> may run inline on the calling thread.
+        /// </summary>
         internal static bool Matches(UnityTaskThreadAffinity affinity)
             => affinity == UnityTaskThreadAffinity.None || affinity == CurrentAffinity;
 
+        /// <summary>
+        /// Runs <paramref name="continuation"/> inline when the calling thread matches <paramref name="affinity"/>;
+        /// otherwise posts it to Unity's main <see cref="SynchronizationContext"/> (inline when none was captured) or
+        /// queues it to the <see cref="ThreadPool"/>. Posted work is wrapped in a pooled <see cref="ContinuationBox"/>
+        /// so no closure is allocated.
+        /// </summary>
         internal static void Run(UnityTaskThreadAffinity affinity, Action<object> continuation, object state)
         {
             if (Matches(affinity))
@@ -89,6 +115,10 @@ namespace EncosyTower.Tasks
             Volatile.Write(ref s_mainThreadId, Thread.CurrentThread.ManagedThreadId);
         }
 
+        /// <summary>
+        /// Pooled holder of a continuation and its state for one posted call. <see cref="InvokeAndReturn"/> clears and
+        /// returns the box before invoking, so the box can be reused while the continuation runs.
+        /// </summary>
         private sealed class ContinuationBox
         {
             private const int MAX_POOL_SIZE = 256;

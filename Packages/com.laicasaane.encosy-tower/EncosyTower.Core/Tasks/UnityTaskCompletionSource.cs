@@ -35,6 +35,16 @@ namespace EncosyTower.Tasks
     /// or corrupts state, per Unity rules.
     /// </description></item>
     /// </list>
+    /// <para>
+    /// <b>Counterparts:</b> UniTask: <c>Cysharp.Threading.Tasks.UniTaskCompletionSource</c>, whose task can be awaited
+    /// many times; Unity: <see cref="UnityEngine.AwaitableCompletionSource"/>, whose <c>Awaitable</c> changes on
+    /// <c>Reset</c>.
+    /// </para>
+    /// <para>
+    /// <b>Backends:</b> on the UniTask backend this class implements <c>IUniTaskSource</c>, so <c>Task.AsUniTask()</c>
+    /// shares this source; on the <c>Awaitable</c> backend it implements the EncosyTower task source and
+    /// <c>Task.AsAwaitable()</c> returns a relay. Completion and thread rules are the same on both backends.
+    /// </para>
     /// </remarks>
     public sealed partial class UnityTaskCompletionSource
     {

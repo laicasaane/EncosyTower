@@ -11,6 +11,9 @@ namespace EncosyTower.Tasks
         /// <remarks>
         /// <para><b>Behaviour:</b> returns <c>default(UnityTask)</c>, which completes inline on any thread.</para>
         /// <para><b>Thread:</b> the awaiter continues inline on the awaiting thread.</para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.CompletedTask</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public static UnityTask CompletedTask => default;
 
@@ -21,6 +24,9 @@ namespace EncosyTower.Tasks
         /// <remarks>
         /// <para><b>Behaviour:</b> completes inline on any thread.</para>
         /// <para><b>Thread:</b> the awaiter continues inline on the awaiting thread.</para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.CompletedTask</c> and <c>UniTask.FromResult</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public static UnityTask GetCompleted()
             => default;
@@ -41,6 +47,13 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.CompletedTask</c> and <c>UniTask.FromResult</c>; Unity: none.
+        /// </para>
+        /// <para>
+        /// <b>Backends:</b> on the UniTask backend a result-carrying task wraps <c>UniTask.FromResult</c>; on the
+        /// <c>Awaitable</c> backend the result is stored in the task itself.
+        /// </para>
         /// </remarks>
         public static UnityTask<T> GetCompleted<T>()
             => FromResult<T>(default);
@@ -62,6 +75,13 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.CompletedTask</c> and <c>UniTask.FromResult</c>; Unity: none.
+        /// </para>
+        /// <para>
+        /// <b>Backends:</b> on the UniTask backend a result-carrying task wraps <c>UniTask.FromResult</c>; on the
+        /// <c>Awaitable</c> backend the result is stored in the task itself.
+        /// </para>
         /// </remarks>
         public static UnityTask<T> GetCompleted<T>(T value)
             => FromResult(value);
@@ -83,15 +103,17 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.FromResult</c>; Unity: a completed
+        /// <see cref="UnityEngine.AwaitableCompletionSource{T}"/> (<c>SetResult</c>).
+        /// </para>
+        /// <para>
+        /// <b>Backends:</b> on the UniTask backend this returns <c>UniTask.FromResult</c>; on the <c>Awaitable</c>
+        /// backend the result is stored in the task itself. Neither allocates.
+        /// </para>
         /// </remarks>
         public static UnityTask<T> FromResult<T>(T value)
-        {
-#if UNITASK && !ENCOSY_UNITYTASK_AWAITABLE
-            return CreateFromResult(value);
-#else
-            return new(InlineAwaitablePool<T>.FromResult(value));
-#endif
-        }
+            => CreateFromResult(value);
 
         /// <summary>
         /// Returns a task that has already completed with <paramref name="exception"/>.
@@ -114,6 +136,10 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.FromException</c>; Unity: a completed
+        /// <see cref="UnityEngine.AwaitableCompletionSource"/> (<c>SetException</c>).
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <c>null</c>.</exception>
         public static UnityTask FromException(Exception exception)
@@ -147,6 +173,10 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.FromException</c>; Unity: a completed
+        /// <see cref="UnityEngine.AwaitableCompletionSource"/> (<c>SetException</c>).
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="exception"/> is <c>null</c>.</exception>
         public static UnityTask<T> FromException<T>(Exception exception)
@@ -174,6 +204,10 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.FromCanceled</c>; Unity: a completed
+        /// <see cref="UnityEngine.AwaitableCompletionSource"/> (<c>SetCanceled</c>), which does not keep a token.
+        /// </para>
         /// </remarks>
         public static UnityTask FromCanceled(CancellationToken token = default)
             => FromException(new OperationCanceledException(token));
@@ -195,6 +229,10 @@ namespace EncosyTower.Tasks
         /// because sources are pooled.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.FromCanceled</c>; Unity: a completed
+        /// <see cref="UnityEngine.AwaitableCompletionSource"/> (<c>SetCanceled</c>), which does not keep a token.
+        /// </para>
         /// </remarks>
         public static UnityTask<T> FromCanceled<T>(CancellationToken token = default)
             => FromException<T>(new OperationCanceledException(token));
