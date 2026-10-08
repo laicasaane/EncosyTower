@@ -34,6 +34,9 @@ namespace EncosyTower.Tasks
         /// kind, the lowest argument index wins.
         /// </para>
         /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
+        /// </para>
+        /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
         /// thread when called on the main thread, a thread-pool thread otherwise.
         /// </para>
@@ -90,6 +93,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -152,6 +158,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -218,6 +227,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -288,6 +300,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -362,6 +377,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -440,6 +458,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -522,6 +543,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -608,6 +632,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -698,6 +725,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -792,6 +822,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -890,6 +923,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -992,6 +1028,9 @@ namespace EncosyTower.Tasks
         /// rethrown as the same instance. Losers are observed and not cancelled, and their faults are
         /// discarded. When several inputs are already complete when observed on the calling thread
         /// kind, the lowest argument index wins.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
         /// </para>
         /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
@@ -1100,6 +1139,9 @@ namespace EncosyTower.Tasks
         /// kind, the lowest argument index wins.
         /// </para>
         /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAny</c>; Unity: none.
+        /// </para>
+        /// <para>
         /// <b>Thread:</b> the awaiter resumes on the kind of thread that called this method: the main
         /// thread when called on the main thread, a thread-pool thread otherwise.
         /// </para>
@@ -1163,6 +1205,29 @@ namespace EncosyTower.Tasks
             return state.WaitAsync();
         }
 
+        /// <summary>
+        /// The pooled state behind the 2-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -1182,6 +1247,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 2.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2> Rent()
             {
                 FixedWhenAnyState<T1, T2> state;
@@ -1208,6 +1277,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2)> WaitAsync()
             {
                 try
@@ -1220,6 +1293,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -1245,6 +1322,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -1270,6 +1351,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -1278,6 +1362,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -1298,6 +1386,30 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 3-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -1319,6 +1431,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 3.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3> state;
@@ -1346,6 +1462,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3)> WaitAsync()
             {
                 try
@@ -1358,6 +1478,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -1383,6 +1507,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -1408,6 +1536,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -1433,6 +1565,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -1441,6 +1576,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -1462,6 +1601,31 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 4-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -1485,6 +1649,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 4.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4> state;
@@ -1513,6 +1681,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4)> WaitAsync()
             {
                 try
@@ -1525,6 +1697,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -1550,6 +1726,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -1575,6 +1755,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -1600,6 +1784,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -1625,6 +1813,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -1633,6 +1824,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -1655,6 +1850,32 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 5-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -1680,6 +1901,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 5.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5> state;
@@ -1709,6 +1934,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5)> WaitAsync()
             {
                 try
@@ -1721,6 +1950,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -1746,6 +1979,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -1771,6 +2008,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -1796,6 +2037,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -1821,6 +2066,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -1846,6 +2095,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -1854,6 +2106,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -1877,6 +2133,33 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 6-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -1904,6 +2187,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 6.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6> state;
@@ -1934,6 +2221,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6)> WaitAsync()
             {
                 try
@@ -1946,6 +2237,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -1971,6 +2266,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -1996,6 +2295,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -2021,6 +2324,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -2046,6 +2353,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -2071,6 +2382,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -2096,6 +2411,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -2104,6 +2422,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -2128,6 +2450,34 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 7-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -2157,6 +2507,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 7.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7> state;
@@ -2188,6 +2542,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7)> WaitAsync()
             {
                 try
@@ -2200,6 +2558,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -2225,6 +2587,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -2250,6 +2616,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -2275,6 +2645,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -2300,6 +2674,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -2325,6 +2703,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -2350,6 +2732,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -2375,6 +2761,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -2383,6 +2772,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -2408,6 +2801,35 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 8-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -2439,6 +2861,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 8.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8> state;
@@ -2471,6 +2897,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8)> WaitAsync()
             {
                 try
@@ -2483,6 +2913,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -2508,6 +2942,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -2533,6 +2971,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -2558,6 +3000,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -2583,6 +3029,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -2608,6 +3058,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -2633,6 +3087,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -2658,6 +3116,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -2683,6 +3145,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -2691,6 +3156,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -2717,6 +3186,36 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 9-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -2750,6 +3249,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 9.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9> state;
@@ -2783,6 +3286,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9)> WaitAsync()
             {
                 try
@@ -2795,6 +3302,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -2820,6 +3331,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -2845,6 +3360,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -2870,6 +3389,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -2895,6 +3418,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -2920,6 +3447,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -2945,6 +3476,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -2970,6 +3505,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -2995,6 +3534,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -3020,6 +3563,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -3028,6 +3574,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -3055,6 +3605,37 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 10-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -3090,6 +3671,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 10.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> state;
@@ -3124,6 +3709,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10)> WaitAsync()
             {
                 try
@@ -3136,6 +3725,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -3161,6 +3754,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -3186,6 +3783,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -3211,6 +3812,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -3236,6 +3841,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -3261,6 +3870,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -3286,6 +3899,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -3311,6 +3928,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -3336,6 +3957,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -3361,6 +3986,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -3386,6 +4015,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -3394,6 +4026,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -3422,6 +4058,38 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 11-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <typeparam name="T11">The result type of the task at argument position 11.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -3459,6 +4127,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 11.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> state;
@@ -3494,6 +4166,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10, T11 result11)> WaitAsync()
             {
                 try
@@ -3506,6 +4182,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -3531,6 +4211,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -3556,6 +4240,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -3581,6 +4269,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -3606,6 +4298,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -3631,6 +4327,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -3656,6 +4356,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -3681,6 +4385,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -3706,6 +4414,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -3731,6 +4443,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -3756,6 +4472,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 11
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Complete(
                   UnityTaskPosition11 position
                 , T11 result
@@ -3781,6 +4501,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -3789,6 +4512,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -3818,6 +4545,39 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 12-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <typeparam name="T11">The result type of the task at argument position 11.</typeparam>
+        /// <typeparam name="T12">The result type of the task at argument position 12.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -3857,6 +4617,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 12.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> state;
@@ -3893,6 +4657,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10, T11 result11, T12 result12)> WaitAsync()
             {
                 try
@@ -3905,6 +4673,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -3930,6 +4702,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -3955,6 +4731,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -3980,6 +4760,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -4005,6 +4789,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -4030,6 +4818,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -4055,6 +4847,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -4080,6 +4876,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -4105,6 +4905,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -4130,6 +4934,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -4155,6 +4963,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 11
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Complete(
                   UnityTaskPosition11 position
                 , T11 result
@@ -4180,6 +4992,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 12
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Complete(
                   UnityTaskPosition12 position
                 , T12 result
@@ -4205,6 +5021,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -4213,6 +5032,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -4243,6 +5066,40 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 13-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <typeparam name="T11">The result type of the task at argument position 11.</typeparam>
+        /// <typeparam name="T12">The result type of the task at argument position 12.</typeparam>
+        /// <typeparam name="T13">The result type of the task at argument position 13.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -4284,6 +5141,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 13.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> state;
@@ -4321,6 +5182,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10, T11 result11, T12 result12, T13 result13)> WaitAsync()
             {
                 try
@@ -4333,6 +5198,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -4358,6 +5227,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -4383,6 +5256,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -4408,6 +5285,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -4433,6 +5314,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -4458,6 +5343,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -4483,6 +5372,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -4508,6 +5401,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -4533,6 +5430,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -4558,6 +5459,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -4583,6 +5488,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 11
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Complete(
                   UnityTaskPosition11 position
                 , T11 result
@@ -4608,6 +5517,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 12
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Complete(
                   UnityTaskPosition12 position
                 , T12 result
@@ -4633,6 +5546,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 13
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Complete(
                   UnityTaskPosition13 position
                 , T13 result
@@ -4658,6 +5575,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -4666,6 +5586,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -4697,6 +5621,41 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 14-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <typeparam name="T11">The result type of the task at argument position 11.</typeparam>
+        /// <typeparam name="T12">The result type of the task at argument position 12.</typeparam>
+        /// <typeparam name="T13">The result type of the task at argument position 13.</typeparam>
+        /// <typeparam name="T14">The result type of the task at argument position 14.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -4740,6 +5699,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 14.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> state;
@@ -4778,6 +5741,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10, T11 result11, T12 result12, T13 result13, T14 result14)> WaitAsync()
             {
                 try
@@ -4790,6 +5757,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -4815,6 +5786,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -4840,6 +5815,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -4865,6 +5844,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -4890,6 +5873,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -4915,6 +5902,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -4940,6 +5931,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -4965,6 +5960,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -4990,6 +5989,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -5015,6 +6018,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -5040,6 +6047,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 11
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Complete(
                   UnityTaskPosition11 position
                 , T11 result
@@ -5065,6 +6076,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 12
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Complete(
                   UnityTaskPosition12 position
                 , T12 result
@@ -5090,6 +6105,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 13
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Complete(
                   UnityTaskPosition13 position
                 , T13 result
@@ -5115,6 +6134,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 14
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T14, UnityTaskPosition14>.Complete(
                   UnityTaskPosition14 position
                 , T14 result
@@ -5140,6 +6163,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T14, UnityTaskPosition14>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -5148,6 +6174,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)
@@ -5180,6 +6210,42 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind the 15-argument <c>WhenAny</c> overload.
+        /// </summary>
+        /// <typeparam name="T1">The result type of the task at argument position 1.</typeparam>
+        /// <typeparam name="T2">The result type of the task at argument position 2.</typeparam>
+        /// <typeparam name="T3">The result type of the task at argument position 3.</typeparam>
+        /// <typeparam name="T4">The result type of the task at argument position 4.</typeparam>
+        /// <typeparam name="T5">The result type of the task at argument position 5.</typeparam>
+        /// <typeparam name="T6">The result type of the task at argument position 6.</typeparam>
+        /// <typeparam name="T7">The result type of the task at argument position 7.</typeparam>
+        /// <typeparam name="T8">The result type of the task at argument position 8.</typeparam>
+        /// <typeparam name="T9">The result type of the task at argument position 9.</typeparam>
+        /// <typeparam name="T10">The result type of the task at argument position 10.</typeparam>
+        /// <typeparam name="T11">The result type of the task at argument position 11.</typeparam>
+        /// <typeparam name="T12">The result type of the task at argument position 12.</typeparam>
+        /// <typeparam name="T13">The result type of the task at argument position 13.</typeparam>
+        /// <typeparam name="T14">The result type of the task at argument position 14.</typeparam>
+        /// <typeparam name="T15">The result type of the task at argument position 15.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <c>PooledUnityTaskObserver</c> per input calls <c>Complete</c> with that
+        /// input's outcome and then <c>Detach</c>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_won</c> is set once with <c>Interlocked.CompareExchange</c>. The first input
+        /// to complete wins. The winner stores its value in its own <c>_result</c> field and completes the
+        /// source with its zero-based index and a tuple of those fields, or faults the source if it
+        /// faulted or was canceled. Later completions return without effect.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and
+        /// <c>WaitAsync</c>. On the second release the instance clears its result fields and returns to
+        /// <c>s_pool</c>. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock
+        /// on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
             : IUnityTaskResultSink<T1, UnityTaskPosition1>
             , IUnityTaskResultSink<T2, UnityTaskPosition2>
@@ -5225,6 +6291,10 @@ namespace EncosyTower.Tasks
             {
             }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and result fields, and
+            /// sets <c>_remaining</c> to 15.
+            /// </summary>
             internal static FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> Rent()
             {
                 FixedWhenAnyState<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> state;
@@ -5264,6 +6334,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases the <c>WaitAsync</c> ownership when the await ends,
+            /// including on a fault.
+            /// </summary>
             internal async UnityTask<(int winArgumentIndex, T1 result1, T2 result2, T3 result3, T4 result4, T5 result5, T6 result6, T7 result7, T8 result8, T9 result9, T10 result10, T11 result11, T12 result12, T13 result13, T14 result14, T15 result15)> WaitAsync()
             {
                 try
@@ -5276,6 +6350,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 1
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Complete(
                   UnityTaskPosition1 position
                 , T1 result
@@ -5301,6 +6379,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T1, UnityTaskPosition1>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 2
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Complete(
                   UnityTaskPosition2 position
                 , T2 result
@@ -5326,6 +6408,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T2, UnityTaskPosition2>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 3
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Complete(
                   UnityTaskPosition3 position
                 , T3 result
@@ -5351,6 +6437,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T3, UnityTaskPosition3>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 4
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Complete(
                   UnityTaskPosition4 position
                 , T4 result
@@ -5376,6 +6466,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T4, UnityTaskPosition4>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 5
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Complete(
                   UnityTaskPosition5 position
                 , T5 result
@@ -5401,6 +6495,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T5, UnityTaskPosition5>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 6
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Complete(
                   UnityTaskPosition6 position
                 , T6 result
@@ -5426,6 +6524,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T6, UnityTaskPosition6>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 7
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Complete(
                   UnityTaskPosition7 position
                 , T7 result
@@ -5451,6 +6553,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T7, UnityTaskPosition7>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 8
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Complete(
                   UnityTaskPosition8 position
                 , T8 result
@@ -5476,6 +6582,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T8, UnityTaskPosition8>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 9
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Complete(
                   UnityTaskPosition9 position
                 , T9 result
@@ -5501,6 +6611,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T9, UnityTaskPosition9>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 10
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Complete(
                   UnityTaskPosition10 position
                 , T10 result
@@ -5526,6 +6640,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T10, UnityTaskPosition10>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 11
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Complete(
                   UnityTaskPosition11 position
                 , T11 result
@@ -5551,6 +6669,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T11, UnityTaskPosition11>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 12
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Complete(
                   UnityTaskPosition12 position
                 , T12 result
@@ -5576,6 +6698,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T12, UnityTaskPosition12>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 13
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Complete(
                   UnityTaskPosition13 position
                 , T13 result
@@ -5601,6 +6727,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T13, UnityTaskPosition13>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 14
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T14, UnityTaskPosition14>.Complete(
                   UnityTaskPosition14 position
                 , T14 result
@@ -5626,6 +6756,10 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T14, UnityTaskPosition14>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Completes the source with the outcome of the task at argument position 15
+            /// if it is the first to complete.
+            /// </summary>
             void IUnityTaskResultSink<T15, UnityTaskPosition15>.Complete(
                   UnityTaskPosition15 position
                 , T15 result
@@ -5651,6 +6785,9 @@ namespace EncosyTower.Tasks
             void IUnityTaskResultSink<T15, UnityTaskPosition15>.Detach()
                 => Detach();
 
+            /// <summary>
+            /// Counts one input as detached and releases the observers' ownership when none remain.
+            /// </summary>
             private void Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) == 0)
@@ -5659,6 +6796,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it clears the result fields and
+            /// returns this instance to the pool.
+            /// </summary>
             private void Release()
             {
                 if (Interlocked.Increment(ref _releases) != 2)

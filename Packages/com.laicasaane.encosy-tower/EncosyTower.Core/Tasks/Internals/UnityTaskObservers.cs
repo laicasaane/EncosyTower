@@ -3,6 +3,32 @@ using System.Collections.Generic;
 
 namespace EncosyTower.Tasks
 {
+    /// <summary>
+    /// Pooled observer that reports the outcome of one <see cref="UnityTask"/> input of a combinator to a sink,
+    /// without allocating a closure.
+    /// </summary>
+    /// <typeparam name="TPosition">
+    /// The <c>UnityTaskPositionN</c> tag type that tells the sink which input completed.
+    /// </typeparam>
+    /// <typeparam name="TSink">
+    /// The sink type, which implements <see cref="IUnityTaskSink{TPosition}"/> for the tag.
+    /// </typeparam>
+    /// <remarks>
+    /// <para>
+    /// <c>Observe</c> takes an observer from the pool and completes inline when the task is already complete. Otherwise
+    /// it registers the cached <c>_continuation</c> delegate with <c>UnsafeOnCompleted</c>, so no closure is
+    /// allocated.
+    /// </para>
+    /// <para>
+    /// <c>Invoke</c> runs on the thread that completes the task. It reads the outcome, calls <c>Complete</c> on the
+    /// sink, returns the observer to the pool and calls <c>Detach</c> last, so the sink can release itself after every
+    /// observer is gone.
+    /// </para>
+    /// <para>
+    /// <typeparamref name="TPosition"/> is only a tag. A fixed-arity sink implements the interface once per tag, so
+    /// the call <c>Complete(default, ...)</c> reaches the right implementation without an index.
+    /// </para>
+    /// </remarks>
     internal sealed class PooledUnityTaskObserver<TPosition, TSink>
         where TSink : class, IUnityTaskSink<TPosition>
     {
@@ -19,6 +45,9 @@ namespace EncosyTower.Tasks
             _continuation = Invoke;
         }
 
+        /// <summary>
+        /// Binds an observer to <paramref name="sink"/> and starts observing <paramref name="task"/>.
+        /// </summary>
         internal static void Observe(UnityTask task, TSink sink)
         {
             PooledUnityTaskObserver<TPosition, TSink> observer;
@@ -41,6 +70,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the task's outcome, reports it to the sink, returns the observer to the pool and detaches from the
+        /// sink.
+        /// </summary>
         private void Invoke()
         {
             var sink = _sink;
@@ -67,10 +100,38 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            // Last, after the observer is back in the pool: the sink may release itself once no observer is left.
             sink.Detach();
         }
     }
 
+    /// <summary>
+    /// Pooled observer that reports the outcome of one <see cref="UnityTask{T}"/> input of a combinator to a sink,
+    /// without allocating a closure.
+    /// </summary>
+    /// <typeparam name="T">The type of the result.</typeparam>
+    /// <typeparam name="TPosition">
+    /// The <c>UnityTaskPositionN</c> tag type that tells the sink which input completed.
+    /// </typeparam>
+    /// <typeparam name="TSink">
+    /// The sink type, which implements <see cref="IUnityTaskResultSink{T, TPosition}"/> for the tag.
+    /// </typeparam>
+    /// <remarks>
+    /// <para>
+    /// <c>Observe</c> takes an observer from the pool and completes inline when the task is already complete. Otherwise
+    /// it registers the cached <c>_continuation</c> delegate with <c>UnsafeOnCompleted</c>, so no closure is
+    /// allocated.
+    /// </para>
+    /// <para>
+    /// <c>Invoke</c> runs on the thread that completes the task. It reads the outcome, calls <c>Complete</c> on the
+    /// sink, returns the observer to the pool and calls <c>Detach</c> last, so the sink can release itself after every
+    /// observer is gone.
+    /// </para>
+    /// <para>
+    /// <typeparamref name="TPosition"/> is only a tag. A fixed-arity sink implements the interface once per tag, so
+    /// the call <c>Complete(default, ...)</c> reaches the right implementation without an index.
+    /// </para>
+    /// </remarks>
     internal sealed class PooledUnityTaskObserver<T, TPosition, TSink>
         where TSink : class, IUnityTaskResultSink<T, TPosition>
     {
@@ -87,6 +148,9 @@ namespace EncosyTower.Tasks
             _continuation = Invoke;
         }
 
+        /// <summary>
+        /// Binds an observer to <paramref name="sink"/> and starts observing <paramref name="task"/>.
+        /// </summary>
         internal static void Observe(UnityTask<T> task, TSink sink)
         {
             PooledUnityTaskObserver<T, TPosition, TSink> observer;
@@ -109,6 +173,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the task's outcome, reports it to the sink, returns the observer to the pool and detaches from the
+        /// sink.
+        /// </summary>
         private void Invoke()
         {
             var sink = _sink;
@@ -136,10 +204,28 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            // Last, after the observer is back in the pool: the sink may release itself once no observer is left.
             sink.Detach();
         }
     }
 
+    /// <summary>
+    /// Pooled observer that reports the outcome of one <see cref="UnityTask"/> input of a combinator over a sequence
+    /// to a sink, together with the input's index.
+    /// </summary>
+    /// <typeparam name="TSink">The sink type, which implements <see cref="IIndexedUnityTaskSink"/>.</typeparam>
+    /// <remarks>
+    /// <para>
+    /// <c>Observe</c> takes an observer from the pool and completes inline when the task is already complete. Otherwise
+    /// it registers the cached <c>_continuation</c> delegate with <c>UnsafeOnCompleted</c>, so no closure is
+    /// allocated.
+    /// </para>
+    /// <para>
+    /// <c>Invoke</c> runs on the thread that completes the task. It reads the outcome, calls <c>Complete</c> on the
+    /// sink, returns the observer to the pool and calls <c>Detach</c> last, so the sink can release itself after every
+    /// observer is gone.
+    /// </para>
+    /// </remarks>
     internal sealed class PooledIndexedUnityTaskObserver<TSink>
         where TSink : class, IIndexedUnityTaskSink
     {
@@ -157,6 +243,10 @@ namespace EncosyTower.Tasks
             _continuation = Invoke;
         }
 
+        /// <summary>
+        /// Binds an observer to <paramref name="sink"/> and <paramref name="index"/> and starts observing
+        /// <paramref name="task"/>.
+        /// </summary>
         internal static void Observe(UnityTask task, TSink sink, int index)
         {
             PooledIndexedUnityTaskObserver<TSink> observer;
@@ -180,6 +270,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the task's outcome, reports it to the sink, returns the observer to the pool and detaches from the
+        /// sink.
+        /// </summary>
         private void Invoke()
         {
             var sink = _sink;
@@ -208,10 +302,31 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            // Last, after the observer is back in the pool: the sink may release itself once no observer is left.
             sink.Detach();
         }
     }
 
+    /// <summary>
+    /// Pooled observer that reports the outcome of one <see cref="UnityTask{T}"/> input of a combinator over a
+    /// sequence to a sink, together with the input's index.
+    /// </summary>
+    /// <typeparam name="T">The type of the result.</typeparam>
+    /// <typeparam name="TSink">
+    /// The sink type, which implements <see cref="IIndexedUnityTaskResultSink{T}"/>.
+    /// </typeparam>
+    /// <remarks>
+    /// <para>
+    /// <c>Observe</c> takes an observer from the pool and completes inline when the task is already complete. Otherwise
+    /// it registers the cached <c>_continuation</c> delegate with <c>UnsafeOnCompleted</c>, so no closure is
+    /// allocated.
+    /// </para>
+    /// <para>
+    /// <c>Invoke</c> runs on the thread that completes the task. It reads the outcome, calls <c>Complete</c> on the
+    /// sink, returns the observer to the pool and calls <c>Detach</c> last, so the sink can release itself after every
+    /// observer is gone.
+    /// </para>
+    /// </remarks>
     internal sealed class PooledIndexedUnityTaskObserver<T, TSink>
         where TSink : class, IIndexedUnityTaskResultSink<T>
     {
@@ -229,6 +344,10 @@ namespace EncosyTower.Tasks
             _continuation = Invoke;
         }
 
+        /// <summary>
+        /// Binds an observer to <paramref name="sink"/> and <paramref name="index"/> and starts observing
+        /// <paramref name="task"/>.
+        /// </summary>
         internal static void Observe(UnityTask<T> task, TSink sink, int index)
         {
             PooledIndexedUnityTaskObserver<T, TSink> observer;
@@ -252,6 +371,10 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Reads the task's outcome, reports it to the sink, returns the observer to the pool and detaches from the
+        /// sink.
+        /// </summary>
         private void Invoke()
         {
             var sink = _sink;
@@ -281,6 +404,7 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            // Last, after the observer is back in the pool: the sink may release itself once no observer is left.
             sink.Detach();
         }
     }

@@ -41,6 +41,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         public static UnityTask WhenAll(params UnityTask[] tasks)
@@ -83,6 +86,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         public static UnityTask WhenAll(IEnumerable<UnityTask> tasks)
@@ -145,6 +151,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is out of range (development
@@ -191,6 +200,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         public static UnityTask<T[]> WhenAll<T>(params UnityTask<T>[] tasks)
@@ -234,6 +246,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         public static UnityTask<T[]> WhenAll<T>(IEnumerable<UnityTask<T>> tasks)
@@ -297,6 +312,9 @@ namespace EncosyTower.Tasks
         /// native-library behaviour.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WhenAll</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="tasks"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is out of range (development
@@ -308,6 +326,10 @@ namespace EncosyTower.Tasks
             return StartWhenAll(tasks, count);
         }
 
+        /// <summary>
+        /// Starts an observer on each of the first <paramref name="count"/> tasks and returns the combined task. An
+        /// empty selection returns <see cref="CompletedTask"/>.
+        /// </summary>
         private static UnityTask StartWhenAll(UnityTask[] tasks, int count)
         {
             if (count == 0)
@@ -325,6 +347,11 @@ namespace EncosyTower.Tasks
             return state.WaitAsync();
         }
 
+        /// <summary>
+        /// Starts an observer on each of the first <paramref name="count"/> tasks and returns a task that holds the
+        /// results in input order. An empty selection returns a task completed with an empty array.
+        /// </summary>
+        /// <typeparam name="T">The type of the results.</typeparam>
         private static UnityTask<T[]> StartWhenAll<T>(UnityTask<T>[] tasks, int count)
         {
             if (count == 0)
@@ -342,6 +369,11 @@ namespace EncosyTower.Tasks
             return state.WaitAsync();
         }
 
+        /// <summary>
+        /// Copies <paramref name="tasks"/> into an array rented from <see cref="ArrayPool{T}.Shared"/> and returns it.
+        /// Only the first <paramref name="count"/> entries are valid; the caller clears them and returns the array.
+        /// </summary>
+        /// <typeparam name="TTask">The task type.</typeparam>
         private static TTask[] Materialize<TTask>(IEnumerable<TTask> tasks, out int count)
         {
             var buffer = ArrayPool<TTask>.Shared.Rent(
@@ -367,6 +399,27 @@ namespace EncosyTower.Tasks
             return buffer;
         }
 
+        /// <summary>
+        /// The pooled state behind <see cref="WhenAll(UnityTask[])"/> for tasks without a result.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <see cref="PooledIndexedUnityTaskObserver{TSink}"/> per input calls
+        /// <see cref="IIndexedUnityTaskSink.Complete"/> with the input's outcome and then
+        /// <see cref="IIndexedUnityTaskSink.Detach"/>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_signaled</c> is set once with
+        /// <see cref="Interlocked.CompareExchange(ref int, int, int)"/>. The first fault wins and faults the source. If
+        /// no input faults, the last detach completes the source successfully.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and <see cref="WaitAsync"/>.
+        /// The instance returns to <c>s_pool</c> on the second release, so it is never reused while either owner can
+        /// still touch it. The pool holds at most <c>MAX_POOL_SIZE</c> instances and is guarded by a lock on
+        /// <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class WhenAllState : IIndexedUnityTaskSink
         {
             private const int MAX_POOL_SIZE = 256;
@@ -380,6 +433,10 @@ namespace EncosyTower.Tasks
 
             private WhenAllState() { }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source and sets <c>_remaining</c> to
+            /// <paramref name="count"/>.
+            /// </summary>
             internal static WhenAllState Rent(int count)
             {
                 WhenAllState state;
@@ -404,6 +461,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases this instance's <c>WaitAsync</c> ownership when the await ends, including
+            /// on a fault.
+            /// </summary>
             internal async UnityTask WaitAsync()
             {
                 try
@@ -416,6 +477,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Faults the source if <paramref name="exception"/> is not <c>null</c> and no other input has signaled
+            /// yet.
+            /// </summary>
             void IIndexedUnityTaskSink.Complete(int index, Exception exception)
             {
                 if (exception != null
@@ -426,6 +491,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Counts one input as detached. The last detach completes the source successfully unless a fault signaled
+            /// first, then releases the observers' ownership.
+            /// </summary>
             void IIndexedUnityTaskSink.Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) != 0)
@@ -441,8 +510,12 @@ namespace EncosyTower.Tasks
                 Release();
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships and returns this instance to the pool on the second call.
+            /// </summary>
             private void Release()
             {
+                // The pool return waits for the second owner, so a late observer cannot touch a reused state.
                 if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
@@ -458,6 +531,32 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// The pooled state behind <see cref="WhenAll{T}(UnityTask{T}[])"/> for tasks with a result.
+        /// </summary>
+        /// <typeparam name="T">The type of the results.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// <b>Protocol:</b> one <see cref="PooledIndexedUnityTaskObserver{T, TSink}"/> per input calls
+        /// <see cref="IIndexedUnityTaskResultSink{T}.Complete"/> with the input's outcome and then
+        /// <see cref="IIndexedUnityTaskResultSink{T}.Detach"/>. <c>_remaining</c> counts the inputs not yet detached.
+        /// </para>
+        /// <para>
+        /// <b>Results:</b> a successful input stores its result in <c>_results</c> at its own index. The source is
+        /// completed with that array by the last detach and the array is cleared when the instance is released for the
+        /// last time.
+        /// </para>
+        /// <para>
+        /// <b>Outcome:</b> <c>_signaled</c> is set once with
+        /// <see cref="Interlocked.CompareExchange(ref int, int, int)"/>. The first fault wins and faults the source. If
+        /// no input faults, the last detach completes the source successfully.
+        /// </para>
+        /// <para>
+        /// <b>Pooling:</b> <c>_releases</c> counts two owners: the last detaching observer and <see cref="WaitAsync"/>.
+        /// The instance returns to <c>s_pool</c> on the second release. The pool holds at most <c>MAX_POOL_SIZE</c>
+        /// instances and is guarded by a lock on <c>s_pool</c>.
+        /// </para>
+        /// </remarks>
         private sealed class WhenAllState<T> : IIndexedUnityTaskResultSink<T>
         {
             private const int MAX_POOL_SIZE = 256;
@@ -472,6 +571,10 @@ namespace EncosyTower.Tasks
 
             private WhenAllState() { }
 
+            /// <summary>
+            /// Takes an instance from the pool or creates one, resets its source, allocates a result array of
+            /// <paramref name="count"/> entries and sets <c>_remaining</c> to <paramref name="count"/>.
+            /// </summary>
             internal static WhenAllState<T> Rent(int count)
             {
                 WhenAllState<T> state;
@@ -497,6 +600,10 @@ namespace EncosyTower.Tasks
                 return state;
             }
 
+            /// <summary>
+            /// Awaits the source and releases this instance's <c>WaitAsync</c> ownership when the await ends, including
+            /// on a fault.
+            /// </summary>
             internal async UnityTask<T[]> WaitAsync()
             {
                 try
@@ -509,6 +616,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Stores the result at <paramref name="index"/> on success. On a fault, faults the source if no other
+            /// input has signaled yet.
+            /// </summary>
             void IIndexedUnityTaskResultSink<T>.Complete(int index, T result, Exception exception)
             {
                 if (exception == null)
@@ -521,6 +632,10 @@ namespace EncosyTower.Tasks
                 }
             }
 
+            /// <summary>
+            /// Counts one input as detached. The last detach completes the source with the result array unless a fault
+            /// signaled first, then releases the observers' ownership.
+            /// </summary>
             void IIndexedUnityTaskResultSink<T>.Detach()
             {
                 if (Interlocked.Decrement(ref _remaining) != 0)
@@ -536,8 +651,13 @@ namespace EncosyTower.Tasks
                 Release();
             }
 
+            /// <summary>
+            /// Gives up one of the two ownerships. On the second call it drops the result array and returns this
+            /// instance to the pool.
+            /// </summary>
             private void Release()
             {
+                // The pool return waits for the second owner, so a late observer cannot touch a reused state.
                 if (Interlocked.Increment(ref _releases) != 2)
                 {
                     return;
