@@ -12,6 +12,9 @@ namespace EncosyTower.Tasks
     /// A request resumes at the next run of its phase. A request made while that phase is running resumes in the
     /// next frame. In the Editor outside Play Mode, every phase is run from <c>EditorApplication.update</c>.
     /// </para>
+    /// <para>
+    /// <b>Counterparts:</b> UniTask: <c>Cysharp.Threading.Tasks.PlayerLoopTiming</c>; Unity: none.
+    /// </para>
     /// </remarks>
     public enum UnityTaskTiming
     {

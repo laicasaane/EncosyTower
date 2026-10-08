@@ -4,8 +4,13 @@ namespace EncosyTower.Tasks
     /// Selects the clock that a <see cref="UnityTask"/> delay measures.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The delay is checked on each tick of the Encosy player-loop scheduler at the requested
     /// <see cref="UnityTaskTiming"/>. In the Editor outside Play Mode, delays use real time.
+    /// </para>
+    /// <para>
+    /// <b>Counterparts:</b> UniTask: <c>Cysharp.Threading.Tasks.DelayType</c>; Unity: none.
+    /// </para>
     /// </remarks>
     public enum UnityTaskDelayType
     {

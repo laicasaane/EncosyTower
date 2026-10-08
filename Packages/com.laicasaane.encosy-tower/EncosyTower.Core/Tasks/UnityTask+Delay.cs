@@ -42,6 +42,9 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.Yield</c>; Unity: none.
+        /// </para>
         /// </remarks>
         public static UnityTask Yield(
               UnityTaskTiming timing = UnityTaskTiming.Update
@@ -103,6 +106,11 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.Delay</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.WaitForSecondsAsync"/>, which waits scaled seconds only and has no
+        /// player-loop phase choice.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="millisecondsDelay"/> is negative (development builds).
@@ -173,6 +181,11 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.Delay</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.WaitForSecondsAsync"/>, which waits scaled seconds only and has no
+        /// player-loop phase choice.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="delay"/> is negative (development builds).
@@ -228,6 +241,11 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.NextFrame</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.NextFrameAsync"/>, which resumes on the next frame with no player-loop
+        /// phase choice.
+        /// </para>
         /// </remarks>
         public static UnityTask NextFrameAsync(CancellationToken token = default)
             => UnityTaskDelayPromise.Create(
@@ -271,6 +289,9 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WaitUntil</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <c>null</c>.</exception>
         public static UnityTask WaitUntil(Func<bool> predicate, CancellationToken token = default)
@@ -314,6 +335,9 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WaitUntil</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <c>null</c>.</exception>
         public static UnityTask WaitUntil<TState>(
@@ -361,6 +385,9 @@ namespace EncosyTower.Tasks
         /// throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.WaitWhile</c>; Unity: none.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="predicate"/> is <c>null</c>.</exception>
         public static UnityTask WaitWhile<TState>(
@@ -373,6 +400,16 @@ namespace EncosyTower.Tasks
             return WaitWhileCoreAsync(state, predicate, token);
         }
 
+        /// <summary>
+        /// Polls <paramref name="predicate"/> at <see cref="UnityTaskTiming.Update"/> until it returns <c>true</c>.
+        /// </summary>
+        /// <param name="predicate">The condition to poll.</param>
+        /// <param name="token">The token that cancels the wait.</param>
+        /// <returns>A task that completes when the condition holds.</returns>
+        /// <remarks>
+        /// The token is checked first and the condition is read before the first yield. Each yield uses the default of
+        /// not cancelling immediately.
+        /// </remarks>
         private static async UnityTask WaitUntilCoreAsync(Func<bool> predicate, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
@@ -383,6 +420,15 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Polls <paramref name="predicate"/> with <paramref name="state"/> at <see cref="UnityTaskTiming.Update"/>
+        /// until it returns <c>true</c>.
+        /// </summary>
+        /// <typeparam name="TState">The type of the state passed to the predicate.</typeparam>
+        /// <param name="state">The state passed to <paramref name="predicate"/> on each poll.</param>
+        /// <param name="predicate">The condition to poll.</param>
+        /// <param name="token">The token that cancels the wait.</param>
+        /// <returns>A task that completes when the condition holds.</returns>
         private static async UnityTask WaitUntilCoreAsync<TState>(
               TState state
             , Func<TState, bool> predicate
@@ -397,6 +443,15 @@ namespace EncosyTower.Tasks
             }
         }
 
+        /// <summary>
+        /// Polls <paramref name="predicate"/> with <paramref name="state"/> at <see cref="UnityTaskTiming.Update"/>
+        /// while it returns <c>true</c>.
+        /// </summary>
+        /// <typeparam name="TState">The type of the state passed to the predicate.</typeparam>
+        /// <param name="state">The state passed to <paramref name="predicate"/> on each poll.</param>
+        /// <param name="predicate">The condition to poll.</param>
+        /// <param name="token">The token that cancels the wait.</param>
+        /// <returns>A task that completes when the condition no longer holds.</returns>
         private static async UnityTask WaitWhileCoreAsync<TState>(
               TState state
             , Func<TState, bool> predicate

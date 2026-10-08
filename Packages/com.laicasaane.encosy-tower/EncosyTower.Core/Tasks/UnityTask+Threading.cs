@@ -38,6 +38,11 @@ namespace EncosyTower.Tasks
         /// off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         public static UnityTask RunOnThreadPool(Action action, CancellationToken token = default)
@@ -80,6 +85,11 @@ namespace EncosyTower.Tasks
         /// off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         public static UnityTask RunOnThreadPool(Action<object> action, object state, CancellationToken token = default)
@@ -121,6 +131,11 @@ namespace EncosyTower.Tasks
         /// off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         public static UnityTask RunOnThreadPool(Func<UnityTask> action, CancellationToken token = default)
@@ -163,6 +178,11 @@ namespace EncosyTower.Tasks
         /// off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         public static UnityTask RunOnThreadPool(
@@ -209,6 +229,11 @@ namespace EncosyTower.Tasks
         /// created off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="function"/> is <c>null</c>.</exception>
         public static UnityTask<T> RunOnThreadPool<T>(Func<T> function, CancellationToken token = default)
@@ -251,6 +276,11 @@ namespace EncosyTower.Tasks
         /// created off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="function"/> is <c>null</c>.</exception>
         public static UnityTask<T> RunOnThreadPool<T>(Func<UnityTask<T>> function, CancellationToken token = default)
@@ -294,6 +324,11 @@ namespace EncosyTower.Tasks
         /// created off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="function"/> is <c>null</c>.</exception>
         public static UnityTask<T> RunOnThreadPool<T>(
@@ -341,6 +376,11 @@ namespace EncosyTower.Tasks
         /// created off the main thread): Unity throws or corrupts state, per Unity rules.
         /// </description></item>
         /// </list>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>UniTask.RunOnThreadPool</c>; Unity:
+        /// <see cref="UnityEngine.Awaitable.BackgroundThreadAsync"/> followed by the work, which does not return to the
+        /// calling thread kind.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="function"/> is <c>null</c>.</exception>
         public static UnityTask<T> RunOnThreadPool<T>(
@@ -356,7 +396,7 @@ namespace EncosyTower.Tasks
         private static async UnityTask RunOnThreadPoolCoreAsync(Action action, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             action();
@@ -371,7 +411,7 @@ namespace EncosyTower.Tasks
         )
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             action(state);
@@ -382,7 +422,7 @@ namespace EncosyTower.Tasks
         private static async UnityTask RunOnThreadPoolCoreAsync(Func<UnityTask> action, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             await action();
@@ -397,7 +437,7 @@ namespace EncosyTower.Tasks
         )
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             await action(state);
@@ -408,7 +448,7 @@ namespace EncosyTower.Tasks
         private static async UnityTask<T> RunOnThreadPoolCoreAsync<T>(Func<T> function, CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             var result = function();
@@ -423,7 +463,7 @@ namespace EncosyTower.Tasks
         )
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             var result = await function();
@@ -439,7 +479,7 @@ namespace EncosyTower.Tasks
         )
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             var result = function(state);
@@ -455,7 +495,7 @@ namespace EncosyTower.Tasks
         )
         {
             token.ThrowIfCancellationRequested();
-            await new ThreadPoolSwitch();
+            await SwitchToThreadPoolAsync();
             token.ThrowIfCancellationRequested();
 
             var result = await function(state);

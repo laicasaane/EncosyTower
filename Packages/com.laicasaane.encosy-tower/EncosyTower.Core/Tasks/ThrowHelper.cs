@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using EncosyTower.Logging;
 using UnityEngine;
 
@@ -95,6 +96,11 @@ namespace EncosyTower.Tasks
         [HideInCallstack, StackTraceHidden, DoesNotReturn]
         internal static void ThrowEnumeratorDisposed()
             => throw new ObjectDisposedException("IUnityTaskAsyncEnumerator");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowOperationCanceled(CancellationToken token)
+            => throw new OperationCanceledException(token);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
