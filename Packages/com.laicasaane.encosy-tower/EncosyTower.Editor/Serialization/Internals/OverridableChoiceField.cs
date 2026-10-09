@@ -5,13 +5,14 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.Editor.Serialization
+namespace EncosyTower.Editor.Serialization.Internals
 {
     internal sealed class OverridableChoiceField : BaseField<int>
     {
         private readonly VisualElement _input;
         private readonly TextElement _text;
         private string[] _choices = Array.Empty<string>();
+        private string _unlistedValueText = string.Empty;
 
         public OverridableChoiceField(string label) : this(label, new VisualElement()) { }
 
@@ -44,6 +45,28 @@ namespace EncosyTower.Editor.Serialization
             set
             {
                 _choices = value ?? Array.Empty<string>();
+                UpdateText();
+            }
+        }
+
+        public string InputTooltip
+        {
+            get => _input.tooltip;
+            set
+            {
+                tooltip = value;
+                _input.tooltip = value;
+            }
+        }
+
+        public bool HasDefaultChoice { get; set; } = true;
+
+        public string UnlistedValueText
+        {
+            get => _unlistedValueText;
+            set
+            {
+                _unlistedValueText = value ?? string.Empty;
                 UpdateText();
             }
         }
@@ -86,10 +109,11 @@ namespace EncosyTower.Editor.Serialization
             var menu = new GenericMenu();
             var choices = _choices;
             var current = showMixedValue ? -1 : value;
+            var count = choices.Length;
 
-            for (var i = 0; i < choices.Length; i++)
+            for (var i = 0; i < count; i++)
             {
-                if (i == 1)
+                if (i == 1 && HasDefaultChoice)
                 {
                     menu.AddSeparator(string.Empty);
                 }
@@ -114,7 +138,7 @@ namespace EncosyTower.Editor.Serialization
         }
 
         private string GetChoiceText(int index)
-            => (uint)index < (uint)_choices.Length ? _choices[index] : string.Empty;
+            => (uint)index < (uint)_choices.Length ? _choices[index] : _unlistedValueText;
     }
 }
 

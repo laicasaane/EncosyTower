@@ -1,0 +1,10 @@
+.encosy-overridable {
+    --encosy-overridable-secondary: #535353;
+    --encosy-overridable-switch-background: #f0f0f0;
+    --encosy-overridable-switch-border-top: #a0a0a0;
+    --encosy-overridable-switch-border: #b7b7b7;
+    --encosy-overridable-switch-knob: #090909;
+    --encosy-overridable-switch-background-on: #008126;
+    --encosy-overridable-switch-knob-on: #ffffff;
+    --encosy-overridable-switch-focus: #1d5087;
+}
