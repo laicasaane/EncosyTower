@@ -14,6 +14,11 @@ namespace EncosyTower.Serialization
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public sealed class OverridableDefaultAttribute : Attribute
     {
+        /// <summary>
+        /// Selects the member supplying the value while the override is disabled.
+        /// </summary>
+        /// <param name="sourceType">The type holding the default value.</param>
+        /// <param name="memberName">The field or property holding the default value.</param>
         public OverridableDefaultAttribute(Type sourceType, string memberName)
         {
             DebuggingThrowHelper.ThrowIfNull(sourceType);
@@ -34,7 +39,7 @@ namespace EncosyTower.Serialization
         public string MemberName { get; }
 
         /// <summary>
-        /// The label of the "use the default" choice. <c>null</c> uses the drawer's default label.
+        /// Names only the default choice of enum dropdowns. <c>null</c> uses the drawer's default label.
         /// </summary>
         public string Label { get; set; }
     }
