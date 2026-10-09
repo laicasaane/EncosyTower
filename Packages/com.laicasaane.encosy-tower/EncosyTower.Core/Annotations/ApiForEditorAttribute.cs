@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 
 namespace EncosyTower.Core
 {
@@ -8,7 +7,6 @@ namespace EncosyTower.Core
     /// even though it is defined in non-Editor assemblies (such as EncosyTower.Core).
     /// </summary>
     [AttributeUsage(AttributeTargets.All)]
-    [Conditional("UNITY_EDITOR")]
     public sealed class ApiForEditorAttribute : Attribute
     {
     }
