@@ -29,12 +29,16 @@ namespace EncosyTower.Editor
             _target = target;
         }
 
+        [ApiForEditor]
         public bool IsValid => _profile.IsValid() || _target.TargetName.IsNotEmpty();
 
+        [ApiForEditor]
         public bool IsProfile => _profile.IsValid();
 
+        [ApiForEditor]
         public bool IsTarget => _profile.IsValid() == false;
 
+        [ApiForEditor]
         public string Name
         {
             get
@@ -52,6 +56,7 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         public BuildProfile Profile
         {
             get
@@ -65,6 +70,7 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         public NamedBuildTarget Target
         {
             get
@@ -86,6 +92,7 @@ namespace EncosyTower.Editor
         public static implicit operator BuildProfileOrTarget(NamedBuildTarget target)
             => new(default, target);
 
+        [ApiForEditor]
         public EditorBuildSettingsScene[] GetScenesForBuild()
         {
             ThrowIfInvalid(IsValid);
@@ -100,6 +107,7 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         public HashSet<string> GetScriptingDefineSymbols()
         {
             ThrowIfInvalid(IsValid);
@@ -114,6 +122,7 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         public void SetScriptingDefineSymbols(params string[] symbols)
         {
             ThrowIfInvalid(IsValid);
@@ -128,6 +137,7 @@ namespace EncosyTower.Editor
             }
         }
 
+        [ApiForEditor]
         public void SetScriptingDefineSymbols(IEnumerable<string> symbols)
         {
             ThrowIfInvalid(IsValid);

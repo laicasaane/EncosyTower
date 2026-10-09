@@ -19,14 +19,17 @@ namespace EncosyTower.Editor
     [ApiForEditor]
     public readonly struct ScriptFileInfo
     {
+        [ApiForEditor]
         public ScriptFileInfo(string absolutePath, int lineNumber)
         {
             AbsolutePath = absolutePath;
             LineNumber = lineNumber;
         }
 
+        [ApiForEditor]
         public string AbsolutePath { get; }
 
+        [ApiForEditor]
         public int LineNumber { get; }
     }
 
