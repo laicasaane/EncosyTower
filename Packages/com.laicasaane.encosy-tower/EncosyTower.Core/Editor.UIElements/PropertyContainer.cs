@@ -25,7 +25,6 @@
 #if UNITY_EDITOR
 
 using System;
-using EncosyTower.Annotations;
 using EncosyTower.Core;
 using EncosyTower.UIElements;
 using UnityEditor;
@@ -215,7 +214,6 @@ namespace EncosyTower.Editor.UIElements
             set => _propertyProxy.bindingPath = value;
         }
 
-        [RemoveFromDocs]
         public override VisualElement contentContainer => _contentContainer;
 
         private void OnPointerUp(PointerUpEvent e)
