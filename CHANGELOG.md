@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.7
+
+### General
+
+- Removed unused `UniTask.Addressables` references from the package assemblies
+
+### Core
+
+- Added `ToUnityTask` and `WithCancellation` for Addressables `AsyncOperationHandle` and `AsyncOperationHandle<T>`, with progress, player-loop timing, cancellation, and auto-release on cancellation, without depending on `UniTask.Addressables`
+- Added `GetAwaiter` so that Addressables handles, `ResourceRequest`, AssetBundle requests, `UnityWebRequestAsyncOperation`, `InstantiateAsync`, `AsyncGPUReadbackRequest`, `JobHandle`, and coroutines can be awaited directly as `UnityTask` and return their results, without UniTask
+- Changed the `Encosy*Extensions` interop classes for `UnityTask` to `UnityTaskFor*Extensions`, keeping the `EncosyTower.Tasks` namespace (breaking: update code that names these classes directly)
+
+### SourceGen
+
+- Changed shipped source generator assemblies for `0.1.8-preview.7`
+
+### Tests
+
+- Added tests for awaiting Addressables handles, resource requests, coroutines, and job handles as `UnityTask`
+
+### Samples
+
+- Changed imported sample paths and database preset references to `0.1.8-preview.7`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.8-preview.7`
+
 ## 0.1.8-preview.6
 
 ### Core
