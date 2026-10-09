@@ -7,7 +7,7 @@ using EncosyTower.Core;
 using EncosyTower.SystemExtensions;
 using UnityEditor;
 
-namespace EncosyTower.Editor.Common
+namespace EncosyTower.Editor
 {
     [ApiForEditor]
     public static class SerializableGuidEditorExtensions

@@ -4,7 +4,7 @@ using EncosyTower.Core;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 
-namespace EncosyTower.Editor.Common
+namespace EncosyTower.Editor
 {
     [ApiForEditor]
     public static class SerializableSortingLayerEditorExtensions

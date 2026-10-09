@@ -2,7 +2,6 @@
 
 using System;
 using System.Reflection;
-using EncosyTower.Editor.Common;
 using EncosyTower.Editor.UIElements;
 using EncosyTower.UIElements;
 using EncosyTower.UnityExtensions;

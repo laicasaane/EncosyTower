@@ -9,7 +9,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.Editor.Common
+namespace EncosyTower.Editor
 {
     [CustomPropertyDrawer(typeof(SerializableGuid), true)]
     public class SerializableGuidPropertyDrawer : PropertyDrawer

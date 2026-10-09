@@ -4,7 +4,7 @@ using System;
 using EncosyTower.Common;
 using UnityEditor.UIElements;
 
-namespace EncosyTower.Editor.Common
+namespace EncosyTower.Editor
 {
     public class SerializableGuidConverter : UxmlAttributeConverter<SerializableGuid>
     {

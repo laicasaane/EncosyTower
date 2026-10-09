@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
-namespace EncosyTower.Annotations
+namespace EncosyTower.Editor
 {
     /// <summary>
     /// Get the path to the file code wherein this attribute is used.
