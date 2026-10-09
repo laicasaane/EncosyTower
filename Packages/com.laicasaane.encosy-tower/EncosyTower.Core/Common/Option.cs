@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.UnityExtensions;
 
 namespace EncosyTower.Common
 {
@@ -262,6 +264,23 @@ namespace EncosyTower.Common
             where T : class
         {
             return self._hasValue ? self._value : null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NotNull]
+        public static string GetNotEmptyOrDefault(this Option<string> self, [NotNull] string defaultString)
+        {
+            Debugging.ThrowHelper.ThrowIfNullOrEmpty(defaultString);
+            return self._hasValue && self._value.IsNotEmpty() ? self._value : defaultString;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NotNull]
+        public static T GetUnityObjectOrDefault<T>(this Option<T> self, [NotNull] T defaultValue)
+            where T : UnityEngine.Object
+        {
+            Debugging.ThrowHelper.ThrowIfUnityObjectInvalid(defaultValue);
+            return self._hasValue && self._value.IsValid() ? self._value : defaultValue;
         }
     }
 
