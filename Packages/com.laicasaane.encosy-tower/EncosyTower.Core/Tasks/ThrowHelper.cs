@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using EncosyTower.Logging;
 using UnityEngine;
@@ -127,6 +128,25 @@ namespace EncosyTower.Tasks
         [HideInCallstack, StackTraceHidden, DoesNotReturn]
         internal static void ThrowWebRequestError(UnityEngine.Networking.UnityWebRequest request)
             => throw new UnityWebRequestException(request);
+#endif
+
+#if UNITY_ADDRESSABLES
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowInvalidOperationHandle()
+            => throw new InvalidOperationException("The Addressables operation handle is not valid.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack, StackTraceHidden, DoesNotReturn]
+        internal static void ThrowOperationHandleFailed(Exception exception)
+        {
+            if (exception != null)
+            {
+                ExceptionDispatchInfo.Capture(exception).Throw();
+            }
+
+            throw new InvalidOperationException("The Addressables operation failed.");
+        }
 #endif
 
         [MethodImpl(MethodImplOptions.NoInlining)]
