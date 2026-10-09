@@ -10,7 +10,6 @@
         "Latios.Psyshock",
         "Latios.Transforms",
         "UniTask",
-        "UniTask.Addressables",
         "Unity.Addressables",
         "Unity.Burst",
         "Unity.Collections",

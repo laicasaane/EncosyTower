@@ -3,7 +3,6 @@
     "rootNamespace": "EncosyTower.Core",
     "references": [
         "UniTask",
-        "UniTask.Addressables",
         "Unity.Addressables",
         "Unity.Burst",
         "Unity.Collections",

@@ -8,7 +8,6 @@
         "Latios.Psyshock",
         "Latios.Transforms",
         "UniTask",
-        "UniTask.Addressables",
         "Unity.2D.Sprite.Editor",
         "Unity.Addressables",
         "Unity.Addressables.Editor",

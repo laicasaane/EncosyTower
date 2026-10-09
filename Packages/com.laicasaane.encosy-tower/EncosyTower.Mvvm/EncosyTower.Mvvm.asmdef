@@ -4,7 +4,6 @@
     "references": [
         "EncosyTower.Core",
         "UniTask",
-        "UniTask.Addressables",
         "Unity.Addressables",
         "Unity.Burst",
         "Unity.Collections",
