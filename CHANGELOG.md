@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.8-preview.8
+
+### General
+
+- Added `docs/api-marker-checks.md` describing the `[ApiForEditor]` and `[ApiForAuthoring]` checks
+
+### Core
+
+- Added `[ValueChoices]`, `ValueChoice`, and `ValueChoice<T>` in `EncosyTower.Editor` to offer preset values for a field, an `Overridable<T>`, or a whole array or list (`applyToCollection`), compiled in player builds so choices members need no `#if`
+- Added `GetNotEmptyOrDefault` for `Option<string>` and `GetUnityObjectOrDefault` for `Option<T>` of Unity objects
+- Changed `[ApiForEditor]` and `[ApiForAuthoring]` to stay in player assemblies, so analyzers can report editor-only API used in player code
+- Changed `ThisFilePathAttribute`, `SerializableGuidEditorExtensions`, and `SerializableSortingLayerEditorExtensions` to the `EncosyTower.Editor` namespace (breaking: replace `using EncosyTower.Annotations;` or `using EncosyTower.Editor.Common;` with `using EncosyTower.Editor;`)
+- Removed `RemoveFromDocsAttribute` (breaking: remove its uses)
+
+### Editor
+
+- Added a `[ValueChoices]` drawer that offers the choices in a dropdown or a ⋮ menu, warns when a value is outside exclusive choices, and logs a choices resolver error once per field
+- Added `Overridable<T>` drawer support for Unity built-in value types (`Color`, `LayerMask`, `AnimationCurve`, `Gradient`, `Rect`, `Bounds`, vectors, `Quaternion`, `Hash128`, `char`, `long`, `double`), structs with fixed-size buffers such as `SerializableGuid`, classes and structs, arrays, lists, and nested `Overridable<T>` collections
+- Changed the `Overridable<T>` drawer to show the default value dimmed while the override switch is off and the stored value when it is on, in both UI Toolkit and IMGUI
+- Changed the `Overridable<T>` right-click menu to Unity's property context menu with an added `Locate Default Source` item; the ⋮ button now appears only for `[ValueChoices]`
+- Changed `OverridablePropertyDrawer` to public
+- Changed `SerializableGuidConverter` and `SerializableGuidPropertyDrawer` to the `EncosyTower.Editor` namespace (breaking: replace `using EncosyTower.Editor.Common;` with `using EncosyTower.Editor;`)
+
+### Editor.AuditorRules
+
+- Added the `EncosyTower.Editor.AuditorRules` assembly with Project Auditor rules `EAP0001` and `EAP0002`, which report `[ApiForEditor]` and `[ApiForAuthoring]` API used in player code
+
+### DevTools
+
+- Added the Overridables showcase window and settings page under `Dev Tools/Showcases/Overridables`
+
+### SourceGen
+
+- Added analyzers `SG_API_MARKER_0001` and `SG_API_MARKER_0002`, which report an error when player code uses `[ApiForEditor]` API without `UNITY_EDITOR`, or `[ApiForAuthoring]` API without `UNITY_EDITOR` or `ENCOSY_INCLUDE_AUTHORING` (breaking: guard such uses or mark the caller with the same attribute)
+- Changed shipped source generator assemblies for `0.1.8-preview.8`
+
+### Tests
+
+- Added tests for the `Overridable<T>` and `[ValueChoices]` drawers, the supported value types, and the API marker Project Auditor rules
+
+### Samples
+
+- Changed imported sample paths and database preset references to `0.1.8-preview.8`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.8-preview.8`
+
 ## 0.1.8-preview.7
 
 ### General
