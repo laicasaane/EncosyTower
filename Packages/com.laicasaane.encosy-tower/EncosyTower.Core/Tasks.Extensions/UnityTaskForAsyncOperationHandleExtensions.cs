@@ -13,6 +13,23 @@ namespace EncosyTower.Tasks
     public static class UnityTaskForAsyncOperationHandleExtensions
     {
         /// <summary>
+        /// Gets an awaiter so that <paramref name="handle"/> can be awaited directly as a <see cref="UnityTask"/>,
+        /// without UniTask.
+        /// </summary>
+        /// <param name="handle">The operation handle to wait for.</param>
+        /// <returns>An awaiter that completes when the operation is done.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask</c> with default arguments.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>AddressablesAsyncExtensions.GetAwaiter</c>; Unity: none.
+        /// </para>
+        /// </remarks>
+        public static UnityTask.Awaiter GetAwaiter(this AsyncOperationHandle handle)
+            => ToUnityTask(handle).GetAwaiter();
+
+        /// <summary>
         /// Returns a task that completes when <paramref name="handle"/> is done, or is cancelled by
         /// <paramref name="token"/>.
         /// </summary>
@@ -177,6 +194,25 @@ namespace EncosyTower.Tasks
                 ThrowHelper.ThrowOperationHandleFailed(handle.OperationException);
             }
         }
+
+        /// <summary>
+        /// Gets an awaiter so that <paramref name="handle"/> can be awaited directly as a <see cref="UnityTask"/>,
+        /// without UniTask.
+        /// </summary>
+        /// <typeparam name="T">The type of the operation result.</typeparam>
+        /// <param name="handle">The operation handle to wait for.</param>
+        /// <returns>An awaiter that completes with the operation result.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask</c> with default arguments.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>AddressablesAsyncExtensions.GetAwaiter</c>; Unity: none.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"><paramref name="handle"/> is not valid.</exception>
+        public static UnityTask<T>.Awaiter GetAwaiter<T>(this AsyncOperationHandle<T> handle)
+            => ToUnityTask(handle).GetAwaiter();
 
         /// <summary>
         /// Returns a task that completes when <paramref name="handle"/> is done, or is cancelled by

@@ -12,6 +12,24 @@ namespace EncosyTower.Tasks
     public static class UnityTaskForAssetBundleCreateRequestExtensions
     {
         /// <summary>
+        /// Gets an awaiter so that <paramref name="operation"/> can be awaited directly as a <see cref="UnityTask"/>.
+        /// </summary>
+        /// <param name="operation">The operation to wait for.</param>
+        /// <returns>An awaiter that completes with the loaded asset bundle.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask</c> with default arguments.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>GetAwaiter</c>; Unity: the inherited
+        /// <c>AsyncOperationAwaitableExtensions.GetAwaiter</c>, which this more specific overload takes precedence
+        /// over and which returns no result.
+        /// </para>
+        /// </remarks>
+        public static UnityTask<AssetBundle>.Awaiter GetAwaiter(this AssetBundleCreateRequest operation)
+            => ToUnityTask(operation).GetAwaiter();
+
+        /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by
         /// <paramref name="token"/>.
         /// </summary>

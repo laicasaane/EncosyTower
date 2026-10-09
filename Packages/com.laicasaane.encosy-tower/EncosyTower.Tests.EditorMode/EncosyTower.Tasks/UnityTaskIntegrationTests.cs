@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EncosyTower.Tasks;
 using NUnit.Framework;
+using Unity.Jobs;
 using UnityEngine;
 
 namespace EncosyTower.Tests.Tasks
@@ -16,6 +17,30 @@ namespace EncosyTower.Tests.Tasks
             var asset = await Resources.LoadAsync<TextAsset>("EncosyTower.Tests/Missing/Asset").ToUnityTask();
 
             Assert.IsNull(asset);
+        }
+
+        [Test]
+        public async Task ResourceRequest_Await_CompletesWithNullForMissingAsset()
+        {
+            var asset = await Resources.LoadAsync<TextAsset>("EncosyTower.Tests/Missing/Asset");
+
+            Assert.IsNull(asset);
+        }
+
+        [Test]
+        public async Task IEnumerator_Await_RunsNestedEnumerators()
+        {
+            var steps = new int[1];
+
+            await Outer(steps);
+
+            Assert.AreEqual(3, steps[0]);
+        }
+
+        [Test]
+        public async Task JobHandle_Await_CompletesFinishedJob()
+        {
+            await default(JobHandle);
         }
 
         [Test]

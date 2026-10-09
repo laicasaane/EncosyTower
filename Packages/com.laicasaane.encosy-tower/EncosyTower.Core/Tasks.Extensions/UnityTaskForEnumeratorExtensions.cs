@@ -19,6 +19,22 @@ namespace EncosyTower.Tasks
         );
 
         /// <summary>
+        /// Gets an awaiter so that <paramref name="enumerator"/> can be awaited directly as a <see cref="UnityTask"/>.
+        /// </summary>
+        /// <param name="enumerator">The coroutine to wait for.</param>
+        /// <returns>An awaiter that completes when the coroutine ends.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask</c> with default arguments.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>GetAwaiter</c>; Unity: none.
+        /// </para>
+        /// </remarks>
+        public static UnityTask.Awaiter GetAwaiter(this IEnumerator enumerator)
+            => ToUnityTask(enumerator).GetAwaiter();
+
+        /// <summary>
         /// Returns a task that runs <paramref name="enumerator"/> on the shared Encosy player-loop scheduler.
         /// </summary>
         /// <param name="enumerator">The coroutine to run.</param>

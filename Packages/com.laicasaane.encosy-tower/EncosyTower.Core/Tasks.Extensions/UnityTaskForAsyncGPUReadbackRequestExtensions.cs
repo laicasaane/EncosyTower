@@ -10,6 +10,22 @@ namespace EncosyTower.Tasks
     public static class UnityTaskForAsyncGPUReadbackRequestExtensions
     {
         /// <summary>
+        /// Gets an awaiter so that <paramref name="request"/> can be awaited directly as a <see cref="UnityTask"/>.
+        /// </summary>
+        /// <param name="request">The request to wait for.</param>
+        /// <returns>An awaiter that completes with the finished request.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask</c> with default arguments.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>GetAwaiter</c>; Unity: none.
+        /// </para>
+        /// </remarks>
+        public static UnityTask<AsyncGPUReadbackRequest>.Awaiter GetAwaiter(this AsyncGPUReadbackRequest request)
+            => ToUnityTask(request).GetAwaiter();
+
+        /// <summary>
         /// Returns a task that completes when <paramref name="request"/> is done, or is cancelled by
         /// <paramref name="token"/>.
         /// </summary>

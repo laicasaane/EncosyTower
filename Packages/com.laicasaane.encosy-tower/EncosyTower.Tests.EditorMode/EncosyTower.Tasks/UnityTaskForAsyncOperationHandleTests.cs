@@ -37,6 +37,18 @@ namespace EncosyTower.Tests.Tasks
         }
 
         [Test]
+        public async Task Handle_Await_ReturnsResult()
+        {
+            var handle = _resourceManager.CreateCompletedOperation(3, errorMsg: null);
+
+            Assert.AreEqual(3, await handle);
+
+            await (AsyncOperationHandle)handle;
+
+            handle.Release();
+        }
+
+        [Test]
         public async Task PendingHandle_ReturnsResultAfterCompletion()
         {
             var operation = new PendingOperation();

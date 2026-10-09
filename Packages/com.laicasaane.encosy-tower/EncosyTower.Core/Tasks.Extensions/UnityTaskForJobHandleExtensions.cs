@@ -9,6 +9,22 @@ namespace EncosyTower.Tasks
     public static class UnityTaskForJobHandleExtensions
     {
         /// <summary>
+        /// Gets an awaiter so that <paramref name="jobHandle"/> can be awaited directly as a <see cref="UnityTask"/>.
+        /// </summary>
+        /// <param name="jobHandle">The job to wait for.</param>
+        /// <returns>An awaiter that completes after the job is completed.</returns>
+        /// <remarks>
+        /// <para>
+        /// <b>Behaviour:</b> same as <c>ToUnityTask(jobHandle, UnityTaskTiming.Update)</c>.
+        /// </para>
+        /// <para>
+        /// <b>Counterparts:</b> UniTask: <c>GetAwaiter</c>; Unity: none.
+        /// </para>
+        /// </remarks>
+        public static UnityTask.Awaiter GetAwaiter(this JobHandle jobHandle)
+            => ToUnityTask(jobHandle, UnityTaskTiming.Update).GetAwaiter();
+
+        /// <summary>
         /// Returns a task that waits one <paramref name="timing"/> tick, then completes <paramref name="jobHandle"/>.
         /// </summary>
         /// <param name="jobHandle">The job to complete.</param>
