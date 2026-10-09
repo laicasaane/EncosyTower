@@ -1,0 +1,17 @@
+{
+    "name": "EncosyTower.Editor.AuditorRules",
+    "rootNamespace": "EncosyTower.Editor.AuditorRules",
+    "references": [
+        "EncosyTower.Core",
+        "Unity.ProjectAuditor.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Mono.Cecil.dll"
+    ],
+    "autoReferenced": true
+}
