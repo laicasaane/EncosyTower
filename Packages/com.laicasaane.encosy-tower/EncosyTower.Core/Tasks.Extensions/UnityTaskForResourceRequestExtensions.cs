@@ -1,5 +1,3 @@
-#if UNITY_ASSETBUNDLE
-
 using System;
 using System.Threading;
 using UnityEngine;
@@ -7,9 +5,9 @@ using UnityEngine;
 namespace EncosyTower.Tasks
 {
     /// <summary>
-    /// Awaits <see cref="AssetBundleCreateRequest"/> as a <see cref="UnityTask"/>.
+    /// Awaits <see cref="ResourceRequest"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyAssetBundleCreateRequestExtensions
+    public static class UnityTaskForResourceRequestExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by
@@ -23,8 +21,8 @@ namespace EncosyTower.Tasks
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask<AssetBundle> WithCancellation(
-              this AssetBundleCreateRequest operation
+        public static UnityTask<UnityEngine.Object> WithCancellation(
+              this ResourceRequest operation
             , CancellationToken token
         )
             => ToUnityTask(operation, progress: null, cancelImmediately: false, token: token);
@@ -45,8 +43,8 @@ namespace EncosyTower.Tasks
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask<AssetBundle> WithCancellation(
-              this AssetBundleCreateRequest operation
+        public static UnityTask<UnityEngine.Object> WithCancellation(
+              this ResourceRequest operation
             , bool cancelImmediately
             , CancellationToken token
         )
@@ -78,8 +76,8 @@ namespace EncosyTower.Tasks
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="operation"/> is <c>null</c>.</exception>
-        public static UnityTask<AssetBundle> ToUnityTask(
-              this AssetBundleCreateRequest operation
+        public static UnityTask<UnityEngine.Object> ToUnityTask(
+              this ResourceRequest operation
             , IProgress<float> progress = null
             , UnityTaskTiming timing = UnityTaskTiming.Update
             , bool cancelImmediately = false
@@ -90,8 +88,8 @@ namespace EncosyTower.Tasks
             return ToUnityTaskCoreAsync(operation, progress, timing, cancelImmediately, token);
         }
 
-        private static async UnityTask<AssetBundle> ToUnityTaskCoreAsync(
-              AssetBundleCreateRequest operation
+        private static async UnityTask<UnityEngine.Object> ToUnityTaskCoreAsync(
+              ResourceRequest operation
             , IProgress<float> progress
             , UnityTaskTiming timing
             , bool cancelImmediately
@@ -99,9 +97,7 @@ namespace EncosyTower.Tasks
         )
         {
             await UnityTaskOperationPolling.WaitAsync(operation, progress, timing, cancelImmediately, token);
-            return operation.assetBundle;
+            return operation.asset;
         }
     }
 }
-
-#endif

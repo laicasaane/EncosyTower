@@ -7,7 +7,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Awaits <see cref="AsyncInstantiateOperation"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyAsyncInstantiateOperationExtensions
+    public static class UnityTaskForAsyncInstantiateOperationExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by

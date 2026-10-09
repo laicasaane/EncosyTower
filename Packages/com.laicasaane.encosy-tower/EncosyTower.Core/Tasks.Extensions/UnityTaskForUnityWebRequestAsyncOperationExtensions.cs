@@ -1,13 +1,15 @@
+#if UNITY_WEBREQUEST
+
 using System;
 using System.Threading;
-using UnityEngine;
+using UnityEngine.Networking;
 
 namespace EncosyTower.Tasks
 {
     /// <summary>
-    /// Awaits <see cref="ResourceRequest"/> as a <see cref="UnityTask"/>.
+    /// Awaits <see cref="UnityWebRequestAsyncOperation"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyResourceRequestExtensions
+    public static class UnityTaskForUnityWebRequestAsyncOperationExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by
@@ -21,8 +23,8 @@ namespace EncosyTower.Tasks
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask<UnityEngine.Object> WithCancellation(
-              this ResourceRequest operation
+        public static UnityTask<UnityWebRequest> WithCancellation(
+              this UnityWebRequestAsyncOperation operation
             , CancellationToken token
         )
             => ToUnityTask(operation, progress: null, cancelImmediately: false, token: token);
@@ -43,8 +45,8 @@ namespace EncosyTower.Tasks
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask<UnityEngine.Object> WithCancellation(
-              this ResourceRequest operation
+        public static UnityTask<UnityWebRequest> WithCancellation(
+              this UnityWebRequestAsyncOperation operation
             , bool cancelImmediately
             , CancellationToken token
         )
@@ -65,8 +67,9 @@ namespace EncosyTower.Tasks
         /// <remarks>
         /// <para>
         /// <b>Behaviour:</b> completes synchronously when the operation is already done. Otherwise checks it after
-        /// each <paramref name="timing"/> tick of the shared Encosy player-loop scheduler. Cancellation throws
-        /// <c>new OperationCanceledException(token)</c> and leaves the operation running.
+        /// each <paramref name="timing"/> tick of the shared Encosy player-loop scheduler. A request that ends with a
+        /// connection, protocol or data-processing error throws <see cref="UnityWebRequestException"/>.
+        /// Cancellation throws <c>new OperationCanceledException(token)</c> and leaves the operation running.
         /// </para>
         /// <para>
         /// <b>Thread:</b> call it on the main thread. The awaiter resumes on the main thread.
@@ -76,8 +79,8 @@ namespace EncosyTower.Tasks
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="operation"/> is <c>null</c>.</exception>
-        public static UnityTask<UnityEngine.Object> ToUnityTask(
-              this ResourceRequest operation
+        public static UnityTask<UnityWebRequest> ToUnityTask(
+              this UnityWebRequestAsyncOperation operation
             , IProgress<float> progress = null
             , UnityTaskTiming timing = UnityTaskTiming.Update
             , bool cancelImmediately = false
@@ -88,8 +91,8 @@ namespace EncosyTower.Tasks
             return ToUnityTaskCoreAsync(operation, progress, timing, cancelImmediately, token);
         }
 
-        private static async UnityTask<UnityEngine.Object> ToUnityTaskCoreAsync(
-              ResourceRequest operation
+        private static async UnityTask<UnityWebRequest> ToUnityTaskCoreAsync(
+              UnityWebRequestAsyncOperation operation
             , IProgress<float> progress
             , UnityTaskTiming timing
             , bool cancelImmediately
@@ -97,7 +100,15 @@ namespace EncosyTower.Tasks
         )
         {
             await UnityTaskOperationPolling.WaitAsync(operation, progress, timing, cancelImmediately, token);
-            return operation.asset;
+
+            if (UnityWebRequestException.IsError(operation.webRequest))
+            {
+                ThrowHelper.ThrowWebRequestError(operation.webRequest);
+            }
+
+            return operation.webRequest;
         }
     }
 }
+
+#endif

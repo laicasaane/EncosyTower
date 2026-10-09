@@ -10,7 +10,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Runs coroutine enumerators as <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyEnumeratorExtensions
+    public static class UnityTaskForEnumeratorExtensions
     {
         // Reads the private seconds field of WaitForSeconds; GetSeconds returns 0 when the field is not found.
         private static readonly FieldInfo s_waitForSecondsField = typeof(WaitForSeconds).GetField(

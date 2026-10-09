@@ -9,7 +9,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Awaits <see cref="AssetBundleRequest"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyAssetBundleRequestExtensions
+    public static class UnityTaskForAssetBundleRequestExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by

@@ -7,7 +7,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Converts <see cref="Task"/> and <see cref="Task{TResult}"/> to <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyTaskExtensions
+    public static class UnityTaskForTaskExtensions
     {
         /// <summary>
         /// Returns a <see cref="UnityTask"/> that completes with the outcome of <paramref name="task"/>.

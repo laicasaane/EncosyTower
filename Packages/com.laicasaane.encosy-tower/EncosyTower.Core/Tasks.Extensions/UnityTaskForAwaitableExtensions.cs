@@ -5,7 +5,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Converts <see cref="Awaitable"/> and <see cref="Awaitable{T}"/> to <see cref="UnityTask"/> on both backends.
     /// </summary>
-    public static class EncosyAwaitableExtensions
+    public static class UnityTaskForAwaitableExtensions
     {
         /// <summary>
         /// Returns a <see cref="UnityTask"/> that completes with the outcome of <paramref name="awaitable"/>.

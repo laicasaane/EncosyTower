@@ -6,7 +6,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Awaits <see cref="JobHandle"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyJobHandleExtensions
+    public static class UnityTaskForJobHandleExtensions
     {
         /// <summary>
         /// Returns a task that waits one <paramref name="timing"/> tick, then completes <paramref name="jobHandle"/>.

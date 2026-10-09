@@ -1,3 +1,5 @@
+#if UNITY_ASSETBUNDLE
+
 using System;
 using System.Threading;
 using UnityEngine;
@@ -5,9 +7,9 @@ using UnityEngine;
 namespace EncosyTower.Tasks
 {
     /// <summary>
-    /// Awaits <see cref="AsyncOperation"/> as a <see cref="UnityTask"/>.
+    /// Awaits <see cref="AssetBundleCreateRequest"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyAsyncOperationExtensions
+    public static class UnityTaskForAssetBundleCreateRequestExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="operation"/> is done, or is cancelled by
@@ -15,14 +17,14 @@ namespace EncosyTower.Tasks
         /// </summary>
         /// <param name="operation">The operation to wait for.</param>
         /// <param name="token">The token that cancels the wait. It does not cancel the operation.</param>
-        /// <returns>A task that completes when the operation is done.</returns>
+        /// <returns>A task that completes with the operation result.</returns>
         /// <remarks>
         /// <para>
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask WithCancellation(
-              this AsyncOperation operation
+        public static UnityTask<AssetBundle> WithCancellation(
+              this AssetBundleCreateRequest operation
             , CancellationToken token
         )
             => ToUnityTask(operation, progress: null, cancelImmediately: false, token: token);
@@ -37,14 +39,14 @@ namespace EncosyTower.Tasks
         /// the token when the scheduler runs.
         /// </param>
         /// <param name="token">The token that cancels the wait. It does not cancel the operation.</param>
-        /// <returns>A task that completes when the operation is done.</returns>
+        /// <returns>A task that completes with the operation result.</returns>
         /// <remarks>
         /// <para>
         /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.WithCancellation</c>; Unity: none.
         /// </para>
         /// </remarks>
-        public static UnityTask WithCancellation(
-              this AsyncOperation operation
+        public static UnityTask<AssetBundle> WithCancellation(
+              this AssetBundleCreateRequest operation
             , bool cancelImmediately
             , CancellationToken token
         )
@@ -61,7 +63,7 @@ namespace EncosyTower.Tasks
         /// the token when the scheduler runs.
         /// </param>
         /// <param name="token">The token that cancels the wait. It does not cancel the operation.</param>
-        /// <returns>A task that completes when the operation is done.</returns>
+        /// <returns>A task that completes with the operation result.</returns>
         /// <remarks>
         /// <para>
         /// <b>Behaviour:</b> completes synchronously when the operation is already done. Otherwise checks it after
@@ -72,14 +74,12 @@ namespace EncosyTower.Tasks
         /// <b>Thread:</b> call it on the main thread. The awaiter resumes on the main thread.
         /// </para>
         /// <para>
-        /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.ToUniTask</c>; Unity:
-        /// <see cref="UnityEngine.Awaitable.FromAsyncOperation"/>, which reports no progress and has no player-loop
-        /// phase choice.
+        /// <b>Counterparts:</b> UniTask: <c>UnityAsyncExtensions.ToUniTask</c>; Unity: none.
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="operation"/> is <c>null</c>.</exception>
-        public static UnityTask ToUnityTask(
-              this AsyncOperation operation
+        public static UnityTask<AssetBundle> ToUnityTask(
+              this AssetBundleCreateRequest operation
             , IProgress<float> progress = null
             , UnityTaskTiming timing = UnityTaskTiming.Update
             , bool cancelImmediately = false
@@ -90,8 +90,8 @@ namespace EncosyTower.Tasks
             return ToUnityTaskCoreAsync(operation, progress, timing, cancelImmediately, token);
         }
 
-        private static async UnityTask ToUnityTaskCoreAsync(
-              AsyncOperation operation
+        private static async UnityTask<AssetBundle> ToUnityTaskCoreAsync(
+              AssetBundleCreateRequest operation
             , IProgress<float> progress
             , UnityTaskTiming timing
             , bool cancelImmediately
@@ -99,6 +99,9 @@ namespace EncosyTower.Tasks
         )
         {
             await UnityTaskOperationPolling.WaitAsync(operation, progress, timing, cancelImmediately, token);
+            return operation.assetBundle;
         }
     }
 }
+
+#endif

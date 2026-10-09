@@ -5,7 +5,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Awaits <see cref="CancellationToken"/> cancellation as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyCancellationTokenExtensions
+    public static class UnityTaskForCancellationTokenExtensions
     {
         /// <summary>
         /// Returns a task that completes successfully when <paramref name="token"/> is cancelled.

@@ -7,7 +7,7 @@ namespace EncosyTower.Tasks
     /// <summary>
     /// Awaits <see cref="AsyncGPUReadbackRequest"/> as a <see cref="UnityTask"/>.
     /// </summary>
-    public static class EncosyAsyncGPUReadbackRequestExtensions
+    public static class UnityTaskForAsyncGPUReadbackRequestExtensions
     {
         /// <summary>
         /// Returns a task that completes when <paramref name="request"/> is done, or is cancelled by
