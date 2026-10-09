@@ -1,0 +1,20 @@
+{
+    "name": "EncosyTower.DevTools.Showcases.Overridables",
+    "rootNamespace": "EncosyTower.DevTools.Showcases.Overridables",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.Editor",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
