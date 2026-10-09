@@ -10,6 +10,7 @@
         "EncosyTower.Editor",
         "EncosyTower.Editor.CodeGen",
         "EncosyTower.Editor.PageFlows",
+        "EncosyTower.Editor.AuditorRules",
         "EncosyTower.Editor.SourceGen",
         "EncosyTower.Mvvm",
         "EncosyTower.PageFlows",
@@ -46,6 +47,7 @@
         "Google.Apis.Core.dll",
         "Google.Apis.dll",
         "Microsoft.Extensions.Logging.Abstractions.dll",
+        "Mono.Cecil.dll",
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
