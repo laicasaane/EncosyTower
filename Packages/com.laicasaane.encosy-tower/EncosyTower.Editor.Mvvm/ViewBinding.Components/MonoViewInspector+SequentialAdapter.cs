@@ -134,7 +134,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             if (length < 1)
             {
                 EditorGUILayout.LabelField(
-                      "This adapter list is empty."
+                      "This sequential adapter has no adapters."
                     , s_noBinderStyle
                     , GUILayout.Height(30)
                     , GUILayout.MinWidth(0)

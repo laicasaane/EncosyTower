@@ -47,7 +47,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
         private static readonly GUIContent s_propertyBindingLabel = new("Property");
         private static readonly GUIContent s_commandBindingLabel = new("Command");
-        private static readonly GUIContent s_converterLabel = new("Converter");
+        private static readonly GUIContent s_adapterTitleLabel = new("Adapter");
         private static readonly GUIContent s_clearAllLabel = new("Clear All");
         private static readonly GUIContent s_copyAllLabel = new("Copy All");
         private static readonly GUIContent s_pasteAllLabel = new("Paste All");
@@ -65,12 +65,12 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
         private static readonly GUIContent s_bindingsLabel = new("Bindings");
         private static readonly GUIContent s_adaptersLabel = new("Adapters");
         private static readonly GUIContent s_targetsLabel = new(
-            "Targets", "Can also drag and drop GameObject or Component here to add to the list."
+            "Targets", "Can also drag and drop GameObject or Component here to add a target."
         );
 
         private static readonly GUIContent[] s_detailsTabLabels = new GUIContent[] {
             new("Bindings"),
-            new("Targets", "Can also drag and drop GameObject or Component here to add to the list."),
+            new("Targets", "Can also drag and drop GameObject or Component here to add a target."),
         };
 
         private void InitStyles()

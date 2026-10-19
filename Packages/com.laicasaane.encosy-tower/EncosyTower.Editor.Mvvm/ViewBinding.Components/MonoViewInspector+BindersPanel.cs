@@ -146,7 +146,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
                 if (bindersLength < 1)
                 {
-                    GUILayout.Label("This binder list is empty.", s_noBinderStyle, guiHeight, guiWidth2);
+                    GUILayout.Label("This view has no binders.", s_noBinderStyle, guiHeight, guiWidth2);
 
                     if (eventData is { Type: EventType.MouseDown, Button: 1 }
                         && rect.Contains(eventData.MousePos)

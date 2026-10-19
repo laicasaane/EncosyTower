@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using EncosyTower.Annotations;
 using EncosyTower.Editor.UIElements;
 using EncosyTower.Logging;
@@ -11,6 +12,7 @@ using EncosyTower.Mvvm.ViewBinding;
 using EncosyTower.Mvvm.ViewBinding.Adapters;
 using EncosyTower.Mvvm.ViewBinding.Adapters.Unity;
 using EncosyTower.Mvvm.ViewBinding.Components;
+using EncosyTower.PolyEnumStructs;
 using EncosyTower.Types;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
@@ -41,12 +43,41 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             Valid,
         }
 
-        private enum TargetTypeResult
+        [PolyEnumStruct]
+        private readonly partial struct TargetTypeError
         {
-            Success,
-            UnknownBinder,
-            NotFoundForBinder,
-            NotGameObjectOrComponent,
+            partial interface IEnumCase
+            {
+                string ToMessage();
+            }
+
+            public readonly partial struct Undefined
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                public readonly string ToMessage()
+                    => string.Empty;
+            }
+
+            public readonly partial struct UnknownBinder
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                public readonly string ToMessage()
+                    => "Cannot find target type for an unknown binder";
+            }
+
+            public readonly partial record struct NotFoundForBinder(System.Type BinderType)
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                public readonly string ToMessage()
+                    => $"Cannot find target type for the binder {BinderType}!";
+            }
+
+            public readonly partial record struct NotGameObjectOrComponent(System.Type TargetType)
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                public readonly string ToMessage()
+                    => $"{TargetType} is not GameObject nor Component!";
+            }
         }
 
         private enum EventResult
@@ -80,14 +111,12 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                     }
                     else
                     {
-                        var result = TryGetTargetType(
+                        if (TryGetTargetType(
                               bindersProp
                             , out var binderProp
-                            , out var binderType
                             , out var targetType
-                        );
-
-                        if (result == TargetTypeResult.Success)
+                            , out var error
+                        ))
                         {
                             eventResult = DrawDetailsPanel_Targets(eventData, binderProp, targetType);
 
@@ -100,7 +129,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                         }
                         else
                         {
-                            DrawDetailsPanel_InvalidTargetType(result, binderType, targetType);
+                            DrawDetailsPanel_InvalidTargetType(error);
                         }
                     }
                 }
@@ -122,11 +151,11 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawDetailsPanel_InvalidTargetType(TargetTypeResult result, Type binderType, Type targetType)
+        private void DrawDetailsPanel_InvalidTargetType(in TargetTypeError error)
         {
             EditorGUILayout.BeginVertical(s_rootTabViewStyle);
             {
-                GUILayout.Label(GetMessage(result, binderType, targetType), s_noBinderStyle);
+                GUILayout.Label(error.ToMessage(), s_noBinderStyle);
             }
             EditorGUILayout.EndVertical();
         }
@@ -233,7 +262,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             if (length < 1)
             {
                 EditorGUILayout.LabelField(
-                    "This target list is empty."
+                    "The selected binder has no targets."
                     , s_noBinderStyle
                     , GUILayout.Height(30)
                     , GUILayout.MinWidth(0)
@@ -415,7 +444,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             if (length < 1)
             {
                 EditorGUILayout.LabelField(
-                      "This binding list is empty."
+                      "The selected binder has no bindings."
                     , s_noBinderStyle
                     , minWidth
                     , GUILayout.Height(30)
@@ -449,7 +478,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
         {
             var propertyLabel = s_propertyBindingLabel;
             var commandLabel = s_commandBindingLabel;
-            var converterLabel = s_converterLabel;
+            var adapterTitleLabel = s_adapterTitleLabel;
             var itemLabelStyle = s_itemLabelStyle;
 
             itemLabelStyle.CalcMinMaxWidth(propertyLabel, out _, out var maxPropWidth);
@@ -691,7 +720,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
                                     DrawAdapterProp(
                                           eventData
-                                        , converterLabel
+                                        , adapterTitleLabel
                                         , itemLabelStyle
                                         , itemLabelWidth
                                         , popupStyle
@@ -736,7 +765,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
         private static void DrawAdapterProp(
               in EventData eventData
-            , GUIContent converterLabel
+            , GUIContent adapterTitleLabel
             , GUIStyle itemLabelStyle
             , float itemLabelWidth
             , GUIStyle popupStyle
@@ -771,7 +800,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                     var itemLabelRect = converterRect;
                     itemLabelRect.width = itemLabelWidth;
 
-                    GUI.Label(itemLabelRect, converterLabel, itemLabelStyle);
+                    GUI.Label(itemLabelRect, adapterTitleLabel, itemLabelStyle);
                 }
 
                 GUILayout.Space(itemLabelWidth + 22f);
@@ -1016,16 +1045,16 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
 
         private void OnDropCreateTargets(Memory<UnityEngine.Object> objects)
         {
-            var result = TryGetTargetType(
+            var hasTargetType = TryGetTargetType(
                   _bindersProp
                 , out var binderProp
-                , out var binderType
                 , out var targetType
+                , out var error
             );
 
-            if (result != TargetTypeResult.Success)
+            if (hasTargetType == false)
             {
-                DisplayDialog(result, binderType, targetType);
+                DisplayDialog(error);
                 return;
             }
 
@@ -1221,63 +1250,50 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
             return result;
         }
 
-        private static TargetTypeResult TryGetTargetType(
+        private static bool TryGetTargetType(
               SerializedArrayProperty bindersProp
             , out SerializedProperty binderProp
-            , out Type binderType
             , out Type targetType
+            , out TargetTypeError error
         )
         {
             binderProp = bindersProp.GetElementAt(bindersProp.SelectedIndex.Value);
-            binderType = binderProp.managedReferenceValue?.GetType();
+
+            var binderType = binderProp.managedReferenceValue?.GetType();
 
             if (binderType == null)
             {
                 targetType = default;
-                return TargetTypeResult.UnknownBinder;
+                error = new TargetTypeError.UnknownBinder();
+                return false;
             }
 
             if (s_binderToTargetTypeMap.TryGetValue(binderType, out targetType) == false)
             {
-                return TargetTypeResult.NotFoundForBinder;
+                error = new TargetTypeError.NotFoundForBinder(binderType);
+                return false;
             }
 
             if (targetType == typeof(GameObject)
                 || typeof(Component).IsAssignableFrom(targetType)
             )
             {
-                return TargetTypeResult.Success;
+                error = default;
+                return true;
             }
 
+            error = new TargetTypeError.NotGameObjectOrComponent(targetType);
             targetType = default;
-            return TargetTypeResult.NotGameObjectOrComponent;
+            return false;
         }
 
-        private static void DisplayDialog(
-              TargetTypeResult result
-            , Type binderType
-            , Type targetType
-        )
+        private static void DisplayDialog(in TargetTypeError error)
         {
             EditorUtility.DisplayDialog(
                   "Invalid Target Type"
-                , GetMessage(result, binderType, targetType)
+                , error.ToMessage()
                 , "I understand"
             );
-        }
-
-        private static string GetMessage(
-              TargetTypeResult result
-            , Type binderType
-            , Type targetType
-        )
-        {
-            return result switch {
-                TargetTypeResult.UnknownBinder => "Cannot find target type for an unknown binder",
-                TargetTypeResult.NotFoundForBinder => $"Cannot find target type for the binder {binderType}!",
-                TargetTypeResult.NotGameObjectOrComponent => $"{targetType} is not GameObject nor Component!",
-                _ => string.Empty,
-            };
         }
 
         private static TargetBindingResult GetTargetMemberData(

@@ -837,7 +837,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
                 ;
         }
 
-        private static BinderDefinition ToDefinition<TBase>(Type type)
+        private static BindingTypeDefinition ToDefinition<TBase>(Type type)
         {
             if (FindFirstTypeArg(typeof(TBase), type, out var targetType) == false)
             {

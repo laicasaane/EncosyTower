@@ -15,7 +15,7 @@ namespace EncosyTower.Editor.Mvvm.ViewBinding.Components
         [WrapRecord]
         private readonly partial record struct SourceType(Type _);
 
-        private readonly partial record struct BinderDefinition(
+        private readonly partial record struct BindingTypeDefinition(
               Type BinderType
             , Type TargetType
             , string Label
