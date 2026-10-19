@@ -224,6 +224,7 @@ namespace EncosyTower.Collections
         /// </summary>
         /// <remarks>
         /// When the method returns an error, the destination string is not modified.
+        /// Temporary UTF-8 storage uses at most 4096 stack bytes; larger buffers allocate a managed array.
         /// </remarks>
         /// <typeparam name="TFixedString">The type of the destination string.</typeparam>
         /// <param name="fs">The destination string.</param>
@@ -235,22 +236,32 @@ namespace EncosyTower.Collections
         public static FormatError Append<TFixedString>(this ref TFixedString fs, ReadOnlySpan<char> utf16Chars)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
-            // SAFETY: The established ownership and safety checks keep the native storage live
-            // for this pointer dereference.
+            const int MAX_STACK_BYTES = 4096;
+            var utf16Length = utf16Chars.Length;
+            var remainingCapacity = fs.Capacity - fs.Length;
+
+            if (utf16Length > remainingCapacity)
+            {
+                return FormatError.Overflow;
+            }
+
+            var bufferCapacity = (int)Math.Min((long)utf16Length * 3, remainingCapacity);
+
+            Span<byte> buffer = bufferCapacity <= MAX_STACK_BYTES
+                ? stackalloc byte[bufferCapacity]
+                : new byte[bufferCapacity];
+
+            // SAFETY: Both input and bounded temporary storage are pinned until conversion and append complete.
             unsafe
             {
                 // we don't know how big the expansion from UTF-16 to UTF8 will be, so we account for worst case.
-                int utf16Length = utf16Chars.Length;
-                int worstCaseCapacity = utf16Length * 4;
-                byte* utf8Bytes = stackalloc byte[worstCaseCapacity];
-                int utf8Len;
-
                 fixed (char* chars = utf16Chars)
+                fixed (byte* utf8Bytes = buffer)
                 {
                     CopyError err = UTF8ArrayUnsafeUtility.Copy(
                           utf8Bytes
-                        , out utf8Len
-                        , worstCaseCapacity
+                        , out var utf8Len
+                        , bufferCapacity
                         , chars
                         , utf16Length
                     );
@@ -259,9 +270,9 @@ namespace EncosyTower.Collections
                     {
                         return FormatError.Overflow;
                     }
-                }
 
-                return fs.Append(utf8Bytes, utf8Len);
+                    return fs.Append(utf8Bytes, utf8Len);
+                }
             }
         }
 
@@ -432,12 +443,12 @@ namespace EncosyTower.Collections
         /// <summary>
         /// Returns a readonly span covering the entire length of <paramref name="fs"/>.
         /// </summary>
+        /// <safety>The returned span borrows the fixed-string storage and must not outlive the variable.</safety>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<byte> AsReadOnlySpan<TFixedString>(this TFixedString fs)
+        public static unsafe ReadOnlySpan<byte> AsReadOnlySpan<TFixedString>(this ref TFixedString fs)
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
-            // SAFETY: The established ownership and safety checks keep the native storage live
-            // for this pointer dereference.
+            // SAFETY: fs is the caller's variable, not a copy; the span is bounded by its length.
             unsafe
             {
                 return new(fs.GetUnsafePtr(), fs.Length);
@@ -449,7 +460,12 @@ namespace EncosyTower.Collections
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
             var result = new NativeText(fs.Length, allocator);
-            result.CopyFromTruncated(fs.AsReadOnlySpan());
+
+            // SAFETY: fs is this method's own copy and stays alive until the bytes are copied.
+            unsafe
+            {
+                result.CopyFromTruncated(fs.AsReadOnlySpan());
+            }
 
             return result;
         }
@@ -462,7 +478,12 @@ namespace EncosyTower.Collections
             where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
         {
             var result = new NativeText(fs.Length, allocator);
-            result.CopyFromTruncated(fs.AsReadOnlySpan());
+
+            // SAFETY: fs is this method's own copy and stays alive until the bytes are copied.
+            unsafe
+            {
+                result.CopyFromTruncated(fs.AsReadOnlySpan());
+            }
 
             return result;
         }

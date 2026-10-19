@@ -3,6 +3,7 @@ namespace EncosyTower.SystemExtensions
     using System;
     using System.Runtime.CompilerServices;
     using EncosyTower.Common;
+    using Unity.Collections.LowLevel.Unsafe;
 
     public static partial class EncosyGuidExtensions
     {
@@ -59,9 +60,17 @@ namespace EncosyTower.SystemExtensions
         public static SerializableGuid AsSerializable(in this Guid self)
             => new Union(self).SerializableGuid;
 
+        /// <remarks>The span borrows <paramref name="self"/> and must not outlive the variable passed in.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlySpan<byte> AsReadOnlySpan(in this Guid self)
-            => self.AsSerializable().AsReadOnlySpan();
+        {
+            // SAFETY: self refers to the caller's Guid, which outlives this call; Guid and SerializableGuid share one
+            // 16-byte layout (Union), so the span covers exactly that value.
+            unsafe
+            {
+                return new ReadOnlySpan<byte>(UnsafeUtilityExtensions.AddressOf(in self), SerializableGuid.SIZE);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Deconstruct(

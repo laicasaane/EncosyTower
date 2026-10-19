@@ -115,7 +115,7 @@ namespace EncosyTower.Collections
             public bool IsCreated
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _buffer.IsCreated && _count.IsCreated && _version.IsCreated;
+                get => _count.IsCreated && _version.IsCreated && (_buffer.IsCreated || _buffer.Length == 0);
             }
 
             public int Count

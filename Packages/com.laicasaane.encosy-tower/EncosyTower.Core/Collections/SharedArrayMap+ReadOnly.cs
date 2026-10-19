@@ -110,7 +110,19 @@ namespace EncosyTower.Collections
             public readonly bool IsCreated
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _valuesInfo.IsCreated && _values.IsCreated && _buckets.IsCreated;
+                get
+                {
+                    // SAFETY: Comparing header identities does not dereference either borrowed pointer.
+                    unsafe
+                    {
+                        return _freeValueCellIndex.IsCreated
+                            && _version.IsCreated
+                            && _nativeData != s_empty._nativeData
+                            && (_valuesInfo.IsCreated || _valuesInfo.Length == 0)
+                            && (_values.IsCreated || _values.Length == 0)
+                            && (_buckets.IsCreated || _buckets.Length == 0);
+                    }
+                }
             }
 
             public readonly int Capacity

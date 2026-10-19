@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Text;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
@@ -226,8 +227,8 @@ namespace EncosyTower.StringIds
         /// <param name="managedString">The managed string to create or retrieve the <see cref="StringId"/> for.</param>
         /// <returns></returns>
         /// <remarks>
-        /// The managed string will be capped at the maximum length of 125 UTF8 characters
-        /// to fit within the <see cref="UnmanagedString"/> representation.
+        /// The managed string is capped at the longest complete UTF-8 code point prefix that fits within
+        /// <see cref="UnmanagedString.UTF8MaxLengthInBytes"/> bytes (509 bytes).
         /// </remarks>
         public StringId GetOrMakeId([NotNull] string managedString)
         {
@@ -239,7 +240,11 @@ namespace EncosyTower.StringIds
 
             lock (_lock)
             {
-                UnmanagedString str = managedString;
+                var str = UnmanagedString.FromManagedStringTruncated(managedString);
+
+                var truncated = managedString.Length > UnmanagedString.UTF8MaxLengthInBytes
+                    || Encoding.UTF8.GetByteCount(managedString) > UnmanagedString.UTF8MaxLengthInBytes;
+
                 var hash = str.GetHashCode64();
                 var registered = _map.TryGetValue(hash, out var id);
 
@@ -265,7 +270,7 @@ namespace EncosyTower.StringIds
 
                     _collisionMap[str] = id;
                     _unmanagedStringRanges[index] = WriteToBuffer(str);
-                    _managedStrings.Add(managedString);
+                    _managedStrings.Add(truncated ? str.ToString() : managedString);
                     _hashes[index] = Option.Some<StringHash>(hash);
                     count += 1;
                 }
@@ -280,13 +285,13 @@ namespace EncosyTower.StringIds
                     if (_map.TryAdd(hash, id))
                     {
                         _unmanagedStringRanges[index] = WriteToBuffer(str);
-                        _managedStrings.Add(managedString);
+                        _managedStrings.Add(truncated ? str.ToString() : managedString);
                         _hashes[index] = Option.Some<StringHash>(hash);
                         count += 1;
                     }
                     else
                     {
-                        ThrowHelper.ThrowIfFailedRegistering(false, managedString, id);
+                        ThrowHelper.ThrowIfFailedRegistering(check: false, str: managedString, id: id);
                     }
                 }
 
@@ -346,7 +351,7 @@ namespace EncosyTower.StringIds
                 return false;
             }
 
-            UnmanagedString str = managedString;
+            var str = UnmanagedString.FromManagedStringTruncated(managedString);
             var hash = str.GetHashCode64();
             var registered = _map.TryGetValue(hash, out var id);
 
@@ -381,7 +386,7 @@ namespace EncosyTower.StringIds
         {
             var indexUnsigned = (uint)id.Id;
             var index = (int)indexUnsigned;
-            var validIndex = indexUnsigned < (uint)_hashes.Count;
+            var validIndex = indexUnsigned < (uint)Count && _hashes[index].HasValue;
 
             Option<UnmanagedString> resultOpt;
 
@@ -461,7 +466,20 @@ namespace EncosyTower.StringIds
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryCopyTo(int sourceStartIndex, Span<string> destination, int length)
-            => GetManagedStringSpan().Slice(sourceStartIndex, length).TryCopyTo(destination[..length]);
+        {
+            var source = GetManagedStringSpan();
+
+            if ((uint)sourceStartIndex > (uint)source.Length
+                || (uint)length > (uint)(source.Length - sourceStartIndex)
+                || (uint)length > (uint)destination.Length
+            )
+            {
+                return false;
+            }
+
+            source.Slice(sourceStartIndex, length).CopyTo(destination);
+            return true;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyTo(Span<UnmanagedString> destination)
@@ -482,7 +500,7 @@ namespace EncosyTower.StringIds
             unsafe
             {
                 new UnmanagedStringSpan(
-                      _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                      _unmanagedStringRanges.AsReadOnlySpan()[..Count]
                     , _unmanagedStringBuffer.AsReadOnlySpan()
                 ).CopyTo(sourceStartIndex, destination, length);
             }
@@ -507,7 +525,7 @@ namespace EncosyTower.StringIds
             unsafe
             {
                 return new UnmanagedStringSpan(
-                      _unmanagedStringRanges.AsReadOnlySpan()[1..Count]
+                      _unmanagedStringRanges.AsReadOnlySpan()[..Count]
                     , _unmanagedStringBuffer.AsReadOnlySpan()
                 ).TryCopyTo(sourceStartIndex, destination, length);
             }

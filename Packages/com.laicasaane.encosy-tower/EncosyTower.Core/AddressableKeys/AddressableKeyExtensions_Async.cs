@@ -456,9 +456,11 @@ namespace EncosyTower.AddressableKeys
                 return Error.InvalidKey((AddressableKey)key);
             }
 
+            var handle = default(AsyncOperationHandle<GameObject>);
+
             try
             {
-                var handle = Addressables.InstantiateAsync(key.Value.Value, parent.Transform, inWorldSpace);
+                handle = Addressables.InstantiateAsync(key.Value.Value, parent.Transform, inWorldSpace);
 
                 if (handle.IsValid() == false)
                 {
@@ -519,8 +521,20 @@ namespace EncosyTower.AddressableKeys
 
                 return new ValueHandlePair<GameObject>(go, handle);
             }
+            catch (OperationCanceledException)
+            {
+                handle.TryReleaseIfValid();
+
+                if (token.IsCancellationRequested)
+                {
+                    return Error.CancelledRequest((AddressableKey)key);
+                }
+
+                throw;
+            }
             catch (Exception ex)
             {
+                handle.TryReleaseIfValid();
                 return Error.Exception((AddressableKey)key, ex);
             }
         }

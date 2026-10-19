@@ -61,58 +61,83 @@ namespace EncosyTower.Collections.Unsafe
         internal AllocatorStrategy _allocator;
 
         public ArraySetUnsafe(int capacity, AllocatorStrategy allocator)
+            : this()
         {
-            _valuesInfo = default;
-            _valuesInfo.Alloc(capacity, allocator);
-            _values = default;
-            _values.Alloc(capacity, allocator);
-            _buckets = default;
-            _buckets.Alloc(HashHelpers.GetPrime(capacity), allocator);
-
-            _freeValueCellIndex = 0;
-            _version = 0;
-            _collisions = 0;
-            _fastModBucketsMultiplier = 0;
-            _allocator = allocator;
-
-            if (capacity > 0)
+            try
             {
-                _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
+                ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
+                ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
+                _valuesInfo = default;
+                _valuesInfo.Alloc(capacity, allocator);
+                _values = default;
+                _values.Alloc(capacity, allocator);
+                _buckets = default;
+                _buckets.Alloc(HashHelpers.GetPrime(capacity), allocator);
+
+                _freeValueCellIndex = 0;
+                _version = 0;
+                _collisions = 0;
+                _fastModBucketsMultiplier = 0;
+                _allocator = allocator;
+
+                if (capacity > 0)
+                {
+                    _fastModBucketsMultiplier = HashHelpers.GetFastModMultiplier((uint)_buckets.Capacity);
+                }
+            }
+            catch
+            {
+                _valuesInfo.Dispose();
+                _values.Dispose();
+                _buckets.Dispose();
+                throw;
             }
         }
 
         public ArraySetUnsafe(ArraySetUnsafe<T> source, AllocatorStrategy allocator)
+            : this()
         {
-            ThrowHelper.ThrowIfSourceCollectionIsNotCreated(
-                source.IsCreated,
-                ThrowHelper.CollectionType.ArraySetUnsafe
-            );
+            try
+            {
+                ThrowHelper.ThrowIfSourceCollectionIsNotCreated(
+                      source.IsCreated
+                    , ThrowHelper.CollectionType.ArraySetUnsafe
+                );
 
-            var capacity = source.Capacity;
+                var capacity = source.Capacity;
 
-            _valuesInfo = default;
-            _valuesInfo.Alloc(capacity, allocator);
-            _values = default;
-            _values.Alloc(capacity, allocator);
-            _buckets = default;
-            // Buckets may have grown past GetPrime(capacity) via RecomputeBuckets;
-            // the copied bucket data and _fastModBucketsMultiplier are only valid
-            // for the exact source bucket count.
-            _buckets.Alloc(source._buckets.Capacity, allocator);
+                _valuesInfo = default;
+                _valuesInfo.Alloc(capacity, allocator);
+                _values = default;
+                _values.Alloc(capacity, allocator);
+                _buckets = default;
+                // Buckets may have grown past GetPrime(capacity) via RecomputeBuckets;
+                // the copied bucket data and _fastModBucketsMultiplier are only valid
+                // for the exact source bucket count.
+                _buckets.Alloc(source._buckets.Capacity, allocator);
 
-            _freeValueCellIndex = 0;
-            _version = 0;
-            _collisions = 0;
-            _fastModBucketsMultiplier = 0;
-            _allocator = allocator;
+                _freeValueCellIndex = 0;
+                _version = 0;
+                _collisions = 0;
+                _fastModBucketsMultiplier = 0;
+                _allocator = allocator;
 
-            source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
-            source._values.AsSpan().CopyTo(_values.AsSpan());
-            source._buckets.AsSpan().CopyTo(_buckets.AsSpan());
+                source._valuesInfo.AsSpan().CopyTo(_valuesInfo.AsSpan());
+                source._values.AsSpan().CopyTo(_values.AsSpan());
+                source._buckets.AsSpan().CopyTo(_buckets.AsSpan());
 
-            _collisions = source._collisions;
-            _fastModBucketsMultiplier = source._fastModBucketsMultiplier;
-            _freeValueCellIndex = source._freeValueCellIndex;
+                _collisions = source._collisions;
+                _fastModBucketsMultiplier = source._fastModBucketsMultiplier;
+                _freeValueCellIndex = source._freeValueCellIndex;
+            }
+            catch
+            {
+                _valuesInfo.Dispose();
+                _values.Dispose();
+                _buckets.Dispose();
+                throw;
+            }
         }
 
         private ArraySetUnsafe(
@@ -144,13 +169,24 @@ namespace EncosyTower.Collections.Unsafe
         /// <safety>The returned set header is owned by allocator and must be freed exactly once with Free.</safety>
         public static unsafe ArraySetUnsafe<T>* Alloc(int capacity, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns writable storage for the complete unmanaged struct.
             unsafe
             {
                 var data = allocator.Allocate<ArraySetUnsafe<T>>();
 
-                *data = new ArraySetUnsafe<T>(capacity, allocator);
-                return data;
+                try
+                {
+                    *data = new ArraySetUnsafe<T>(capacity, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 
@@ -162,13 +198,27 @@ namespace EncosyTower.Collections.Unsafe
         /// <safety>The returned set header is owned by allocator and must be freed exactly once with Free.</safety>
         public static unsafe ArraySetUnsafe<T>* Alloc(in ArraySetUnsafe<T> source, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfSourceCollectionIsNotCreated(
+                  source.IsCreated
+                , ThrowHelper.CollectionType.ArraySetUnsafe
+            );
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns writable storage for the complete unmanaged struct.
             unsafe
             {
                 var data = allocator.Allocate<ArraySetUnsafe<T>>();
 
-                *data = new ArraySetUnsafe<T>(source, allocator);
-                return data;
+                try
+                {
+                    *data = new ArraySetUnsafe<T>(source, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 
@@ -232,6 +282,7 @@ namespace EncosyTower.Collections.Unsafe
             _version = 0;
             _collisions = 0;
             _fastModBucketsMultiplier = 0;
+            _allocator = default;
         }
 
         public JobHandle Dispose(JobHandle inputDeps)
@@ -249,6 +300,7 @@ namespace EncosyTower.Collections.Unsafe
             _version = 0;
             _collisions = 0;
             _fastModBucketsMultiplier = 0;
+            _allocator = default;
 
             return inputDeps;
         }
@@ -260,6 +312,7 @@ namespace EncosyTower.Collections.Unsafe
         public readonly ArraySetUnsafeEnumerator<T> GetEnumerator()
             => new(this);
 
+        /// <remarks>The returned view borrows every buffer and is invalidated by owner resize or disposal.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ArraySetUnsafe<U> Reinterpret<U>()
             where U : unmanaged, IEquatable<U>
@@ -267,12 +320,12 @@ namespace EncosyTower.Collections.Unsafe
             return new ArraySetUnsafe<U>(
                   _valuesInfo.Reinterpret<ArrayMapNode<U>>()
                 , _values.Reinterpret<U>()
-                , _buckets
+                , _buckets.Reinterpret<int>()
                 , _fastModBucketsMultiplier
                 , _collisions
                 , _freeValueCellIndex
                 , _version
-                , _allocator
+                , IsCreated ? Allocator.None : default(AllocatorStrategy)
             );
         }
 
@@ -333,6 +386,7 @@ namespace EncosyTower.Collections.Unsafe
         {
             if (_values.Capacity < size)
             {
+                EncosyTower.Buffers.ThrowHelper.ThrowIfBufferIsBorrowed(_values.OwnsAllocation);
                 var expandPrime = HashHelpers.ExpandPrime(size);
 
                 _version++;
@@ -472,6 +526,11 @@ namespace EncosyTower.Collections.Unsafe
         {
             var size = _freeValueCellIndex;
 
+            if (size != Capacity)
+            {
+                EncosyTower.Buffers.ThrowHelper.ThrowIfBufferIsBorrowed(_values.OwnsAllocation);
+            }
+
             _version++;
             _values.Resize(size);
             _valuesInfo.Resize(size);
@@ -586,6 +645,11 @@ namespace EncosyTower.Collections.Unsafe
 
                     currenTIndex = mode._previous;
                 } while (currenTIndex != -1); //-1 means no more values with key with the same hash
+
+                if (_collisions >= (uint)_buckets.Capacity)
+                {
+                    EncosyTower.Buffers.ThrowHelper.ThrowIfBufferIsBorrowed(_buckets.OwnsAllocation);
+                }
 
                 ResizeIfNeeded();
 

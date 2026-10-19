@@ -492,6 +492,7 @@ namespace EncosyTower.Collections.Unsafe
                 var count = Count;
                 ThrowHelper.ThrowIfStartIndexIsOutOfRange((uint)startIndex < (uint)count);
 
+                ThrowHelper.ThrowIfSourceLengthIsInvalid((uint)length <= (uint)(count - startIndex));
                 var end = startIndex + length;
                 ThrowHelper.ThrowIfRemovalRangeIsOutOfRange((uint)end <= (uint)count);
 

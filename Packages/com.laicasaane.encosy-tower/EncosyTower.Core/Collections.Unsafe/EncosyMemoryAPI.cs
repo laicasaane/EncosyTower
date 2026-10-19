@@ -114,6 +114,10 @@ namespace EncosyTower.Collections.Unsafe
                     , int align
                 )
                 {
+                    ThrowHelper.ThrowIfCustomAllocatorSizeIsInvalid(size > 0 && size <= int.MaxValue);
+                    ThrowHelper.ThrowIfCustomAllocatorCountIsInvalid(newCount >= 0 && newCount <= int.MaxValue);
+                    ThrowHelper.ThrowIfCustomAllocatorCountIsInvalid(oldCount >= 0 && oldCount <= int.MaxValue);
+
                     // SAFETY: Unity's allocator contract validates the block range and returns
                     // its managed allocation pointer.
                     unsafe
@@ -134,7 +138,7 @@ namespace EncosyTower.Collections.Unsafe
                             if (oldCount > 0)
                             {
                                 long count = System.Math.Min(oldCount, newCount);
-                                long bytesToCopy = count * size;
+                                long bytesToCopy = checked(count * size);
                                 CheckByteCountIsReasonable(bytesToCopy);
                                 UnsafeUtility.MemCpy(newPointer, oldPointer, bytesToCopy);
                             }
@@ -170,6 +174,13 @@ namespace EncosyTower.Collections.Unsafe
                     // SAFETY: Counts, sizes, and allocator strategy are validated before any copy or free.
                     unsafe
                     {
+                        ThrowHelper.ThrowIfAllocationSizeIsInvalid(size > 0);
+                        ThrowHelper.ThrowIfAllocationCountIsInvalid(oldCount >= 0);
+                        ThrowHelper.ThrowIfAllocationCountIsInvalid(newCount >= 0);
+                        long bytesToAllocate = checked(newCount * size);
+                        long oldByteCount = checked(oldCount * size);
+                        CheckByteCountIsReasonable(bytesToAllocate);
+                        CheckByteCountIsReasonable(oldByteCount);
                         var alignment = System.Math.Max(JobsUtility.CacheLineSize, align);
 
 #if UNITY_COLLECTIONS
@@ -183,8 +194,6 @@ namespace EncosyTower.Collections.Unsafe
 
                         if (newCount > 0)
                         {
-                            long bytesToAllocate = newCount * size;
-                            CheckByteCountIsReasonable(bytesToAllocate);
                             newPointer = UnsafeUtility.MallocTracked(
                                   bytesToAllocate
                                 , alignment
@@ -196,7 +205,7 @@ namespace EncosyTower.Collections.Unsafe
                             {
                                 long count = System.Math.Min(oldCount, newCount);
 
-                                long bytesToCopy = count * size;
+                                long bytesToCopy = checked(count * size);
                                 CheckByteCountIsReasonable(bytesToCopy);
                                 UnsafeUtility.MemCpy(newPointer, oldPointer, bytesToCopy);
                             }
@@ -275,10 +284,10 @@ namespace EncosyTower.Collections.Unsafe
                 // SAFETY: The validated count bounds every element write in the caller-owned buffer.
                 unsafe
                 {
-                    long bytesToSet = count * UnsafeUtility.SizeOf<T>();
+                    long bytesToSet = checked(count * UnsafeUtility.SizeOf<T>());
                     CheckByteCountIsReasonable(bytesToSet);
 
-                    for (var i = 0; i < count; ++i)
+                    for (long i = 0; i < count; ++i)
                     {
                         pointer[i] = t;
                     }
@@ -292,7 +301,7 @@ namespace EncosyTower.Collections.Unsafe
                 // SAFETY: The validated count bounds the clear operation in the caller-owned buffer.
                 unsafe
                 {
-                    long bytesToClear = count * UnsafeUtility.SizeOf<T>();
+                    long bytesToClear = checked(count * UnsafeUtility.SizeOf<T>());
                     CheckByteCountIsReasonable(bytesToClear);
                     UnsafeUtility.MemClear(pointer, bytesToClear);
                 }
@@ -305,7 +314,7 @@ namespace EncosyTower.Collections.Unsafe
                 // SAFETY: The validated count bounds the copy between caller-owned buffers.
                 unsafe
                 {
-                    long bytesToCopy = count * UnsafeUtility.SizeOf<T>();
+                    long bytesToCopy = checked(count * UnsafeUtility.SizeOf<T>());
                     CheckByteCountIsReasonable(bytesToCopy);
                     UnsafeUtility.MemCpy(dest, src, bytesToCopy);
                 }

@@ -48,6 +48,7 @@ namespace EncosyTower.Buffers
         [NativeDisableUnsafePtrRestriction]
         internal unsafe void* _buffer;
         internal int _capacity;
+        private bool _ownsHandle;
 
         public BufferShared(int capacity) : this()
         {
@@ -79,6 +80,7 @@ namespace EncosyTower.Buffers
             }
 
             _capacity = capacity;
+            _ownsHandle = false;
         }
 
         /// <safety>The designated owner must remain alive and must not resize or dispose during access.</safety>
@@ -169,6 +171,8 @@ namespace EncosyTower.Buffers
             {
                 return;
             }
+
+            ThrowHelper.ThrowIfBufferIsBorrowed(_ownsHandle);
 
             var nextHandle = default(GCHandle);
 
@@ -525,6 +529,7 @@ namespace EncosyTower.Buffers
         /// The designated owner must remain alive. TNative and UNative must have equal size, and returned aliases
         /// must not be used after owner resize or disposal.
         /// </safety>
+        /// <remarks>Disposing the returned view clears only that view; changing its capacity is rejected.</remarks>
         public readonly unsafe BufferShared<T, UNative> Reinterpret<UNative>()
             where UNative : unmanaged
         {
@@ -565,7 +570,9 @@ namespace EncosyTower.Buffers
             }
 
             var handle = _gcHandle;
+            var ownsHandle = _ownsHandle;
             _gcHandle = default;
+            _ownsHandle = false;
 
             // SAFETY: Clearing pointer prevents this owner value from reusing released pinned storage.
             unsafe
@@ -574,7 +581,11 @@ namespace EncosyTower.Buffers
             }
 
             _capacity = 0;
-            handle.Free();
+
+            if (ownsHandle)
+            {
+                handle.Free();
+            }
         }
 
         private void Create(T[] managed)
@@ -594,6 +605,7 @@ namespace EncosyTower.Buffers
                 }
 
                 _gcHandle = handle;
+                _ownsHandle = true;
 
                 // SAFETY: Published handle continues pinning managed for this owner's lifetime.
                 unsafe

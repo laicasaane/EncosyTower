@@ -18,7 +18,7 @@ namespace EncosyTower.AtlasedSprites
                     return InvalidKey(key).Prefix(prefix);
 
                 case AddressableKeyError.Error.EnumCase.InvalidHandle:
-                    return InvalidHandle(key);
+                    return InvalidHandle(key).Prefix(prefix);
 
                 case AddressableKeyError.Error.EnumCase.CancelledRequest:
                     return CancelledRequest(key).Prefix(prefix);

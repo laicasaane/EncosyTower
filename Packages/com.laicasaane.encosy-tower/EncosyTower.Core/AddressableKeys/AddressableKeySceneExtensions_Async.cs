@@ -105,9 +105,11 @@ namespace EncosyTower.AddressableKeys
                 return Error.InvalidKey((AddressableKey)key);
             }
 
+            var handle = default(AsyncOperationHandle<SceneInstance>);
+
             try
             {
-                var handle = Addressables.LoadSceneAsync(key.Value.Value, mode, activateOnLoad, priority);
+                handle = Addressables.LoadSceneAsync(key.Value.Value, mode, activateOnLoad, priority);
 
                 if (handle.IsValid() == false)
                 {
@@ -144,8 +146,20 @@ namespace EncosyTower.AddressableKeys
                 handle.TryRelease();
                 return Error.FailedStatus((AddressableKey)key, handle.Status);
             }
+            catch (OperationCanceledException)
+            {
+                handle.TryReleaseIfValid();
+
+                if (token.IsCancellationRequested)
+                {
+                    return Error.CancelledRequest((AddressableKey)key);
+                }
+
+                throw;
+            }
             catch (Exception ex)
             {
+                handle.TryReleaseIfValid();
                 return Error.Exception((AddressableKey)key, ex);
             }
         }

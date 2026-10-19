@@ -88,7 +88,6 @@ namespace EncosyTower.Collections.Extensions
             where TComparer : IEqualityComparer<T>
         {
             DebuggingThrowHelper.ThrowIfNull(self);
-            self.VersionRW++;
 
             var index = IndexOf(self, item, comparer);
 
@@ -96,6 +95,8 @@ namespace EncosyTower.Collections.Extensions
             {
                 return false;
             }
+
+            self.VersionRW++;
 
             if (index < --self.CountRW)
             {
@@ -116,7 +117,6 @@ namespace EncosyTower.Collections.Extensions
             where TComparer : IEqualityComparer<T>
         {
             DebuggingThrowHelper.ThrowIfNull(self);
-            self.VersionRW++;
 
             var index = IndexOf(self, in item, comparer);
 
@@ -124,6 +124,8 @@ namespace EncosyTower.Collections.Extensions
             {
                 return false;
             }
+
+            self.VersionRW++;
 
             if (index < --self.CountRW)
             {

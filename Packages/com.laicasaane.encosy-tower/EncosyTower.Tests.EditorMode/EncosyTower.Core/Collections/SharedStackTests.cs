@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using EncosyTower.Collections;
+using EncosyTower.Tests.Core.Testing;
 using NUnit.Framework;
 
 namespace EncosyTower.Tests.Core.Collections
@@ -221,6 +223,330 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.IsFalse(stack.IsCreated);
             Assert.DoesNotThrow(() => stack.Dispose());
+        }
+
+        [Test]
+        public void PushRange_EmptyInput_LeavesTheStackUnchanged()
+        {
+            using var zeroCapacity = new SharedStack<int>();
+            using var stack = new SharedStack<int>(new[] { 1, 2, 3 }.AsSpan());
+
+            zeroCapacity.PushRange(ReadOnlySpan<int>.Empty);
+            zeroCapacity.PushRange(Array.Empty<int>());
+            stack.PushRange(ReadOnlySpan<int>.Empty);
+
+            Assert.AreEqual(0, zeroCapacity.Count);
+            Assert.AreEqual(0, zeroCapacity.Capacity);
+            Assert.AreEqual(3, stack.Count);
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, stack.ToArray());
+        }
+
+        [Test]
+        public void PushRange_ZeroCapacityStack_GrowsAndKeepsLifoOrder()
+        {
+            using var stack = new SharedStack<int>();
+            var items = new int[50];
+            var expected = new int[items.Length];
+
+            for (var i = 0; i < items.Length; i++)
+            {
+                items[i] = i * 3;
+                expected[items.Length - 1 - i] = items[i];
+            }
+
+            stack.PushRange(items);
+
+            Assert.AreEqual(items.Length, stack.Count);
+            Assert.GreaterOrEqual(stack.Capacity, items.Length);
+            CollectionAssert.AreEqual(expected, stack.ToArray());
+        }
+
+        [Test]
+        public void PushRange_AtEveryFillLevelAndLength_MatchesStackOfT()
+        {
+            const int CAPACITY = 8;
+
+            for (var fill = 0; fill <= CAPACITY; fill++)
+            {
+                for (var length = 0; length <= 10; length++)
+                {
+                    using var stack = new SharedStack<int>(CAPACITY);
+                    var model = new Stack<int>();
+                    var items = new int[length];
+                    var message = $"fill {fill} length {length}";
+
+                    for (var i = 0; i < fill; i++)
+                    {
+                        stack.Push(-(i + 1));
+                        model.Push(-(i + 1));
+                    }
+
+                    for (var i = 0; i < length; i++)
+                    {
+                        items[i] = 100 + i;
+                        model.Push(items[i]);
+                    }
+
+                    stack.PushRange(items);
+
+                    Assert.AreEqual(model.Count, stack.Count, message);
+
+                    if (fill + length <= CAPACITY)
+                    {
+                        Assert.AreEqual(CAPACITY, stack.Capacity, message);
+                    }
+
+                    CollectionAssert.AreEqual(model.ToArray(), stack.ToArray(), message);
+
+                    while (model.Count > 0)
+                    {
+                        Assert.AreEqual(model.Pop(), stack.Pop(), message);
+                    }
+
+                    Assert.AreEqual(0, stack.Count, message);
+                }
+            }
+        }
+
+        [Test]
+        public void PushRange_ElementSizes_RoundTripBitExact()
+        {
+            AssertPushRangeRoundTrip(new byte[] { 0, 255, 128 });
+            AssertPushRangeRoundTrip(new[] { long.MinValue, -1L, long.MaxValue });
+            AssertPushRangeRoundTrip(new[] { new Rgb { r = 1, g = 2, b = 3 }, new Rgb { r = 255, g = 0, b = 128 } });
+            AssertPushRangeRoundTrip(new[] { new Wide { a = long.MinValue, b = -1, c = long.MaxValue } });
+        }
+
+        [Test]
+        public void AsNative_ViewAndOwnerShareTheStack()
+        {
+            using var stack = new SharedStack<int>(8);
+
+            // SAFETY: stack outlives the native view, which is used before any resize.
+            unsafe
+            {
+                var native = stack.AsNative();
+
+                stack.Push(1);
+                native.Push(2);
+
+                Assert.AreEqual(2, stack.Count);
+                Assert.AreEqual(2, native.Count);
+                CollectionAssert.AreEqual(new[] { 2, 1 }, stack.ToArray());
+                CollectionAssert.AreEqual(new[] { 2, 1 }, native.ToArray());
+                Assert.AreEqual(2, native.Pop());
+                Assert.AreEqual(1, stack.Count);
+                Assert.AreEqual(1, stack.Peek());
+
+                stack.Clear();
+
+                Assert.AreEqual(0, native.Count);
+            }
+        }
+
+        [Test]
+        public void AsReadOnly_ViewsSeeLaterPushesAndPops()
+        {
+            using var stack = new SharedStack<int>(8);
+
+            // SAFETY: stack outlives the views, which are used before any resize.
+            unsafe
+            {
+                var view = stack.AsReadOnly();
+                var nativeReadOnly = view.AsNative();
+
+                stack.Push(5);
+                stack.Push(6);
+
+                Assert.AreEqual(2, view.Count);
+                Assert.AreEqual(2, nativeReadOnly.Count);
+                Assert.AreEqual(6, view.Peek());
+                Assert.AreEqual(6, stack.Pop());
+                Assert.AreEqual(1, nativeReadOnly.Count);
+                Assert.AreEqual(5, view.Peek());
+                CollectionAssert.AreEqual(new[] { 5 }, view.ToArray());
+            }
+        }
+
+        [Test]
+        public void GetEnumerator_EmptyStacks_YieldNothing()
+        {
+            using var zeroCapacity = new SharedStack<int>();
+            using var withCapacity = new SharedStack<int>(4);
+            var count = 0;
+
+            // SAFETY: The stacks outlive the views and their enumerators and are not modified while they run.
+            unsafe
+            {
+                var zeroView = zeroCapacity.AsReadOnly();
+                var capacityView = withCapacity.AsReadOnly();
+
+                foreach (var value in zeroCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var value in withCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var value in (IEnumerable<int>)zeroCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var value in (IEnumerable)withCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var value in zeroView)
+                {
+                    count++;
+                }
+
+                foreach (var value in capacityView)
+                {
+                    count++;
+                }
+
+                foreach (var value in (IEnumerable<int>)zeroView)
+                {
+                    count++;
+                }
+
+                foreach (var value in (IEnumerable)capacityView)
+                {
+                    count++;
+                }
+            }
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void ReadOnlyAsNative_ViewSeesLaterPushes()
+        {
+            using var stack = new SharedStack<int>(8);
+
+            // SAFETY: stack outlives the views, which are used before any resize.
+            unsafe
+            {
+                var view = stack.AsReadOnly();
+                var native = view.AsNative();
+
+                Assert.IsTrue(native.IsCreated);
+                Assert.AreEqual(0, native.Count);
+
+                stack.Push(7);
+
+                Assert.AreEqual(1, native.Count);
+                CollectionAssert.AreEqual(new[] { 7 }, native.ToArray());
+            }
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void Dispose_StackWithLiveNativeView_InvalidatesTheView()
+        {
+            var stack = new SharedStack<int>(new[] { 1, 2 }.AsSpan());
+
+            // SAFETY: This test intentionally retains a borrowed alias across owner disposal to verify checks.
+            unsafe
+            {
+                var native = stack.AsNative();
+
+                stack.Dispose();
+
+                Assert.Catch(() => _ = native.Count);
+                Assert.DoesNotThrow(() => stack.Dispose());
+            }
+        }
+
+        [Test]
+        public void Dispose_StackState_ReportsNotCreatedAndEmpty()
+        {
+            var stack = new SharedStack<int>(new[] { 1, 2 }.AsSpan());
+            var zeroCapacity = new SharedStack<int>();
+
+            stack.Dispose();
+            zeroCapacity.Dispose();
+
+            Assert.IsFalse(stack.IsCreated);
+            Assert.IsFalse(zeroCapacity.IsCreated);
+            Assert.AreEqual(0, stack.Count);
+            Assert.AreEqual(0, stack.Capacity);
+            Assert.AreEqual(0, zeroCapacity.Count);
+            Assert.DoesNotThrow(() => zeroCapacity.Dispose());
+        }
+
+        [Test]
+        public void InternalState_FollowsTheStack()
+        {
+            using var stack = new SharedStack<int>(4);
+
+            Assert.AreEqual(0, stack.CountRO);
+
+            var version = stack.VersionRO;
+
+            stack.Push(1);
+            stack.Push(2);
+
+            Assert.AreEqual(2, stack.CountRO);
+            Assert.AreNotEqual(version, stack.VersionRO);
+
+            version = stack.VersionRO;
+
+            _ = stack.Peek();
+            _ = stack.ToArray();
+            _ = stack.Count;
+
+            Assert.AreEqual(version, stack.VersionRO);
+
+            stack.VersionRW++;
+
+            Assert.AreEqual(version + 1, stack.VersionRO);
+
+            stack.CountRW = 1;
+
+            Assert.AreEqual(1, stack.Count);
+            Assert.AreEqual(1, stack.Peek());
+
+            stack.Clear();
+
+            Assert.AreEqual(0, stack.CountRO);
+        }
+
+        private static void AssertPushRangeRoundTrip<T>(T[] values)
+            where T : unmanaged
+        {
+            using var stack = new SharedStack<T>();
+            var expected = (T[])values.Clone();
+
+            Array.Reverse(expected);
+            stack.PushRange(values);
+
+            SpanBytesAssert.AreEqual(expected, stack.ToArray());
+
+            var top = stack.Pop();
+
+            SpanBytesAssert.AreEqual(new[] { values[^1] }, new[] { top });
+            SpanBytesAssert.AreEqual(expected.AsSpan(1).ToArray(), stack.ToArray());
+        }
+
+        private struct Rgb
+        {
+            public byte r;
+            public byte g;
+            public byte b;
+        }
+
+        private struct Wide
+        {
+            public long a;
+            public long b;
+            public long c;
         }
     }
 }

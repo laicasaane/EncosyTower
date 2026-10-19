@@ -74,10 +74,10 @@ namespace EncosyTower.Collections.Unsafe
                 var dstPtr = (IntPtr)destination.GetUnsafePtr();
                 var srcPtr = (IntPtr)source.GetUnsafePtr();
 
-                UnsafeUtility.MemCpy(
+                UnsafeUtility.MemMove(
                       destination: (void*)(dstPtr + destinationIndex * sizeOfT)
                     , source: (void*)(srcPtr + sourceIndex * sizeOfT)
-                    , size: length * sizeOfT
+                    , size: (long)length * sizeOfT
                 );
             }
         }
@@ -100,10 +100,10 @@ namespace EncosyTower.Collections.Unsafe
                 var srcPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(source);
                 var dstPtr = (IntPtr)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(destination);
 
-                UnsafeUtility.MemCpy(
+                UnsafeUtility.MemMove(
                       destination: (void*)(dstPtr + destinationIndex * sizeOfT)
                     , source: (void*)(srcPtr + sourceIndex * sizeOfT)
-                    , size: length * sizeOfT
+                    , size: (long)length * sizeOfT
                 );
             }
         }

@@ -74,8 +74,9 @@ namespace EncosyTower.Collections.Unsafe
 
         public void Push(in T item)
         {
+            var value = item;
             EnsureCapacity(_count + 1);
-            _buffer.AsSpan()[_count++] = item;
+            _buffer.AsSpan()[_count++] = value;
             _version++;
         }
 
@@ -86,7 +87,15 @@ namespace EncosyTower.Collections.Unsafe
                 return;
             }
 
-            EnsureCapacity(checked(_count + items.Length));
+            var length = items.Length;
+            var aliasesStorage = _buffer.AsReadOnlySpan().Overlaps(items, out var sourceOffset);
+            EnsureCapacity(checked(_count + length));
+
+            if (aliasesStorage)
+            {
+                items = _buffer.AsReadOnlySpan().Slice(sourceOffset, length);
+            }
+
             items.CopyTo(_buffer.AsSpan()[_count..]);
             _count += items.Length;
             _version++;
@@ -281,24 +290,47 @@ namespace EncosyTower.Collections.Unsafe
         /// <safety>The returned header owns the allocation and must be freed exactly once with Free.</safety>
         internal static unsafe StackUnsafe<T>* Alloc(int capacity, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one StackUnsafe header and its owned buffer.
             unsafe
             {
                 var data = allocator.Allocate<StackUnsafe<T>>();
-                *data = new StackUnsafe<T>(capacity, allocator);
-                return data;
+
+                try
+                {
+                    *data = new StackUnsafe<T>(capacity, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 
         /// <safety>The returned header owns a copy of source and must be freed exactly once with Free.</safety>
         internal static unsafe StackUnsafe<T>* Alloc(ReadOnlySpan<T> source, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one StackUnsafe header and its owned buffer.
             unsafe
             {
                 var data = allocator.Allocate<StackUnsafe<T>>();
-                *data = new StackUnsafe<T>(source, allocator);
-                return data;
+
+                try
+                {
+                    *data = new StackUnsafe<T>(source, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 

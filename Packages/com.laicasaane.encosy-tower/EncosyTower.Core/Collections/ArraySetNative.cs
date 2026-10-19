@@ -264,6 +264,8 @@ namespace EncosyTower.Collections
         public readonly ArraySetNative<U> Reinterpret<U>()
             where U : unmanaged, IEquatable<U>
         {
+            ThrowHelper.ThrowIfTypesNotEqualSize<T, U>(UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>());
+
             // SAFETY: Reinterpret preserves the same live native header and only changes unmanaged element types.
             unsafe
             {

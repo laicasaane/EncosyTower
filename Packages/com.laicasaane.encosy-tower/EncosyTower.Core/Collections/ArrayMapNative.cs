@@ -328,6 +328,10 @@ namespace EncosyTower.Collections
         public readonly ArrayMapNative<TKey, UValue> Reinterpret<UValue>()
             where UValue : unmanaged
         {
+            ThrowHelper.ThrowIfTypesNotEqualSize<TValue, UValue>(
+                UnsafeUtility.SizeOf<TValue>() == UnsafeUtility.SizeOf<UValue>()
+            );
+
             // SAFETY: The established ownership and safety checks keep the native storage live
             // for this pointer dereference.
             unsafe

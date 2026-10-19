@@ -71,6 +71,19 @@ namespace EncosyTower.StringIds
         public static bool operator !=(in UnmanagedString a, in UnmanagedString b)
             => !a.Equals(b);
 
+        internal static UnmanagedString FromManagedStringTruncated(string value)
+        {
+            var result = new UnmanagedString();
+
+#if UNITY_COLLECTIONS
+            result._value.CopyFromTruncated(value.AsSpan());
+#else
+            result._value = new FixedString512Bytes(value);
+#endif
+
+            return result;
+        }
+
         internal static Option<UnmanagedString> FromBufferAt(Range range, ReadOnlySpan<byte> buffer)
         {
             if (range.TryGetOffsetAndLength(buffer.Length).TryGetValue(out var offsetLength) == false)
@@ -86,7 +99,7 @@ namespace EncosyTower.StringIds
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ulong GetHashCode64()
-            => HashValue64.FNV1a(_value.AsReadOnlySpan());
+            => HashValue64.FNV1a(AsReadOnlySpan());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly override int GetHashCode()
@@ -123,8 +136,16 @@ namespace EncosyTower.StringIds
             }
         }
 
+        /// <remarks>The span borrows this value's storage and must not outlive the variable it came from.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<byte> AsReadOnlySpan()
-            => _value.AsReadOnlySpan();
+        {
+            // SAFETY: GetUnsafePtr and Length are readonly members, so no defensive copy is made; the span borrows
+            // this value's own storage and is bounded by its length.
+            unsafe
+            {
+                return new(_value.GetUnsafePtr(), _value.Length);
+            }
+        }
     }
 }

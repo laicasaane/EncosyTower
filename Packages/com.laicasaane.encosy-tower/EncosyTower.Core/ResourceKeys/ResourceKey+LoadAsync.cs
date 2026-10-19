@@ -77,7 +77,11 @@ namespace EncosyTower.ResourceKeys
 
                 return Error.InvalidObjectOfType((ResourceKey)this, typeof(T), obj.GetType());
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                return Error.CancelledRequest((ResourceKey)this);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 return Error.Exception((ResourceKey)this, ex);
             }

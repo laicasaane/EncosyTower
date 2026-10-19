@@ -300,7 +300,7 @@ namespace EncosyTower.StringIds
         {
             var indexUnsigned = (uint)id.Id;
             var index = (int)indexUnsigned;
-            var validIndex = indexUnsigned < (uint)_hashesLength;
+            var validIndex = indexUnsigned < (uint)Count && _hashes[index].HasValue;
             var resultOpt = validIndex
                 ? UnmanagedString.FromBufferAt(_stringRanges[index], StringBufferSpan)
                 : Option.None;
@@ -332,9 +332,9 @@ namespace EncosyTower.StringIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void CopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
             => new UnmanagedStringSpan(
-                  _stringRanges.AsReadOnlySpan()[1..Count]
+                  _stringRanges.AsReadOnlySpan()[..Count]
                 , StringBufferSpan
-            ).Slice(sourceStartIndex, length).CopyTo(destination[..length]);
+            ).CopyTo(sourceStartIndex, destination, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryCopyTo(Span<UnmanagedString> destination)
@@ -351,9 +351,9 @@ namespace EncosyTower.StringIds
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
             => new UnmanagedStringSpan(
-                  _stringRanges.AsReadOnlySpan()[1..Count]
+                  _stringRanges.AsReadOnlySpan()[..Count]
                 , StringBufferSpan
-            ).Slice(sourceStartIndex, length).TryCopyTo(destination[..length]);
+            ).TryCopyTo(sourceStartIndex, destination, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IncreaseCapacityBy(int amount)

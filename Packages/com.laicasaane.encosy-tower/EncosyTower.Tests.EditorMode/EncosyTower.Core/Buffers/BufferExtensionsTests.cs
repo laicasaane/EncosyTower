@@ -1,5 +1,6 @@
 using System;
 using EncosyTower.Buffers;
+using EncosyTower.Tests.Core.Collections;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -148,6 +149,78 @@ namespace EncosyTower.Tests.Core.Buffers
                 Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 0, -1));
 
                 CollectionAssert.AreEqual(s_seed, buffer.AsSpan().ToArray());
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        [Test]
+        public void Unsafe_ShiftLeftAndRight_UncreatedBuffer_ThrowsArgumentException()
+        {
+            var buffer = default(BufferUnsafe<int>);
+
+            Assert.Throws<ArgumentException>(() => BufferUnsafeExtensions.ShiftLeft(ref buffer, 0, 0));
+            Assert.Throws<ArgumentException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 0, 0));
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void Unsafe_ShiftLeftAndRight_ZeroCapacityBuffer_ThrowsBecauseNoIndexIsValid()
+        {
+            var buffer = default(BufferUnsafe<int>);
+
+            try
+            {
+                buffer.Alloc(0, Allocator.Temp);
+
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftLeft(ref buffer, 0, 0));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 0, 0));
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void Unsafe_ShiftLeftAndRight_IndexOrCountAtCapacity_Throws()
+        {
+            var buffer = new BufferUnsafe<int>(6, Allocator.Temp);
+
+            try
+            {
+                buffer.CopyFrom(s_seed);
+
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftLeft(ref buffer, 6, 6));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 6, 6));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftLeft(ref buffer, 0, 6));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 0, 6));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftLeft(ref buffer, 3, 2));
+                Assert.Throws<InvalidOperationException>(() => BufferUnsafeExtensions.ShiftRight(ref buffer, 3, 2));
+                CollectionAssert.AreEqual(s_seed, buffer.AsSpan().ToArray());
+            }
+            finally
+            {
+                buffer.Dispose();
+            }
+        }
+
+        [Test]
+        public void Unsafe_ShiftLeftAndRight_SingleElementBuffer_ShiftsNothing()
+        {
+            var buffer = new BufferUnsafe<int>(1, Allocator.Temp);
+
+            try
+            {
+                buffer[0] = 42;
+
+                BufferUnsafeExtensions.ShiftLeft(ref buffer, 0, 0);
+                BufferUnsafeExtensions.ShiftRight(ref buffer, 0, 0);
+
+                Assert.AreEqual(42, buffer[0]);
             }
             finally
             {

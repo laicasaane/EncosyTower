@@ -788,6 +788,72 @@ namespace EncosyTower.Collections
         }
 
         [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_COLLECTIONS_CHECKS)]
+        internal static void ThrowIfSliceIndexOutsideRestrictedRange([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static IndexOutOfRangeException CreateException()
+                => new("Index is outside the permitted range of the slice.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfAllocationSizeIsInvalid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Allocation element size must be positive.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfAllocationCountIsInvalid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Allocation element count must be non-negative.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfCustomAllocatorSizeIsInvalid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Custom allocator element size must fit in a positive Int32.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfCustomAllocatorCountIsInvalid([DoesNotReturnIf(false)] bool valid)
+        {
+            if (valid == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Custom allocator element count must fit in a non-negative Int32.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(COLLECTIONS_CHECKS)]
         [Conditional(UNITY_COLLECTIONS_CHECKS)]

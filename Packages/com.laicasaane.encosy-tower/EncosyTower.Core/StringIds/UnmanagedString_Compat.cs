@@ -18,6 +18,7 @@ namespace EncosyTower.StringIds
             private ushort utf8LengthInBytes;
             private FixedBytes510 bytes;
 
+            /// <remarks>Truncates at a complete UTF-8 code point within the fixed 509-byte capacity.</remarks>
             public FixedString512Bytes(string other) : this()
             {
                 // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
@@ -75,17 +76,34 @@ namespace EncosyTower.StringIds
 
             private static void Initialize(ref FixedString512Bytes fs, ReadOnlySpan<char> chars)
             {
-                // SAFETY: The stack buffer is local to this call and the fixed-string span is bounded by Capacity.
-                unsafe
-                {
-                    int worstCaseCapacity = chars.Length * 4;
-                    Span<byte> buffer = stackalloc byte[worstCaseCapacity];
-                    var length = Encoding.UTF8.GetBytes(chars, buffer);
-                    length = Mathf.Min(length, fs.Capacity);
+                var charLength = 0;
+                var length = 0;
+                var capacity = fs.Capacity;
+                var sourceLength = chars.Length;
 
-                    fs.Length = length;
-                    buffer[..length].CopyTo(fs.AsSpan());
+                while (charLength < sourceLength)
+                {
+                    var isSurrogatePair = char.IsHighSurrogate(chars[charLength])
+                        && charLength < sourceLength - 1
+                        && char.IsLowSurrogate(chars[charLength + 1]);
+
+                    var charCount = isSurrogatePair ? 2 : 1;
+                    var byteCount = Encoding.UTF8.GetByteCount(chars.Slice(charLength, charCount));
+
+                    if (byteCount > capacity - length)
+                    {
+                        break;
+                    }
+
+                    length += byteCount;
+                    charLength += charCount;
                 }
+
+                Span<byte> buffer = stackalloc byte[UTF8MaxLengthInBytes];
+                Encoding.UTF8.GetBytes(chars[..charLength], buffer);
+
+                fs.Length = length;
+                buffer[..length].CopyTo(fs.AsSpan());
             }
 
             /// <safety>The returned pointer is valid only for this fixed-string value's lifetime.</safety>

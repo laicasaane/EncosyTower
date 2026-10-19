@@ -841,12 +841,19 @@ namespace EncosyTower.Pooling
                 return;
             }
 
+            var unusedGameObjects = _unusedGameObjects.AsListFast();
             var unusedGameObjectIds = _unusedGameObjectIds.AsListFast();
             var unusedTransformIds = _unusedTransformIds.AsListFast();
             var capacity = unusedGameObjectIds.Count + length;
 
+            unusedGameObjects.IncreaseCapacityTo(capacity);
             unusedGameObjectIds.IncreaseCapacityTo(capacity);
             unusedTransformIds.IncreaseCapacityTo(capacity);
+
+            for (var i = 0; i < length; i++)
+            {
+                unusedGameObjects.Add(gameObjectIds[i].ToObject().GetValueOrThrow());
+            }
 
             unusedGameObjectIds.AddRange(gameObjectIds);
             unusedTransformIds.AddRange(transformIds);

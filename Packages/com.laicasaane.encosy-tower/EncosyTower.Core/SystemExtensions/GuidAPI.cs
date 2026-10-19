@@ -64,9 +64,8 @@ namespace EncosyTower.SystemExtensions
     {
         public static bool TryParse(in FixedString128Bytes guidString, out Guid result)
         {
-            Span<char> utf16Chars = stackalloc char[68];
-
-            var length = Math.Min(guidString.Length, utf16Chars.Length);
+            Span<char> utf16Chars = stackalloc char[FixedString128Bytes.UTF8MaxLengthInBytes];
+            var length = guidString.Length;
 
             for (var i = 0; i < length; i++)
             {

@@ -124,5 +124,18 @@ namespace EncosyTower.Buffers
             static InvalidOperationException CreateException()
                 => new("Pinned storage address does not satisfy native element alignment.");
         }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfBufferIsBorrowed([DoesNotReturnIf(false)] bool ownsAllocation)
+        {
+            if (ownsAllocation == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("Cannot change the capacity of a borrowed buffer.");
+        }
     }
 }

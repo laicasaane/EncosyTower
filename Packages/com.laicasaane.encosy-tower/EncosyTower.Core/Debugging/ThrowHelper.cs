@@ -67,6 +67,11 @@ namespace EncosyTower.Debugging
             , [CallerArgumentExpression("argument")] string paramName = null
         )
         {
+            if (typeof(T).IsValueType && Nullable.GetUnderlyingType(typeof(T)) == null)
+            {
+                return;
+            }
+
             if (argument is null)
             {
                 throw CreateArgumentNullException(paramName);

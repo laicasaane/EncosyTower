@@ -29,7 +29,7 @@ namespace EncosyTower.Collections.Unsafe
             // SAFETY: Caller owns the reference lifetime and accepts the read-only aliasing contract.
             unsafe
             {
-                return ref UnsafeUtility.AsRef<T>(reference.GetUnsafePtr());
+                return ref UnsafeUtility.AsRef<T>(reference.GetUnsafeReadOnlyPtr());
             }
         }
 

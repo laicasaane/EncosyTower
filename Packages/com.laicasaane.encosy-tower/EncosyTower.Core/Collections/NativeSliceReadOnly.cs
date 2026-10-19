@@ -42,9 +42,11 @@ namespace EncosyTower.Collections
             {
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
                 AtomicSafetyHandle.CheckReadAndThrow(m_Safety);
+                ThrowHelper.ThrowIfIndexOutOfRangeException((uint)index < (uint)_length);
+                ThrowHelper.ThrowIfSliceIndexOutsideRestrictedRange(index >= _minIndex && index <= _maxIndex);
 #endif
 
-                // SAFETY: The read safety handle was checked and the caller supplies an index within the slice.
+                // SAFETY: The read safety handle and index bounds were checked before reading the slice.
                 unsafe
                 {
                     return UnsafeUtility.ReadArrayElementWithStride<T>(_buffer, index, _stride);
@@ -393,16 +395,29 @@ namespace EncosyTower.Collections
             ThrowHelper.ThrowIfArrayLengthMismatch(Length == array.Length, array.Length, Length);
 
             GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
-            IntPtr addr = handle.AddrOfPinnedObject();
 
-            // SAFETY: The pinned destination and validated slice length bound both copy ranges.
-            unsafe
+            try
             {
-                var sizeOf = UnsafeUtility.SizeOf<T>();
-                UnsafeUtility.MemCpyStride((byte*)addr, sizeOf, this.GetUnsafeReadOnlyPtr(), Stride, sizeOf, _length);
-            }
+                IntPtr addr = handle.AddrOfPinnedObject();
 
-            handle.Free();
+                // SAFETY: The pinned destination and validated slice length bound both copy ranges.
+                unsafe
+                {
+                    var sizeOf = UnsafeUtility.SizeOf<T>();
+                    UnsafeUtility.MemCpyStride(
+                          (byte*)addr
+                        , sizeOf
+                        , this.GetUnsafeReadOnlyPtr()
+                        , Stride
+                        , sizeOf
+                        , _length
+                    );
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -413,14 +428,25 @@ namespace EncosyTower.Collections
             return array;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Returns a live, zero-copy view for contiguous slices and slices with at most one element.
+        /// For a strided slice with multiple elements, allocates a managed snapshot that does not
+        /// observe later writes to the source and remains valid independently of the source lifetime.
+        /// </summary>
         public readonly ReadOnlySpan<T> AsSpan()
         {
-            // SAFETY: The returned span borrows the slice allocation and is bounded by Length.
+            // SAFETY: The accessor checks read access, and the contiguous view is bounded by Length.
             unsafe
             {
-                return new(this.GetUnsafeReadOnlyPtr(), Length);
+                var buffer = this.GetUnsafeReadOnlyPtr();
+
+                if (_length <= 1 || _stride == UnsafeUtility.SizeOf<T>())
+                {
+                    return new ReadOnlySpan<T>(buffer, _length);
+                }
             }
+
+            return ToArray();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -470,7 +496,7 @@ namespace EncosyTower.Collections
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsSliceRangeWithinLength(int sourceLength, int start, int length)
-            => start + length <= sourceLength;
+            => start <= sourceLength && length <= sourceLength - start;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsSliceRangeUnrestricted(
@@ -481,23 +507,16 @@ namespace EncosyTower.Collections
             , int length
         )
             => ((minIndex != 0 || maxIndex != sourceLength - 1)
-                && (start < minIndex || maxIndex < start || maxIndex < start + length - 1)
+                && (start < minIndex || maxIndex < start || (long)maxIndex < (long)start + length - 1)
             ) == false;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsReadOnlyArraySliceRangeUnrestricted(
-              int sourceLength
-            , int start
-            , int length
-        )
-            => (start < 0
-                || sourceLength - 1 < start
-                || sourceLength - 1 < start + length - 1
-            ) == false;
+        private static bool IsReadOnlyArraySliceRangeUnrestricted(int sourceLength, int start, int length)
+            => start >= 0 && start <= sourceLength && length >= 0 && length <= sourceLength - start;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsSliceRangeWithoutOverflow(int start, int length)
-            => start + length >= 0;
+            => (long)start + length <= int.MaxValue;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private readonly bool IsSliceConvertStrideValid()

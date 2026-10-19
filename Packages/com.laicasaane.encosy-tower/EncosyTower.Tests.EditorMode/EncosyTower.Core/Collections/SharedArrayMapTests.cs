@@ -2,8 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using EncosyTower.Collections;
+using EncosyTower.Common;
+using EncosyTower.Tests.Core.Testing;
 using NUnit.Framework;
 using Unity.Collections;
+using UnityEngine;
 
 namespace EncosyTower.Tests.Core.Collections
 {
@@ -583,6 +586,873 @@ namespace EncosyTower.Tests.Core.Collections
 
             Assert.DoesNotThrow(() => map.Dispose());
             Assert.DoesNotThrow(() => map.Dispose());
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void MissingKey_OnEveryLookupThatThrows_ThrowsKeyNotFound()
+        {
+            using var zeroCapacity = new SharedArrayMap<int, int>();
+            using var map = new SharedArrayMap<int, int>(4);
+
+            map.Add(1, 10);
+
+            Assert.Throws<KeyNotFoundException>(() => _ = zeroCapacity[1]);
+            Assert.Throws<KeyNotFoundException>(() => _ = map[2]);
+            Assert.Throws<KeyNotFoundException>(() => zeroCapacity.GetIndex(1));
+            Assert.Throws<KeyNotFoundException>(() => map.GetIndex(2));
+
+            // SAFETY: The lambdas only provoke the lookup failure; no reference escapes.
+            unsafe
+            {
+                Assert.Throws<KeyNotFoundException>(() => _ = zeroCapacity.GetValueByRef(1));
+                Assert.Throws<KeyNotFoundException>(() => _ = map.GetValueByRef(2));
+            }
+
+            Assert.AreEqual(1, map.Count);
+        }
+
+        [Test]
+        public void TryAdd_ZeroCapacityMap_GrowsAndStoresEntries()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            Assert.AreEqual(0, map.Capacity);
+            Assert.IsTrue(map.TryAdd(1, 10));
+            Assert.IsTrue(map.TryAdd(2, 20, out var index));
+            Assert.AreEqual(1, index);
+            Assert.IsFalse(map.TryAdd(2, 99));
+            Assert.IsFalse(map.TryAdd(2, 99, out var existingIndex));
+            Assert.AreEqual(1, existingIndex);
+            Assert.Greater(map.Capacity, 0);
+            Assert.AreEqual(2, map.Count);
+            Assert.AreEqual(10, map[1]);
+            Assert.AreEqual(20, map[2]);
+        }
+
+        [Test]
+        public void Lookups_ZeroCapacityMap_FindNothing()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            Assert.IsFalse(map.ContainsKey(1));
+            Assert.IsFalse(map.TryGetValue(1, out var value));
+            Assert.AreEqual(0, value);
+            Assert.IsFalse(map.TryFindIndex(1, out var index));
+            Assert.AreEqual(0, index);
+            Assert.IsFalse(map.Remove(1));
+            Assert.IsFalse(map.Remove(1, out var removedIndex, out var removedValue));
+            Assert.AreEqual(0, removedIndex);
+            Assert.AreEqual(0, removedValue);
+            Assert.AreEqual(0, map.Count);
+            Assert.AreEqual(0, map.Values.Length);
+        }
+
+        [Test]
+        public void Add_ExtremeKeys_AreFoundAgainAndRemovable()
+        {
+            var keys = new[] { 0, -1, 1, int.MinValue, int.MaxValue, 101, -101 };
+            using var map = new SharedArrayMap<int, int>();
+
+            for (var i = 0; i < keys.Length; i++)
+            {
+                map.Add(keys[i], i);
+            }
+
+            Assert.AreEqual(keys.Length, map.Count);
+
+            for (var i = 0; i < keys.Length; i++)
+            {
+                Assert.AreEqual(i, map[keys[i]], $"key {keys[i]}");
+            }
+
+            for (var i = 0; i < keys.Length; i++)
+            {
+                Assert.IsTrue(map.Remove(keys[i]), $"key {keys[i]}");
+                Assert.IsFalse(map.ContainsKey(keys[i]), $"key {keys[i]}");
+            }
+
+            Assert.AreEqual(0, map.Count);
+        }
+
+        [Test]
+        public void Clear_EmptyMaps_KeepTheMapsUsable()
+        {
+            using var zeroCapacity = new SharedArrayMap<int, int>();
+            using var withCapacity = new SharedArrayMap<int, int>(4);
+
+            zeroCapacity.Clear();
+            withCapacity.Clear();
+
+            Assert.AreEqual(0, zeroCapacity.Count);
+            Assert.AreEqual(0, withCapacity.Count);
+
+            zeroCapacity.Add(1, 10);
+            withCapacity.Add(2, 20);
+
+            Assert.AreEqual(10, zeroCapacity[1]);
+            Assert.AreEqual(20, withCapacity[2]);
+        }
+
+        [Test]
+        public void Clear_ThenReAdd_DoesNotSeeStaleEntries()
+        {
+            const int COUNT = 20;
+            using var map = new SharedArrayMap<int, int>(4);
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                map.Add(i, i * 10);
+            }
+
+            map.Clear();
+
+            Assert.AreEqual(0, map.Count);
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                Assert.IsFalse(map.ContainsKey(i), $"key {i}");
+                Assert.IsFalse(map.TryGetValue(i, out _), $"key {i}");
+            }
+
+            for (var i = COUNT - 1; i >= 0; i--)
+            {
+                map.Add(i, i + 1);
+            }
+
+            Assert.AreEqual(COUNT, map.Count);
+
+            for (var i = 0; i < COUNT; i++)
+            {
+                Assert.AreEqual(i + 1, map[i], $"key {i}");
+            }
+        }
+
+        [Test]
+        public void GetOrAdd_KeyAddedAfterClear_StartsFromDefault()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+
+            map.Add(1, 10);
+            map.Add(2, 20);
+            map.Clear();
+
+            // SAFETY: The reference is read before any further mutation of the map.
+            unsafe
+            {
+                Assert.AreEqual(0, map.GetOrAdd(3));
+            }
+        }
+
+        [Test]
+        public void GetOrAdd_ZeroCapacityMap_AddsAndAliasesTheStoredValue()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            // SAFETY: The reference is used before any further structural mutation of the map.
+            unsafe
+            {
+                ref var first = ref map.GetOrAdd(5);
+
+                Assert.AreEqual(0, first);
+
+                first = 50;
+            }
+
+            // SAFETY: Both references address the same stored value and no structural mutation happens.
+            unsafe
+            {
+                ref var again = ref map.GetOrAdd(5);
+
+                Assert.AreEqual(50, again);
+
+                again = 51;
+
+                ref var withIndex = ref map.GetOrAdd(5, out var index);
+
+                Assert.AreEqual(51, withIndex);
+                Assert.AreEqual(0, index);
+
+                withIndex = 52;
+            }
+
+            Assert.AreEqual(1, map.Count);
+            Assert.AreEqual(52, map[5]);
+            Assert.AreEqual(52, map.Values.Span[0]);
+        }
+
+        [Test]
+        public void Remove_EveryPositionAndChain_MatchesTheSwapWithLastModel()
+        {
+            AssertRemoveMatchesModel(static i => i * 7);
+            AssertRemoveMatchesModel(static i => new CollidingKey(i));
+        }
+
+        [Test]
+        public void AddAndRemove_PseudoRandomSequenceOnOneChain_MatchesDictionary()
+        {
+            var random = new System.Random(20261018);
+            var model = new Dictionary<int, int>();
+            using var map = new SharedArrayMap<CollidingKey, int>(2);
+
+            for (var step = 0; step < 2000; step++)
+            {
+                var key = random.Next(0, 24);
+                var value = random.Next();
+                var collidingKey = new CollidingKey(key);
+
+                if (random.Next(0, 3) == 0)
+                {
+                    Assert.AreEqual(model.Remove(key), map.Remove(collidingKey), $"remove {key} step {step}");
+                }
+                else
+                {
+                    var expectedAdded = model.TryAdd(key, value);
+
+                    Assert.AreEqual(expectedAdded, map.TryAdd(collidingKey, value), $"add {key} step {step}");
+                }
+
+                Assert.AreEqual(model.Count, map.Count, $"step {step}");
+            }
+
+            for (var key = 0; key < 24; key++)
+            {
+                var found = map.TryGetValue(new CollidingKey(key), out var actual);
+
+                Assert.AreEqual(model.TryGetValue(key, out var expected), found, $"key {key}");
+                Assert.AreEqual(expected, actual, $"key {key}");
+            }
+        }
+
+        [Test]
+        public void EnsureCapacity_SizeWithinTheCapacity_KeepsTheCapacityAndEntries()
+        {
+            using var map = new SharedArrayMap<int, int>(8);
+
+            map.Add(1, 10);
+
+            var capacity = map.Capacity;
+
+            Assert.AreEqual(capacity, map.EnsureCapacity(0));
+            Assert.AreEqual(capacity, map.EnsureCapacity(1));
+            Assert.AreEqual(capacity, map.EnsureCapacity(capacity));
+            Assert.AreEqual(capacity, map.Capacity);
+            Assert.AreEqual(10, map[1]);
+        }
+
+        [Test]
+        public void EnsureCapacity_PastTheCapacity_KeepsEveryEntryReachable()
+        {
+            using var map = new SharedArrayMap<CollidingKey, int>(4);
+
+            for (var i = 0; i < 4; i++)
+            {
+                map.Add(new CollidingKey(i), i * 10);
+            }
+
+            var grown = map.EnsureCapacity(40);
+
+            Assert.GreaterOrEqual(grown, 40);
+            Assert.AreEqual(grown, map.Capacity);
+            Assert.AreEqual(4, map.Count);
+
+            for (var i = 0; i < 4; i++)
+            {
+                Assert.IsTrue(map.TryGetValue(new CollidingKey(i), out var value), $"key {i}");
+                Assert.AreEqual(i * 10, value, $"key {i}");
+            }
+
+            map.Add(new CollidingKey(100), 1000);
+
+            Assert.AreEqual(5, map.Count);
+            Assert.AreEqual(1000, map[new CollidingKey(100)]);
+        }
+
+        [Test]
+        public void Trim_EmptyMapWithCapacity_ShrinksToZeroAndStillAcceptsKeys()
+        {
+            using var map = new SharedArrayMap<int, int>(8);
+
+            map.Trim();
+
+            Assert.AreEqual(0, map.Capacity);
+            Assert.AreEqual(0, map.Count);
+
+            map.Add(1, 10);
+
+            Assert.AreEqual(10, map[1]);
+        }
+
+        [Test]
+        public void Trim_ZeroCapacityMap_KeepsTheMapUsable()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            map.Trim();
+
+            Assert.AreEqual(0, map.Capacity);
+
+            map.Add(1, 10);
+
+            Assert.AreEqual(10, map[1]);
+        }
+
+        [Test]
+        public void Trim_AfterRemovals_KeepsEveryRemainingEntry()
+        {
+            using var map = new SharedArrayMap<CollidingKey, int>(16);
+
+            for (var i = 0; i < 10; i++)
+            {
+                map.Add(new CollidingKey(i), i * 10);
+            }
+
+            Assert.IsTrue(map.Remove(new CollidingKey(2)));
+            Assert.IsTrue(map.Remove(new CollidingKey(9)));
+
+            map.Trim();
+
+            Assert.AreEqual(8, map.Count);
+            Assert.AreEqual(8, map.Capacity);
+
+            for (var i = 0; i < 10; i++)
+            {
+                var expected = i != 2 && i != 9;
+
+                Assert.AreEqual(expected, map.TryGetValue(new CollidingKey(i), out var value), $"key {i}");
+
+                if (expected)
+                {
+                    Assert.AreEqual(i * 10, value, $"key {i}");
+                }
+            }
+        }
+
+        [Test]
+        public void IntersectAndExclude_EmptyMaps_BehaveLikeSetOperations()
+        {
+            using var zeroCapacityOther = new SharedArrayMap<int, long>();
+            using var emptyOther = new SharedArrayMap<int, int>(4);
+            using var zeroCapacitySelf = new SharedArrayMap<int, int>();
+            using var emptySelf = new SharedArrayMap<int, int>(4);
+            using var full = CreateMap(1, 2, 3);
+            using var other = CreateMap(1, 2);
+
+            full.Exclude(zeroCapacityOther);
+            full.Exclude(emptyOther);
+
+            Assert.AreEqual(3, full.Count);
+
+            zeroCapacitySelf.Intersect(other);
+            zeroCapacitySelf.Exclude(other);
+            emptySelf.Intersect(other);
+            emptySelf.Exclude(other);
+
+            Assert.AreEqual(0, zeroCapacitySelf.Count);
+            Assert.AreEqual(0, emptySelf.Count);
+
+            full.Intersect(zeroCapacityOther);
+
+            Assert.AreEqual(0, full.Count);
+        }
+
+        [Test]
+        public void IntersectAndExclude_WithTheMapItself_KeepOrRemoveEveryEntry()
+        {
+            using var intersected = CreateMap(1, 2, 3);
+            using var excluded = CreateMap(1, 2, 3);
+
+            intersected.Intersect(intersected);
+            excluded.Exclude(excluded);
+
+            Assert.AreEqual(3, intersected.Count);
+            Assert.IsTrue(intersected.ContainsKey(1));
+            Assert.IsTrue(intersected.ContainsKey(2));
+            Assert.IsTrue(intersected.ContainsKey(3));
+            Assert.AreEqual(0, excluded.Count);
+        }
+
+        [Test]
+        public void Dispose_Map_ReportsNotCreatedAndEmpty()
+        {
+            var map = new SharedArrayMap<int, int>(4);
+
+            map.Add(1, 10);
+            map.Dispose();
+
+            Assert.IsFalse(map.IsCreated);
+            Assert.AreEqual(0, map.Count);
+            Assert.AreEqual(0, map.Capacity);
+        }
+
+        [Test]
+        public void GetEnumerator_EmptyMaps_YieldNothing()
+        {
+            using var zeroCapacity = new SharedArrayMap<int, int>();
+            using var withCapacity = new SharedArrayMap<int, int>(4);
+            var count = 0;
+
+            // SAFETY: The maps outlive the enumerators and are not modified while they run.
+            unsafe
+            {
+                foreach (var pair in zeroCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var pair in withCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var pair in (IEnumerable<SharedArrayMapKeyValuePair<int, int, int>>)zeroCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var pair in (IEnumerable)withCapacity)
+                {
+                    count++;
+                }
+
+                foreach (var key in zeroCapacity.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in withCapacity.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable<int>)zeroCapacity.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable)withCapacity.Keys)
+                {
+                    count++;
+                }
+            }
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void InternalCounters_FollowTheMapContent()
+        {
+            using var map = new SharedArrayMap<CollidingKey, int>(8);
+
+            Assert.AreEqual(0, map.FreeValueCellIndexRO);
+            Assert.AreEqual(0u, map.CollisionsRO);
+
+            var version = map.VersionRO;
+
+            map.Add(new CollidingKey(1), 10);
+
+            Assert.AreEqual(1, map.FreeValueCellIndexRO);
+            Assert.AreEqual(0u, map.CollisionsRO);
+            Assert.AreNotEqual(version, map.VersionRO);
+
+            map.Add(new CollidingKey(2), 20);
+
+            Assert.AreEqual(2, map.FreeValueCellIndexRO);
+            Assert.AreEqual(1u, map.CollisionsRO);
+
+            version = map.VersionRO;
+
+            _ = map.ContainsKey(new CollidingKey(1));
+            _ = map.TryGetValue(new CollidingKey(2), out _);
+            _ = map[new CollidingKey(1)];
+            _ = map.Count;
+
+            Assert.AreEqual(version, map.VersionRO);
+
+            map.VersionRW++;
+
+            Assert.AreEqual(version + 1, map.VersionRO);
+
+            map.FreeValueCellIndexRW = 0;
+
+            Assert.AreEqual(0, map.Count);
+            Assert.DoesNotThrow(() => map.CheckRead());
+        }
+
+        [Test]
+        public void FastModBucketsMultiplierRO_CapacityMap_ComputesTheBucketRemainder()
+        {
+            using var map = new SharedArrayMap<int, int>(8);
+            var divisor = (uint)map._buckets.Capacity;
+            var multiplier = map.FastModBucketsMultiplierRO;
+            var values = new uint[] { 0, 1, divisor - 1, divisor, divisor + 1, 12345, uint.MaxValue };
+
+            for (var i = 0; i < values.Length; i++)
+            {
+                var actual = HashHelpers.FastMod(values[i], divisor, multiplier);
+
+                Assert.AreEqual(values[i] % divisor, actual, $"{values[i]}");
+            }
+        }
+
+        [Test]
+        public void AsReadOnly_EmptyMapWithCapacity_ReportsNoEntries()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+
+            // SAFETY: map outlives the views, which are only inspected here.
+            unsafe
+            {
+                var view = map.AsReadOnly();
+                var direct = new SharedArrayMap<int, int, int>.ReadOnly(map);
+
+                Assert.IsTrue(view.IsCreated);
+                Assert.IsTrue(direct.IsCreated);
+                Assert.AreEqual(0, view.Count);
+                Assert.AreEqual(map.Capacity, view.Capacity);
+                Assert.IsFalse(view.ContainsKey(1));
+                Assert.IsFalse(view.TryGetValue(1, out var value));
+                Assert.AreEqual(0, value);
+                Assert.IsFalse(view.TryFindIndex(1, out var index));
+                Assert.AreEqual(0, index);
+                Assert.AreEqual(0, view.Values.Length);
+                Assert.IsTrue(view.Keys.IsValid);
+            }
+        }
+
+        [Test]
+        public void ReadOnly_ZeroCapacityMap_IsCreatedAndDefaultIsNotCreated()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            // SAFETY: The owner remains alive and unmodified while its view is inspected.
+            unsafe
+            {
+                Assert.IsTrue(map.AsReadOnly().IsCreated);
+            }
+
+            Assert.IsFalse(default(SharedArrayMap<int, int, int>.ReadOnly).IsCreated);
+        }
+
+        [Test]
+        public void AsReadOnly_ZeroCapacityMap_FindsNothing()
+        {
+            using var map = new SharedArrayMap<int, int>();
+
+            // SAFETY: map outlives the view, which is only inspected here.
+            unsafe
+            {
+                var view = map.AsReadOnly();
+
+                Assert.AreEqual(0, view.Count);
+                Assert.IsFalse(view.ContainsKey(1));
+                Assert.IsFalse(view.TryGetValue(1, out var value));
+                Assert.AreEqual(0, value);
+                Assert.IsFalse(view.TryFindIndex(1, out _));
+                Assert.AreEqual(0, view.Values.Length);
+            }
+        }
+
+        [Test]
+        public void ReadOnlyGetEnumerator_EmptyMapWithCapacity_YieldsNothing()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+            var count = 0;
+
+            // SAFETY: map outlives the view and its enumerators and is not modified while they run.
+            unsafe
+            {
+                var view = map.AsReadOnly();
+
+                foreach (var pair in view)
+                {
+                    count++;
+                }
+
+                foreach (var key in view.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable<int>)view.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable)view.Keys)
+                {
+                    count++;
+                }
+            }
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void ReadOnlyGetEnumerator_ZeroCapacityMap_YieldsNothing()
+        {
+            using var map = new SharedArrayMap<int, int>();
+            var count = 0;
+
+            // SAFETY: map outlives the view and its enumerators and is not modified while they run.
+            unsafe
+            {
+                var view = map.AsReadOnly();
+
+                foreach (var pair in view)
+                {
+                    count++;
+                }
+
+                foreach (var key in view.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable<int>)view.Keys)
+                {
+                    count++;
+                }
+
+                foreach (var key in (IEnumerable)view.Keys)
+                {
+                    count++;
+                }
+            }
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void ReadOnlyValues_FollowTheCountThroughRemovals()
+        {
+            using var map = new SharedArrayMap<int, int>(4);
+
+            map.Add(1, 10);
+            map.Add(2, 20);
+            map.Add(3, 30);
+
+            // SAFETY: map outlives the view, which is used before any resize.
+            unsafe
+            {
+                var view = map.AsReadOnly();
+
+                Assert.AreEqual(3, view.Values.Length);
+
+                Assert.IsTrue(map.Remove(1));
+
+                var values = view.Values;
+
+                Assert.AreEqual(2, values.Length);
+                Assert.AreEqual(30, values[0]);
+                Assert.AreEqual(20, values[1]);
+            }
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public void ReadOnlyValues_IndexPastTheCount_Throws()
+        {
+            using var map = new SharedArrayMap<int, int>(8);
+
+            map.Add(1, 10);
+            map.Add(2, 20);
+
+            // SAFETY: map outlives the view and the slice, which are only inspected here.
+            unsafe
+            {
+                var values = map.AsReadOnly().Values;
+
+                Assert.AreEqual(2, values.Length);
+                Assert.Catch(() => _ = values[2]);
+                Assert.Catch(() => _ = values[-1]);
+            }
+        }
+
+        [Test]
+        public void ReadOnlyValues_ElementSizes_RoundTripBitExact()
+        {
+            AssertValuesRoundTrip(new byte[] { 0, 255, 128 });
+            AssertValuesRoundTrip(new[] { long.MinValue, -1L, long.MaxValue });
+            AssertValuesRoundTrip(new[] { new Rgb { r = 1, g = 2, b = 3 }, new Rgb { r = 255, g = 0, b = 128 } });
+            AssertValuesRoundTrip(new[] { new Wide { a = long.MinValue, b = -1, c = long.MaxValue } });
+        }
+
+        [Test]
+        public void ReadOnlyKeyValuePair_ValueOutsideTheStoredValues_Throws()
+        {
+            using var nativeValues = new NativeArray<int>(new[] { 30, 40 }, Allocator.Temp);
+            var key = 7;
+            SharedArrayMapReadOnlyKeyValuePair<int, int, int> negative;
+            SharedArrayMapReadOnlyKeyValuePair<int, int, int> past;
+
+            // SAFETY: nativeValues remains allocated and unmodified while the pairs are consumed.
+            unsafe
+            {
+                negative = new SharedArrayMapReadOnlyKeyValuePair<int, int, int>(in key, nativeValues.AsReadOnly(), -1);
+                past = new SharedArrayMapReadOnlyKeyValuePair<int, int, int>(in key, nativeValues.AsReadOnly(), 2);
+
+                Assert.Throws<IndexOutOfRangeException>(() => _ = negative.Value);
+                Assert.Throws<IndexOutOfRangeException>(() => _ = past.Value);
+                Assert.Throws<IndexOutOfRangeException>(() => past.Deconstruct(out _, out _));
+            }
+        }
+
+        [Test]
+        public void KeyValuePairs_DefaultPairs_HaveDefaultKeysAndAreNotValid()
+        {
+            var managed = default(SharedArrayMapKeyValuePair<int, int, int>);
+            var readOnly = default(SharedArrayMapReadOnlyKeyValuePair<int, int, int>);
+
+            Assert.IsFalse(managed.IsValid);
+            Assert.IsFalse(readOnly.IsValid);
+            Assert.AreEqual(0, managed.Key);
+            Assert.AreEqual(0, readOnly.Key);
+        }
+
+        [Test]
+        public void OnBeforeSerialize_EmptyMaps_StoreAnEmptyPayload()
+        {
+            using var zeroCapacity = new SharedArrayMap<int, int>();
+            using var withCapacity = new SharedArrayMap<int, int>(4);
+
+            ((ISerializationCallbackReceiver)zeroCapacity).OnBeforeSerialize();
+            ((ISerializationCallbackReceiver)withCapacity).OnBeforeSerialize();
+
+            Assert.That(zeroCapacity._serializedEntries, Is.Not.Null);
+            Assert.That(zeroCapacity._serializedEntries, Is.Empty);
+            Assert.That(withCapacity._serializedEntries, Is.Not.Null);
+            Assert.That(withCapacity._serializedEntries, Is.Empty);
+        }
+
+        [Test]
+        public void OnBeforeSerialize_DisposedMap_StoresNoPayload()
+        {
+            var map = new SharedArrayMap<int, int>(4);
+
+            map.Add(1, 10);
+            map.Dispose();
+
+            ((ISerializationCallbackReceiver)map).OnBeforeSerialize();
+
+            Assert.That(map._serializedEntries, Is.Null);
+        }
+
+        [Test]
+        public void OnBeforeSerialize_MapAfterRemovals_StoresOnlyTheLiveEntries()
+        {
+            using var map = new SharedArrayMap<CollidingKey, int>(8);
+
+            for (var i = 0; i < 5; i++)
+            {
+                map.Add(new CollidingKey(i), i * 10);
+            }
+
+            Assert.IsTrue(map.Remove(new CollidingKey(1)));
+
+            ((ISerializationCallbackReceiver)map).OnBeforeSerialize();
+
+            var entries = map._serializedEntries;
+
+            Assert.AreEqual(4, entries.Length);
+
+            var seen = new Dictionary<int, int>();
+
+            for (var i = 0; i < entries.Length; i++)
+            {
+                seen.Add(entries[i].key.Value, entries[i].value);
+            }
+
+            CollectionAssert.AreEquivalent(
+                new Dictionary<int, int> { { 0, 0 }, { 2, 20 }, { 3, 30 }, { 4, 40 } },
+                seen
+            );
+        }
+
+        private static void AssertRemoveMatchesModel<TKey>(Func<int, TKey> makeKey)
+            where TKey : unmanaged, IEquatable<TKey>
+        {
+            const int COUNT = 6;
+
+            for (var removeAt = 0; removeAt < COUNT; removeAt++)
+            {
+                using var map = new SharedArrayMap<TKey, int>(2);
+                var keys = new List<int>();
+                var values = new List<int>();
+
+                for (var i = 0; i < COUNT; i++)
+                {
+                    map.Add(makeKey(i), 100 + i);
+                    keys.Add(i);
+                    values.Add(100 + i);
+                }
+
+                var removedKey = keys[removeAt];
+
+                Assert.IsTrue(map.Remove(makeKey(removedKey), out var index, out var value), $"removeAt {removeAt}");
+                Assert.AreEqual(removeAt, index, $"removeAt {removeAt}");
+                Assert.AreEqual(values[removeAt], value, $"removeAt {removeAt}");
+
+                var last = keys.Count - 1;
+
+                keys[removeAt] = keys[last];
+                values[removeAt] = values[last];
+                keys.RemoveAt(last);
+                values.RemoveAt(last);
+
+                Assert.AreEqual(keys.Count, map.Count, $"removeAt {removeAt}");
+                CollectionAssert.AreEqual(values, map.Values.ToArray(), $"removeAt {removeAt}");
+                Assert.IsFalse(map.ContainsKey(makeKey(removedKey)), $"removeAt {removeAt}");
+
+                for (var i = 0; i < keys.Count; i++)
+                {
+                    var message = $"removeAt {removeAt} key {keys[i]}";
+
+                    Assert.IsTrue(map.TryGetValue(makeKey(keys[i]), out var found), message);
+                    Assert.AreEqual(values[i], found, message);
+                }
+
+                Assert.IsTrue(map.TryAdd(makeKey(removedKey), 7, out var newIndex), $"removeAt {removeAt}");
+                Assert.AreEqual(keys.Count, newIndex, $"removeAt {removeAt}");
+            }
+        }
+
+        private static void AssertValuesRoundTrip<TValue>(TValue[] values)
+            where TValue : unmanaged
+        {
+            using var map = new SharedArrayMap<int, TValue>(values.Length);
+
+            for (var i = 0; i < values.Length; i++)
+            {
+                map.Add(i, values[i]);
+            }
+
+            // SAFETY: map outlives the view and the slice, which are inspected before any mutation.
+            unsafe
+            {
+                var slice = map.AsReadOnly().Values;
+
+                Assert.AreEqual(values.Length, slice.Length);
+
+                for (var i = 0; i < values.Length; i++)
+                {
+                    SpanBytesAssert.AreEqual(new[] { values[i] }, new[] { slice[i] });
+                }
+            }
+        }
+
+        private struct Rgb
+        {
+            public byte r;
+            public byte g;
+            public byte b;
+        }
+
+        private struct Wide
+        {
+            public long a;
+            public long b;
+            public long c;
         }
 
         private static SharedArrayMap<int, int> CreateMap(params int[] keys)

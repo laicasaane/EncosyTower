@@ -72,9 +72,11 @@ namespace EncosyTower.AddressableKeys
                 return Error.InvalidKey((AddressableKey)this);
             }
 
+            var handle = default(AsyncOperationHandle<T>);
+
             try
             {
-                var handle = Addressables.LoadAssetAsync<T>(Value.Value);
+                handle = Addressables.LoadAssetAsync<T>(Value.Value);
 
                 if (handle.IsValid() == false)
                 {
@@ -119,8 +121,20 @@ namespace EncosyTower.AddressableKeys
                 handle.TryRelease();
                 return Error.InvalidObject((AddressableKey)this);
             }
+            catch (OperationCanceledException)
+            {
+                handle.TryReleaseIfValid();
+
+                if (token.IsCancellationRequested)
+                {
+                    return Error.CancelledRequest((AddressableKey)this);
+                }
+
+                throw;
+            }
             catch (Exception ex)
             {
+                handle.TryReleaseIfValid();
                 return Error.Exception((AddressableKey)this, ex);
             }
         }

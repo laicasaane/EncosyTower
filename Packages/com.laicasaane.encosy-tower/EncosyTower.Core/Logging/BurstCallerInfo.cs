@@ -154,7 +154,16 @@ namespace EncosyTower.Logging
             , out FixedString128Bytes result3
         )
         {
-            Split(filePath.AsReadOnlySpan(), out var filePathSpan2, out result3);
+            ReadOnlySpan<byte> source;
+
+            // SAFETY: filePath refers to the caller's value, which outlives this call; GetUnsafePtr and Length are
+            // readonly, so no defensive copy is made, and the span is bounded by the length.
+            unsafe
+            {
+                source = new ReadOnlySpan<byte>(filePath.GetUnsafePtr(), filePath.Length);
+            }
+
+            Split(source, out var filePathSpan2, out result3);
             Split(filePathSpan2, out var filePathSpan1, out result2);
             Split(filePathSpan1, out _, out result1);
         }

@@ -210,6 +210,10 @@ namespace EncosyTower.Collections
             return itemAdded;
         }
 
+        /// <summary>
+        /// Removes all entries while retaining value slots for recycling. Stored object references
+        /// remain alive until their slots are overwritten or the map becomes unreachable.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
@@ -224,7 +228,6 @@ namespace EncosyTower.Collections
             // Buckets cannot be FastCleared because it's important that the values are reset to 0
             _buckets.Clear();
 
-            _values.FastClear();
             _valuesInfo.FastClear();
         }
 

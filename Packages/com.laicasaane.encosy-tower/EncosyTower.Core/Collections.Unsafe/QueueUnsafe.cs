@@ -79,8 +79,9 @@ namespace EncosyTower.Collections.Unsafe
 
         public void Enqueue(in T item)
         {
+            var value = item;
             EnsureCapacity(_count + 1);
-            _buffer.AsSpan()[_tail] = item;
+            _buffer.AsSpan()[_tail] = value;
             MoveNext(ref _tail);
             _count++;
             _version++;
@@ -93,10 +94,28 @@ namespace EncosyTower.Collections.Unsafe
                 return;
             }
 
-            EnsureCapacity(checked(_count + items.Length));
-            CopyIntoRing(items);
-            _count += items.Length;
-            _version++;
+            var newCount = checked(_count + items.Length);
+            var snapshot = default(BufferUnsafe<T>);
+
+            try
+            {
+                if (_buffer.AsReadOnlySpan().Overlaps(items))
+                {
+                    EncosyTower.Buffers.ThrowHelper.ThrowIfBufferIsBorrowed(_buffer.OwnsAllocation);
+                    snapshot = new BufferUnsafe<T>(items.Length, _buffer._allocator, clear: false);
+                    items.CopyTo(snapshot.AsSpan());
+                    items = snapshot.AsReadOnlySpan();
+                }
+
+                EnsureCapacity(newCount);
+                CopyIntoRing(items);
+                _count = newCount;
+                _version++;
+            }
+            finally
+            {
+                snapshot.Dispose();
+            }
         }
 
         public T Dequeue()
@@ -233,6 +252,7 @@ namespace EncosyTower.Collections.Unsafe
                 return;
             }
 
+            EncosyTower.Buffers.ThrowHelper.ThrowIfBufferIsBorrowed(_buffer.OwnsAllocation);
             var newBuffer = new BufferUnsafe<T>(newCapacity, _buffer._allocator, clear: false);
 
             if (_count > 0)
@@ -337,24 +357,47 @@ namespace EncosyTower.Collections.Unsafe
         /// <safety>The returned header owns the allocation and must be freed exactly once with Free.</safety>
         internal static unsafe QueueUnsafe<T>* Alloc(int capacity, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one QueueUnsafe header and its owned buffer.
             unsafe
             {
                 var data = allocator.Allocate<QueueUnsafe<T>>();
-                *data = new QueueUnsafe<T>(capacity, allocator);
-                return data;
+
+                try
+                {
+                    *data = new QueueUnsafe<T>(capacity, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 
         /// <safety>The returned header owns a copy of source and must be freed exactly once with Free.</safety>
         internal static unsafe QueueUnsafe<T>* Alloc(ReadOnlySpan<T> source, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one QueueUnsafe header and its owned buffer.
             unsafe
             {
                 var data = allocator.Allocate<QueueUnsafe<T>>();
-                *data = new QueueUnsafe<T>(source, allocator);
-                return data;
+
+                try
+                {
+                    *data = new QueueUnsafe<T>(source, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 

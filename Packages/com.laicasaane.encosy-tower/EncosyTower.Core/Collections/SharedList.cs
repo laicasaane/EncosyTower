@@ -367,6 +367,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
+            var value = item;
             VersionRW++;
 
             ref var count = ref CountRW;
@@ -379,7 +380,7 @@ namespace EncosyTower.Collections
             // SAFETY: Capacity is available and count is a bounded index into this owned buffer.
             unsafe
             {
-                _buffer.AsSpan()[count++] = item;
+                _buffer.AsSpan()[count++] = value;
             }
         }
 
@@ -414,6 +415,7 @@ namespace EncosyTower.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Insert(int index, in T item)
         {
+            var value = item;
             VersionRW++;
 
             ref var count = ref CountRW;
@@ -435,7 +437,7 @@ namespace EncosyTower.Collections
             // SAFETY: The insertion checks and capacity growth bound the destination index.
             unsafe
             {
-                _buffer.AsSpan()[index] = item;
+                _buffer.AsSpan()[index] = value;
             }
         }
 
@@ -497,9 +499,29 @@ namespace EncosyTower.Collections
                 return;
             }
 
+            items = items[..count];
+
             if (_buffer.Capacity - CountRO < count)
             {
+                var sourceOffset = 0;
+                bool aliasesBuffer;
+
+                // SAFETY: The owner keeps the source buffer pinned while checking the borrowed span's offset.
+                unsafe
+                {
+                    aliasesBuffer = _buffer.AsSpan().Overlaps(items, out sourceOffset);
+                }
+
                 AllocateMore(checked(CountRO + count));
+
+                if (aliasesBuffer)
+                {
+                    // SAFETY: Growth preserves the old buffer contents and the source's element offset.
+                    unsafe
+                    {
+                        items = _buffer.AsSpan().Slice(sourceOffset, count);
+                    }
+                }
             }
 
             // SAFETY: Capacity and count checks bound the synchronous copy into owned storage.
@@ -677,14 +699,14 @@ namespace EncosyTower.Collections
 
         public bool Remove(T item)
         {
-            VersionRW++;
-
             var index = IndexOf(item);
 
             if ((uint)index >= (uint)CountRO)
             {
                 return false;
             }
+
+            VersionRW++;
 
             if (index < --CountRW)
             {
@@ -705,14 +727,14 @@ namespace EncosyTower.Collections
 
         public bool Remove(in T item)
         {
-            VersionRW++;
-
             var index = IndexOf(item);
 
             if ((uint)index >= (uint)CountRO)
             {
                 return false;
             }
+
+            VersionRW++;
 
             if (index < --CountRW)
             {

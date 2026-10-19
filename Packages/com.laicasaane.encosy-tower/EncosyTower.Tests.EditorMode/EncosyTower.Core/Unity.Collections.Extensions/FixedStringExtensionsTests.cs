@@ -4,6 +4,7 @@ using System;
 using System.Text;
 using EncosyTower.Collections;
 using EncosyTower.Common;
+using EncosyTower.Tests.Core.Testing;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -222,7 +223,7 @@ namespace EncosyTower.Tests.Core.Collections
 
             Span<byte> writable = EncosyFixedStringExtensions.AsSpan(ref value);
             writable[0] = (byte)'z';
-            ReadOnlySpan<byte> readOnly = EncosyFixedStringExtensions.AsReadOnlySpan(value);
+            ReadOnlySpan<byte> readOnly = EncosyFixedStringExtensions.AsReadOnlySpan(ref value);
 
             Assert.AreEqual("zbc", value.ToString());
             CollectionAssert.AreEqual(Encoding.UTF8.GetBytes("zbc"), readOnly.ToArray());
@@ -282,6 +283,492 @@ namespace EncosyTower.Tests.Core.Collections
                     handleText.Dispose();
                 }
             }
+        }
+
+        [Test]
+        public void AsReadOnlySpan_ViewsTheVariable_SeesLaterWrites()
+        {
+            FixedString512Bytes value = "abc";
+            var view = EncosyFixedStringExtensions.AsReadOnlySpan(ref value);
+
+            EncosyFixedStringExtensions.AsSpan(ref value)[0] = (byte)'z';
+
+            Assert.AreEqual((byte)'z', view[0]);
+        }
+
+        [Test]
+        public void ToNativeText_RoundTripsEveryFixedStringSize()
+        {
+            AssertToNativeTextRoundTrips<FixedString32Bytes>(FixedString32Bytes.UTF8MaxLengthInBytes);
+            AssertToNativeTextRoundTrips<FixedString64Bytes>(FixedString64Bytes.UTF8MaxLengthInBytes);
+            AssertToNativeTextRoundTrips<FixedString128Bytes>(FixedString128Bytes.UTF8MaxLengthInBytes);
+            AssertToNativeTextRoundTrips<FixedString512Bytes>(FixedString512Bytes.UTF8MaxLengthInBytes);
+            AssertToNativeTextRoundTrips<FixedString4096Bytes>(FixedString4096Bytes.UTF8MaxLengthInBytes);
+        }
+
+        private static void AssertToNativeTextRoundTrips<TFixedString>(int byteCount)
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+        {
+            var chars = new char[byteCount];
+
+            for (var i = 0; i < byteCount; i++)
+            {
+                chars[i] = (char)('a' + i % 26);
+            }
+
+            var text = new string(chars);
+            var source = default(TFixedString);
+
+            Assert.AreEqual(CopyError.None, EncosyFixedStringExtensions.CopyFrom(ref source, text.AsSpan()));
+            Assert.AreEqual(byteCount, source.Length);
+
+            NativeText allocatorText = default;
+            NativeText handleText = default;
+
+            try
+            {
+                allocatorText = EncosyFixedStringExtensions.ToNativeText(source, Allocator.Persistent);
+                StackOverwriter.Fill(value: 0xCD);
+
+                handleText = EncosyFixedStringExtensions.ToNativeText(source, AllocatorManager.Persistent);
+                StackOverwriter.Fill(value: 0x00);
+
+                Assert.AreEqual(byteCount, allocatorText.Length);
+                Assert.AreEqual(text, allocatorText.ToString());
+                Assert.AreEqual(byteCount, handleText.Length);
+                Assert.AreEqual(text, handleText.ToString());
+            }
+            finally
+            {
+                if (allocatorText.IsCreated)
+                {
+                    allocatorText.Dispose();
+                }
+
+                if (handleText.IsCreated)
+                {
+                    handleText.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void CopyFromTruncated_Utf8SelfCopy_KeepsTheContent()
+        {
+            FixedString64Bytes value = "abcdef";
+
+            var result = EncosyFixedStringExtensions.CopyFromTruncated(
+                  ref value
+                , EncosyFixedStringExtensions.AsReadOnlySpan(ref value)
+            );
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual("abcdef", value.ToString());
+        }
+
+        [Test]
+        public void CopyFromTruncated_Utf8OverlappingSourceShiftedLeft_MatchesArrayCopy()
+        {
+            FixedString64Bytes value = "abcdef";
+            var expected = Encoding.UTF8.GetBytes("abcdef");
+            Array.Copy(expected, 1, expected, 0, 5);
+            var expectedText = Encoding.UTF8.GetString(expected, 0, 5);
+
+            var result = EncosyFixedStringExtensions.CopyFromTruncated(
+                  ref value
+                , EncosyFixedStringExtensions.AsReadOnlySpan(ref value)[1..]
+            );
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual(expectedText, value.ToString());
+        }
+
+        [TestCase("abc")]
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("\u2713\u2713")]
+        [TestCase("A\U0001F600B")]
+        public void CopyFromTruncated_EverySizeAndText_RoundTripsBitExact(string text)
+        {
+            AssertCopyFromTruncatedRoundTrips<FixedString32Bytes>(text);
+            AssertCopyFromTruncatedRoundTrips<FixedString64Bytes>(text);
+            AssertCopyFromTruncatedRoundTrips<FixedString128Bytes>(text);
+            AssertCopyFromTruncatedRoundTrips<FixedString512Bytes>(text);
+            AssertCopyFromTruncatedRoundTrips<FixedString4096Bytes>(text);
+        }
+
+        [Test]
+        public void Append_LongChars_ReturnsOverflowWithoutChangingString()
+        {
+            var longChars = new string('x', 10_000);
+            FixedString32Bytes small = "abc";
+            FixedString4096Bytes large = "abc";
+
+            var smallResult = EncosyFixedStringExtensions.Append(ref small, longChars.AsSpan());
+            var largeResult = EncosyFixedStringExtensions.Append(ref large, longChars.AsSpan());
+
+            Assert.AreEqual(FormatError.Overflow, smallResult);
+            Assert.AreEqual("abc", small.ToString());
+            Assert.AreEqual(FormatError.Overflow, largeResult);
+            Assert.AreEqual("abc", large.ToString());
+        }
+
+        [Test]
+        public void Append_EmptyChars_LeavesTheStringUnchanged()
+        {
+            FixedString32Bytes value = "abc";
+
+            var result = EncosyFixedStringExtensions.Append(ref value, ReadOnlySpan<char>.Empty);
+
+            Assert.AreEqual(FormatError.None, result);
+            Assert.AreEqual("abc", value.ToString());
+        }
+
+        [Test]
+        public void Append_NonAsciiChars_AppendsTheUtf8Bytes()
+        {
+            const string SUFFIX = "\u00fc\u2713\U0001F600";
+
+            FixedString128Bytes value = "a";
+
+            var result = EncosyFixedStringExtensions.Append(ref value, SUFFIX.AsSpan());
+
+            Assert.AreEqual(FormatError.None, result);
+            CollectionAssert.AreEqual(
+                  Encoding.UTF8.GetBytes("a" + SUFFIX)
+                , EncosyFixedStringExtensions.AsReadOnlySpan(ref value).ToArray()
+            );
+        }
+
+        [Test]
+        public void Append_CharsFillingTheExactCapacity_SucceedsAndTheNextCharOverflows()
+        {
+            var fill = new string('\u2713', 9) + "ab";
+
+            FixedString32Bytes value = default;
+
+            var exact = EncosyFixedStringExtensions.Append(ref value, fill.AsSpan());
+
+            Assert.AreEqual(FormatError.None, exact);
+            Assert.AreEqual(value.Capacity, value.Length);
+            Assert.AreEqual(fill, value.ToString());
+
+            var overflow = EncosyFixedStringExtensions.Append(ref value, "z".AsSpan());
+
+            Assert.AreEqual(FormatError.Overflow, overflow);
+            Assert.AreEqual(fill, value.ToString());
+        }
+
+        [Test]
+        public void CopyTo_EmptyString_WritesNothingAndReportsZeroLength()
+        {
+            var value = default(FixedString32Bytes);
+            var destination = new[] { 'x', 'y' };
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, destination, out var length);
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual(0, length);
+            CollectionAssert.AreEqual(new[] { 'x', 'y' }, destination);
+        }
+
+        [Test]
+        public void CopyTo_EmptyStringAndEmptyDestination_Succeeds()
+        {
+            var value = default(FixedString32Bytes);
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, Span<char>.Empty, out var length);
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual(0, length);
+        }
+
+        [Test]
+        public void CopyTo_NonEmptyStringAndEmptyDestination_ReturnsTruncation()
+        {
+            FixedString32Bytes value = "abc";
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, Span<char>.Empty, out _);
+
+            Assert.AreEqual(CopyError.Truncation, result);
+        }
+
+        [TestCase("abc")]
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("\u2713\u2713")]
+        [TestCase("A\U0001F600B")]
+        public void CopyTo_NonAsciiText_EqualsTheManagedChars(string text)
+        {
+            var value = (FixedString128Bytes)text;
+            var destination = new char[text.Length];
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, destination, out var length);
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual(text.Length, length);
+            CollectionAssert.AreEqual(text.ToCharArray(), destination);
+        }
+
+        [TestCase("abc")]
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("A\U0001F600B")]
+        public void CopyTo_DestinationOneCharShort_ReturnsTruncation(string text)
+        {
+            var value = (FixedString128Bytes)text;
+            var destination = new char[text.Length - 1];
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, destination, out _);
+
+            Assert.AreEqual(CopyError.Truncation, result);
+        }
+
+        [Test]
+        public void CopyTo_StringFillingTheExactCapacity_CopiesEveryChar()
+        {
+            FixedString32Bytes value = default;
+            var text = new string('a', value.Capacity);
+            value = text;
+            var destination = new char[text.Length];
+
+            var result = EncosyFixedStringExtensions.CopyTo(value, destination, out var length);
+
+            Assert.AreEqual(CopyError.None, result);
+            Assert.AreEqual(text.Length, length);
+            Assert.AreEqual(text, new string(destination));
+        }
+
+        [Test]
+        public void AppendTo_EmptyString_AppendsNothing()
+        {
+            var value = default(FixedString32Bytes);
+            var builder = new StringBuilder("start");
+
+            EncosyFixedStringExtensions.AppendTo(value, builder, out var length);
+
+            Assert.AreEqual(0, length);
+            Assert.AreEqual("start", builder.ToString());
+        }
+
+        [TestCase("abc")]
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("\u2713\u2713")]
+        [TestCase("A\U0001F600B")]
+        public void AppendTo_NonAsciiText_AppendsTheManagedText(string text)
+        {
+            var value = (FixedString128Bytes)text;
+            var builder = new StringBuilder("start:");
+
+            EncosyFixedStringExtensions.AppendTo(value, builder, out var length);
+
+            Assert.AreEqual(text.Length, length);
+            Assert.AreEqual("start:" + text, builder.ToString());
+        }
+
+        [Test]
+        public void AppendTo_StringFillingTheExactCapacity_AppendsEveryChar()
+        {
+            var text = new string('\u2713', 9) + "ab";
+            var value = (FixedString32Bytes)text;
+            var builder = new StringBuilder();
+
+            EncosyFixedStringExtensions.AppendTo(value, builder, out var length);
+
+            Assert.AreEqual(value.Capacity, value.Length);
+            Assert.AreEqual(text.Length, length);
+            Assert.AreEqual(text, builder.ToString());
+        }
+
+        [Test]
+        public void AsSpan_EmptyString_IsEmpty()
+        {
+            var value = default(FixedString32Bytes);
+
+            Assert.IsTrue(EncosyFixedStringExtensions.AsSpan(ref value).IsEmpty);
+            Assert.IsTrue(EncosyFixedStringExtensions.AsReadOnlySpan(ref value).IsEmpty);
+        }
+
+        [Test]
+        public void AsSpan_ViewsTheVariable_SeesLaterAssignments()
+        {
+            FixedString512Bytes value = "abc";
+            var view = EncosyFixedStringExtensions.AsSpan(ref value);
+
+            value = "xyz";
+            StackOverwriter.Fill(value: 0xCD);
+
+            Assert.AreEqual(3, view.Length);
+            CollectionAssert.AreEqual(Encoding.UTF8.GetBytes("xyz"), view.ToArray());
+        }
+
+        [Test]
+        public void AsSpan_WriteMultiByteBytes_ChangesTheString()
+        {
+            FixedString64Bytes value = "ab";
+            var bytes = Encoding.UTF8.GetBytes("\u00fc");
+
+            var span = EncosyFixedStringExtensions.AsSpan(ref value);
+            bytes.AsSpan().CopyTo(span);
+
+            Assert.AreEqual("\u00fc", value.ToString());
+        }
+
+        [TestCase("abc")]
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("\u2713\u2713")]
+        [TestCase("A\U0001F600B")]
+        public void AsSpan_EverySize_ViewsTheStringBytes(string text)
+        {
+            AssertSpansEqualUtf8Bytes<FixedString32Bytes>(text);
+            AssertSpansEqualUtf8Bytes<FixedString64Bytes>(text);
+            AssertSpansEqualUtf8Bytes<FixedString128Bytes>(text);
+            AssertSpansEqualUtf8Bytes<FixedString512Bytes>(text);
+            AssertSpansEqualUtf8Bytes<FixedString4096Bytes>(text);
+        }
+
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("A\U0001F600B")]
+        public void AsReadOnlySpan_NonAsciiText_EqualsUtf8BytesAfterStackHeavyCalls(string text)
+        {
+            var value = (FixedString128Bytes)text;
+            var view = EncosyFixedStringExtensions.AsReadOnlySpan(ref value);
+
+            StackOverwriter.Fill(value: 0xCD);
+
+            CollectionAssert.AreEqual(Encoding.UTF8.GetBytes(text), view.ToArray());
+        }
+
+        [Test]
+        public void ToNativeText_EmptyFixedString_CreatesEmptyText()
+        {
+            var value = default(FixedString32Bytes);
+            NativeText allocatorText = default;
+            NativeText handleText = default;
+
+            try
+            {
+                allocatorText = EncosyFixedStringExtensions.ToNativeText(value, Allocator.Persistent);
+                handleText = EncosyFixedStringExtensions.ToNativeText(value, AllocatorManager.Persistent);
+
+                Assert.IsTrue(allocatorText.IsCreated);
+                Assert.AreEqual(0, allocatorText.Length);
+                Assert.IsTrue(handleText.IsCreated);
+                Assert.AreEqual(0, handleText.Length);
+            }
+            finally
+            {
+                if (allocatorText.IsCreated)
+                {
+                    allocatorText.Dispose();
+                }
+
+                if (handleText.IsCreated)
+                {
+                    handleText.Dispose();
+                }
+            }
+        }
+
+        [TestCase("\u00fc\u00ef\u00f6")]
+        [TestCase("\u2713\u2713")]
+        [TestCase("A\U0001F600B")]
+        public void ToNativeText_NonAsciiText_RoundTripsTheUtf8Bytes(string text)
+        {
+            var value = (FixedString128Bytes)text;
+            NativeText allocatorText = default;
+            NativeText handleText = default;
+
+            try
+            {
+                allocatorText = EncosyFixedStringExtensions.ToNativeText(value, Allocator.Persistent);
+                handleText = EncosyFixedStringExtensions.ToNativeText(value, AllocatorManager.Persistent);
+
+                Assert.AreEqual(value.Length, allocatorText.Length);
+                Assert.AreEqual(text, allocatorText.ToString());
+                Assert.AreEqual(value.Length, handleText.Length);
+                Assert.AreEqual(text, handleText.ToString());
+            }
+            finally
+            {
+                if (allocatorText.IsCreated)
+                {
+                    allocatorText.Dispose();
+                }
+
+                if (handleText.IsCreated)
+                {
+                    handleText.Dispose();
+                }
+            }
+        }
+
+        [TestCase(Allocator.Temp)]
+        [TestCase(Allocator.TempJob)]
+        [TestCase(Allocator.Persistent)]
+        public void ToNativeText_AcceptedAllocator_CreatesAnIndependentCopy(Allocator allocator)
+        {
+            FixedString64Bytes value = "abc";
+            var text = EncosyFixedStringExtensions.ToNativeText(value, allocator);
+
+            try
+            {
+                value = "xyz";
+
+                Assert.AreEqual("abc", text.ToString());
+            }
+            finally
+            {
+                text.Dispose();
+            }
+        }
+
+        [Test]
+        public void ToNativeText_TempAndTempJobHandles_CreateIndependentCopies()
+        {
+            FixedString64Bytes value = "abc";
+            var temp = EncosyFixedStringExtensions.ToNativeText(value, AllocatorManager.Temp);
+            var tempJob = EncosyFixedStringExtensions.ToNativeText(value, AllocatorManager.TempJob);
+
+            try
+            {
+                value = "xyz";
+
+                Assert.AreEqual("abc", temp.ToString());
+                Assert.AreEqual("abc", tempJob.ToString());
+            }
+            finally
+            {
+                tempJob.Dispose();
+                temp.Dispose();
+            }
+        }
+
+        private static void AssertCopyFromTruncatedRoundTrips<TFixedString>(string text)
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            ReadOnlySpan<byte> utf8 = bytes;
+            var fromBytes = default(TFixedString);
+            var fromChars = default(TFixedString);
+
+            var bytesResult = EncosyFixedStringExtensions.CopyFromTruncated(ref fromBytes, utf8);
+            var charsResult = EncosyFixedStringExtensions.CopyFromTruncated(ref fromChars, text.AsSpan());
+
+            Assert.AreEqual(CopyError.None, bytesResult);
+            Assert.AreEqual(CopyError.None, charsResult);
+
+            CollectionAssert.AreEqual(bytes, EncosyFixedStringExtensions.AsReadOnlySpan(ref fromBytes).ToArray());
+            CollectionAssert.AreEqual(bytes, EncosyFixedStringExtensions.AsReadOnlySpan(ref fromChars).ToArray());
+        }
+
+        private static void AssertSpansEqualUtf8Bytes<TFixedString>(string text)
+            where TFixedString : unmanaged, INativeList<byte>, IUTF8Bytes
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            var value = default(TFixedString);
+
+            Assert.AreEqual(CopyError.None, EncosyFixedStringExtensions.CopyFrom(ref value, text.AsSpan()));
+
+            CollectionAssert.AreEqual(bytes, EncosyFixedStringExtensions.AsSpan(ref value).ToArray());
+            CollectionAssert.AreEqual(bytes, EncosyFixedStringExtensions.AsReadOnlySpan(ref value).ToArray());
         }
     }
 }

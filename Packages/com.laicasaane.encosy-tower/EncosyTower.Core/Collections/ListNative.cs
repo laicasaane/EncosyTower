@@ -629,6 +629,7 @@ namespace EncosyTower.Collections
 
         public static ListNative<T> Prefill(int amount, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
             var result = new ListNative<T>(amount, allocator);
             result.AddReplicate(amount);
             return result;
@@ -636,6 +637,7 @@ namespace EncosyTower.Collections
 
         public static ListNative<T> Prefill(T value, int amount, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfAmountIsInvalid(amount > 0);
             var result = new ListNative<T>(amount, allocator);
             result.AddReplicate(value, amount);
             return result;

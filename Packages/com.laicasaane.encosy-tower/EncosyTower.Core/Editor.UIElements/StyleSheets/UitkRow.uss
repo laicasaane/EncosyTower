@@ -1,0 +1,88 @@
+.encosy-row-root {
+    flex-direction: column;
+}
+
+.encosy-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.encosy-row > .unity-base-field,
+.encosy-row > .unity-property-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.encosy-row--collection > .encosy-row__more {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.encosy-row__value {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.encosy-row__value > .unity-property-field {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.encosy-row__value > .unity-base-field,
+.encosy-row__value > .unity-property-field > .unity-base-field {
+    margin: 0;
+    min-width: 0;
+}
+
+.encosy-row__value .unity-property-field__imgui-container-property {
+    margin-left: 0;
+    margin-right: 0;
+    min-width: 0;
+}
+
+.encosy-row__value .unity-property-field__imgui-container-property > .unity-imgui-container {
+    align-self: stretch;
+    width: auto;
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.encosy-row__more {
+    width: 12px;
+    min-width: 12px;
+    height: 20px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0 0 0 2px;
+    border-width: 0;
+    background-color: transparent;
+    align-items: center;
+    justify-content: center;
+}
+
+.encosy-row__more:hover {
+    background-color: var(--unity-colors-button-background-hover);
+}
+
+.encosy-row__more-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.encosy-warning-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.encosy-row--collection {
+    align-items: flex-start;
+}
+
+.encosy-row--collection .encosy-row__plain-collection-size--choices {
+    right: 14px;
+}

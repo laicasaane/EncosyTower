@@ -42,6 +42,14 @@ namespace UnityEngine.ResourceManagement.AsyncOperations
                 return Success.No(ex);
             }
         }
+
+        internal static void TryReleaseIfValid<T>(this AsyncOperationHandle<T> self)
+        {
+            if (self.IsValid())
+            {
+                self.TryRelease();
+            }
+        }
     }
 }
 

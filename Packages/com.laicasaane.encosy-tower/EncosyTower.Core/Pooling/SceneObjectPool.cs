@@ -300,6 +300,7 @@ namespace EncosyTower.Pooling
             PrepoolDifference(1);
 
             var last = UnusedCount - 1;
+            var id = _unusedGameObjectIds[last];
             var result = _unusedTransformIds[last];
 
             _unusedGameObjectIds.RemoveAt(last);
@@ -308,7 +309,7 @@ namespace EncosyTower.Pooling
             if (new RentOperation(RentingStrategy, strategy).ShouldActivate())
             {
                 var ids = NativeArray.CreateFast<EntityId>(1, Allocator.Temp);
-                ids[0] = (EntityId)result;
+                ids[0] = (EntityId)id;
 
                 GameObject.SetGameObjectsActive(ids, true);
             }
@@ -699,6 +700,11 @@ namespace EncosyTower.Pooling
             var startIndex = Mathf.Max(UnusedCount - estimatedAmount, 0);
             var length = UnusedCount - startIndex;
 
+            if (length == 0)
+            {
+                return 0;
+            }
+
             _unusedGameObjectIds.AsListFast().RemoveRange(startIndex, length);
             _unusedTransformIds.AsListFast().RemoveRange(startIndex, length);
 
@@ -728,6 +734,11 @@ namespace EncosyTower.Pooling
 
             var startIndex = Mathf.Max(UnusedCount - estimatedAmount, 0);
             var length = UnusedCount - startIndex;
+
+            if (length == 0)
+            {
+                return 0;
+            }
 
             _unusedTransformIds.AsListFast().CopyTo(startIndex, transformIds[..length]);
             _unusedGameObjectIds.AsListFast().CopyTo(startIndex, gameObjectIds[..length]);
@@ -988,7 +999,7 @@ namespace EncosyTower.Pooling
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
-                GameObject.SetGameObjectsActive(returnedGameObjectIds.Reinterpret<EntityId>(), true);
+                GameObject.SetGameObjectsActive(returnedGameObjectIds.Reinterpret<EntityId>(), false);
             }
         }
 
@@ -1031,7 +1042,7 @@ namespace EncosyTower.Pooling
 
             if (new ReturnOperation(ReturningStrategy, strategy).ShouldDeactivate())
             {
-                GameObject.SetGameObjectsActive(returnedGameObjectIds.Reinterpret<EntityId>(), true);
+                GameObject.SetGameObjectsActive(returnedGameObjectIds.Reinterpret<EntityId>(), false);
             }
         }
 

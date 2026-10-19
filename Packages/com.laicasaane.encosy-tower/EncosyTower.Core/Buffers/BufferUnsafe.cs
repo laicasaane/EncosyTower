@@ -57,6 +57,12 @@ namespace EncosyTower.Buffers
             }
         }
 
+        internal readonly bool OwnsAllocation
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _allocator.IsValid && _allocator.ToAllocator() != Allocator.None;
+        }
+
         public readonly int Capacity
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,6 +84,9 @@ namespace EncosyTower.Buffers
 
         public void Alloc(int newCapacity, AllocatorStrategy allocatorStrategy, bool memClear = true)
         {
+            CollectionsThrowHelper.ThrowIfCapacityIsInvalid(newCapacity >= 0);
+            ThrowHelper.ThrowIfInvalidAllocatorStrategy(allocatorStrategy.IsValid);
+
             // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
@@ -109,6 +118,8 @@ namespace EncosyTower.Buffers
 
         public void Resize(int newCapacity, bool copyContent, bool memClear)
         {
+            CollectionsThrowHelper.ThrowIfCapacityIsInvalid(newCapacity >= 0);
+
             // SAFETY: The surrounding validation or ownership contract makes this native-memory operation sound.
             unsafe
             {
@@ -118,6 +129,8 @@ namespace EncosyTower.Buffers
                 {
                     return;
                 }
+
+                ThrowHelper.ThrowIfBufferIsBorrowed(OwnsAllocation);
 
                 var newBuffer = newCapacity > 0
                     ? _allocator.Allocate(UnsafeUtility.SizeOf<T>(), UnsafeUtility.AlignOf<T>(), newCapacity)
@@ -268,6 +281,7 @@ namespace EncosyTower.Buffers
         public readonly ReadOnly AsReadOnly()
             => this;
 
+        /// <remarks>The returned view borrows storage and is invalidated by owner resize or disposal.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly BufferUnsafe<U> Reinterpret<U>()
             where U : unmanaged
@@ -279,7 +293,9 @@ namespace EncosyTower.Buffers
                     UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                 );
 
-                return new BufferUnsafe<U>(_buffer, _capacity, _allocator);
+                return IsCreated
+                    ? new BufferUnsafe<U>(_buffer, _capacity, Allocator.None)
+                    : default;
             }
         }
 
@@ -295,12 +311,13 @@ namespace EncosyTower.Buffers
             {
                 var pointer = _buffer;
                 var allocator = _allocator;
+                var ownsAllocation = OwnsAllocation;
 
                 _buffer = null;
                 _capacity = 0;
                 _allocator = default;
 
-                if (pointer != null)
+                if (ownsAllocation && pointer != null)
                 {
                     allocator.Free(pointer);
                 }
@@ -319,12 +336,13 @@ namespace EncosyTower.Buffers
             {
                 var pointer = _buffer;
                 var allocator = _allocator;
+                var ownsAllocation = OwnsAllocation;
 
                 _buffer = null;
                 _capacity = 0;
                 _allocator = default;
 
-                if (pointer == null)
+                if (ownsAllocation == false || pointer == null)
                 {
                     return inputDeps;
                 }
@@ -363,7 +381,7 @@ namespace EncosyTower.Buffers
                     // SAFETY: Reading the pointer field only observes the alias state.
                     unsafe
                     {
-                        return _buffer != null && _allocator.IsValid;
+                        return _allocator.IsValid && ((_capacity > 0 && _buffer != null) || _capacity == 0);
                     }
                 }
             }
@@ -453,7 +471,9 @@ namespace EncosyTower.Buffers
                         UnsafeUtility.SizeOf<T>() == UnsafeUtility.SizeOf<U>()
                     );
 
-                    var buffer = new BufferUnsafe<U>(_buffer, _capacity, _allocator);
+                    var buffer = IsCreated
+                        ? new BufferUnsafe<U>(_buffer, _capacity, Allocator.None)
+                        : default;
                     return buffer.AsReadOnly();
                 }
             }

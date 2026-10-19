@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using EncosyTower.SystemExtensions;
 
 namespace EncosyTower.StringIds
 {
@@ -60,17 +61,17 @@ namespace EncosyTower.StringIds
 
         public bool TryCopyTo(int sourceStartIndex, Span<UnmanagedString> destination, int length)
         {
-            if (TrySlice(sourceStartIndex, length, out var span) == false)
+            if ((uint)sourceStartIndex > (uint)Length || (uint)length > (uint)(Length - sourceStartIndex))
             {
                 return false;
             }
 
-            if ((uint)sourceStartIndex > (uint)destination.Length)
+            if ((uint)length > (uint)destination.Length)
             {
                 return false;
             }
 
-            return TryCopy(span, destination[..length]);
+            return TryCopy(Slice(sourceStartIndex, length), destination[..length]);
         }
 
         private static void Copy(UnmanagedStringSpan source, Span<UnmanagedString> dest)
@@ -94,15 +95,13 @@ namespace EncosyTower.StringIds
 
             for (var i = 0; i < length; i++)
             {
-                var resultOpt = UnmanagedString.FromBufferAt(ranges[i], buffer);
-                dest[i] = resultOpt.GetValueOrDefault();
-
-                if (resultOpt.HasValue == false)
+                if (ranges[i].TryGetOffsetAndLength(buffer.Length).HasValue == false)
                 {
                     return false;
                 }
             }
 
+            Copy(source, dest);
             return true;
         }
     }

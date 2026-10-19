@@ -638,6 +638,241 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(value, actualValue);
         }
 
+        [Test]
+        public void RecycleOrAdd_KeyAlreadyPresent_ReturnsTheStoredValueWithoutBuildingOrRecycling()
+        {
+            using var map = new ArrayMap<int, IReusableValue>(2);
+            var stored = new ReusableValue { Value = 5 };
+            var builderCalls = 0;
+            var recyclerCalls = 0;
+
+            map.Add(1, stored);
+
+            var found = map.RecycleOrAdd<ReusableValue>(1, Build, Recycle);
+
+            Assert.AreSame(stored, found);
+            Assert.AreEqual(0, builderCalls);
+            Assert.AreEqual(0, recyclerCalls);
+            Assert.AreEqual(1, map.Count);
+
+            ReusableValue Build()
+            {
+                builderCalls++;
+                return new ReusableValue();
+            }
+
+            void Recycle(ref ReusableValue value)
+            {
+                recyclerCalls++;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_ZeroCapacityMap_BuildsTheValueAndGrows()
+        {
+            using var map = new ArrayMap<int, IReusableValue>();
+            var builderCalls = 0;
+            var recyclerCalls = 0;
+
+            var created = map.RecycleOrAdd<ReusableValue>(7, Build, Recycle);
+
+            created.Value = 3;
+
+            Assert.AreEqual(1, builderCalls);
+            Assert.AreEqual(0, recyclerCalls);
+            Assert.AreEqual(1, map.Count);
+            Assert.AreSame(created, map[7]);
+            Assert.AreEqual(3, map[7].Value);
+
+            ReusableValue Build()
+            {
+                builderCalls++;
+                return new ReusableValue();
+            }
+
+            void Recycle(ref ReusableValue value)
+            {
+                recyclerCalls++;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_PastTheCapacity_BuildsOneDistinctValuePerKey()
+        {
+            using var map = new ArrayMap<int, IReusableValue>(1);
+            var seen = new HashSet<IReusableValue>();
+            var builderCalls = 0;
+            var recyclerCalls = 0;
+
+            for (var i = 0; i < 40; i++)
+            {
+                var value = map.RecycleOrAdd<ReusableValue>(i, Build, Recycle);
+
+                value.Value = i;
+                seen.Add(value);
+            }
+
+            Assert.AreEqual(40, builderCalls);
+            Assert.AreEqual(0, recyclerCalls);
+            Assert.AreEqual(40, seen.Count);
+            Assert.AreEqual(40, map.Count);
+
+            for (var i = 0; i < 40; i++)
+            {
+                Assert.AreEqual(i, map[i].Value, $"key {i}");
+            }
+
+            ReusableValue Build()
+            {
+                builderCalls++;
+                return new ReusableValue();
+            }
+
+            void Recycle(ref ReusableValue value)
+            {
+                recyclerCalls++;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_AfterClear_RecyclesTheLeftoverValuesInSlotOrderThenBuilds()
+        {
+            using var map = new ArrayMap<int, IReusableValue>(2);
+            var first = new ReusableValue { Value = 1 };
+            var second = new ReusableValue { Value = 2 };
+            var builderCalls = 0;
+            var recyclerCalls = 0;
+
+            map.Add(1, first);
+            map.Add(2, second);
+            map.Clear();
+
+            var a = map.RecycleOrAdd<ReusableValue>(3, Build, Recycle);
+
+            Assert.AreSame(first, a);
+            Assert.AreEqual(0, a.Value);
+
+            var b = map.RecycleOrAdd<ReusableValue>(4, Build, Recycle);
+
+            Assert.AreSame(second, b);
+            Assert.AreEqual(0, b.Value);
+
+            var c = map.RecycleOrAdd<ReusableValue>(5, Build, Recycle);
+
+            Assert.AreNotSame(first, c);
+            Assert.AreNotSame(second, c);
+            Assert.AreEqual(1, builderCalls);
+            Assert.AreEqual(2, recyclerCalls);
+            Assert.AreEqual(3, map.Count);
+            Assert.AreSame(first, map[3]);
+            Assert.AreSame(second, map[4]);
+            Assert.AreSame(c, map[5]);
+
+            ReusableValue Build()
+            {
+                builderCalls++;
+                return new ReusableValue();
+            }
+
+            void Recycle(ref ReusableValue value)
+            {
+                recyclerCalls++;
+                value.Value = 0;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_RecyclerReplacesTheValueThroughTheReference_StoresTheReplacement()
+        {
+            using var map = new ArrayMap<int, IReusableValue>(2);
+            var leftover = new ReusableValue { Value = 1 };
+            var replacement = new ReusableValue { Value = 2 };
+
+            map.Add(1, leftover);
+            map.Remove(1);
+
+            var result = map.RecycleOrAdd<ReusableValue>(2, Build, Replace);
+
+            Assert.AreSame(replacement, result);
+            Assert.AreSame(replacement, map[2]);
+            Assert.AreEqual(1, map.Count);
+
+            ReusableValue Build()
+            {
+                return new ReusableValue();
+            }
+
+            void Replace(ref ReusableValue value)
+            {
+                value = replacement;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_WithParameter_PassesTheParameterByReferenceToTheBuilderAndRecycler()
+        {
+            using var map = new ArrayMap<int, IReusableValue>(2);
+            var parameter = 0;
+
+            var built = map.RecycleOrAdd<ReusableValue, int>(1, Build, Recycle, ref parameter);
+
+            Assert.AreEqual(1, parameter);
+            Assert.AreEqual(1, built.Value);
+
+            map.Remove(1);
+
+            var recycled = map.RecycleOrAdd<ReusableValue, int>(2, Build, Recycle, ref parameter);
+
+            Assert.AreSame(built, recycled);
+            Assert.AreEqual(101, parameter);
+            Assert.AreEqual(101, recycled.Value);
+
+            var found = map.RecycleOrAdd<ReusableValue, int>(2, Build, Recycle, ref parameter);
+
+            Assert.AreSame(built, found);
+            Assert.AreEqual(101, parameter);
+
+            IReusableValue Build(ref int state)
+            {
+                state++;
+                return new ReusableValue { Value = state };
+            }
+
+            void Recycle(ref ReusableValue value, ref int state)
+            {
+                state += 100;
+                value.Value = state;
+            }
+        }
+
+        [Test]
+        public void RecycleOrAdd_WithParameterOnZeroCapacityMap_BuildsEveryValue()
+        {
+            using var map = new ArrayMap<int, IReusableValue>();
+            var parameter = 10;
+
+            for (var i = 0; i < 20; i++)
+            {
+                var value = map.RecycleOrAdd<ReusableValue, int>(i, Build, Recycle, ref parameter);
+
+                Assert.AreEqual(11 + i, value.Value, $"key {i}");
+            }
+
+            Assert.AreEqual(20, map.Count);
+            Assert.AreEqual(30, parameter);
+
+            IReusableValue Build(ref int state)
+            {
+                state++;
+                return new ReusableValue { Value = state };
+            }
+
+            void Recycle(ref ReusableValue value, ref int state)
+            {
+                state += 100;
+            }
+        }
+
         private static ArrayMapKeyValuePair<int, int> GetFirstPair(ArrayMap<int, int> map)
         {
             var enumerator = map.GetEnumerator();

@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using EncosyTower.Collections;
+using EncosyTower.Tests.Core.Testing;
 using NUnit.Framework;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace EncosyTower.Tests.Core.Collections
 {
@@ -542,6 +544,675 @@ namespace EncosyTower.Tests.Core.Collections
             Assert.AreEqual(3, view.Count);
             Assert.AreEqual(40, view[new CollidingKey(4)]);
             Assert.AreEqual(3, map.Count);
+        }
+
+        [Test]
+        public unsafe void Constructor_BorrowedHeader_ViewsTheHeaderAndAcceptsANullHeader()
+        {
+            using var storage = new SharedArrayMapStorage<int, int>(4, 3);
+            var header = storage.CreateHeader();
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+            var safety = AtomicSafetyHandle.Create();
+            var view = new SharedArrayMapNative<int, int>(&header, safety);
+            var nullView = new SharedArrayMapNative<int, int>(null, safety);
+            var nullReadOnly = new SharedArrayMapNative<int, int>.ReadOnly(null, safety);
+#else
+            var view = new SharedArrayMapNative<int, int>(&header);
+            var nullView = new SharedArrayMapNative<int, int>(null);
+            var nullReadOnly = new SharedArrayMapNative<int, int>.ReadOnly(null);
+#endif
+
+            try
+            {
+                Assert.IsTrue(view.IsCreated);
+                Assert.IsFalse(nullView.IsCreated);
+                Assert.IsFalse(nullReadOnly.IsCreated);
+                Assert.AreEqual(4, view.Capacity);
+                Assert.AreEqual(3, view.BucketCapacity);
+                Assert.AreEqual(0, view.Count);
+
+                var version = view.Version;
+
+                view.Add(1, 10);
+
+                Assert.AreEqual(1, view.Count);
+                Assert.AreEqual(1, storage.Count);
+                Assert.AreNotEqual(version, view.Version);
+                Assert.AreEqual(10, view[1]);
+            }
+            finally
+            {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS && !DISABLE_SHAREDARRAY_SAFETY
+                AtomicSafetyHandle.Release(safety);
+#endif
+            }
+        }
+
+        [Test]
+        public unsafe void InternalBuffers_CoverTheCapacityAndExposeTheOwnerEntries()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+
+            Assert.AreEqual(view.Capacity, view._values.Length);
+            Assert.AreEqual(view.Capacity, view._valuesInfo.Length);
+            Assert.GreaterOrEqual(view.BucketCapacity, 1);
+            Assert.AreEqual(1, view._valuesInfo[0].key);
+            Assert.AreEqual(2, view._valuesInfo[1].key);
+            Assert.AreEqual(10, view._values[0]);
+            Assert.AreEqual(20, view._values[1]);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void InternalMembers_AfterOwnerDispose_Throw()
+        {
+            var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+
+            owner.Dispose();
+
+            Assert.Catch(() => _ = view.Version);
+            Assert.Catch(() => _ = view.BucketCapacity);
+            Assert.Catch(() => _ = view._values);
+            Assert.Catch(() => _ = view._valuesInfo);
+        }
+
+        [Test]
+        public unsafe void Values_CountBelowCapacity_LengthIsCountAndSeesLaterWrites()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+
+            var values = view.Values;
+
+            Assert.AreEqual(2, values.Length);
+            Assert.GreaterOrEqual(view.Capacity, 8);
+            CollectionAssert.AreEqual(new[] { 10, 20 }, values.ToArray());
+
+            view.GetValueByRef(2) = 99;
+
+            Assert.AreEqual(99, values[1]);
+            Assert.AreEqual(99, owner[2]);
+        }
+
+        [Test]
+        public unsafe void Values_ElementShapes_RoundTripBitExact()
+        {
+            using var small = new SharedArrayMap<int, Rgb>(4);
+            using var wide = new SharedArrayMap<int, Wide>(4);
+            using var longs = new SharedArrayMap<long, long>(4);
+            small.Add(1, new Rgb { r = 1, g = 2, b = 3 });
+            small.Add(2, new Rgb { r = 250, g = 251, b = 252 });
+            wide.Add(1, new Wide { a = long.MinValue, b = -1L, c = long.MaxValue });
+            longs.Add(long.MaxValue, long.MinValue);
+            var smallView = small.AsNative();
+            var wideView = wide.AsNative();
+            var longView = longs.AsNative();
+
+            Assert.AreEqual(2, smallView.Values.Length);
+            Assert.AreEqual(3, smallView.Values[0].b);
+            Assert.AreEqual(250, smallView.Values[1].r);
+            Assert.AreEqual(252, smallView[2].b);
+            Assert.AreEqual(long.MinValue, wideView.Values[0].a);
+            Assert.AreEqual(-1L, wideView[1].b);
+            Assert.AreEqual(long.MaxValue, wideView[1].c);
+            Assert.AreEqual(long.MinValue, longView[long.MaxValue]);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void Values_SliceUsedAfterOwnerDispose_Throws()
+        {
+            var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+            var values = view.Values;
+
+            owner.Dispose();
+
+            Assert.Catch(() => _ = values[0]);
+            Assert.Catch(() => _ = view.Values);
+        }
+
+        [Test]
+        public unsafe void EmptyMap_Queries_ReturnEmptyResults()
+        {
+            using var owner = new SharedArrayMap<int, int>(4);
+            var view = owner.AsNative();
+            var keyCount = 0;
+
+            foreach (var key in view.Keys)
+            {
+                keyCount++;
+            }
+
+            var enumerator = view.GetEnumerator();
+
+            Assert.AreEqual(0, keyCount);
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.AreEqual(0, view.Count);
+            Assert.AreEqual(0, view.Values.Length);
+            Assert.IsFalse(view.ContainsKey(1));
+            Assert.IsFalse(view.TryGetValue(1, out var value));
+            Assert.AreEqual(0, value);
+            Assert.IsFalse(view.TryFindIndex(1, out _));
+            Assert.IsFalse(view.Remove(1));
+            Assert.IsFalse(view.Remove(1, out var index, out var removed));
+            Assert.AreEqual(0, index);
+            Assert.AreEqual(0, removed);
+            Assert.DoesNotThrow(() => view.Clear());
+            Assert.AreEqual(0, view.Count);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void MissingKey_IndexerGetIndexAndGetValueByRef_ThrowKeyNotFound()
+        {
+            using var owner = CreateMap(1);
+            var view = owner.AsNative();
+
+            Assert.Throws<KeyNotFoundException>(() => _ = view[5]);
+            Assert.Throws<KeyNotFoundException>(() => view.GetIndex(5));
+            Assert.Throws<KeyNotFoundException>(() => view.GetValueByRef(5));
+            Assert.AreEqual(0, view.GetIndex(1));
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void Add_ExactlyFullThenOnePast_ThrowsAndKeepsTheContent()
+        {
+            using var owner = new SharedArrayMap<int, int>(3);
+            owner.Add(1, 10);
+            owner.Add(2, 20);
+            owner.Add(3, 30);
+            var view = owner.AsNative();
+            var value = 40;
+
+            Assert.AreEqual(3, view.Count);
+            Assert.Throws<InvalidOperationException>(() => view.Add(4, 40));
+            Assert.Throws<InvalidOperationException>(() => view.Add(4, in value));
+            Assert.Throws<InvalidOperationException>(() => view.TryAdd(4, 40));
+            Assert.Throws<InvalidOperationException>(() => view.TryAdd(4, 40, out _));
+            Assert.Throws<InvalidOperationException>(() => view[4] = 40);
+            Assert.Throws<InvalidOperationException>(() => view.GetOrAdd(4));
+            Assert.Throws<InvalidOperationException>(() => view.GetOrAdd(4, out _));
+            Assert.IsFalse(view.TryAdd(2, 99));
+            view[2] = 21;
+
+            Assert.AreEqual(21, owner[2]);
+            Assert.AreEqual(3, owner.Count);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void Add_DuplicateKey_ThrowsAndKeepsTheValue()
+        {
+            using var owner = CreateMap(1);
+            var view = owner.AsNative();
+
+            Assert.Throws<InvalidOperationException>(() => view.Add(1, 20));
+            Assert.AreEqual(10, owner[1]);
+        }
+
+        [Test]
+        public unsafe void GetOrAdd_ExistingAndMissingKeys_ReturnReferencesIntoTheOwnerValues()
+        {
+            using var owner = CreateMap(1);
+            var view = owner.AsNative();
+
+            ref var existing = ref view.GetOrAdd(1);
+            existing = 11;
+
+            ref var added = ref view.GetOrAdd(2, out var index);
+            added = 22;
+
+            ref var again = ref view.GetOrAdd(2);
+
+            Assert.AreEqual(1, index);
+            Assert.AreEqual(22, again);
+            Assert.AreEqual(11, owner[1]);
+            Assert.AreEqual(22, owner[2]);
+            Assert.AreEqual(2, owner.Count);
+        }
+
+        [Test]
+        public unsafe void Remove_FirstKey_MovesTheLastEntryIntoTheHole()
+        {
+            using var owner = CreateMap(1, 2, 3, 4);
+            var view = owner.AsNative();
+
+            Assert.IsTrue(view.Remove(1, out var index, out var removed));
+
+            Assert.AreEqual(0, index);
+            Assert.AreEqual(10, removed);
+            Assert.AreEqual(3, view.Count);
+            CollectionAssert.AreEqual(new[] { 40, 20, 30 }, view.Values.ToArray());
+            Assert.AreEqual(0, view.GetIndex(4));
+            Assert.AreEqual(1, view.GetIndex(2));
+            Assert.IsFalse(view.ContainsKey(1));
+            Assert.IsFalse(view.Remove(1));
+        }
+
+        [Test]
+        public unsafe void Remove_LastRemainingKey_LeavesAnEmptyMapThatAcceptsNewKeys()
+        {
+            using var owner = new SharedArrayMap<int, int>(2);
+            owner.Add(1, 10);
+            var view = owner.AsNative();
+
+            Assert.IsTrue(view.Remove(1));
+            Assert.AreEqual(0, view.Count);
+
+            view.Add(1, 11);
+            view.Add(2, 22);
+
+            Assert.AreEqual(2, owner.Count);
+            Assert.AreEqual(11, owner[1]);
+            Assert.AreEqual(22, owner[2]);
+        }
+
+        [Test]
+        public unsafe void SetOperations_EmptyOperands_ProduceTheSetResult()
+        {
+            using var owner = CreateMap(1, 2);
+            using var emptyOwner = new SharedArrayMap<int, int>(4);
+            using var emptyLongOwner = new SharedArrayMap<int, long>(4);
+            var view = owner.AsNative();
+            var empty = emptyOwner.AsNative();
+            var emptyLong = emptyLongOwner.AsNative();
+
+            view.Exclude(in empty);
+            view.Union(in empty);
+            view.Exclude(in emptyLong);
+
+            Assert.AreEqual(2, view.Count);
+            Assert.AreEqual(10, view[1]);
+            Assert.AreEqual(20, view[2]);
+
+            view.Intersect(in emptyLong);
+
+            Assert.AreEqual(0, view.Count);
+
+            empty.Intersect(in view);
+            empty.Exclude(in view);
+            empty.Union(in empty);
+
+            Assert.AreEqual(0, empty.Count);
+        }
+
+        [Test]
+        public unsafe void SetOperations_DefaultOperand_Throws()
+        {
+            using var owner = CreateMap(1);
+            var view = owner.AsNative();
+            SharedArrayMapNative<int, int> notCreated = default;
+            SharedArrayMapNative<int, long> notCreatedLongs = default;
+
+            Assert.Throws<ArgumentException>(() => view.Intersect(in notCreatedLongs));
+            Assert.Throws<ArgumentException>(() => view.Exclude(in notCreatedLongs));
+            Assert.Throws<ArgumentException>(() => view.Union(in notCreated));
+        }
+
+        [Test]
+        public unsafe void CopyTo_FilledMap_CopiesEveryBufferAndReportsTheState()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+            var valuesInfo = new ArrayMapNode<int>[view.Capacity];
+            var values = new int[view.Capacity];
+            var buckets = new int[view.BucketCapacity];
+
+            view.CopyTo(valuesInfo, values, buckets, out var count, out _, out _);
+
+            Assert.AreEqual(2, count);
+            Assert.AreEqual(1, valuesInfo[0].key);
+            Assert.AreEqual(2, valuesInfo[1].key);
+            Assert.AreEqual(10, values[0]);
+            Assert.AreEqual(20, values[1]);
+        }
+
+        [Test]
+        public unsafe void CopyTo_EmptyMapAndLargerDestination_ReportsZero()
+        {
+            using var owner = new SharedArrayMap<int, int>(4);
+            var view = owner.AsNative();
+
+            view.CopyTo(
+                  new ArrayMapNode<int>[view.Capacity + 3]
+                , new int[view.Capacity + 3]
+                , new int[view.BucketCapacity + 3]
+                , out var count
+                , out var collisions
+                , out _
+            );
+
+            Assert.AreEqual(0, count);
+            Assert.AreEqual(0u, collisions);
+        }
+
+        [Test]
+        public unsafe void CopyTo_DestinationShorterThanTheStorage_ThrowsArgumentException()
+        {
+            using var owner = CreateMap(1);
+            var view = owner.AsNative();
+            var capacity = view.Capacity;
+            var bucketCapacity = view.BucketCapacity;
+
+            var info = new ArrayMapNode<int>[capacity];
+            var values = new int[capacity];
+            var buckets = new int[bucketCapacity];
+            var shortInfo = new ArrayMapNode<int>[capacity - 1];
+            var shortValues = new int[capacity - 1];
+            var shortBuckets = new int[bucketCapacity - 1];
+
+            Assert.Throws<ArgumentException>(
+                () => view.CopyTo(shortInfo, values, buckets, out _, out _, out _)
+            );
+            Assert.Throws<ArgumentException>(
+                () => view.CopyTo(info, shortValues, buckets, out _, out _, out _)
+            );
+            Assert.Throws<ArgumentException>(
+                () => view.CopyTo(info, values, shortBuckets, out _, out _, out _)
+            );
+        }
+
+        [Test]
+        public unsafe void Keys_ModifiedDuringEnumeration_Throws()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+            var enumerator = view.Keys.GetEnumerator();
+
+            Assert.IsTrue(enumerator.MoveNext());
+
+            view.Add(3, 30);
+
+            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+        }
+
+        [Test]
+        public unsafe void EnumeratorsAndKeyEnumerable_FromDefaultView_Throw()
+        {
+            SharedArrayMapNative<int, int> notCreated = default;
+            SharedArrayMapNative<int, int>.ReadOnly notCreatedReadOnly = default;
+
+            Assert.Throws<ArgumentException>(
+                () => _ = new SharedArrayMapNativeKeyValueEnumerator<int, int>(notCreated)
+            );
+            Assert.Throws<ArgumentException>(
+                () => _ = new SharedArrayMapNativeReadOnlyKeyValueEnumerator<int, int>(in notCreatedReadOnly)
+            );
+            Assert.Throws<ArgumentException>(() => _ = new SharedArrayMapNative<int, int>.KeyEnumerable(in notCreated));
+            Assert.Throws<ArgumentException>(() => _ = new SharedArrayMapNative<int, int>.KeyEnumerator(in notCreated));
+            Assert.Throws<ArgumentException>(
+                () => _ = new SharedArrayMapNative<int, int>.ReadOnly.KeyEnumerable(in notCreatedReadOnly)
+            );
+            Assert.Throws<ArgumentException>(
+                () => _ = new SharedArrayMapNative<int, int>.ReadOnly.KeyEnumerator(in notCreatedReadOnly)
+            );
+        }
+
+        [Test]
+        public unsafe void KeyValueEnumerator_EmptyMapAndExhausted_StaysFinishedUntilReset()
+        {
+            using var empty = new SharedArrayMap<int, int>(4);
+            using var owner = CreateMap(7);
+            var emptyView = empty.AsNative();
+            var view = owner.AsNative();
+            var emptyEnumerator = emptyView.GetEnumerator();
+            var enumerator = view.GetEnumerator();
+
+            Assert.IsFalse(emptyEnumerator.MoveNext());
+            Assert.IsTrue(enumerator.MoveNext());
+            AssertPair(enumerator.Current, 7, 70);
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsFalse(enumerator.MoveNext());
+
+            enumerator.Reset();
+
+            Assert.IsTrue(enumerator.MoveNext());
+        }
+
+        [Test]
+        public unsafe void KeyValueEnumerator_ModifiedMap_MoveNextThrows()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+            var enumerator = view.GetEnumerator();
+
+            Assert.IsTrue(enumerator.MoveNext());
+
+            view.Add(3, 30);
+
+            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+        }
+
+        [Test]
+        public unsafe void KeyValuePair_FromANativeArray_ExposesTheKeyAndTheIndexedValue()
+        {
+            using var values = new NativeArray<int>(new[] { 80, 90 }, Allocator.Temp);
+            using var wide = new NativeArray<Wide>(
+                  new[] { new Wide { a = long.MinValue, b = 0, c = long.MaxValue } }
+                , Allocator.Temp
+            );
+            var key = 8;
+            var wideKey = 9;
+            var pair = new SharedArrayMapNativeKeyValuePair<int, int>(in key, values, 0);
+            var wideValue = new SharedArrayMapNativeKeyValuePair<int, Wide>(in wideKey, wide, 0);
+            var readOnlyPair = new SharedArrayMapNativeReadOnlyKeyValuePair<int, int>(in key, values.AsReadOnly(), 1);
+
+            AssertPair(pair, 8, 80);
+            Assert.AreEqual(long.MinValue, wideValue.Value.a);
+            Assert.AreEqual(long.MaxValue, wideValue.Value.c);
+            AssertPair(readOnlyPair, 8, 90);
+            Assert.IsFalse(default(SharedArrayMapNativeReadOnlyKeyValuePair<int, int>).IsValid);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void KeyValuePair_IndexOutsideTheArrayOrDisposedArray_Throws()
+        {
+            var values = new NativeArray<int>(new[] { 80, 90 }, Allocator.Persistent);
+            var key = 8;
+            var pair = new SharedArrayMapNativeKeyValuePair<int, int>(in key, values, 2);
+            var negativePair = new SharedArrayMapNativeKeyValuePair<int, int>(in key, values, -1);
+            var disposedPair = new SharedArrayMapNativeKeyValuePair<int, int>(in key, values, 0);
+
+            Assert.Throws<IndexOutOfRangeException>(() => _ = pair.Value);
+            Assert.Throws<IndexOutOfRangeException>(() => _ = negativePair.Value);
+
+            values.Dispose();
+
+            Assert.Catch(() => _ = disposedPair.Value);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void Members_AfterOwnerDispose_Throw()
+        {
+            var owner = CreateMap(1, 2);
+            var other = CreateMap(1);
+            var otherLongs = new SharedArrayMap<int, long>(4);
+            var view = owner.AsNative();
+            var otherView = other.AsNative();
+            var otherLongView = otherLongs.AsNative();
+            var enumerator = view.GetEnumerator();
+            var value = 9;
+
+            try
+            {
+                owner.Dispose();
+
+                Assert.Catch(() => _ = view.Capacity);
+                Assert.Catch(() => _ = view.Count);
+                Assert.Catch(() => _ = view[1]);
+                Assert.Catch(() => view[1] = 5);
+                Assert.Catch(() => view.GetEnumerator());
+                Assert.Catch(() => view.Keys.GetEnumerator());
+                Assert.Catch(() => view.Add(5, 50));
+                Assert.Catch(() => view.Add(5, in value));
+                Assert.Catch(() => view.TryAdd(5, 50));
+                Assert.Catch(() => view.TryAdd(5, 50, out _));
+                Assert.Catch(() => view.Clear());
+                Assert.Catch(() => view.ContainsKey(1));
+                Assert.Catch(() => view.TryGetValue(1, out _));
+                Assert.Catch(() => view.GetOrAdd(1));
+                Assert.Catch(() => view.GetOrAdd(1, out _));
+                Assert.Catch(() => view.GetValueByRef(1));
+                Assert.Catch(() => view.Remove(1));
+                Assert.Catch(() => view.Remove(1, out _, out _));
+                Assert.Catch(() => view.TryFindIndex(1, out _));
+                Assert.Catch(() => view.GetIndex(1));
+                Assert.Catch(() => view.Intersect(in otherLongView));
+                Assert.Catch(() => view.Exclude(in otherLongView));
+                Assert.Catch(() => view.Union(in otherView));
+                Assert.Catch(() => enumerator.MoveNext());
+            }
+            finally
+            {
+                other.Dispose();
+                otherLongs.Dispose();
+            }
+        }
+
+        [Test]
+        public unsafe void ReadOnly_EmptyMap_ReturnsEmptyResults()
+        {
+            using var owner = new SharedArrayMap<int, int>(4);
+            var readOnly = owner.AsNative().AsReadOnly();
+            var keyCount = 0;
+
+            foreach (var key in readOnly.Keys)
+            {
+                keyCount++;
+            }
+
+            var enumerator = readOnly.GetEnumerator();
+
+            Assert.AreEqual(0, keyCount);
+            Assert.IsFalse(enumerator.MoveNext());
+            Assert.IsTrue(readOnly.IsCreated);
+            Assert.AreEqual(0, readOnly.Count);
+            Assert.AreEqual(4, readOnly.Capacity);
+            Assert.AreEqual(0, readOnly.Values.Length);
+            Assert.IsFalse(readOnly.ContainsKey(1));
+            Assert.IsFalse(readOnly.TryGetValue(1, out _));
+            Assert.IsFalse(readOnly.TryFindIndex(1, out _));
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void ReadOnly_MissingKey_IndexerAndGetIndexThrowKeyNotFound()
+        {
+            using var owner = CreateMap(1);
+            var readOnly = owner.AsNative().AsReadOnly();
+
+            Assert.Throws<KeyNotFoundException>(() => _ = readOnly[5]);
+            Assert.Throws<KeyNotFoundException>(() => readOnly.GetIndex(5));
+            Assert.AreEqual(0, readOnly.GetIndex(1));
+        }
+
+        [Test]
+        public unsafe void ReadOnly_Conversion_FromDefaultView_Throws()
+        {
+            SharedArrayMapNative<int, int> notCreated = default;
+
+            Assert.Throws<ArgumentException>(() => _ = (SharedArrayMapNative<int, int>.ReadOnly)notCreated);
+        }
+
+        [Test]
+        public unsafe void ReadOnly_ValuesAndBuffers_LengthIsCountAndElementShapesRoundTrip()
+        {
+            using var small = new SharedArrayMap<int, Rgb>(4);
+            small.Add(1, new Rgb { r = 1, g = 2, b = 3 });
+            using var owner = CreateMap(1, 2);
+            var smallView = small.AsNative().AsReadOnly();
+            var readOnly = owner.AsNative().AsReadOnly();
+
+            Assert.AreEqual(2, readOnly.Values.Length);
+            CollectionAssert.AreEqual(new[] { 10, 20 }, readOnly.Values.ToArray());
+            Assert.AreEqual(readOnly.Capacity, readOnly._values.Length);
+            Assert.AreEqual(1, readOnly._valuesInfo[0].key);
+            Assert.AreEqual(1, smallView.Values.Length);
+            Assert.AreEqual(3, smallView.Values[0].b);
+            Assert.AreEqual(2, smallView[1].g);
+        }
+
+        [Test]
+        [TestRequiresCollectionChecks]
+        public unsafe void ReadOnly_Members_AfterOwnerDispose_Throw()
+        {
+            var owner = CreateMap(1, 2);
+            var readOnly = owner.AsNative().AsReadOnly();
+            var enumerator = readOnly.GetEnumerator();
+            var values = readOnly.Values;
+
+            owner.Dispose();
+
+            Assert.Catch(() => _ = readOnly.Capacity);
+            Assert.Catch(() => _ = readOnly.Count);
+            Assert.Catch(() => _ = readOnly.Version);
+            Assert.Catch(() => _ = readOnly.Values);
+            Assert.Catch(() => _ = values[0]);
+            Assert.Catch(() => _ = readOnly[1]);
+            Assert.Catch(() => readOnly.GetEnumerator());
+            Assert.Catch(() => readOnly.Keys.GetEnumerator());
+            Assert.Catch(() => readOnly.ContainsKey(1));
+            Assert.Catch(() => readOnly.TryGetValue(1, out _));
+            Assert.Catch(() => readOnly.GetIndex(1));
+            Assert.Catch(() => readOnly.TryFindIndex(1, out _));
+            Assert.Catch(() => _ = readOnly._values);
+            Assert.Catch(() => _ = readOnly._valuesInfo);
+            Assert.Catch(() => enumerator.MoveNext());
+        }
+
+        [Test]
+        public unsafe void ReadOnly_ModifiedDuringEnumeration_Throws()
+        {
+            using var owner = CreateMap(1, 2);
+            var view = owner.AsNative();
+            var readOnly = view.AsReadOnly();
+            var enumerator = readOnly.GetEnumerator();
+            var keyEnumerator = readOnly.Keys.GetEnumerator();
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsTrue(keyEnumerator.MoveNext());
+
+            view.Add(3, 30);
+
+            Assert.Throws<InvalidOperationException>(() => enumerator.MoveNext());
+            Assert.Throws<InvalidOperationException>(() => keyEnumerator.MoveNext());
+        }
+
+        [Test]
+        public unsafe void ElementShapes_OwnerViewsRoundTripBitExactThroughTheView()
+        {
+            using var bytes = new SharedArrayMap<int, byte>(4);
+            var view = bytes.AsNative();
+
+            view.Add(1, 0xA5);
+            view[2] = 0xFF;
+            view.GetOrAdd(3) = 0x00;
+
+            Assert.AreEqual(0xA5, bytes[1]);
+            Assert.AreEqual(0xFF, bytes[2]);
+            Assert.AreEqual(0x00, bytes[3]);
+            CollectionAssert.AreEqual(new byte[] { 0xA5, 0xFF, 0x00 }, view.Values.ToArray());
+        }
+
+        private struct Rgb
+        {
+            public byte r;
+            public byte g;
+            public byte b;
+        }
+
+        private struct Wide
+        {
+            public long a;
+            public long b;
+            public long c;
         }
     }
 }

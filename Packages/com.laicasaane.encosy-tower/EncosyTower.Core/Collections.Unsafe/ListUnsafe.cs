@@ -123,8 +123,9 @@ namespace EncosyTower.Collections.Unsafe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
+            var value = item;
             EnsureCapacity(_count + 1);
-            _buffer.AsSpan()[_count++] = item;
+            _buffer.AsSpan()[_count++] = value;
             _version++;
         }
 
@@ -147,9 +148,10 @@ namespace EncosyTower.Collections.Unsafe
                   (uint)index <= (uint)_count
                 , ThrowHelper.CollectionType.ListUnsafe
             );
+            var value = item;
             EnsureCapacity(_count + 1);
             Move(index, index + 1, _count - index);
-            _buffer.AsSpan()[index] = item;
+            _buffer.AsSpan()[index] = value;
             _count++;
             _version++;
         }
@@ -166,8 +168,17 @@ namespace EncosyTower.Collections.Unsafe
                 return;
             }
 
-            EnsureCapacity(checked(_count + count));
-            items[..count].CopyTo(_buffer.AsSpan().Slice(_count, count));
+            items = items[..count];
+            var newCount = checked(_count + count);
+            var aliasesStorage = _buffer.AsReadOnlySpan().Overlaps(items, out var sourceOffset);
+            EnsureCapacity(newCount);
+
+            if (aliasesStorage)
+            {
+                items = _buffer.AsReadOnlySpan().Slice(sourceOffset, count);
+            }
+
+            items.CopyTo(_buffer.AsSpan().Slice(_count, count));
             _count += count;
             _version++;
         }
@@ -357,6 +368,7 @@ namespace EncosyTower.Collections.Unsafe
         public readonly ReadOnly AsReadOnly()
             => new(this);
 
+        /// <remarks>The returned view borrows storage and is invalidated by owner resize or disposal.</remarks>
         public ListUnsafe<U> Reinterpret<U>()
             where U : unmanaged
         {
@@ -424,24 +436,47 @@ namespace EncosyTower.Collections.Unsafe
         /// <safety>The returned header owns the allocation and must be freed exactly once with Free.</safety>
         internal static unsafe ListUnsafe<T>* Alloc(int capacity, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfCapacityIsInvalid(capacity >= 0);
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one ListUnsafe header and the header owns its buffer.
             unsafe
             {
                 var data = allocator.Allocate<ListUnsafe<T>>();
-                *data = new ListUnsafe<T>(capacity, allocator);
-                return data;
+
+                try
+                {
+                    *data = new ListUnsafe<T>(capacity, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 
         /// <safety>The returned header owns a copy of source and must be freed exactly once with Free.</safety>
         internal static unsafe ListUnsafe<T>* Alloc(ReadOnlySpan<T> source, AllocatorStrategy allocator)
         {
+            ThrowHelper.ThrowIfAllocatorIsInvalid(allocator.IsValid);
+
             // SAFETY: The allocator returns storage for one ListUnsafe header and the header owns its buffer.
             unsafe
             {
                 var data = allocator.Allocate<ListUnsafe<T>>();
-                *data = new ListUnsafe<T>(source, allocator);
-                return data;
+
+                try
+                {
+                    *data = new ListUnsafe<T>(source, allocator);
+                    return data;
+                }
+                catch
+                {
+                    allocator.Free(data);
+                    throw;
+                }
             }
         }
 

@@ -15,7 +15,7 @@ namespace EncosyTower.Common
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
-            => base.GetHashCode();
+            => 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString()

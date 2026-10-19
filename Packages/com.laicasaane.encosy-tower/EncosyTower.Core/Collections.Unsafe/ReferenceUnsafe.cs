@@ -367,7 +367,7 @@ namespace EncosyTower.Collections.Unsafe
             // for this pointer dereference.
             unsafe
             {
-                return new Span<T>(_data, 1);
+                return new Span<T>(_data, Length);
             }
         }
 
@@ -378,7 +378,7 @@ namespace EncosyTower.Collections.Unsafe
             // for this pointer dereference.
             unsafe
             {
-                return new ReadOnlySpan<T>(_data, 1);
+                return new ReadOnlySpan<T>(_data, Length);
             }
         }
 
