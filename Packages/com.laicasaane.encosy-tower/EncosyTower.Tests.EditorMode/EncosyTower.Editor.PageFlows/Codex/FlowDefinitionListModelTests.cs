@@ -6,21 +6,17 @@ using UnityEngine;
 
 namespace EncosyTower.Tests.Editor.PageFlows
 {
-    using Row = FlowDefinitionTestAsset.Row;
+    using Definition = FlowDefinitionTestAsset.Definition;
 
     public sealed class FlowDefinitionListModelTests
     {
         private const int LIST = 1;
-        private const int MULTI_PAGE_STACK = 2;
+        private const int PAGE_STACK_MULTI = 2;
 
         private static readonly string[] s_scopes = { "Screen", "Popup", "FreeTop" };
 
-        private static readonly PageFlowScopeCollectionInfo s_info = new(
-              TypeName: "GamePageFlowScopes"
-            , ScopeIdentifiers: s_scopes
-            , Problem: ScopeCollectionProblem.None
-            , InitializerInterfaceName: string.Empty
-        );
+        private static readonly PageFlowScopeCollectionInfo s_info
+            = new PageFlowScopeCollectionInfo.Found("GamePageFlowScopes", s_scopes);
 
         private FlowDefinitionTestAsset _asset;
 
@@ -37,44 +33,46 @@ namespace EncosyTower.Tests.Editor.PageFlows
         }
 
         [Test]
-        public void RowProblems_DescribeEmptyUnknownAndDuplicateIdentifiers()
+        public void Errors_DescribeEmptyUnknownAndDuplicateIdentifiers()
         {
             var model = new FlowDefinitionListModel(new[] { "", "Overlay", "Screen", "Popup", "Screen" }, s_info);
 
-            AssertProblem(
-                  model.GetRowProblems(0)
-                , "This row has no identifier, so the codex cannot match it to a scope."
+            AssertError(
+                  model.GetErrors(0)
+                , "This flow definition has no identifier, so the codex cannot match it to a scope."
                 , "Choose a scope from the Identifier dropdown, or press Sync Scopes."
             );
 
-            AssertProblem(
-                  model.GetRowProblems(1)
+            AssertError(
+                  model.GetErrors(1)
                 , "'Overlay' is not a scope of GamePageFlowScopes."
                 , "Choose one of Screen, Popup, FreeTop, add a PageFlowScope property named Overlay to "
                     + "GamePageFlowScopes, or press Sync Scopes."
             );
 
-            AssertProblem(
-                  model.GetRowProblems(2)
-                , "'Screen' is also used by row 5. Each scope can have only one flow."
-                , "Choose another scope for one of these rows, or press Sync Scopes (it keeps the first row)."
+            AssertError(
+                  model.GetErrors(2)
+                , "'Screen' is also used by definition 5. Each scope can have only one flow."
+                , "Choose another scope for one of these definitions, or press Sync Scopes "
+                    + "(it keeps the first flow definition)."
             );
 
-            CollectionAssert.IsEmpty(model.GetRowProblems(3));
+            CollectionAssert.IsEmpty(model.GetErrors(3));
 
-            AssertProblem(
-                  model.GetRowProblems(4)
-                , "'Screen' is also used by row 3. Each scope can have only one flow."
-                , "Choose another scope for one of these rows, or press Sync Scopes (it keeps the first row)."
+            AssertError(
+                  model.GetErrors(4)
+                , "'Screen' is also used by definition 3. Each scope can have only one flow."
+                , "Choose another scope for one of these definitions, or press Sync Scopes "
+                    + "(it keeps the first flow definition)."
             );
         }
 
         [Test]
-        public void ListProblem_UsesSingularAndPluralForms()
+        public void DefinitionsError_UsesSingularAndPluralForms()
         {
-            var one = new FlowDefinitionListModel(new[] { "Screen", "Popup" }, s_info).GetListProblem();
-            var two = new FlowDefinitionListModel(new[] { "Screen" }, s_info).GetListProblem();
-            var none = new FlowDefinitionListModel(s_scopes, s_info).GetListProblem();
+            var one = new FlowDefinitionListModel(new[] { "Screen", "Popup" }, s_info).GetDefinitionsError();
+            var two = new FlowDefinitionListModel(new[] { "Screen" }, s_info).GetDefinitionsError();
+            var none = new FlowDefinitionListModel(s_scopes, s_info).GetDefinitionsError();
 
             Assert.AreEqual("FreeTop has no flow definition, so the codex cannot create that flow.", one.ToProblem());
             Assert.AreEqual(
@@ -89,14 +87,14 @@ namespace EncosyTower.Tests.Editor.PageFlows
         public void IdentifierChoices_DisableScopesInUseAndListUnknownValueFirst()
         {
             var model = new FlowDefinitionListModel(new[] { "Screen", "Overlay" }, s_info);
-            var screenRow = model.GetIdentifierChoices(0);
-            var unknownRow = model.GetIdentifierChoices(1);
+            var screenChoices = model.GetIdentifierChoices(0);
+            var unknownChoices = model.GetIdentifierChoices(1);
 
-            Assert.AreEqual(3, screenRow.Length);
-            Assert.AreEqual(Choice("Screen", isChecked: true, disabled: false, note: ""), screenRow[0]);
-            Assert.AreEqual(Choice("Popup", isChecked: false, disabled: false, note: ""), screenRow[1]);
+            Assert.AreEqual(3, screenChoices.Length);
+            Assert.AreEqual(Choice("Screen", isChecked: true, disabled: false, note: ""), screenChoices[0]);
+            Assert.AreEqual(Choice("Popup", isChecked: false, disabled: false, note: ""), screenChoices[1]);
 
-            Assert.AreEqual(4, unknownRow.Length);
+            Assert.AreEqual(4, unknownChoices.Length);
             Assert.AreEqual(
                   new IdentifierChoice(
                         Value: "Overlay"
@@ -105,20 +103,20 @@ namespace EncosyTower.Tests.Editor.PageFlows
                       , Note: "not a scope"
                       , SeparatorAfter: true
                   )
-                , unknownRow[0]
+                , unknownChoices[0]
             );
-            Assert.AreEqual(Choice("Screen", isChecked: false, disabled: true, note: "in use"), unknownRow[1]);
-            Assert.AreEqual(Choice("FreeTop", isChecked: false, disabled: false, note: ""), unknownRow[3]);
+            Assert.AreEqual(Choice("Screen", isChecked: false, disabled: true, note: "in use"), unknownChoices[1]);
+            Assert.AreEqual(Choice("FreeTop", isChecked: false, disabled: false, note: ""), unknownChoices[3]);
         }
 
         [Test]
         public void Sync_KeepsReassignsRemovesAndAppendsInOneUndoStep()
         {
             _asset.flows = new[] {
-                new Row { identifier = "Screen", kind = 0 },
-                new Row { identifier = "Screen", kind = LIST },
-                new Row { identifier = "Overlay", kind = MULTI_PAGE_STACK },
-                new Row { identifier = "", kind = 0 },
+                new Definition { identifier = "Screen", kind = 0 },
+                new Definition { identifier = "Screen", kind = LIST },
+                new Definition { identifier = "Overlay", kind = PAGE_STACK_MULTI },
+                new Definition { identifier = "", kind = 0 },
             };
 
             using var serializedObject = new SerializedObject(_asset);
@@ -128,13 +126,13 @@ namespace EncosyTower.Tests.Editor.PageFlows
             Assert.IsTrue(model.CanSync);
 
             Undo.IncrementCurrentGroup();
-            model.Sync(flows, ResetRow);
+            model.Sync(flows, ResetDefinition);
 
             CollectionAssert.AreEqual(
                   new[] {
-                      new Row { identifier = "Screen", kind = 0 },
-                      new Row { identifier = "Popup", kind = LIST },
-                      new Row { identifier = "FreeTop", kind = MULTI_PAGE_STACK },
+                      new Definition { identifier = "Screen", kind = 0 },
+                      new Definition { identifier = "Popup", kind = LIST },
+                      new Definition { identifier = "FreeTop", kind = PAGE_STACK_MULTI },
                   }
                 , _asset.flows
             );
@@ -148,18 +146,18 @@ namespace EncosyTower.Tests.Editor.PageFlows
         }
 
         [Test]
-        public void Sync_OnEmptyList_AppendsEveryScopeWithResetRows()
+        public void Sync_OnEmptyList_AppendsEveryScopeWithResetDefinitions()
         {
             using var serializedObject = new SerializedObject(_asset);
             var flows = serializedObject.FindProperty(nameof(FlowDefinitionTestAsset.flows));
 
-            FlowDefinitionListModel.Create(flows, s_info).Sync(flows, ResetRow);
+            FlowDefinitionListModel.Create(flows, s_info).Sync(flows, ResetDefinition);
 
             CollectionAssert.AreEqual(
                   new[] {
-                      new Row { identifier = "Screen", kind = MULTI_PAGE_STACK },
-                      new Row { identifier = "Popup", kind = MULTI_PAGE_STACK },
-                      new Row { identifier = "FreeTop", kind = MULTI_PAGE_STACK },
+                      new Definition { identifier = "Screen", kind = PAGE_STACK_MULTI },
+                      new Definition { identifier = "Popup", kind = PAGE_STACK_MULTI },
+                      new Definition { identifier = "FreeTop", kind = PAGE_STACK_MULTI },
                   }
                 , _asset.flows
             );
@@ -172,13 +170,13 @@ namespace EncosyTower.Tests.Editor.PageFlows
         }
 
         [Test]
-        public void MissingScopeCollection_CannotSyncAndReportsNoRowProblem()
+        public void MissingScopeCollection_CannotSyncAndReportsNoError()
         {
-            var info = PageFlowScopeCollectionInfo.Failed(ScopeCollectionProblem.NoInitializer, typeof(IDisposable));
+            PageFlowScopeCollectionInfo info = new PageFlowScopeCollectionInfo.NoInitializer(nameof(IDisposable));
             var model = new FlowDefinitionListModel(new[] { "" }, info);
 
             Assert.IsFalse(model.CanSync);
-            CollectionAssert.IsEmpty(model.GetRowProblems(0));
+            CollectionAssert.IsEmpty(model.GetErrors(0));
             Assert.AreEqual("No initializer component found", info.ToProblemText());
             StringAssert.Contains("No component on this GameObject implements IDisposable", info.ToTooltip());
         }
@@ -186,16 +184,16 @@ namespace EncosyTower.Tests.Editor.PageFlows
         private static IdentifierChoice Choice(string value, bool isChecked, bool disabled, string note)
             => new(Value: value, Checked: isChecked, Disabled: disabled, Note: note, SeparatorAfter: false);
 
-        private static void ResetRow(SerializedProperty row)
+        private static void ResetDefinition(SerializedProperty definition)
         {
-            row.FindPropertyRelative(nameof(Row.kind)).intValue = MULTI_PAGE_STACK;
+            definition.FindPropertyRelative(nameof(Definition.kind)).intValue = PAGE_STACK_MULTI;
         }
 
-        private static void AssertProblem(RowProblem[] problems, string problem, string fix)
+        private static void AssertError(FlowDefinitionError[] errors, string problem, string fix)
         {
-            Assert.AreEqual(1, problems.Length);
-            Assert.AreEqual(problem, problems[0].ToProblem());
-            Assert.AreEqual(fix, problems[0].ToFix());
+            Assert.AreEqual(1, errors.Length);
+            Assert.AreEqual(problem, errors[0].ToProblem());
+            Assert.AreEqual(fix, errors[0].ToFix());
         }
     }
 }

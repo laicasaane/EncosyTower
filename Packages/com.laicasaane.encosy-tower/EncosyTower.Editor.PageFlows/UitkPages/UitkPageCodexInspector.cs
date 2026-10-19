@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using EncosyTower.Editor.Settings;
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows.Codex;
+using EncosyTower.PageFlows.UitkPages.Codex;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -13,6 +14,39 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows.UitkPages
 {
+    /// <summary>
+    /// The custom inspector of <see cref="UitkPageCodex"/> and its derived types.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The inspector has three sections:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>
+    /// Context, with the rows Warn No Subscriber, Reject Duplicate Pages, Load Strategy and Log Environment.
+    /// </description></item>
+    /// <item><description>
+    /// Flow Definitions, a <see cref="FlowDefinitionsSection"/> with the columns Identifier, Kind and Container Name.
+    /// The Container Name cell has a pick button that opens a <see cref="ContainerPickerPopup"/>. The container
+    /// problems of <see cref="LayoutAssetContainerModel"/> join the identifier problems of each row.
+    /// </description></item>
+    /// <item><description>
+    /// Panel, with Panel Settings, Sorting Order, Layout Asset and a read-only row for the panel component.
+    /// </description></item>
+    /// </list>
+    /// <para>
+    /// The inspector decides the panel mode once, when it creates the inspector. If the GameObject already has a
+    /// <c>PanelRenderer</c> (Unity 6000.5 or newer) or a <c>UIDocument</c>, the codex uses it, the Panel fields are
+    /// disabled and a note says so. Otherwise the codex adds a <c>PanelRenderer</c> on Unity 6000.5 or newer, or a
+    /// <c>UIDocument</c> on older Unity or when <see cref="UitkPageFlowSettings.forceUIDocument"/> is on.
+    /// </para>
+    /// <para>
+    /// The layout asset that the container checks use is the one of the existing component if there is one, otherwise
+    /// the Layout Asset field. A change of the field updates the note and rechecks the list. The inspector reads its
+    /// state from the first selected object.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="FlowDefinitionsSection"/>
     [CustomEditor(typeof(UitkPageCodex), true)]
     [CanEditMultipleObjects]
     public class UitkPageCodexInspector : UnityEditor.Editor
@@ -33,8 +67,9 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private const int PICK_DOT_COUNT = 3;
 
 
-        private static readonly ContextRow[] s_contextRows = {
+        private static readonly ContextSetting[] s_contextSettings = {
             new(nameof(UitkPageFlowContext.warnNoSubscriber), "warn-no-subscriber"),
+            new(nameof(UitkPageFlowContext.rejectDuplicatePages), "reject-duplicate-pages"),
             new(nameof(UitkPageFlowContext.loadStrategy), "load-strategy"),
             new(nameof(UitkPageFlowContext.logEnvironment), "log-environment"),
         };
@@ -45,6 +80,11 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
         private VisualElement _flowsSection;
         private Label _layoutNote;
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Returns the root with the Context, Flow Definitions and Panel sections. The scope collection comes from
+        /// the <see cref="IUitkPageCodexOnInitialize"/> component.
+        /// </remarks>
         public override VisualElement CreateInspectorGUI()
         {
             var codex = (UitkPageCodex)target;
@@ -56,7 +96,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             var root = PageFlowContextSection.CreateRoot();
             var context = serializedObject.FindProperty(FLOW_CONTEXT);
 
-            root.Add(PageFlowContextSection.Create(context, OpenSettings, s_contextRows));
+            root.Add(PageFlowContextSection.Create(context, OpenSettings, s_contextSettings));
 
             var info = PageFlowScopeCollectionResolver.Resolve(
                   codex
@@ -69,8 +109,8 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 , _flows
                 , info
                 , CreateColumns()
-                , ResetNewRow
-                , GetContainerProblems
+                , ResetNewDefinition
+                , GetContainerErrors
             );
 
             root.Add(_flowsSection);
@@ -83,10 +123,18 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             UitkPageFlowSettings.Instance.OpenSettingsWindow();
         }
 
-        private static void ResetNewRow(SerializedProperty row)
+        /// <summary>
+        /// Sets the fields of a flow definition that Sync adds, except the identifier, to their defaults.
+        /// </summary>
+        /// <param name="definition">The serialized flow definition.</param>
+        /// <remarks>
+        /// The defaults are <see cref="PageFlowKind.PageStackSingle"/> and an empty container name. A serialized field
+        /// that is added to the runtime flow definition needs its default here too.
+        /// </remarks>
+        private static void ResetNewDefinition(SerializedProperty definition)
         {
-            row.FindPropertyRelative(KIND).enumValueIndex = (int)PageFlowKind.SinglePageStack;
-            row.FindPropertyRelative(CONTAINER_NAME).stringValue = string.Empty;
+            definition.FindPropertyRelative(KIND).enumValueIndex = (int)PageFlowKind.PageStackSingle;
+            definition.FindPropertyRelative(CONTAINER_NAME).stringValue = string.Empty;
         }
 
         private FlowDefinitionColumn[] CreateColumns()
@@ -108,7 +156,8 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                     , Width: 0f
                     , Grow: 1.25f
                     , MakeCell: static () => FlowDefinitionsSection.CreateCell(new EnumField())
-                    , BindCell: static (cell, row) => cell.Q<EnumField>().BindProperty(row.FindPropertyRelative(KIND))
+                    , BindCell: static (cell, definition) => cell.Q<EnumField>()
+                        .BindProperty(definition.FindPropertyRelative(KIND))
                 ),
                 new(
                       Name: CONTAINER_NAME
@@ -121,6 +170,14 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             };
         }
 
+        /// <summary>
+        /// Creates a cell of the Container Name column.
+        /// </summary>
+        /// <remarks>
+        /// The cell has a text field with the codex root as placeholder, and a pick button. The button keeps the
+        /// serialized flow definition of the row in its <c>userData</c>, which <c>BindContainerCell</c> sets on each
+        /// bind. The list reuses a cell for different rows.
+        /// </remarks>
         private VisualElement MakeContainerCell()
         {
             var field = new TextField();
@@ -148,29 +205,36 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
             void OnClicked()
             {
-                if (button.userData is SerializedProperty row)
+                if (button.userData is SerializedProperty definition)
                 {
-                    ShowContainerPicker(button, row);
+                    ShowContainerPicker(button, definition);
                 }
             }
         }
 
-        private static void BindContainerCell(VisualElement cell, SerializedProperty row)
+        private static void BindContainerCell(VisualElement cell, SerializedProperty definition)
         {
-            cell.Q<TextField>().BindProperty(row.FindPropertyRelative(CONTAINER_NAME));
-            cell.Q<Button>().userData = row;
+            cell.Q<TextField>().BindProperty(definition.FindPropertyRelative(CONTAINER_NAME));
+            cell.Q<Button>().userData = definition;
         }
 
-        private void ShowContainerPicker(VisualElement anchor, SerializedProperty row)
+        /// <summary>
+        /// Opens the container picker for a flow definition.
+        /// </summary>
+        /// <remarks>
+        /// Updates the serialized object first, so the choices see the latest values. The choices come from the
+        /// effective layout asset and the other flow definitions. The popup is right-aligned with the pick button.
+        /// </remarks>
+        private void ShowContainerPicker(VisualElement anchor, SerializedProperty definition)
         {
             serializedObject.Update();
 
-            var container = row.FindPropertyRelative(CONTAINER_NAME);
+            var container = definition.FindPropertyRelative(CONTAINER_NAME);
             var containers = LayoutAssetContainerModel.Get(GetEffectiveLayoutAsset());
             var choices = LayoutAssetContainerModel.GetChoices(
                   containers
                 , container.stringValue
-                , GetOtherRows(row.propertyPath)
+                , GetOtherDefinitions(definition.propertyPath)
             );
 
             var bounds = anchor.worldBound;
@@ -188,37 +252,44 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             ));
         }
 
-        private List<(string Identifier, string ContainerName)> GetOtherRows(string rowPath)
+        private List<(string Identifier, string ContainerName)> GetOtherDefinitions(string definitionPath)
         {
             var count = _flows.arraySize;
-            var rows = new List<(string Identifier, string ContainerName)>(count);
+            var definitions = new List<(string Identifier, string ContainerName)>(count);
 
             for (var i = 0; i < count; i++)
             {
-                var row = _flows.GetArrayElementAtIndex(i);
+                var definition = _flows.GetArrayElementAtIndex(i);
 
-                if (string.Equals(row.propertyPath, rowPath, StringComparison.Ordinal))
+                if (string.Equals(definition.propertyPath, definitionPath, StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                rows.Add((
-                      row.FindPropertyRelative(IDENTIFIER).stringValue
-                    , row.FindPropertyRelative(CONTAINER_NAME).stringValue
+                definitions.Add((
+                      definition.FindPropertyRelative(IDENTIFIER).stringValue
+                    , definition.FindPropertyRelative(CONTAINER_NAME).stringValue
                 ));
             }
 
-            return rows;
+            return definitions;
         }
 
-        private RowProblem[] GetContainerProblems(SerializedProperty row, int index)
+        /// <summary>
+        /// Gets the container problem of a flow definition.
+        /// </summary>
+        /// <returns>
+        /// An array with the problem from <see cref="LayoutAssetContainerModel.TryGetError"/>, checked against the
+        /// effective layout asset, or an empty array when there is none.
+        /// </returns>
+        private FlowDefinitionError[] GetContainerErrors(SerializedProperty definition)
         {
-            var name = row.FindPropertyRelative(CONTAINER_NAME).stringValue;
+            var name = definition.FindPropertyRelative(CONTAINER_NAME).stringValue;
             var containers = LayoutAssetContainerModel.Get(GetEffectiveLayoutAsset());
 
-            return LayoutAssetContainerModel.TryGetProblem(name, containers, out var problem)
-                ? new[] { problem }
-                : Array.Empty<RowProblem>();
+            return LayoutAssetContainerModel.TryGetError(name, containers, out var error)
+                ? new[] { error }
+                : Array.Empty<FlowDefinitionError>();
         }
 
         private VisualElement CreatePanelSection()
@@ -294,6 +365,13 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
                 : texts.LayoutAssetEmpty;
         }
 
+        /// <summary>
+        /// Gets the layout asset that the container checks use.
+        /// </summary>
+        /// <remarks>
+        /// The order of priority is the existing <c>PanelRenderer</c> (Unity 6000.5 or newer), the existing
+        /// <c>UIDocument</c>, then the Layout Asset field.
+        /// </remarks>
         private VisualTreeAsset GetEffectiveLayoutAsset()
         {
             var codex = target as UitkPageCodex;
@@ -354,12 +432,34 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             };
         }
 
+        /// <summary>
+        /// Says which panel component the codex uses.
+        /// </summary>
         private enum PanelMode
         {
+            /// <summary>
+            /// The codex adds a <c>PanelRenderer</c>.
+            /// </summary>
             AddRenderer,
+
+            /// <summary>
+            /// The codex adds a <c>UIDocument</c>, because Unity is older than 6000.5.
+            /// </summary>
             AddDocument,
+
+            /// <summary>
+            /// The codex adds a <c>UIDocument</c>, because <see cref="UitkPageFlowSettings.forceUIDocument"/> is on.
+            /// </summary>
             Forced,
+
+            /// <summary>
+            /// The GameObject already has a <c>PanelRenderer</c>.
+            /// </summary>
             ExistingRenderer,
+
+            /// <summary>
+            /// The GameObject already has a <c>UIDocument</c>.
+            /// </summary>
             ExistingDocument,
         }
     }

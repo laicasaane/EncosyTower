@@ -10,11 +10,45 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows
 {
+    /// <summary>
+    /// Builds the Caller Info foldout of the settings windows, which chooses the <see cref="PubSubCallerInfoOption"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The option is not a serialized setting. It is stored as scripting define symbols on every supported named build
+    /// target, so it is not part of any <see cref="SerializedObject"/> and has no Undo. Changing it saves the assets
+    /// and refreshes the <see cref="AssetDatabase"/>, which recompiles the scripts.
+    /// </para>
+    /// <para>
+    /// The foldout reads the current option from <see cref="PageFlowPublishingContext.CallerInfoOption"/>, so it shows
+    /// the option of the current compilation.
+    /// </para>
+    /// </remarks>
     internal static class PageFlowCallerInfoSection
     {
+        /// <summary>
+        /// The define symbol that includes caller info in all builds.
+        /// </summary>
+        /// <remarks>
+        /// Must equal the symbol that the runtime tests for in <see cref="PageFlowPublishingContext"/>.
+        /// </remarks>
         public const string SYMBOL_ALWAYS = "ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO";
+
+        /// <summary>
+        /// The define symbol that includes caller info only in the Editor and in development builds.
+        /// </summary>
+        /// <remarks>
+        /// Must equal the symbol that the runtime tests for in <see cref="PageFlowPublishingContext"/>.
+        /// </remarks>
         public const string SYMBOL_FOR_DEV = "ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO_DEV";
 
+        /// <summary>
+        /// Creates the Caller Info foldout.
+        /// </summary>
+        /// <returns>
+        /// The foldout, with the option field and a help box that names both define symbols. Do not bind it to a
+        /// <see cref="SerializedObject"/>.
+        /// </returns>
         public static Foldout Create()
         {
             var texts = PageFlowsViewResources.Get().CallerInfo;
@@ -34,6 +68,15 @@ namespace EncosyTower.Editor.PageFlows
             return foldout;
         }
 
+        /// <summary>
+        /// Applies the chosen option.
+        /// </summary>
+        /// <remarks>
+        /// Ignores a value that is not a <see cref="PubSubCallerInfoOption"/> and an unchanged option. Otherwise it
+        /// removes both define symbols from every supported named build target, adds the symbol of the new option
+        /// (none for <see cref="PubSubCallerInfoOption.Never"/>), then saves the assets and refreshes the
+        /// <see cref="AssetDatabase"/>. The Editor recompiles the scripts.
+        /// </remarks>
         private static void OnOptionChanged(ChangeEvent<Enum> evt)
         {
             if (evt.newValue is not PubSubCallerInfoOption newValue)

@@ -1,12 +1,12 @@
 using System;
 using System.Collections;
-using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows.UitkPages.Codex;
 using EncosyTower.UnityExtensions;
-using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.TestTools;
+using NUnit.Framework;
 
 namespace EncosyTower.Tests.Editor.PageFlows
 {
@@ -44,7 +44,7 @@ namespace EncosyTower.Tests.Editor.PageFlows
 #if UNITY_UGUI
         [UnityTest]
         public IEnumerator UguiPageCodexInspector_BindsInEditorPanelWithoutErrors()
-            => BindInspector(typeof(EncosyTower.PageFlows.UguiPages.UguiPageCodex));
+            => BindInspector(typeof(EncosyTower.PageFlows.UguiPages.Codex.UguiPageCodex));
 #endif
 
         private IEnumerator BindInspector(Type codexType)

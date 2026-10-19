@@ -3,11 +3,12 @@
 using System;
 using EncosyTower.Editor.PageFlows;
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.UguiPages;
+using EncosyTower.PageFlows.PubSub;
+using EncosyTower.PageFlows.UguiPages.Codex;
 using EncosyTower.Tasks;
 using EncosyTower.Tests.PageFlows;
-using NUnit.Framework;
 using UnityEngine;
+using NUnit.Framework;
 
 namespace EncosyTower.Tests.Editor.PageFlows
 {
@@ -32,8 +33,9 @@ namespace EncosyTower.Tests.Editor.PageFlows
         {
             var info = Resolve();
 
-            Assert.AreEqual(ScopeCollectionProblem.NoInitializer, info.Problem);
-            Assert.AreEqual(nameof(IUguiPageCodexOnInitialize), info.InitializerInterfaceName);
+            Assert.AreEqual(PageFlowScopeCollectionInfo.EnumCase.NoInitializer, info.GetEnumCase());
+            Assert.IsTrue(info.TryGetValue(out PageFlowScopeCollectionInfo.NoInitializer noInitializer));
+            Assert.AreEqual(nameof(IUguiPageCodexOnInitialize), noInitializer.InitializerInterfaceName);
             Assert.AreEqual("No initializer component found", info.ToProblemText());
         }
 
@@ -56,7 +58,7 @@ namespace EncosyTower.Tests.Editor.PageFlows
 
             var info = Resolve();
 
-            Assert.AreEqual(ScopeCollectionProblem.NullApplier, info.Problem);
+            Assert.AreEqual(PageFlowScopeCollectionInfo.EnumCase.NullApplier, info.GetEnumCase());
             Assert.AreEqual("Initializer returns no applier", info.ToProblemText());
         }
 
@@ -70,6 +72,36 @@ namespace EncosyTower.Tests.Editor.PageFlows
             Assert.IsTrue(info.IsValid);
             Assert.AreEqual(nameof(TestScopes), info.TypeName);
             CollectionAssert.AreEqual(new[] { "A", "B" }, info.ScopeIdentifiers);
+        }
+
+        [Test]
+        public void InterfaceInitializerWhoseApplierThrows_ReportsScopesUnreadable()
+        {
+            _gameObject.AddComponent<ThrowingApplierInitializer>();
+
+            var info = Resolve();
+
+            Assert.AreEqual(PageFlowScopeCollectionInfo.EnumCase.ScopesUnreadable, info.GetEnumCase());
+            Assert.IsFalse(info.IsValid);
+            Assert.IsTrue(info.TryGetValue(out PageFlowScopeCollectionInfo.ScopesUnreadable unreadable));
+            Assert.AreEqual(nameof(ThrowingApplierInitializer), unreadable.InitializerTypeName);
+            Assert.AreEqual(nameof(InvalidOperationException), unreadable.ExceptionTypeName);
+            Assert.AreEqual("applier failed", unreadable.ExceptionMessage);
+            Assert.AreEqual("Scope collection could not be read", info.ToProblemText());
+            StringAssert.Contains("applier failed", info.ToTooltip());
+        }
+
+        [Test]
+        public void BaseClassInitializerWhoseScopesThrow_ReportsScopesUnreadable()
+        {
+            _gameObject.AddComponent<ThrowingScopesInitializer>();
+
+            var info = Resolve();
+
+            Assert.AreEqual(PageFlowScopeCollectionInfo.EnumCase.ScopesUnreadable, info.GetEnumCase());
+            Assert.IsTrue(info.TryGetValue(out PageFlowScopeCollectionInfo.ScopesUnreadable unreadable));
+            Assert.AreEqual(nameof(ThrowingScopesInitializer), unreadable.InitializerTypeName);
+            Assert.AreEqual("scopes failed", unreadable.ExceptionMessage);
         }
 
         private PageFlowScopeCollectionInfo Resolve()
@@ -108,6 +140,31 @@ namespace EncosyTower.Tests.Editor.PageFlows
             public UnityTask OnInitializeAsync(UguiPageCodex codex)
                 => UnityTask.CompletedTask;
         }
+
+        private sealed class ThrowingApplierInitializer : MonoBehaviour, IUguiPageCodexOnInitialize
+        {
+            public IPageFlowScopeCollectionApplier PageFlowScopeCollectionApplier
+                => throw new InvalidOperationException("applier failed");
+
+            public UnityTask OnInitializeAsync(UguiPageCodex codex)
+                => UnityTask.CompletedTask;
+        }
+
+        private sealed class ThrowingScopesInitializer : UguiPageCodexInitializer<ThrowingScopes>
+        {
+            protected override UnityTask OnInitializeAsync(UguiPageCodex codex, ThrowingScopes scopes)
+                => UnityTask.CompletedTask;
+        }
+
+#pragma warning disable SG_PAGEFLOWS_0006
+        private readonly struct ThrowingScopes : IPageFlowScopeCollection
+        {
+            public ReadOnlyMemory<string> ScopeIdentifiers => throw new InvalidOperationException("scopes failed");
+
+            public bool TrySetScope(string identifier, PageFlowScope scope)
+                => false;
+        }
+#pragma warning restore SG_PAGEFLOWS_0006
     }
 }
 

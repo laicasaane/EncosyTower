@@ -100,72 +100,73 @@ namespace EncosyTower.Tests.Editor.PageFlows.UitkPages
         }
 
         [Test]
-        public void TryGetProblem_EmptyOrUniqueName_ReportsNothing()
+        public void TryGetError_EmptyOrUniqueName_ReportsNothing()
         {
             var containers = LayoutAssetContainerModel.Get(_asset);
 
-            Assert.IsFalse(LayoutAssetContainerModel.TryGetProblem(string.Empty, containers, out _));
-            Assert.IsFalse(LayoutAssetContainerModel.TryGetProblem(null, LayoutAssetContainers.Empty, out _));
-            Assert.IsFalse(LayoutAssetContainerModel.TryGetProblem("overlay-root", containers, out _));
+            Assert.IsFalse(LayoutAssetContainerModel.TryGetError(string.Empty, containers, out _));
+            Assert.IsFalse(LayoutAssetContainerModel.TryGetError(null, LayoutAssetContainers.Empty, out _));
+            Assert.IsFalse(LayoutAssetContainerModel.TryGetError("overlay-root", containers, out _));
         }
 
         [Test]
-        public void TryGetProblem_NameNotInLayout_DescribesTheFallback()
+        public void TryGetError_NameNotInLayout_DescribesTheFallback()
         {
             var containers = LayoutAssetContainerModel.Get(_asset);
 
-            Assert.IsTrue(LayoutAssetContainerModel.TryGetProblem("missing", containers, out var problem));
-            Assert.AreEqual(RowProblemKind.ContainerNotInLayout, problem.Kind);
-            Assert.IsFalse(problem.IsIdentifierProblem);
+            Assert.IsTrue(LayoutAssetContainerModel.TryGetError("missing", containers, out var error));
+            Assert.AreEqual(FlowDefinitionError.EnumCase.ContainerNotInLayout, error.GetEnumCase());
+            Assert.IsFalse(error.IsIdentifierProblem);
             Assert.AreEqual(
                   "'missing' is not an element of Layout Asset layout-containers. Unless code creates it before "
                     + "the codex initializes, the flow goes under the codex root."
-                , problem.ToProblem()
+                , error.ToProblem()
             );
             Assert.AreEqual(
                   "Press ⋯ and pick an element, or name an element of layout-containers 'missing'."
-                , problem.ToFix()
+                , error.ToFix()
             );
         }
 
         [Test]
-        public void TryGetProblem_NameMatchesMany_NamesTheFirstPath()
+        public void TryGetError_NameMatchesMany_NamesTheFirstPath()
         {
             var containers = LayoutAssetContainerModel.Get(_asset);
 
-            Assert.IsTrue(LayoutAssetContainerModel.TryGetProblem("content", containers, out var problem));
-            Assert.AreEqual(RowProblemKind.ContainerMatchesMany, problem.Kind);
-            Assert.AreEqual(2, problem.MatchCount);
+            Assert.IsTrue(LayoutAssetContainerModel.TryGetError("content", containers, out var error));
+            Assert.AreEqual(FlowDefinitionError.EnumCase.ContainerMatchesMany, error.GetEnumCase());
+            Assert.IsTrue(error.TryGetValue(out FlowDefinitionError.ContainerMatchesMany matches));
+            Assert.AreEqual(2, matches.MatchCount);
             Assert.AreEqual(
                   "'content' matches 2 elements of Layout Asset layout-containers; the first one "
                     + "(safe-area / content) is used."
-                , problem.ToProblem()
+                , error.ToProblem()
             );
             Assert.AreEqual(
                   "Give the intended element a unique name in layout-containers, then pick it with ⋯."
-                , problem.ToFix()
+                , error.ToFix()
             );
         }
 
         [Test]
-        public void TryGetProblem_WithoutLayoutAsset_DescribesTheRuntimeRequirement()
+        public void TryGetError_WithoutLayoutAsset_DescribesTheRuntimeRequirement()
         {
-            Assert.IsTrue(LayoutAssetContainerModel.TryGetProblem(
+            Assert.IsTrue(LayoutAssetContainerModel.TryGetError(
                   "content"
                 , LayoutAssetContainers.Empty
-                , out var problem
+                , out var error
             ));
 
-            Assert.AreEqual(RowProblemKind.ContainerWithoutLayout, problem.Kind);
+            Assert.AreEqual(FlowDefinitionError.EnumCase.ContainerWithoutLayout, error.GetEnumCase());
             Assert.AreEqual(
                   "No Layout Asset is assigned, so the container 'content' must be created by code before the "
                     + "codex initializes; otherwise the flow goes under the codex root."
-                , problem.ToProblem()
+                , error.ToProblem()
             );
             Assert.AreEqual(
                   "Assign a Layout Asset that contains an element named 'content', or clear the field to use the "
                     + "codex root."
-                , problem.ToFix()
+                , error.ToFix()
             );
         }
 
@@ -173,7 +174,7 @@ namespace EncosyTower.Tests.Editor.PageFlows.UitkPages
         public void GetChoices_StartsWithCodexRootAndChecksTheFirstMatch()
         {
             var containers = LayoutAssetContainerModel.Get(_asset);
-            var choices = LayoutAssetContainerModel.GetChoices(containers, "content", otherRows: null);
+            var choices = LayoutAssetContainerModel.GetChoices(containers, "content", otherDefinitions: null);
 
             Assert.AreEqual(containers.Items.Length + 1, choices.Length);
             Assert.AreEqual(string.Empty, choices[0].Value);
@@ -194,16 +195,16 @@ namespace EncosyTower.Tests.Editor.PageFlows.UitkPages
         }
 
         [Test]
-        public void GetChoices_NotesWhichOtherRowsUseEachContainer()
+        public void GetChoices_NotesWhichOtherDefinitionsUseEachContainer()
         {
             var containers = LayoutAssetContainerModel.Get(_asset);
-            var otherRows = new[] {
+            var otherDefinitions = new[] {
                 ("Popup", "content"),
                 (string.Empty, "content"),
                 ("FreeTop", "overlay-root"),
             };
 
-            var choices = LayoutAssetContainerModel.GetChoices(containers, string.Empty, otherRows);
+            var choices = LayoutAssetContainerModel.GetChoices(containers, string.Empty, otherDefinitions);
 
             Assert.AreEqual(string.Empty, choices[1].Note);
             Assert.AreEqual("used by Popup, (no identifier)", choices[2].Note);

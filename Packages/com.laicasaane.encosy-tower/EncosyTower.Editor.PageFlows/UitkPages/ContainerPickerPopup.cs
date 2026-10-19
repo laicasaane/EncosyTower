@@ -8,8 +8,30 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows.UitkPages
 {
+    /// <summary>
+    /// A popup that picks the element of the layout asset in which a flow definition places its flow.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="UitkPageCodexInspector"/> opens it with <c>PopupWindow.Show</c>. The content is a UI Toolkit tree
+    /// from <see cref="CreateGUI"/>; <see cref="OnGUI"/> is empty on purpose.
+    /// </para>
+    /// <para>
+    /// The first item is always the codex root, followed by a separator. A search field filters the other items by
+    /// label or path, ignoring case. Without a layout asset, a row says so instead of the list. Each item shows its
+    /// path and its note; no item is disabled.
+    /// </para>
+    /// <para>
+    /// Picking an item writes the container name with <c>Update</c>, a change of the value and
+    /// <c>ApplyModifiedProperties</c>, which is one Undo step, then closes the window. The popup keeps the serialized
+    /// property for its lifetime.
+    /// </para>
+    /// </remarks>
     internal sealed class ContainerPickerPopup : PopupWindowContent
     {
+        /// <summary>
+        /// The width of the popup in pixels. The inspector uses it to align the popup with the pick button.
+        /// </summary>
         public const float WIDTH = 300f;
 
         private const string ROOT = PageFlowContextSection.ROOT_USS_CLASS_NAME;
@@ -32,6 +54,15 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
 
         private ScrollView _items;
 
+        /// <summary>
+        /// Creates the popup.
+        /// </summary>
+        /// <param name="container">The string property of the container name to write.</param>
+        /// <param name="choices">
+        /// The choices to list. The first choice must be the Codex root: it is always shown first, above the separator,
+        /// and is never filtered.
+        /// </param>
+        /// <param name="hasAsset">Whether a layout asset is available.</param>
         public ContainerPickerPopup(SerializedProperty container, ContainerChoice[] choices, bool hasAsset)
         {
             _container = container;
@@ -39,16 +70,25 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             _hasAsset = hasAsset;
         }
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The height grows with the number of choices, with room for at least two rows, up to a maximum of 360 pixels.
+        /// </remarks>
         public override Vector2 GetWindowSize()
         {
             var rows = Math.Max(_choices.Length, 2);
             return new Vector2(WIDTH, Mathf.Min(rows * ITEM_HEIGHT + CHROME_HEIGHT, MAX_HEIGHT));
         }
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// Draws nothing. The content comes from <see cref="CreateGUI"/>.
+        /// </remarks>
         public override void OnGUI(Rect rect)
         {
         }
 
+        /// <inheritdoc/>
         public override VisualElement CreateGUI()
         {
             var size = GetWindowSize();
@@ -77,6 +117,10 @@ namespace EncosyTower.Editor.PageFlows.UitkPages
             Draw(evt.newValue ?? string.Empty);
         }
 
+        /// <summary>
+        /// Rebuilds the items for the text of the search field. It runs on every change of that text.
+        /// </summary>
+        /// <param name="query">The search text. Empty keeps all items.</param>
         private void Draw(string query)
         {
             _items.Clear();

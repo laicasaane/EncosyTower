@@ -5,10 +5,10 @@ namespace EncosyTower.Tests.Editor.PageFlows
 {
     public sealed class FlowDefinitionTestAsset : ScriptableObject
     {
-        public Row[] flows = Array.Empty<Row>();
+        public Definition[] flows = Array.Empty<Definition>();
 
         [Serializable]
-        public struct Row
+        public struct Definition
         {
             public string identifier;
             public int kind;

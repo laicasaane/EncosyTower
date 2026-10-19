@@ -5,7 +5,7 @@ using EncosyTower.Editor.Settings;
 using EncosyTower.Editor.UIElements;
 using EncosyTower.Logging;
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows.Loading;
 using EncosyTower.UIElements;
 using EncosyTower.UnityExtensions;
 using UnityEditor;
@@ -13,6 +13,23 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
 {
+    /// <summary>
+    /// Builds the UI Toolkit page of the Page Flows settings.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The page has the rows Warn No Subscriber, Reject Duplicate Pages, Loader Strategy, Log Environment and Force UI
+    /// Document, and the Caller Info foldout of <see cref="PageFlowCallerInfoSection"/>. Force UI Document makes a new
+    /// codex add a <c>UIDocument</c> instead of a <c>PanelRenderer</c> on Unity 6000.5 or newer; see
+    /// <see cref="EncosyTower.Editor.PageFlows.UitkPages.UitkPageCodexInspector"/>. The rows are bound to the
+    /// serialized settings, so the binding gives the Undo behaviour. The Caller Info foldout is not bound.
+    /// </para>
+    /// <para>
+    /// A change of a bound value only sets a flag. The next call of <see cref="Update"/> applies the change and saves
+    /// the settings asset, so the asset is written to disk one editor update after each change.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="UitkPageFlowSettings"/>
     internal class UitkPageFlowSettingsEditor
     {
         public static readonly string ProjectSettingsUssClassName = "project-settings";
@@ -26,6 +43,15 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
 
         private bool _valueUpdated;
 
+        /// <summary>
+        /// Builds the page and binds its rows.
+        /// </summary>
+        /// <param name="serializedSettings">
+        /// The serialized <see cref="UitkPageFlowSettings"/> asset that the rows bind to.
+        /// </param>
+        /// <param name="root">
+        /// The root element of the page. It receives the style sheets, the title bar and a scroll view.
+        /// </param>
         public UitkPageFlowSettingsEditor(SerializedObject serializedSettings, VisualElement root)
         {
             _serializedSettings = serializedSettings;
@@ -52,6 +78,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
             var contentContainer = container.Q("unity-content-container");
 
             var warnNoSubscriber = new Toggle(texts.WarnNoSubscriber);
+            var rejectDuplicatePages = new Toggle(texts.RejectDuplicatePages);
             var loaderStrategy = new EnumField(texts.LoaderStrategy, default(PageLoaderStrategy));
             var logEnvironment = new EnumField(texts.LogEnvironment, default(LogEnvironment));
             var forceUIDocument = new Toggle(texts.ForceUIDocument) {
@@ -61,17 +88,20 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
             var callerInfoFoldout = PageFlowCallerInfoSection.Create();
 
             contentContainer.Add(warnNoSubscriber.WithAlignFieldClass());
+            contentContainer.Add(rejectDuplicatePages.WithAlignFieldClass());
             contentContainer.Add(loaderStrategy.WithAlignFieldClass());
             contentContainer.Add(logEnvironment.WithAlignFieldClass());
             contentContainer.Add(forceUIDocument.WithAlignFieldClass());
             contentContainer.Add(callerInfoFoldout);
 
             warnNoSubscriber.RegisterValueChangedCallback(OnValueChanged);
+            rejectDuplicatePages.RegisterValueChangedCallback(OnValueChanged);
             loaderStrategy.RegisterValueChangedCallback(OnValueChanged);
             logEnvironment.RegisterValueChangedCallback(OnValueChanged);
             forceUIDocument.RegisterValueChangedCallback(OnValueChanged);
 
             warnNoSubscriber.WithBindProperty(Find(nameof(UitkPageFlowSettings.warnNoSubscriber)));
+            rejectDuplicatePages.WithBindProperty(Find(nameof(UitkPageFlowSettings.rejectDuplicatePages)));
             loaderStrategy.WithBindProperty(Find(nameof(UitkPageFlowSettings.loaderStrategy)));
             logEnvironment.WithBindProperty(Find(nameof(UitkPageFlowSettings.logEnvironment)));
             forceUIDocument.WithBindProperty(Find(nameof(UitkPageFlowSettings.forceUIDocument)));
@@ -79,6 +109,13 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
             contentContainer.WithBind(serializedSettings);
         }
 
+        /// <summary>
+        /// Saves the settings asset when a bound value changed.
+        /// </summary>
+        /// <remarks>
+        /// Does nothing when no value changed since the last call. Otherwise it applies the modified properties, reads
+        /// them again, marks the asset dirty and saves it at once. Call it on every inspector update.
+        /// </remarks>
         public void Update()
         {
             if (_valueUpdated == false)
@@ -126,6 +163,9 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
             }
         }
 
+        /// <summary>
+        /// Replaces the default inspector of the settings asset with a button that opens the settings page.
+        /// </summary>
         [CustomEditor(typeof(UitkPageFlowSettings), true)]
         private sealed class Inspector : UnityEditor.Editor
         {
@@ -136,6 +176,7 @@ namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
                 _settings = target as UitkPageFlowSettings;
             }
 
+            /// <inheritdoc/>
             public override VisualElement CreateInspectorGUI()
             {
                 var root = new VisualElement();

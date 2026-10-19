@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 
 using EncosyTower.Editor.UIElements;
-using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows;
 
 namespace EncosyTower.Editor.PageFlows.UitkPages.Settings.Views
 {

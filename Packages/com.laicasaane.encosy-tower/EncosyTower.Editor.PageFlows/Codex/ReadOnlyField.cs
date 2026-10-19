@@ -4,6 +4,12 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows
 {
+    /// <summary>
+    /// A label with a text that the user cannot edit, aligned with the other inspector fields.
+    /// </summary>
+    /// <remarks>
+    /// The inherited <c>value</c> is not connected to the text. Use <see cref="SetText"/> to change the text.
+    /// </remarks>
     internal sealed class ReadOnlyField : BaseField<string>
     {
         private const string READONLY_USS_CLASS_NAME = PageFlowContextSection.ROOT_USS_CLASS_NAME + "__readonly";
@@ -11,6 +17,8 @@ namespace EncosyTower.Editor.PageFlows
 
         private readonly VisualElement _input;
         private readonly Label _text;
+
+        private VisualElement _icon;
 
         public ReadOnlyField(string label) : this(label, new VisualElement()) { }
 
@@ -25,8 +33,19 @@ namespace EncosyTower.Editor.PageFlows
             _input.Add(_text);
         }
 
+        /// <summary>
+        /// Sets the text and the icon.
+        /// </summary>
+        /// <param name="text">The text to show.</param>
+        /// <param name="icon">The element to show before the text, or <see langword="null"/> for none.</param>
+        /// <remarks>
+        /// Removes the icon of a previous call.
+        /// </remarks>
         public void SetText(string text, VisualElement icon = null)
         {
+            _icon?.RemoveFromHierarchy();
+            _icon = icon;
+
             if (icon != null)
             {
                 _input.Insert(0, icon);

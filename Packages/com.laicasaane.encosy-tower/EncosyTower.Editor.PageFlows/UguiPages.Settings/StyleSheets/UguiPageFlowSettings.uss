@@ -1,9 +1,23 @@
 :root {
     --label-min-width: 200px;
+    /* Original label padding-left (1px) + the foldout indent (15px). */
+    --nested-label-padding-left: 16px;
 }
 
+/* Every aligned label box has the same left and right edge, so every value starts at the same x. */
 .ugui-page-flow .unity-base-field__aligned > .unity-base-field__label {
     min-width: var(--label-min-width);
+    max-width: var(--label-min-width);
+    width: var(--label-min-width);
+}
+
+/* Foldout content does not indent its children; the labels carry the indent instead. */
+.ugui-page-flow .unity-foldout__content {
+    margin-left: 0;
+}
+
+.ugui-page-flow .unity-foldout__content .unity-base-field__aligned > .unity-base-field__label {
+    padding-left: var(--nested-label-padding-left);
 }
 
 .ugui-page-flow .unity-base-field {

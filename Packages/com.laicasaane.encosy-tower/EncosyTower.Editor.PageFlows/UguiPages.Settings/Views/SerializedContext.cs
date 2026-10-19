@@ -1,30 +1,30 @@
 #if UNITY_EDITOR && UNITY_UGUI
 
-using System;
-using EncosyTower.PageFlows.UguiPages;
-using EncosyTower.Types;
+using EncosyTower.PageFlows;
 using UnityEditor;
-using UnityEngine;
 
 namespace EncosyTower.Editor.PageFlows.UguiPages.Settings.Views
 {
+    /// <summary>
+    /// Gives typed access to the serialized properties of <see cref="UguiPageFlowSettings"/>.
+    /// </summary>
+    /// <remarks>
+    /// Finds each property with <c>nameof</c> of the runtime field, so a rename of the field is followed.
+    /// </remarks>
     internal class SerializedContext
     {
-        public readonly Type Type;
-        public readonly string Name;
-        public readonly UguiPageFlowSettings Settings;
         public readonly SerializedObject Object;
 
-        public SerializedContext(ScriptableObject settings, SerializedObject serializedObject)
+        public SerializedContext(SerializedObject serializedObject)
         {
-            Settings = settings as UguiPageFlowSettings;
             Object = serializedObject;
-            Type = Settings.GetType();
-            Name = Type.GetNameWithoutSuffix("Settings");
         }
 
         public SerializedProperty GetWarnNoSubscriber()
             => Object.FindProperty(nameof(UguiPageFlowSettings.warnNoSubscriber));
+
+        public SerializedProperty GetRejectDuplicatePages()
+            => Object.FindProperty(nameof(UguiPageFlowSettings.rejectDuplicatePages));
 
         public SerializedProperty GetLoaderStrategyProperty()
             => Object.FindProperty(nameof(UguiPageFlowSettings.loaderStrategy));

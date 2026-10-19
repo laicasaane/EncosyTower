@@ -9,6 +9,25 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.PageFlows
 {
+    /// <summary>
+    /// Describes one data column of the flow definition list.
+    /// </summary>
+    /// <param name="Name">
+    /// The column name, which is also the name of the serialized field that the column shows. The column named
+    /// <see cref="FlowDefinitionsSection.CONTAINER_NAME_COLUMN"/> receives the container problems.
+    /// </param>
+    /// <param name="Title">The header text.</param>
+    /// <param name="Width">The fixed width in pixels.</param>
+    /// <param name="Grow">The share of the remaining width. <c>0</c> keeps the width fixed.</param>
+    /// <param name="MakeCell">
+    /// Creates one cell. Build it with <see cref="FlowDefinitionsSection.CreateCell"/> or
+    /// <see cref="FlowDefinitionsSection.CreateCenteredCell"/>. <see langword="null"/> for the identifier column, which
+    /// the section builds itself.
+    /// </param>
+    /// <param name="BindCell">
+    /// Binds a cell to the flow definition, which is an element of the serialized array. It runs on every row bind, so
+    /// it must be safe to run again. <see langword="null"/> for the identifier column.
+    /// </param>
     internal sealed record FlowDefinitionColumn(
           string Name
         , string Title
@@ -18,9 +37,48 @@ namespace EncosyTower.Editor.PageFlows
         , Action<VisualElement, SerializedProperty> BindCell
     );
 
+    /// <summary>
+    /// Builds the Flow Definitions section of the codex inspectors.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The uGUI and UI Toolkit codex inspectors share it. The section has a header with a warning icon for the
+    /// list-level error and a Sync Scopes button, a read-only Scope Collection row, and a reorderable list bound to the
+    /// serialized array. The list has the identifier column, the columns of the inspector, and a status column.
+    /// </para>
+    /// <para>
+    /// <see cref="Create"/> builds everything. The section lives through the callbacks it registers, so the caller does
+    /// not keep it. With several objects selected, the section shows only a note.
+    /// </para>
+    /// <para>
+    /// A refresh builds a new <see cref="FlowDefinitionListModel"/> after <c>UpdateIfRequiredOrScript</c>, so Undo,
+    /// Redo and external edits are picked up. It runs on creation, on every change of the array and after Sync. The
+    /// problems of a row are read when the row binds. A row shows an invalid style on the cell of the column that
+    /// <see cref="FlowDefinitionError.IEnumCase.IsIdentifierProblem"/> selects, and the status icon lists every problem
+    /// of the row as a tooltip.
+    /// </para>
+    /// <para>
+    /// List cells use Unity property binding. The dropdown of the identifier column writes with
+    /// <c>Update</c>, a change of the value and <c>ApplyModifiedProperties</c>, which is one Undo step. Sync is one
+    /// Undo step too.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="FlowDefinitionListModel"/>
+    /// <seealso cref="FlowDefinitionError"/>
+    /// <seealso cref="PageFlowScopeCollectionInfo"/>
     internal sealed class FlowDefinitionsSection
     {
+        /// <summary>
+        /// The name of the identifier column. It equals <see cref="FlowDefinitionListModel.IDENTIFIER"/>.
+        /// </summary>
         public const string IDENTIFIER_COLUMN = FlowDefinitionListModel.IDENTIFIER;
+
+        /// <summary>
+        /// The name of the column that shows the problems other than identifier problems.
+        /// </summary>
+        /// <remarks>
+        /// A codex without a column of this name still shows the status icon, but no invalid cell for these problems.
+        /// </remarks>
         public const string CONTAINER_NAME_COLUMN = "containerName";
 
         private const string ROOT = PageFlowContextSection.ROOT_USS_CLASS_NAME;
@@ -39,8 +97,8 @@ namespace EncosyTower.Editor.PageFlows
 
         private readonly SerializedProperty _flows;
         private readonly PageFlowScopeCollectionInfo _info;
-        private readonly Action<SerializedProperty> _resetNewRow;
-        private readonly Func<SerializedProperty, int, RowProblem[]> _getExtraRowProblems;
+        private readonly Action<SerializedProperty> _resetNewDefinition;
+        private readonly Func<SerializedProperty, FlowDefinitionError[]> _getExtraErrors;
         private readonly Image _listWarning;
         private readonly Button _syncButton;
         private readonly MultiColumnListView _list;
@@ -54,14 +112,14 @@ namespace EncosyTower.Editor.PageFlows
             , SerializedProperty flows
             , in PageFlowScopeCollectionInfo info
             , IReadOnlyList<FlowDefinitionColumn> columns
-            , Action<SerializedProperty> resetNewRow
-            , Func<SerializedProperty, int, RowProblem[]> getExtraRowProblems
+            , Action<SerializedProperty> resetNewDefinition
+            , Func<SerializedProperty, FlowDefinitionError[]> getExtraErrors
         )
         {
             _flows = flows;
             _info = info;
-            _resetNewRow = resetNewRow;
-            _getExtraRowProblems = getExtraRowProblems;
+            _resetNewDefinition = resetNewDefinition;
+            _getExtraErrors = getExtraErrors;
 
             _listWarning = CreateWarningIcon();
             header.Add(_listWarning);
@@ -95,13 +153,35 @@ namespace EncosyTower.Editor.PageFlows
             Refresh();
         }
 
+        /// <summary>
+        /// Creates the Flow Definitions section.
+        /// </summary>
+        /// <param name="serializedObject">
+        /// The inspected object. Only <see cref="SerializedObject.isEditingMultipleObjects"/> is read from it.
+        /// </param>
+        /// <param name="flows">The serialized array of flow definitions.</param>
+        /// <param name="info">The result of the scope collection lookup.</param>
+        /// <param name="columns">
+        /// The columns of the list. The first one must be the identifier column, named
+        /// <see cref="IDENTIFIER_COLUMN"/>.
+        /// </param>
+        /// <param name="resetNewDefinition">
+        /// Sets the fields other than the identifier of a flow definition that Sync adds to their defaults.
+        /// </param>
+        /// <param name="getExtraErrors">
+        /// Returns more errors for a flow definition, for example container errors. They follow the identifier errors.
+        /// Can be <see langword="null"/>.
+        /// </param>
+        /// <returns>
+        /// The section. With several objects selected, it holds only a note.
+        /// </returns>
         public static VisualElement Create(
               SerializedObject serializedObject
             , SerializedProperty flows
             , in PageFlowScopeCollectionInfo info
             , IReadOnlyList<FlowDefinitionColumn> columns
-            , Action<SerializedProperty> resetNewRow
-            , Func<SerializedProperty, int, RowProblem[]> getExtraRowProblems = null
+            , Action<SerializedProperty> resetNewDefinition
+            , Func<SerializedProperty, FlowDefinitionError[]> getExtraErrors = null
         )
         {
             var flowsTexts = PageFlowsViewResources.Get().Flows;
@@ -115,10 +195,15 @@ namespace EncosyTower.Editor.PageFlows
                 return section;
             }
 
-            _ = new FlowDefinitionsSection(section, header, flows, info, columns, resetNewRow, getExtraRowProblems);
+            _ = new FlowDefinitionsSection(section, header, flows, info, columns, resetNewDefinition, getExtraErrors);
             return section;
         }
 
+        /// <summary>
+        /// Wraps content in the standard cell of the list.
+        /// </summary>
+        /// <param name="content">The content of the cell.</param>
+        /// <returns>The cell.</returns>
         public static VisualElement CreateCell(VisualElement content)
         {
             var cell = new VisualElement();
@@ -127,6 +212,11 @@ namespace EncosyTower.Editor.PageFlows
             return cell;
         }
 
+        /// <summary>
+        /// Wraps content in the standard cell of the list and centers it, for example a toggle.
+        /// </summary>
+        /// <param name="content">The content of the cell.</param>
+        /// <returns>The cell.</returns>
         public static VisualElement CreateCenteredCell(VisualElement content)
         {
             var cell = CreateCell(content);
@@ -210,6 +300,15 @@ namespace EncosyTower.Editor.PageFlows
             });
         }
 
+        /// <summary>
+        /// Creates the identifier column.
+        /// </summary>
+        /// <remarks>
+        /// While the scope collection is not found, the cells are text fields that the user types in. Otherwise the
+        /// cells are popups built by hand, not <c>PopupField</c>, because the choices differ per row: they can include
+        /// a disabled current value that is not a scope, and "in use" notes. Code binds the popup cells, so they are
+        /// not unbound.
+        /// </remarks>
         private Column CreateIdentifierColumn(FlowDefinitionColumn source)
         {
             if (_info.IsValid == false)
@@ -238,6 +337,14 @@ namespace EncosyTower.Editor.PageFlows
             };
         }
 
+        /// <summary>
+        /// Sizes the columns to the width of the list.
+        /// </summary>
+        /// <remarks>
+        /// The fixed width of every column and the width of the status column are subtracted from the width of the
+        /// viewport. The rest is divided between the columns by their <see cref="FlowDefinitionColumn.Grow"/>. Widths
+        /// are rounded down. Horizontal scrolling is off.
+        /// </remarks>
         private void OnListGeometryChanged(GeometryChangedEvent evt)
         {
             var available = evt.newRect.width - STATUS_WIDTH;
@@ -311,9 +418,9 @@ namespace EncosyTower.Editor.PageFlows
 
             void OnClicked()
             {
-                if (input.userData is int row)
+                if (input.userData is int definitionIndex)
                 {
-                    ShowIdentifierMenu(input, row);
+                    ShowIdentifierMenu(input, definitionIndex);
                 }
             }
         }
@@ -334,9 +441,16 @@ namespace EncosyTower.Editor.PageFlows
             SetInvalid(element, HasProblemInColumn(index, IDENTIFIER_COLUMN));
         }
 
-        private void ShowIdentifierMenu(VisualElement anchor, int row)
+        /// <summary>
+        /// Shows the identifier choices of a row as a menu.
+        /// </summary>
+        /// <remarks>
+        /// An item reads <c>value</c> or <c>value (note)</c>. Picking an item writes the identifier as one Undo step.
+        /// A pick is ignored when the row no longer exists.
+        /// </remarks>
+        private void ShowIdentifierMenu(VisualElement anchor, int definitionIndex)
         {
-            var choices = _model.GetIdentifierChoices(row);
+            var choices = _model.GetIdentifierChoices(definitionIndex);
             var menu = new GenericMenu();
 
             for (var i = 0; i < choices.Length; i++)
@@ -364,13 +478,14 @@ namespace EncosyTower.Editor.PageFlows
 
             void OnSelected(object value)
             {
-                if ((uint)row >= (uint)_flows.arraySize)
+                if ((uint)definitionIndex >= (uint)_flows.arraySize)
                 {
                     return;
                 }
 
                 _flows.serializedObject.Update();
-                _flows.GetArrayElementAtIndex(row).FindPropertyRelative(IDENTIFIER_COLUMN).stringValue = (string)value;
+                var definition = _flows.GetArrayElementAtIndex(definitionIndex);
+                definition.FindPropertyRelative(IDENTIFIER_COLUMN).stringValue = (string)value;
                 _flows.serializedObject.ApplyModifiedProperties();
             }
         }
@@ -389,48 +504,62 @@ namespace EncosyTower.Editor.PageFlows
         private void BindStatusCell(VisualElement element, int index)
         {
             var icon = element.Q<Image>();
-            var problems = GetRowProblems(index);
+            var errors = GetErrors(index);
 
-            icon.visible = problems.Length > 0;
-            icon.tooltip = problems.Length > 0 ? ProblemText.ToTooltip(problems) : string.Empty;
+            icon.visible = errors.Length > 0;
+            icon.tooltip = errors.Length > 0 ? TooltipAPI.ToTooltip(errors) : string.Empty;
         }
 
-        private RowProblem[] GetRowProblems(int index)
+        /// <summary>
+        /// Gets all problems of a row.
+        /// </summary>
+        /// <returns>
+        /// The identifier errors of the model, then the extra errors of the inspector. Empty while there is no model,
+        /// or when the index is stale.
+        /// </returns>
+        private FlowDefinitionError[] GetErrors(int index)
         {
             if (_model == null || (uint)index >= (uint)_flows.arraySize)
             {
-                return Array.Empty<RowProblem>();
+                return Array.Empty<FlowDefinitionError>();
             }
 
-            var problems = _model.GetRowProblems(index);
+            var errors = _model.GetErrors(index);
 
-            if (_getExtraRowProblems == null)
+            if (_getExtraErrors == null)
             {
-                return problems;
+                return errors;
             }
 
-            var extra = _getExtraRowProblems(_flows.GetArrayElementAtIndex(index), index);
+            var extra = _getExtraErrors(_flows.GetArrayElementAtIndex(index));
 
             if (extra == null || extra.Length < 1)
             {
-                return problems;
+                return errors;
             }
 
-            var combined = new RowProblem[problems.Length + extra.Length];
-            problems.CopyTo(combined, 0);
-            extra.CopyTo(combined, problems.Length);
+            var combined = new FlowDefinitionError[errors.Length + extra.Length];
+            errors.CopyTo(combined, 0);
+            extra.CopyTo(combined, errors.Length);
             return combined;
         }
 
+        /// <summary>
+        /// Gets whether a row has a problem that belongs to a column.
+        /// </summary>
+        /// <remarks>
+        /// An identifier problem belongs to <see cref="IDENTIFIER_COLUMN"/>. Every other problem belongs to
+        /// <see cref="CONTAINER_NAME_COLUMN"/>.
+        /// </remarks>
         private bool HasProblemInColumn(int index, string columnName)
         {
-            var problems = GetRowProblems(index);
+            var errors = GetErrors(index);
 
-            for (var i = 0; i < problems.Length; i++)
+            for (var i = 0; i < errors.Length; i++)
             {
-                var problemColumn = problems[i].IsIdentifierProblem ? IDENTIFIER_COLUMN : CONTAINER_NAME_COLUMN;
+                var errorColumn = errors[i].IsIdentifierProblem ? IDENTIFIER_COLUMN : CONTAINER_NAME_COLUMN;
 
-                if (problemColumn == columnName)
+                if (errorColumn == columnName)
                 {
                     return true;
                 }
@@ -447,19 +576,26 @@ namespace EncosyTower.Editor.PageFlows
         private void OnSync()
         {
             _flows.serializedObject.Update();
-            _model.Sync(_flows, _resetNewRow);
+            _model.Sync(_flows, _resetNewDefinition);
             Refresh();
         }
 
+        /// <summary>
+        /// Validates the list again and updates the section.
+        /// </summary>
+        /// <remarks>
+        /// Updates the serialized object, builds a new model, then updates the header warning, the Sync button and its
+        /// tooltip, and the rows of the list. It runs on creation, on every change of the array and after Sync.
+        /// </remarks>
         private void Refresh()
         {
             _flows.serializedObject.UpdateIfRequiredOrScript();
             _model = FlowDefinitionListModel.Create(_flows, _info);
 
-            var listProblem = _model.GetListProblem();
-            _listWarning.style.display = listProblem.HasProblem ? DisplayStyle.Flex : DisplayStyle.None;
-            _listWarning.tooltip = listProblem.HasProblem
-                ? ProblemText.ToTooltip(listProblem.ToProblem(), listProblem.ToFix())
+            var definitionsError = _model.GetDefinitionsError();
+            _listWarning.style.display = definitionsError.HasProblem ? DisplayStyle.Flex : DisplayStyle.None;
+            _listWarning.tooltip = definitionsError.HasProblem
+                ? TooltipAPI.ToTooltip(definitionsError.ToProblem(), definitionsError.ToFix())
                 : string.Empty;
 
             var canSync = _model.CanSync;
