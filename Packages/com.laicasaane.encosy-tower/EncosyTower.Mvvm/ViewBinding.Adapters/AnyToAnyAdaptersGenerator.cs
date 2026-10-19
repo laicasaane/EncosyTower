@@ -9,9 +9,6 @@ namespace EncosyTower.Editor.Mvvm.Variants.Converters
     [ApiForEditor]
     internal abstract class AnyToAnyAdaptersGenerator : ICodeGenerator
     {
-        private const string MOVED_FROM = "[MovedFrom(true, sourceNamespace: null, "
-            + "sourceAssembly: \"EncosyTower.Core\", sourceClassName: null)]";
-
         private static readonly string[] s_variantTypes = new string[] {
             "byte",
             "sbyte",
@@ -62,7 +59,6 @@ namespace EncosyTower.Editor.Mvvm.Variants.Converters
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
-using UnityEngine.Scripting.APIUpdating;
 ");
 
             p.PrintLine("namespace EncosyTower.Mvvm.ViewBinding.Adapters");
@@ -82,7 +78,6 @@ using UnityEngine.Scripting.APIUpdating;
                     var typeName = variantTypeNames[i];
 
                     p.PrintLine("[Serializable]");
-                    p.PrintLine(MOVED_FROM);
                     p.PrintBeginLine("[Label(\"").Print(typeName).Print(" ⇒ ")
                         .Print(toTypeNameLabel).PrintEndLine("\", \"Default\")]");
                     p.PrintBeginLine("[Adapter(sourceType: typeof(").Print(type)

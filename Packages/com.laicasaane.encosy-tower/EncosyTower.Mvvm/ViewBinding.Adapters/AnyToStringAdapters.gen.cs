@@ -12,12 +12,10 @@
 using System;
 using EncosyTower.Annotations;
 using EncosyTower.Variants;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Byte ⇒ String", "Default")]
     [Adapter(sourceType: typeof(byte), destType: typeof(string), order: 0)]
     public sealed class ByteToStringAdapter : IAdapter
@@ -34,7 +32,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("SByte ⇒ String", "Default")]
     [Adapter(sourceType: typeof(sbyte), destType: typeof(string), order: 0)]
     public sealed class SByteToStringAdapter : IAdapter
@@ -51,7 +48,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Char ⇒ String", "Default")]
     [Adapter(sourceType: typeof(char), destType: typeof(string), order: 0)]
     public sealed class CharToStringAdapter : IAdapter
@@ -68,7 +64,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Double ⇒ String", "Default")]
     [Adapter(sourceType: typeof(double), destType: typeof(string), order: 0)]
     public sealed class DoubleToStringAdapter : IAdapter
@@ -85,7 +80,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Float ⇒ String", "Default")]
     [Adapter(sourceType: typeof(float), destType: typeof(string), order: 0)]
     public sealed class FloatToStringAdapter : IAdapter
@@ -102,7 +96,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Int ⇒ String", "Default")]
     [Adapter(sourceType: typeof(int), destType: typeof(string), order: 0)]
     public sealed class IntToStringAdapter : IAdapter
@@ -119,7 +112,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UInt ⇒ String", "Default")]
     [Adapter(sourceType: typeof(uint), destType: typeof(string), order: 0)]
     public sealed class UIntToStringAdapter : IAdapter
@@ -136,7 +128,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Long ⇒ String", "Default")]
     [Adapter(sourceType: typeof(long), destType: typeof(string), order: 0)]
     public sealed class LongToStringAdapter : IAdapter
@@ -153,7 +144,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("ULong ⇒ String", "Default")]
     [Adapter(sourceType: typeof(ulong), destType: typeof(string), order: 0)]
     public sealed class ULongToStringAdapter : IAdapter
@@ -170,7 +160,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Short ⇒ String", "Default")]
     [Adapter(sourceType: typeof(short), destType: typeof(string), order: 0)]
     public sealed class ShortToStringAdapter : IAdapter
@@ -187,7 +176,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("UShort ⇒ String", "Default")]
     [Adapter(sourceType: typeof(ushort), destType: typeof(string), order: 0)]
     public sealed class UShortToStringAdapter : IAdapter

@@ -2,12 +2,10 @@ using System;
 using EncosyTower.Annotations;
 using EncosyTower.Common;
 using EncosyTower.Variants;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding.Adapters
 {
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ Bool", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(bool), order: 0)]
     public sealed class BoolToBoolAdapter : IAdapter
@@ -24,7 +22,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("String ⇒ Bool", "Default")]
     [Adapter(sourceType: typeof(string), destType: typeof(bool), order: 0)]
     public sealed class StringToBoolAdapter : IAdapter
@@ -46,7 +43,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ Bool", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(bool), order: 0)]
     public sealed class ObjectToBoolAdapter : IAdapter
@@ -63,7 +59,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Bool ⇒ ! Bool", "Default")]
     [Adapter(sourceType: typeof(bool), destType: typeof(bool), order: 1)]
     public sealed class BoolToNotBoolAdapter : IAdapter
@@ -80,7 +75,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("String ⇒ ! Bool", "Default")]
     [Adapter(sourceType: typeof(string), destType: typeof(bool), order: 1)]
     public sealed class StringToNotBoolAdapter : IAdapter
@@ -102,7 +96,6 @@ namespace EncosyTower.Mvvm.ViewBinding.Adapters
     }
 
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     [Label("Object ⇒ ! Bool", "Default")]
     [Adapter(sourceType: typeof(object), destType: typeof(bool), order: 1)]
     public sealed class ObjectToNotBoolAdapter : IAdapter

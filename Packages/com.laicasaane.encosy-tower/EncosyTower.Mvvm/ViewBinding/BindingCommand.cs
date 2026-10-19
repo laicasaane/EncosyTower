@@ -1,11 +1,9 @@
 using System;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace EncosyTower.Mvvm.ViewBinding
 {
     [Serializable]
-    [MovedFrom(true, sourceNamespace: null, sourceAssembly: "EncosyTower.Core", sourceClassName: null)]
     public struct BindingCommand
     {
         /// <summary>
