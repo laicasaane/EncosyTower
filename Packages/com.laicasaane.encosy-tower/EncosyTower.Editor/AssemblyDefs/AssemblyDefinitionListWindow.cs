@@ -27,11 +27,11 @@ namespace EncosyTower.Editor.AssemblyDefs
         private static readonly string[] s_folders1 = new[] { "Assets" };
         private static readonly string[] s_folders2 = new[] { "Assets", "Packages" };
 
-        private readonly List<ItemInfo> _items = new();
+        private readonly List<AssemblyDefinitionEntry> _items = new();
 
-        private ItemCollectionAsset _asset;
+        private AssemblyDefinitionEntryCollectionAsset _asset;
         private SerializedObject _serializedObject;
-        private SimpleTableView<ItemInfo> _table;
+        private SimpleTableView<AssemblyDefinitionEntry> _table;
         private Toggle _includePackagesToggle;
 
         [MenuItem("Encosy Tower/Assembly Definitions", priority = 65_83_00_00)]
@@ -104,8 +104,8 @@ namespace EncosyTower.Editor.AssemblyDefs
 
         private void CreateTable()
         {
-            var table = _table = new SimpleTableView<ItemInfo>() {
-                bindingPath = nameof(ItemCollectionAsset.items),
+            var table = _table = new SimpleTableView<AssemblyDefinitionEntry>() {
+                bindingPath = nameof(AssemblyDefinitionEntryCollectionAsset.items),
                 showBoundCollectionSize = false,
             }.WithEditorStyleSheets();
 
@@ -118,7 +118,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                 , 200
                 , TableColumn_MakeCell_References
                 , TableColumn_BindCell_References
-                , header: new(ItemInfo.CompareNames)
+                , header: new(AssemblyDefinitionEntry.CompareNames)
             );
 
             column.resizable = true;
@@ -128,13 +128,13 @@ namespace EncosyTower.Editor.AssemblyDefs
                 , 200
                 , TableColumn_MakeCell_Path
                 , TableColumn_BindCell_Path
-                , header: new(ItemInfo.ComparePaths)
+                , header: new(AssemblyDefinitionEntry.ComparePaths)
             );
 
             column.resizable = true;
             column.sortable = true;
 
-            _asset = CreateInstance<ItemCollectionAsset>();
+            _asset = CreateInstance<AssemblyDefinitionEntryCollectionAsset>();
             _asset.items = _table.Items;
 
             _serializedObject = new SerializedObject(_asset);
@@ -147,7 +147,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             button.AddToClassList("asset-button");
 
             button.clicked += () => {
-                if (button.userData is not ItemInfo item || item.asset.IsInvalid())
+                if (button.userData is not AssemblyDefinitionEntry item || item.asset.IsInvalid())
                 {
                     return;
                 }
@@ -174,7 +174,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             return button;
         }
 
-        private static void TableColumn_BindCell_References(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_References(VisualElement element, AssemblyDefinitionEntry item)
         {
             if (element is not Button button || item is null)
             {
@@ -200,7 +200,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             return label;
         }
 
-        private static void TableColumn_BindCell_Path(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Path(VisualElement element, AssemblyDefinitionEntry item)
         {
             if (element is not Label label || item is null)
             {
@@ -211,7 +211,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             label.userData = item.asset;
         }
 
-        private static void FindItems(List<ItemInfo> result, bool includePackages)
+        private static void FindItems(List<AssemblyDefinitionEntry> result, bool includePackages)
         {
             result.Clear();
 
@@ -224,7 +224,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                 return;
             }
 
-            var items = new List<ItemInfo>(guids.Length);
+            var items = new List<AssemblyDefinitionEntry>(guids.Length);
 
             for (var i = 0; i < guids.Length; i++)
             {
@@ -244,7 +244,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                     continue;
                 }
 
-                items.Add(new ItemInfo {
+                items.Add(new AssemblyDefinitionEntry {
                     asset = asset,
                     name = asset.name,
                     path = path,
@@ -255,35 +255,35 @@ namespace EncosyTower.Editor.AssemblyDefs
             result.AddRange(items);
             return;
 
-            static int Sort(ItemInfo x, ItemInfo y)
+            static int Sort(AssemblyDefinitionEntry x, AssemblyDefinitionEntry y)
                 => StringComparer.OrdinalIgnoreCase.Compare(x.path, y.path);
         }
 
         [Serializable]
-        private class ItemInfo
+        private class AssemblyDefinitionEntry
         {
             public AssemblyDefinitionAsset asset;
             public string name;
             public string path;
 
-            public static int CompareNames(ItemInfo a, ItemInfo b)
+            public static int CompareNames(AssemblyDefinitionEntry a, AssemblyDefinitionEntry b)
                 => string.Compare(a.asset.name, b.asset.name, StringComparison.Ordinal);
 
-            public static int ComparePaths(ItemInfo a, ItemInfo b)
+            public static int ComparePaths(AssemblyDefinitionEntry a, AssemblyDefinitionEntry b)
                 => string.Compare(a.path, b.path, StringComparison.Ordinal);
         }
 
-        private class ItemCollectionAsset : ScriptableObject
+        private class AssemblyDefinitionEntryCollectionAsset : ScriptableObject
         {
-            public List<ItemInfo> items;
+            public List<AssemblyDefinitionEntry> items;
         }
 
-        private readonly struct SearchValidator : ISearchValidator<ItemInfo>
+        private readonly struct SearchValidator : ISearchValidator<AssemblyDefinitionEntry>
         {
-            public bool IsSearchable(ItemInfo item)
+            public bool IsSearchable(AssemblyDefinitionEntry item)
                 => item.path.IsNotEmpty();
 
-            public string GetSearchableString(ItemInfo item)
+            public string GetSearchableString(AssemblyDefinitionEntry item)
                 => item.name;
         }
     }

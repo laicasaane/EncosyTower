@@ -134,8 +134,8 @@ namespace EncosyTower.Editor.AssemblyDefs
             var guidToRefMap = new Dictionary<GUID, AssemblyReferenceData>(guidStringsLength);
             var nameToRefMap = new Dictionary<string, AssemblyReferenceData>(guidStringsLength);
             var otherReferences = new List<AssemblyReferenceData>(guidStringsLength);
-            var allReferences = new List<AssemblyReferenceData>(guidStringsLength);
-            var filteredReferences = new List<AssemblyReferenceData>(guidStringsLength);
+            var selectedReferences = new List<AssemblyReferenceData>(guidStringsLength);
+            var suggestedReferences = new List<AssemblyReferenceData>(guidStringsLength);
             var suggestedSet = new HashSet<GUID>(guidStringsLength);
 
             for (var i = 0; i < guidStringsLength; i++)
@@ -163,13 +163,13 @@ namespace EncosyTower.Editor.AssemblyDefs
                 guidToRefMap[guid] = data;
                 nameToRefMap[info.name] = data;
 
-                // If the reference is selected, add it to the `allReferences` list.
+                // If the reference is selected, add it to the `selectedReferences` list.
                 // When we finally combine that list with `otherReferences`,
                 // the selected references will be grouped at the top.
 
                 if (data.selected)
                 {
-                    allReferences.Add(data);
+                    selectedReferences.Add(data);
                 }
                 else
                 {
@@ -177,7 +177,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                 }
             }
 
-            foreach (var refData in allReferences)
+            foreach (var refData in selectedReferences)
             {
                 var refInfoResult = TryGetInfo(refData.asset.text);
 
@@ -202,7 +202,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                             continue;
                         }
 
-                        filteredReferences.Add(suggestedData);
+                        suggestedReferences.Add(suggestedData);
                         suggestedSet.Add(suggestedData.guid);
                     }
                 }
@@ -219,21 +219,21 @@ namespace EncosyTower.Editor.AssemblyDefs
                             continue;
                         }
 
-                        filteredReferences.Add(suggestedData);
+                        suggestedReferences.Add(suggestedData);
                         suggestedSet.Add(suggestedData.guid);
                     }
                 }
             }
 
-            allReferences.Sort(AssemblyReferenceData.CompareName);
-            allReferences.Insert(0, new() { IsHeader = true, headerText = "Pre-selected References" });
+            selectedReferences.Sort(AssemblyReferenceData.CompareName);
 
-            filteredReferences.Sort(AssemblyReferenceData.CompareName);
-            filteredReferences.Insert(0, new() { IsHeader = true, headerText = "Other References" });
-            filteredReferences.InsertRange(0, allReferences);
+            suggestedReferences.Sort(AssemblyReferenceData.CompareName);
+            suggestedReferences.InsertRange(0, selectedReferences);
 
-            allReferences.Add(new() { IsHeader = true, headerText = "Other References" });
             otherReferences.Sort(AssemblyReferenceData.CompareName);
+
+            var allReferences = new List<AssemblyReferenceData>(selectedReferences.Count + otherReferences.Count);
+            allReferences.AddRange(selectedReferences);
             allReferences.AddRange(otherReferences);
 
             var result = new AssemblyData(
@@ -242,7 +242,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                 , assemblyDef
                 , useGuid
                 , allReferences
-                , filteredReferences
+                , suggestedReferences
             );
 
             return result;

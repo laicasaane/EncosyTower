@@ -214,7 +214,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.AreSame(_secondSource, drawn.serializedObject);
             Assert.IsTrue(drawn.hasMultipleDifferentValues);
-            Assert.IsFalse(OverridableImguiRow.IsLocked(property));
+            Assert.IsFalse(PropertyLockAPI.IsLocked(property));
             row.SetOverride(true);
             Assert.IsTrue(_asset.retryCount.isOverridden);
             Assert.IsTrue(_secondAsset.retryCount.isOverridden);
@@ -233,8 +233,8 @@ namespace EncosyTower.Tests.Editor.Serialization
             var firstRow = OverridableImguiRow.Get(first, field);
             var secondRow = OverridableImguiRow.Get(second, field);
 
-            Assert.IsTrue(OverridableImguiRow.IsLocked(first));
-            Assert.IsTrue(OverridableImguiRow.IsLocked(second));
+            Assert.IsTrue(PropertyLockAPI.IsLocked(first));
+            Assert.IsTrue(PropertyLockAPI.IsLocked(second));
             Assert.AreEqual(expected: 0, actual: firstRow.BuildContextMenu(first.displayName).GetItemCount());
             Assert.AreEqual(expected: 0, actual: secondRow.BuildContextMenu(second.displayName).GetItemCount());
             Assert.AreEqual(expected: 2, actual: firstRow.GetDrawnProperty().intValue);
@@ -257,7 +257,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var field = typeof(OverridableTestAsset).GetField(outer.name);
             var row = OverridableImguiRow.Get(element, field);
 
-            Assert.IsTrue(OverridableImguiRow.IsLocked(element));
+            Assert.IsTrue(PropertyLockAPI.IsLocked(element));
             row.SetOverride(false);
             row.ApplyPreset(44);
             Assert.AreEqual(expected: 21, actual: _asset.nestedList.value[0].value);
@@ -279,7 +279,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.AreEqual(expected: 2, actual: _asset.nestedList.value[0].value);
             Assert.IsFalse(_asset.nestedList.value[1].isOverridden);
             Assert.AreEqual(expected: 9, actual: _asset.nestedList.value[1].value);
-            Assert.IsFalse(OverridableImguiRow.IsLocked(second));
+            Assert.IsFalse(PropertyLockAPI.IsLocked(second));
             Assert.AreEqual(expected: 0, actual: secondRow.GetDrawnProperty().intValue);
             secondRow.SetOverride(true);
             Assert.AreEqual(expected: 0, actual: _asset.nestedList.value[1].value);
@@ -297,7 +297,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var drawn = GetRow(property.name).GetDrawnProperty();
 
             Assert.AreEqual(isOverridden, SerializedProperty.EqualContents(value, drawn));
-            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is OverridableDefaultHolder);
+            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is SerializedValueHolder);
             Assert.AreEqual(isOverridden ? 9 : 0, drawn.FindPropertyRelative("number").intValue);
             Assert.AreEqual(isOverridden ? "Stored" : string.Empty, drawn.FindPropertyRelative("text").stringValue);
             Assert.AreEqual(expected: 9, actual: _asset.payloadValue.value.number);
@@ -311,7 +311,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var value = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             var row = GetRow(property.name);
             var drawn = row.GetDrawnProperty();
-            Assert.IsInstanceOf<OverridableDefaultHolder>(drawn.serializedObject.targetObject);
+            Assert.IsInstanceOf<SerializedValueHolder>(drawn.serializedObject.targetObject);
             Assert.AreEqual(expected: 2, actual: drawn.arraySize);
 
             value.arraySize = 8;
@@ -340,7 +340,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var drawn = GetRow(fieldName).GetDrawnProperty();
 
             Assert.AreEqual(isOverridden, SerializedProperty.EqualContents(value, drawn));
-            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is OverridableDefaultHolder);
+            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is SerializedValueHolder);
 
             if (fieldName == nameof(OverridableTestAsset.nestedList))
             {
@@ -390,18 +390,18 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             if (dropdown)
             {
-                var popupChoices = ValueChoicesPropertyDrawer.GetPopupChoices(
+                var selectableChoices = ValueChoicesEditorAPI.GetSelectableChoices(
                       attribute
                     , typeof(TestLayers)
                     , choices
                 );
 
                 var storedValue = _choicesAsset.strictLayerPresets.value;
-                Assert.AreSame(choices, popupChoices);
+                Assert.AreSame(choices, selectableChoices);
 
                 Assert.AreEqual(
                       expected: -1
-                    , actual: ValueChoicesPropertyDrawer.GetChoiceIndex(popupChoices, storedValue)
+                    , actual: ValueChoicesEditorAPI.GetChoiceIndex(selectableChoices, storedValue)
                 );
             }
         }
@@ -417,7 +417,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var row = OverridableImguiRow.Get(property, field);
             var drawn = row.GetDrawnProperty();
 
-            Assert.IsTrue(drawn.serializedObject.targetObject is OverridableDefaultHolder);
+            Assert.IsTrue(drawn.serializedObject.targetObject is SerializedValueHolder);
             Assert.AreEqual(expected: (int)TestLayers.None, actual: drawn.intValue);
             Undo.IncrementCurrentGroup();
             row.ApplyPreset(TestLayers.Ground | TestLayers.Air);
@@ -453,9 +453,9 @@ namespace EncosyTower.Tests.Editor.Serialization
             ), error.ToMessage());
 
             Assert.AreEqual(expected: 3, actual: choices.Count);
-            Assert.AreEqual(TestLayers.Ground, choices[0].value);
-            Assert.AreEqual(TestLayers.Ground | TestLayers.Air, choices[1].value);
-            Assert.AreEqual(TestLayers.Water, choices[2].value);
+            Assert.AreEqual(TestLayers.Ground, choices[0].Value);
+            Assert.AreEqual(TestLayers.Ground | TestLayers.Air, choices[1].Value);
+            Assert.AreEqual(TestLayers.Water, choices[2].Value);
             Assert.AreEqual(expected: (int)TestLayers.Air, actual: property.intValue);
         }
 
@@ -472,7 +472,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var drawn = OverridableImguiRow.Get(property, field).GetDrawnProperty();
 
             Assert.AreEqual(isOverridden, SerializedProperty.EqualContents(value, drawn));
-            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is OverridableDefaultHolder);
+            Assert.AreEqual(isOverridden == false, drawn.serializedObject.targetObject is SerializedValueHolder);
             Assert.AreEqual(isOverridden ? 21 : 0, drawn.FindPropertyRelative("number").intValue);
             Assert.AreEqual(isOverridden, _customAsset.payload.isOverridden);
             Assert.AreEqual(expected: 21, actual: _customAsset.payload.value.number);

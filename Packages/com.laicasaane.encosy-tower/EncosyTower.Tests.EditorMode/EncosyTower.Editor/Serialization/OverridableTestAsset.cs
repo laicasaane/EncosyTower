@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using EncosyTower.Common;
-using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows;
 using EncosyTower.Serialization;
 using UnityEngine;
 
@@ -153,7 +153,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
     public sealed class OverridableSettingsTestAsset : ScriptableObject
     {
-        [OverridableDefault(typeof(UitkPageFlowSettings), nameof(UitkPageFlowSettings.warnNoSubscriber))]
-        public Overridable<bool> warnNoSubscriber;
+        [OverridableDefault(typeof(UitkPageFlowSettings), nameof(UitkPageFlowSettings.forceUIDocument))]
+        public Overridable<bool> forceUIDocument;
     }
 }

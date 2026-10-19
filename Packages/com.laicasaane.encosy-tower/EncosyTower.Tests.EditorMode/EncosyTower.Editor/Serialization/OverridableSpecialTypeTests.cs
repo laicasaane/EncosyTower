@@ -22,7 +22,7 @@ namespace EncosyTower.Tests.Editor.Serialization
     {
         private OverridableSpecialTypeTestAsset _asset;
         private SerializedObject _source;
-        private OverridableDefaultHolder _holder;
+        private SerializedValueHolder _holder;
         private SpecialTypeWindow _window;
         private Texture2D _defaultTexture;
         private Texture2D _storedTexture;
@@ -272,10 +272,10 @@ namespace EncosyTower.Tests.Editor.Serialization
             SetStored(field, CreateStoredValue(fieldName));
             var expected = ReadDefault(field);
             var property = _source.FindProperty(fieldName).FindPropertyRelative(OverridableEditorAPI.VALUE);
-            _holder = OverridableDefaultHolder.Create(valueType);
+            _holder = SerializedValueHolder.Create(valueType);
             var copy = _holder.Write(expected, property);
 
-            AssertValue(expected, SerializedValueCopy.Read(copy, valueType));
+            AssertValue(expected, SerializedValueAPI.Read(copy, valueType));
             AssertValue(stored, ReadStored(field));
             Assert.IsFalse(ReadOverride(field));
 
@@ -285,12 +285,12 @@ namespace EncosyTower.Tests.Editor.Serialization
                 or List<Overridable<int>>
             )
             {
-                Assert.AreNotSame(expected, SerializedValueCopy.Read(copy, valueType));
+                Assert.AreNotSame(expected, SerializedValueAPI.Read(copy, valueType));
             }
 
-            SerializedValueCopy.Write(copy, stored, valueType);
+            SerializedValueAPI.Write(copy, stored, valueType);
             copy.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-            AssertValue(stored, SerializedValueCopy.Read(copy, valueType));
+            AssertValue(stored, SerializedValueAPI.Read(copy, valueType));
             AssertValue(ReadDefault(field), expected);
             LogAssert.NoUnexpectedReceived();
         }
@@ -323,26 +323,26 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             if (useToolkit)
             {
-                var previous = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+                var previous = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
                 _window = ScriptableObject.CreateInstance<SpecialTypeWindow>();
                 _window.Show();
                 builder = new OverridableRowBuilder(property, field, valueType, attribute);
                 _window.rootVisualElement.Add(builder.Root);
                 builder.Root.Bind(_source);
                 toggle = builder.Root.Q<OverridableSwitch>();
-                valueField = builder.Root.Q<VisualElement>(className: OverridableRowBuilder.VALUE_FIELD_CLASS_NAME);
+                valueField = builder.Root.Q<VisualElement>(className: UitkAPI.VALUE_FIELD_CLASS_NAME);
                 Assert.IsNotNull(toggle);
                 Assert.IsNotNull(valueField);
                 Assert.IsFalse(valueField.enabledSelf);
-                Assert.AreEqual("_overridableDefault.value", ((IBindable)valueField).bindingPath);
+                Assert.AreEqual("_box.value", ((IBindable)valueField).bindingPath);
                 Assert.AreEqual(
                       OverridableEditorAPI.GetDefaultTooltip(attribute, valueType)
                     , valueField.parent.tooltip
                 );
                 AssertLocate(builder.BuildContextMenu());
 
-                var holders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
-                OverridableDefaultHolder preview = null;
+                var holders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
+                SerializedValueHolder preview = null;
 
                 for (var i = 0; i < holders.Length; i++)
                 {
@@ -356,7 +356,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                 }
 
                 Assert.IsTrue(preview.IsValid());
-                AssertValue(expected, SerializedValueCopy.Read(preview.GetValueProperty(), valueType));
+                AssertValue(expected, SerializedValueAPI.Read(preview.GetValueProperty(), valueType));
 
                 var header = builder.Root.Q<Foldout>(className: "encosy-overridable__header-label");
                 var expectedHeader = fieldName is "summary" or "spawnBudget" or "waveArray"
@@ -366,7 +366,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             else
             {
                 imgui = OverridableImguiRow.Get(property, field);
-                AssertValue(expected, SerializedValueCopy.Read(imgui.GetDrawnProperty(), valueType));
+                AssertValue(expected, SerializedValueAPI.Read(imgui.GetDrawnProperty(), valueType));
                 AssertLocate(imgui.BuildContextMenu(property.displayName));
             }
 
@@ -384,7 +384,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             SetOverride(true);
             var value = _source.FindProperty(fieldName).FindPropertyRelative(OverridableEditorAPI.VALUE);
-            SerializedValueCopy.Write(value, stored, valueType);
+            SerializedValueAPI.Write(value, stored, valueType);
             _source.ApplyModifiedPropertiesWithoutUndo();
             builder?.Refresh();
             Undo.ClearUndo(_asset);
@@ -406,11 +406,11 @@ namespace EncosyTower.Tests.Editor.Serialization
                     toggle.value = active;
                     Assert.AreSame(
                           valueField
-                        , builder.Root.Q<VisualElement>(className: OverridableRowBuilder.VALUE_FIELD_CLASS_NAME)
+                        , builder.Root.Q<VisualElement>(className: UitkAPI.VALUE_FIELD_CLASS_NAME)
                     );
                     Assert.AreEqual(active, valueField.enabledSelf);
 
-                    var expectedPath = active ? fieldName + ".value" : "_overridableDefault.value";
+                    var expectedPath = active ? fieldName + ".value" : "_box.value";
                     Assert.AreEqual(expectedPath, ((IBindable)valueField).bindingPath);
                     var tooltip = active ? string.Empty : OverridableEditorAPI.GetDefaultTooltip(attribute, valueType);
                     Assert.AreEqual(tooltip, valueField.parent.tooltip);
@@ -425,10 +425,10 @@ namespace EncosyTower.Tests.Editor.Serialization
                     }
                     else
                     {
-                        Assert.IsInstanceOf<OverridableDefaultHolder>(drawn.serializedObject.targetObject);
+                        Assert.IsInstanceOf<SerializedValueHolder>(drawn.serializedObject.targetObject);
                     }
 
-                    AssertValue(active ? ReadStored(field) : expected, SerializedValueCopy.Read(drawn, valueType));
+                    AssertValue(active ? ReadStored(field) : expected, SerializedValueAPI.Read(drawn, valueType));
                 }
             }
         }
@@ -455,8 +455,8 @@ namespace EncosyTower.Tests.Editor.Serialization
                 , out var error
             ), error.ToMessage());
 
-            Assert.IsTrue(ValueChoicesEditorAPI.Matches(choices[0].value, ReadDefault(field)));
-            Assert.IsFalse(ValueChoicesEditorAPI.Matches(choices[0].value, stored));
+            Assert.IsTrue(ValueChoicesEditorAPI.Matches(choices[0].Value, ReadDefault(field)));
+            Assert.IsFalse(ValueChoicesEditorAPI.Matches(choices[0].Value, stored));
             GenericMenu menu;
 
             if (useToolkit)

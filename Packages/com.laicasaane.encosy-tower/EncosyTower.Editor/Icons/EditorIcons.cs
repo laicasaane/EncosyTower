@@ -28,12 +28,12 @@ namespace EncosyTower.Editor.Icons
         private GUIStyle _iconPreviewBlack;
         private GUIStyle _iconPreviewWhite;
 
-        private readonly List<GUIContent> _iconContentListAll = new();
-        private readonly List<GUIContent> _iconContentListSmall = new();
-        private readonly List<GUIContent> _iconContentListBig = new();
+        private readonly List<IconEntry> _allIcons = new();
+        private readonly List<IconEntry> _smallIcons = new();
+        private readonly List<IconEntry> _bigIcons = new();
         private readonly List<string> _iconNames = new();
 
-        private GUIContent _iconSelected;
+        private IconEntry _iconSelected;
 
         private bool _viewBigIcons = true;
         private bool _darkPreview = true;
@@ -61,9 +61,9 @@ namespace EncosyTower.Editor.Icons
             var builtInIconNames = GetBuiltinIconNames();
             _iconNames.AsListFast().AddRange(builtInIconNames);
 
-            var iconContentListAll = _iconContentListAll;
-            var iconContentListSmall = _iconContentListSmall;
-            var iconContentListBig = _iconContentListBig;
+            var allIcons = _allIcons;
+            var smallIcons = _smallIcons;
+            var bigIcons = _bigIcons;
 
             var iconNames = _iconNames.AsReadOnlySpan();
             var iconNamesLength = iconNames.Length;
@@ -79,15 +79,17 @@ namespace EncosyTower.Editor.Icons
                 }
 
                 icon.tooltip = iconName;
-                iconContentListAll.Add(icon);
+
+                var entry = new IconEntry(iconName, icon);
+                allIcons.Add(entry);
 
                 if (icon.image.width <= 36 || icon.image.height <= 36)
                 {
-                    iconContentListSmall.Add(icon);
+                    smallIcons.Add(entry);
                 }
                 else
                 {
-                    iconContentListBig.Add(icon);
+                    bigIcons.Add(entry);
                 }
             }
         }
@@ -143,9 +145,9 @@ namespace EncosyTower.Editor.Icons
 
                 int row = 0, index = 0;
 
-                List<GUIContent> iconList = DoSearch
-                    ? _iconContentListAll.Where(x => x.tooltip.ToLower().Contains(_search.ToLower())).ToList()
-                    : _viewBigIcons ? _iconContentListBig : _iconContentListSmall;
+                List<IconEntry> iconList = DoSearch
+                    ? _allIcons.Where(x => x.Name.ToLower().Contains(_search.ToLower())).ToList()
+                    : _viewBigIcons ? _bigIcons : _smallIcons;
 
                 while (index < iconList.Count)
                 {
@@ -158,7 +160,12 @@ namespace EncosyTower.Editor.Icons
                             var k = i + row * gridW;
                             var icon = iconList[ k ];
 
-                            if (GUILayout.Button(icon, _iconButtonStyle, GUILayout.Width(_buttonSize), GUILayout.Height(_buttonSize)))
+                            if (GUILayout.Button(
+                                  icon.Content
+                                , _iconButtonStyle
+                                , GUILayout.Width(_buttonSize)
+                                , GUILayout.Height(_buttonSize)
+                            ))
                             {
                                 EditorGUI.FocusTextInControl("");
                                 _iconSelected = icon;
@@ -194,7 +201,7 @@ namespace EncosyTower.Editor.Icons
                     GUILayout.Space(2);
 
                     GUILayout.Button(
-                          _iconSelected
+                          _iconSelected.Content
                         , _darkPreview ? _iconPreviewBlack : _iconPreviewWhite
                         , GUILayout.Width(128)
                         , GUILayout.Height(_viewBigIcons ? 128 : 40)
@@ -216,25 +223,25 @@ namespace EncosyTower.Editor.Icons
 
                 using (new GUILayout.VerticalScope())
                 {
-                    var isDark = _iconSelected.tooltip.IndexOf("d_", StringComparison.Ordinal) == 0;
-                    var s = $"Size: {_iconSelected.image.width}x{_iconSelected.image.height}";
+                    var isDark = _iconSelected.Name.IndexOf("d_", StringComparison.Ordinal) == 0;
+                    var s = $"Size: {_iconSelected.Content.image.width}x{_iconSelected.Content.image.height}";
                     s += "\nIs Pro Skin Icon: " + (isDark ? "Yes" : "No");
-                    s += $"\nTotal {_iconContentListAll.Count} icons";
+                    s += $"\nTotal {_allIcons.Count} icons";
 
                     GUILayout.Space(5);
                     EditorGUILayout.HelpBox(s, MessageType.None);
                     GUILayout.Space(5);
-                    EditorGUILayout.TextField("EditorGUIUtility.IconContent(\"" + _iconSelected.tooltip + "\")");
+                    EditorGUILayout.TextField("EditorGUIUtility.IconContent(\"" + _iconSelected.Name + "\")");
                     GUILayout.Space(5);
 
                     if (GUILayout.Button("Copy to clipboard", EditorStyles.miniButton))
                     {
-                        EditorGUIUtility.systemCopyBuffer = _iconSelected.tooltip;
+                        EditorGUIUtility.systemCopyBuffer = _iconSelected.Name;
                     }
 
                     if (GUILayout.Button("Save icon to file ...", EditorStyles.miniButton))
                     {
-                        SaveIcon(_iconSelected.tooltip);
+                        SaveIcon(_iconSelected.Name);
                     }
                 }
 
@@ -429,6 +436,8 @@ namespace EncosyTower.Editor.Icons
             t.Apply();
             return t;
         }
+
+        private sealed record class IconEntry(string Name, GUIContent Content);
     }
 }
 

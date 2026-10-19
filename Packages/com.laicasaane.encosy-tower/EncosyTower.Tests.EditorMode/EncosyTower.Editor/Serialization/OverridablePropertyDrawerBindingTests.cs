@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using EncosyTower.Editor;
 using System.Collections.Generic;
 using System.Reflection;
 using EncosyTower.Common;
@@ -24,7 +25,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         private OverridableTestAsset _asset;
         private OverridableTestAsset _secondAsset;
         private OverridableSettingsTestAsset _settingsAsset;
-        private OverridableDefaultHolder _outerHolder;
+        private SerializedValueHolder _outerHolder;
         private SerializedObject _serializedObject;
         private SerializedObject _settingsObject;
         private BindingTestWindow _window;
@@ -36,9 +37,9 @@ namespace EncosyTower.Tests.Editor.Serialization
 
         public static OverridableTestPayload PayloadDefault => s_payloadDefault;
 
-        private static OverridableDefaultHolder GetNewHolder(OverridableDefaultHolder[] previousHolders)
+        private static SerializedValueHolder GetNewHolder(SerializedValueHolder[] previousHolders)
         {
-            var holders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var holders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
             var count = holders.Length;
 
             for (var i = 0; i < count; i++)
@@ -96,7 +97,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         {
             _settingsAsset = ScriptableObject.CreateInstance<OverridableSettingsTestAsset>();
             _settingsObject = new SerializedObject(_settingsAsset);
-            var property = _settingsObject.FindProperty(nameof(OverridableSettingsTestAsset.warnNoSubscriber));
+            var property = _settingsObject.FindProperty(nameof(OverridableSettingsTestAsset.forceUIDocument));
             var root = _window.rootVisualElement;
             root.Add(new PropertyField(property));
 
@@ -180,7 +181,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsNotNull(_row.Q<OverridableSwitch>());
             Assert.IsFalse(buttons.Exists(static button => button.text == "Reset"));
-            Assert.IsNull(_row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(_row.Q<Button>(className: "encosy-row__more"));
             Assert.IsFalse(valueField.enabledSelf);
             Assert.IsNotNull(input);
             Assert.AreEqual(3, input.value);
@@ -292,7 +293,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void StaticDefaultTick_UpdatesSameHolderWithoutManualRefresh()
         {
-            var previousHolders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var previousHolders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
             CreateRow(nameof(OverridableTestAsset.retryCount));
             BindRow();
             var valueField = _row.Q<PropertyField>();
@@ -326,7 +327,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void StaticDefaultTick_LeavesOverrideUntouchedAndResumesAfterSwitchOff()
         {
-            var previousHolders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var previousHolders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
             CreateRow(nameof(OverridableTestAsset.retryCount));
             BindRow();
             var control = _row.Q<OverridableSwitch>();
@@ -357,7 +358,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void StaticDefaultTick_RefreshesClassMembersWhenDisplayTextIsUnchanged()
         {
-            var previousHolders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var previousHolders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
 
             var attribute = new OverridableDefaultAttribute(
                   typeof(OverridablePropertyDrawerBindingTests)
@@ -433,7 +434,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             _serializedObject.Update();
             CreateRow(nameof(OverridableTestAsset.enumWithoutDefault));
             BindRow();
-            var choice = _row.Q<OverridableChoiceField>();
+            var choice = _row.Q<ChoicePopupField>();
             var text = choice.Q<TextElement>(className: BasePopupField<string, string>.textUssClassName);
 
             Assert.IsNotNull(text);
@@ -450,14 +451,14 @@ namespace EncosyTower.Tests.Editor.Serialization
         {
             CreateRow(nameof(OverridableTestAsset.enumWithDefault));
             BindRow();
-            var choice = _row.Q<OverridableChoiceField>();
+            var choice = _row.Q<ChoicePopupField>();
             var text = choice.Q<TextElement>(className: BasePopupField<string, string>.textUssClassName);
 
             Assert.IsNotNull(text);
             Assert.AreEqual(0, choice.value);
             Assert.AreEqual("Default (Third Value)", text.text);
             StringAssert.Contains("Default value: Third Value", choice.tooltip);
-            Assert.IsNull(_row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(_row.Q<Button>(className: "encosy-row__more"));
 
             choice.value = 1;
 
@@ -481,7 +482,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var property = _serializedObject.FindProperty(nameof(OverridableTestAsset.payloadValue));
             var valueProperty = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             valueProperty.isExpanded = false;
-            var previousHolders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var previousHolders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
             var fieldInfo = typeof(OverridableTestAsset).GetField(nameof(OverridableTestAsset.payloadValue));
 
             var attribute = new OverridableDefaultAttribute(
@@ -739,7 +740,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.AreEqual(0, valueField.Q<IntegerField>().value);
             Assert.IsFalse(valueField.enabledSelf);
             Assert.IsTrue(control.enabledSelf);
-            Assert.IsNull(_row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(_row.Q<Button>(className: "encosy-row__more"));
             StringAssert.Contains("No [OverridableDefault]", valueField.parent.tooltip);
             Assert.AreEqual(9, _asset.nestedList.value[1].value);
             Assert.IsFalse(_asset.nestedList.value[1].isOverridden);
@@ -925,7 +926,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [TestCase(1, 0, false)]
         public void NestedHolderElement_PreservesFlagsAndLocksItsControls(int index, int shownValue, bool isOverridden)
         {
-            _outerHolder = OverridableDefaultHolder.Create(typeof(Overridable<int>[]));
+            _outerHolder = SerializedValueHolder.Create(typeof(Overridable<int>[]));
 
             var defaults = new[] {
                 new Overridable<int>(value: 2, isOverridden: true),
@@ -934,7 +935,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             var list = _outerHolder.Write(value: defaults, expandedSource: null);
             var element = list.GetArrayElementAtIndex(index);
-            var fieldInfo = typeof(OverridableDefaultBox<Overridable<int>[]>).GetField(OverridableEditorAPI.VALUE);
+            var fieldInfo = typeof(SerializedValueBox<Overridable<int>[]>).GetField(OverridableEditorAPI.VALUE);
             var valueType = OverridableEditorAPI.GetValueType(fieldInfo, element);
 
             _builder = new OverridableRowBuilder(
@@ -947,7 +948,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             _row = _builder.Root;
             _window.rootVisualElement.Add(_row);
             var control = _row.Q<OverridableSwitch>();
-            var more = _row.Q<Button>(className: "encosy-overridable__more");
+            var more = _row.Q<Button>(className: "encosy-row__more");
             var valueField = _row.Q<PropertyField>();
             var input = valueField.Q<IntegerField>();
 
@@ -1002,7 +1003,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.AreEqual(3, valueField.Q<IntegerField>().value);
             Assert.IsFalse(valueField.enabledSelf);
-            Assert.IsNull(_row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(_row.Q<Button>(className: "encosy-row__more"));
             StringAssert.Contains("Default value: 3", valueField.parent.tooltip);
 
             _row.Q<OverridableSwitch>().value = true;
@@ -1015,7 +1016,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Bind_HolderTargetLocksControlsAndHasNoOwnTooltips()
         {
-            _outerHolder = OverridableDefaultHolder.Create(typeof(Overridable<int>));
+            _outerHolder = SerializedValueHolder.Create(typeof(Overridable<int>));
 
             var property = _outerHolder.Write(
                   value: new Overridable<int>(value: 9, isOverridden: true)
@@ -1035,7 +1036,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             _window.rootVisualElement.Add(_row);
             _row.Bind(property.serializedObject);
             var control = _row.Q<OverridableSwitch>();
-            var more = _row.Q<Button>(className: "encosy-overridable__more");
+            var more = _row.Q<Button>(className: "encosy-row__more");
             var valueField = _row.Q<PropertyField>();
 
             Assert.IsFalse(control.enabledSelf);
@@ -1050,7 +1051,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Detach_DestroysHolderAndReattachCreatesFreshDefaultBinding()
         {
-            var previousHolders = Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>();
+            var previousHolders = Resources.FindObjectsOfTypeAll<SerializedValueHolder>();
             CreateRow(nameof(OverridableTestAsset.retryCount));
             BindRow();
             var valueField = _row.Q<PropertyField>();
@@ -1060,7 +1061,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsTrue(previousHolder.IsInvalid());
             OverridableTestDefaults.IntValue = 8;
             _builder.TickDefaultSource();
-            Assert.AreEqual(previousHolders.Length, Resources.FindObjectsOfTypeAll<OverridableDefaultHolder>().Length);
+            Assert.AreEqual(previousHolders.Length, Resources.FindObjectsOfTypeAll<SerializedValueHolder>().Length);
 
             BindRow();
             var holder = GetNewHolder(previousHolders);
@@ -1089,7 +1090,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                 }
                 else
                 {
-                    Assert.IsInstanceOf<OverridableDefaultHolder>(element.serializedObject.targetObject);
+                    Assert.IsInstanceOf<SerializedValueHolder>(element.serializedObject.targetObject);
                 }
             }
         }

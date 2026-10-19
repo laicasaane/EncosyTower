@@ -47,7 +47,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             return result;
         }
 
-        private static IReadOnlyList<(string label, object value)> Resolve(FieldInfo field, Type valueType)
+        private static IReadOnlyList<ValueChoice> Resolve(FieldInfo field, Type valueType)
         {
             var attribute = field.GetCustomAttribute<ValueChoicesAttribute>();
 
@@ -120,11 +120,11 @@ namespace EncosyTower.Tests.Editor.Serialization
             var field = typeof(CollectionChoicesTestAsset).GetField(fieldName);
             var choices = Resolve(field, valueType);
             Assert.AreEqual(expected: 3, actual: choices.Count);
-            Assert.AreEqual("Gentle", choices[0].label);
-            Assert.AreEqual("Standard", choices[1].label);
-            Assert.AreEqual("Rush", choices[2].label);
-            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)choices[1].value);
-            Assert.AreEqual(valueType, choices[1].value.GetType());
+            Assert.AreEqual("Gentle", choices[0].Label);
+            Assert.AreEqual("Standard", choices[1].Label);
+            Assert.AreEqual("Rush", choices[2].Label);
+            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)choices[1].Value);
+            Assert.AreEqual(valueType, choices[1].Value.GetType());
             Assert.IsFalse(ValueChoicesEditorAPI.UsesDropdown(
                   field.GetCustomAttribute<ValueChoicesAttribute>()
                 , valueType
@@ -210,7 +210,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsTrue(resolved, error.ToMessage());
             Assert.AreEqual(expected: 3, actual: choices.Count);
-            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)choices[1].value);
+            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)choices[1].Value);
         }
 
         [Test]
@@ -252,10 +252,10 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsNotNull(list);
             Assert.AreEqual(expected: 3, actual: list.itemsSource.Count);
-            var buttons = root.Query<Button>(className: "encosy-overridable__more").ToList();
+            var buttons = root.Query<Button>(className: "encosy-row__more").ToList();
             Assert.AreEqual(expected: 1, actual: buttons.Count);
-            Assert.IsNull(root.Q<OverridableChoiceField>());
-            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)ValueChoicesPropertyDrawer.ReadValue(
+            Assert.IsNull(root.Q<ChoicePopupField>());
+            CollectionAssert.AreEqual(new[] { 1, 2, 4 }, (IEnumerable)SerializedValueAPI.Read(
                   property
                 , typeof(CollectionChoicesTestAsset).GetField(fieldName).FieldType
             ));
@@ -319,7 +319,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsNotNull(input);
             Assert.AreEqual(expected: 2, actual: input.value);
-            Assert.IsNull(root.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(root.Q<Button>(className: "encosy-row__more"));
             input.value = 7;
             Assert.AreEqual(expected: 7, actual: collection.GetArrayElementAtIndex(1).intValue);
             Assert.AreEqual(expected: 1, actual: collection.GetArrayElementAtIndex(0).intValue);
@@ -369,18 +369,18 @@ namespace EncosyTower.Tests.Editor.Serialization
                 );
 
                 var method = type.GetMethod("ApplyChoice", BindingFlags.Instance | BindingFlags.NonPublic);
-                method.Invoke(plain, new[] { choices[2].value });
+                method.Invoke(plain, new[] { choices[2].Value });
             }
 
             _source.Update();
-            CollectionAssert.AreEqual(new[] { 2, 4, 8 }, (IEnumerable)ValueChoicesPropertyDrawer.ReadValue(
+            CollectionAssert.AreEqual(new[] { 2, 4, 8 }, (IEnumerable)SerializedValueAPI.Read(
                   property
                 , field.FieldType
             ));
 
             Undo.PerformUndo();
             _source.Update();
-            CollectionAssert.AreEqual(new[] { 1, 2, 4, 99 }, (IEnumerable)ValueChoicesPropertyDrawer.ReadValue(
+            CollectionAssert.AreEqual(new[] { 1, 2, 4, 99 }, (IEnumerable)SerializedValueAPI.Read(
                   property
                 , field.FieldType
             ));
@@ -441,7 +441,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var value = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             CollectionAssert.AreEqual(
                   new[] { 2, 4, 8 }
-                , (IEnumerable)ValueChoicesPropertyDrawer.ReadValue(value, valueType)
+                , (IEnumerable)SerializedValueAPI.Read(value, valueType)
             );
 
             var selectedMenu = imgui
@@ -456,7 +456,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsFalse(property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN).boolValue);
             CollectionAssert.AreEqual(
                   new[] { 99 }
-                , (IEnumerable)ValueChoicesPropertyDrawer.ReadValue(value, valueType)
+                , (IEnumerable)SerializedValueAPI.Read(value, valueType)
             );
         }
 

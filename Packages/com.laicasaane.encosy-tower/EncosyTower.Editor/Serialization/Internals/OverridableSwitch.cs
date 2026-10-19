@@ -5,6 +5,13 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.Serialization.Internals
 {
+    /// <summary>
+    /// The override switch of a UI Toolkit row.
+    /// </summary>
+    /// <remarks>
+    /// The switch is focusable and has the tooltip "Override". While it is enabled, a left click, Space, Return or
+    /// Enter toggles it. In the mixed state, a click or key press sets it to true.
+    /// </remarks>
     internal sealed class OverridableSwitch : VisualElement, INotifyValueChanged<bool>
     {
         private const string ON_CLASS = "encosy-overridable__switch--on";
@@ -13,6 +20,9 @@ namespace EncosyTower.Editor.Serialization.Internals
         private bool _value;
         private bool _showMixedValue;
 
+        /// <summary>
+        /// Creates the switch.
+        /// </summary>
         public OverridableSwitch()
         {
             focusable = true;
@@ -39,6 +49,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             RegisterCallback<KeyDownEvent>(OnKeyDown);
         }
 
+        /// <summary>
+        /// Whether the override is on.
+        /// </summary>
+        /// <value>
+        /// The setter clears the mixed state and raises a <see cref="ChangeEvent{T}"/>, except when the value is
+        /// unchanged and the switch is not mixed.
+        /// </value>
         public bool value
         {
             get => _value;
@@ -57,6 +74,9 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
+        /// <summary>
+        /// Whether the switch shows the mixed state of several objects.
+        /// </summary>
         public bool ShowMixedValue
         {
             get => _showMixedValue;
@@ -67,6 +87,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
+        /// <inheritdoc/>
         public void SetValueWithoutNotify(bool newValue)
         {
             _value = newValue;

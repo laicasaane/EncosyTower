@@ -27,7 +27,7 @@ namespace EncosyTower.Editor.AssemblyDefs
 
         private TabView _tabView;
         private AssemblyReferenceTab _tabAll;
-        private AssemblyReferenceTab _tabFiltered;
+        private AssemblyReferenceTab _tabSuggested;
 
         public static void OpenWindow(AssemblyData assemblyData)
         {
@@ -44,7 +44,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             var allReferences = (IReadOnlyList<AssemblyReferenceData>)assemblyData?.AllReferences
                 ?? Array.Empty<AssemblyReferenceData>();
 
-            var filteredReferences = (IReadOnlyList<AssemblyReferenceData>)assemblyData?.FilteredReferences
+            var suggestedReferences = (IReadOnlyList<AssemblyReferenceData>)assemblyData?.SuggestedReferences
                 ?? Array.Empty<AssemblyReferenceData>();
 
             OnCreateGUI();
@@ -57,12 +57,12 @@ namespace EncosyTower.Editor.AssemblyDefs
                 allReferences
             );
 
-            _tabFiltered.Update(
+            _tabSuggested.Update(
                 assemblyData.AssetPath,
                 assemblyData.Asset,
                 assemblyData.AssemblyDefinition,
                 assemblyData.UseGuid,
-                filteredReferences
+                suggestedReferences
             );
         }
 
@@ -77,11 +77,11 @@ namespace EncosyTower.Editor.AssemblyDefs
             rootVisualElement.WithEditorStyleSheet(STYLE_SHEET_DARK, STYLE_SHEET_LIGHT);
 
             _tabAll = new AssemblyReferenceTab("All", Close);
-            _tabFiltered = new AssemblyReferenceTab("Filtered", Close);
+            _tabSuggested = new AssemblyReferenceTab("Suggested", Close);
 
             _tabView = new TabView();
             _tabView.Add(_tabAll);
-            _tabView.Add(_tabFiltered);
+            _tabView.Add(_tabSuggested);
 
             rootVisualElement.Add(_tabView);
         }
@@ -103,7 +103,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             private readonly ObjectField _objectField;
             private readonly VisualElement _bar;
 
-            public ReferenceField(string label, AssemblyReferenceData data, bool isSeparator = false)
+            public ReferenceField()
             {
                 AddToClassList(ReferenceFieldUssClassName);
 
@@ -116,7 +116,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                 _bar = new();
                 _bar.AddToClassList(ReferenceBarUssClassName);
 
-                _label = new(label);
+                _label = new(string.Empty);
                 _label.AddToClassList(ReferenceLabelUssClassName);
 
                 _objectField = new(string.Empty) {
@@ -129,19 +129,12 @@ namespace EncosyTower.Editor.AssemblyDefs
                 _bar.Add(_objectField);
 
                 Add(_bar);
-
-                UpdateHeader(label, data, isSeparator);
             }
 
-            public void UpdateHeader(string label, AssemblyReferenceData data, bool isHeader)
+            public void UpdateItem(ReferenceItem item)
             {
-                this.isHeader = isHeader;
-                this.data = data;
-
-                if (data == null)
-                {
-                    return;
-                }
+                isHeader = item.IsGroupHeader;
+                data = item.Reference;
 
                 EnableInClassList(ItemAsHeaderUssClassName, isHeader);
 
@@ -151,18 +144,29 @@ namespace EncosyTower.Editor.AssemblyDefs
                 _objectField.enabledSelf = !isHeader;
 
                 _toggle.value = !isHeader && data.selected;
-                _label.text = isHeader ? data.headerText : label;
+                _label.text = isHeader ? item.GroupName : data.Name;
                 _objectField.value = isHeader ? null : data.asset;
             }
 
             private void Toggle_OnValueChanged(ChangeEvent<bool> evt)
             {
-                data.selected = evt.newValue;
+                if (data != null)
+                {
+                    data.selected = evt.newValue;
+                }
             }
+        }
+
+        private sealed record class ReferenceItem(string GroupName, AssemblyReferenceData Reference)
+        {
+            public bool IsGroupHeader => Reference == null;
         }
 
         private class AssemblyReferenceTab : Tab
         {
+            private const string SELECTED_GROUP = "Pre-selected References";
+            private const string OTHER_GROUP = "Other References";
+
             public static readonly string ListViewUssClassName = "list-view";
             public static readonly string ListEmptyLabelUssClassName = "list-empty-label";
             public static readonly string AssemblyContainerUssClassName = "assembly-container";
@@ -175,7 +179,8 @@ namespace EncosyTower.Editor.AssemblyDefs
             public static readonly string ApplyGroupUssClassName = "apply-group";
             public static readonly string ApplyAssemblyUssClassName = "apply-assembly";
 
-            private readonly List<AssemblyReferenceData> _listViewItemSource = new();
+            private readonly List<ReferenceItem> _listViewItemSource = new();
+            private readonly List<ReferenceItem> _items = new();
             private readonly List<AssemblyReferenceData> _references = new();
 
             private readonly Label _emptyLabel;
@@ -285,12 +290,33 @@ namespace EncosyTower.Editor.AssemblyDefs
                 _references.Clear();
                 _references.AddRange(references);
 
+                _items.Clear();
+                _items.Add(new ReferenceItem(GroupName: SELECTED_GROUP, Reference: null));
+
+                for (var i = 0; i < _references.Count; i++)
+                {
+                    if (_references[i].selected)
+                    {
+                        _items.Add(new ReferenceItem(GroupName: null, Reference: _references[i]));
+                    }
+                }
+
+                _items.Add(new ReferenceItem(GroupName: OTHER_GROUP, Reference: null));
+
+                for (var i = 0; i < _references.Count; i++)
+                {
+                    if (_references[i].selected == false)
+                    {
+                        _items.Add(new ReferenceItem(GroupName: null, Reference: _references[i]));
+                    }
+                }
+
                 _listViewItemSource.Clear();
-                _listViewItemSource.AddRange(_references);
+                _listViewItemSource.AddRange(_items);
 
                 _listView.Rebuild();
 
-                var hasItems = references.Count > 0;
+                var hasItems = _items.Count > 0;
                 _emptyLabel.WithDisplay(hasItems ? DisplayStyle.None : DisplayStyle.Flex);
                 _container.WithDisplay(hasItems ? DisplayStyle.Flex : DisplayStyle.None);
             }
@@ -308,7 +334,7 @@ namespace EncosyTower.Editor.AssemblyDefs
 
             private void SearchField_OnValueChanged(ChangeEvent<string> evt)
             {
-                FuzzySearchAPI.Search(_references, evt.newValue, _listViewItemSource, new SearchValidator());
+                FuzzySearchAPI.Search(_items, evt.newValue, _listViewItemSource, new SearchValidator());
                 _listView?.Rebuild();
             }
 
@@ -329,7 +355,7 @@ namespace EncosyTower.Editor.AssemblyDefs
             }
 
             private ReferenceField ListView_OnMakeItem()
-                => new(string.Empty, null);
+                => new();
 
             private void ListView_OnBindItem(VisualElement element, int index)
             {
@@ -338,8 +364,7 @@ namespace EncosyTower.Editor.AssemblyDefs
                     return;
                 }
 
-                var item = _listViewItemSource[index];
-                field.UpdateHeader(item.Name, item, item.IsHeader);
+                field.UpdateItem(_listViewItemSource[index]);
             }
 
             private static void ApplyReferences(
@@ -358,7 +383,6 @@ namespace EncosyTower.Editor.AssemblyDefs
 
                 assemblyDef.references = references
                     .Where(static x => x != null)
-                    .Where(static x => x.IsHeader == false)
                     .Where(static x => x.selected)
                     .Select(x => useGuid ? x.guidString : x.Name)
                     .ToArray();
@@ -375,13 +399,13 @@ namespace EncosyTower.Editor.AssemblyDefs
                 }
             }
 
-            private readonly struct SearchValidator : ISearchValidator<AssemblyReferenceData>
+            private readonly struct SearchValidator : ISearchValidator<ReferenceItem>
             {
-                public string GetSearchableString(AssemblyReferenceData item)
-                    => item.Name;
+                public string GetSearchableString(ReferenceItem item)
+                    => item.Reference.Name;
 
-                public bool IsSearchable(AssemblyReferenceData item)
-                    => item.IsHeader == false;
+                public bool IsSearchable(ReferenceItem item)
+                    => item.IsGroupHeader == false;
             }
         }
     }

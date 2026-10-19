@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 
+using EncosyTower.Editor;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -56,7 +57,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             if (controlType == typeof(OverridableQuaternionField))
             {
                 Assume.That(
-                      OverridableImguiRow.HasCustomDrawer(typeof(Quaternion))
+                      global::EncosyTower.Editor.ImguiAPI.HasCustomDrawer(typeof(Quaternion))
                     , Is.False
                     , "A registered Quaternion drawer (for example SRP Core's) takes precedence."
                 );
@@ -64,7 +65,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         }
 
         private static VisualElement GetValueField(VisualElement root)
-            => root.Q<VisualElement>(className: OverridableRowBuilder.VALUE_FIELD_CLASS_NAME);
+            => root.Q<VisualElement>(className: UitkAPI.VALUE_FIELD_CLASS_NAME);
 
         private static VisualElement GetSingleControl(VisualElement root, Type controlType)
         {
@@ -137,7 +138,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.AreEqual(propertyType, stored.propertyType);
             Assert.IsNull(builder.Root.Q<Foldout>());
             Assert.IsFalse(input.enabledSelf);
-            Assert.AreEqual("_overridableDefault.value", ((IBindable)input).bindingPath);
+            Assert.AreEqual("_box.value", ((IBindable)input).bindingPath);
             Assert.AreEqual(expected, controlType.GetProperty("value").GetValue(control));
             Assert.IsFalse(property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN).boolValue);
 
@@ -145,7 +146,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var preview = imgui.GetDrawnProperty();
             Assert.AreEqual(propertyType, preview.propertyType);
             Assert.IsFalse(OverridableImguiRow.UsesHeader(preview, valueType));
-            Assert.AreEqual(expected, SerializedValueCopy.Read(preview, valueType));
+            Assert.AreEqual(expected, SerializedValueAPI.Read(preview, valueType));
 
             builder.Root.Q<OverridableSwitch>().value = true;
             Assert.AreSame(input, GetValueField(builder.Root));
@@ -196,7 +197,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsFalse(_asset.weights.isOverridden);
             Assert.AreEqual(edited, _asset.weights.value);
             Assert.AreSame(input, builder.Root.Q<Vector4Field>());
-            Assert.AreEqual("_overridableDefault.value", ((IBindable)input).bindingPath);
+            Assert.AreEqual("_box.value", ((IBindable)input).bindingPath);
             Assert.AreEqual(SpecialTypeTestDefaults.Weights, input.value);
             Assert.IsFalse(input.enabledInHierarchy);
             Undo.PerformUndo();

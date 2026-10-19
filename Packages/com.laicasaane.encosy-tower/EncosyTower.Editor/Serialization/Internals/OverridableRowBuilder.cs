@@ -13,17 +13,39 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.Serialization.Internals
 {
+    /// <summary>
+    /// Builds the UI Toolkit row of an <see cref="Overridable{T}"/> field.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="OverridablePropertyDrawer"/> and <see cref="ValueChoicesPropertyDrawer"/> create it.
+    /// The row binds to the real value property while the field is overridden or mixed. Otherwise it binds to the
+    /// property of a temporary <see cref="SerializedValueHolder"/> that holds the shown default, and the row is
+    /// read-only. <see cref="Refresh"/> swaps the binding.
+    /// </para>
+    /// <para>
+    /// <see cref="Refresh"/> runs when the property value changes, when the row attaches to a panel, when the
+    /// settings asset of the default changes, on Undo or Redo for a collection, and when the default changes. A
+    /// default from a <c>Settings&lt;T&gt;</c> asset is tracked through a <see cref="SerializedObject"/>. Any other
+    /// default is polled every 100 ms by comparing JSON snapshots; the poll pauses while the field is overridden or
+    /// mixed and while the row is detached. When the row detaches, it destroys the holder and drops the bindings.
+    /// </para>
+    /// <para>
+    /// A dropdown row lists the default item first, with the default value in parentheses, then the choices.
+    /// Its index is -1 when the state is mixed or an overridden value is not in the list. The default tooltip shows
+    /// only while the default item is selected and the row is not locked. The warning icon shows only when the
+    /// choices are exclusive and the value is not listed.
+    /// </para>
+    /// <para>
+    /// The root swallows the bubbling <c>SerializedObjectBindEvent</c>, so a bind on a parent cannot rebind the
+    /// child fields.
+    /// </para>
+    /// </remarks>
     internal sealed class OverridableRowBuilder
     {
-        public const string ROW_CLASS_NAME = "encosy-overridable__row";
-        public const string VALUE_FIELD_CLASS_NAME = "encosy-overridable__value-field";
-
         private const string USS_CLASS_NAME = "encosy-overridable";
         private const string DIMMED_CLASS = USS_CLASS_NAME + "__label--default";
         private const string LOCKED_BODY_CLASS = USS_CLASS_NAME + "__value--locked";
-        private const string LOCAL_LABEL_CLASS = USS_CLASS_NAME + "__local-label";
-        private const string LIST_LAYOUT_CLASS = USS_CLASS_NAME + "__list-layout";
-        private const string IMGUI_LAYOUT_CLASS = USS_CLASS_NAME + "__imgui-layout";
         private const string ARRAY_SIZE_PATH = "Array.size";
         private const long DEFAULT_REFRESH_INTERVAL = 100;
 
@@ -36,14 +58,14 @@ namespace EncosyTower.Editor.Serialization.Internals
         private readonly SerializedProperty _isOverriddenProperty;
         private readonly Type _valueType;
         private readonly OverridableDefaultAttribute _attribute;
-        private readonly IReadOnlyList<(string label, object value)> _choices;
-        private readonly IReadOnlyList<(string label, object value)> _popupChoices;
-        private readonly bool _listsOnlyChoices;
+        private readonly IReadOnlyList<ValueChoice> _choices;
+        private readonly IReadOnlyList<ValueChoice> _selectableChoices;
+        private readonly bool _isExclusive;
         private readonly string _displayLabel;
         private readonly bool _isListElement;
         private readonly bool _locked;
         private readonly OverridableSwitch _switch;
-        private readonly OverridableChoiceField _choiceField;
+        private readonly ChoicePopupField _choiceField;
         private readonly Image _warning;
         private readonly VisualElement _valueField;
         private readonly VisualElement _valueContainer;
@@ -57,7 +79,7 @@ namespace EncosyTower.Editor.Serialization.Internals
         private readonly object _defaultSnapshotBox;
         private readonly FieldInfo _defaultSnapshotValue;
 
-        private OverridableDefaultHolder _holder;
+        private SerializedValueHolder _holder;
         private SerializedObject _settingsObject;
         private SerializedProperty _boundProperty;
         private Foldout _valueFoldout;
@@ -68,13 +90,35 @@ namespace EncosyTower.Editor.Serialization.Internals
         private bool _hasTracking;
         private bool _detached;
 
+        /// <summary>
+        /// Creates the row of a property.
+        /// </summary>
+        /// <remarks>
+        /// The row is a dropdown when the choices or the value type ask for one; see
+        /// <see cref="ValueChoicesEditorAPI.UsesDropdown"/> and <see cref="OverridableEditorAPI.GetMode"/>.
+        /// Otherwise it is an override switch with a value field. A composite or collection value gets a foldout
+        /// header, and a collection gets a size field.
+        /// </remarks>
+        /// <param name="property">The <see cref="Overridable{T}"/> property.</param>
+        /// <param name="fieldInfo">The field that holds the property.</param>
+        /// <param name="valueType">The type of the value.</param>
+        /// <param name="attribute">
+        /// The default source. It is ignored for an element of a collection, and it falls back to the attribute of
+        /// <paramref name="fieldInfo"/> when it is <see langword="null"/>.
+        /// </param>
+        /// <param name="label">The row label. The display name of the property is the default.</param>
+        /// <param name="choices">
+        /// The resolved choices, or <see langword="null"/> when the field has none. A non-exclusive row with at least
+        /// one choice gets a menu button.
+        /// </param>
+        /// <param name="choicesAttribute">The choices attribute; it makes the row exclusive or not.</param>
         public OverridableRowBuilder(
               SerializedProperty property
             , FieldInfo fieldInfo
             , Type valueType
             , OverridableDefaultAttribute attribute
             , string label = null
-            , IReadOnlyList<(string label, object value)> choices = null
+            , IReadOnlyList<ValueChoice> choices = null
             , ValueChoicesAttribute choicesAttribute = null
         )
         {
@@ -89,8 +133,8 @@ namespace EncosyTower.Editor.Serialization.Internals
                 : attribute ?? fieldInfo?.GetCustomAttribute<OverridableDefaultAttribute>();
 
             _choices = choices;
-            _listsOnlyChoices = choices != null && ValueChoicesEditorAPI.ListsOnlyChoices(choicesAttribute, valueType);
-            _locked = OverridableImguiRow.IsLocked(property);
+            _isExclusive = choices != null && ValueChoicesEditorAPI.IsExclusive(choicesAttribute);
+            _locked = PropertyLockAPI.IsLocked(property);
             label ??= property.displayName;
             _displayLabel = label;
 
@@ -98,7 +142,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             AddStyleSheets(Root);
 
             var row = new VisualElement();
-            row.AddToClassList(ROW_CLASS_NAME);
+            row.AddToClassList(UitkAPI.ROW_CLASS_NAME);
             Root.Add(row);
 
             var usesDropdown = choices != null
@@ -107,7 +151,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             if (usesDropdown)
             {
-                _choiceField = new OverridableChoiceField(label);
+                _choiceField = new ChoicePopupField(label);
                 _choiceField.AddToClassList(BaseField<int>.alignedFieldUssClassName);
                 _choiceField.RegisterValueChangedCallback(OnChoiceChanged);
                 _choiceField.SetEnabled(_locked == false);
@@ -115,12 +159,16 @@ namespace EncosyTower.Editor.Serialization.Internals
 
                 if (choices != null)
                 {
-                    _popupChoices = ValueChoicesPropertyDrawer.GetPopupChoices(choicesAttribute, valueType, choices);
+                    _selectableChoices = ValueChoicesEditorAPI.GetSelectableChoices(
+                          choicesAttribute
+                        , valueType
+                        , choices
+                    );
                 }
 
-                if (_listsOnlyChoices)
+                if (_isExclusive)
                 {
-                    _warning = ValueChoicesPropertyDrawer.CreateWarningIcon();
+                    _warning = UitkAPI.CreateWarningIcon();
                     row.Add(_warning);
                 }
             }
@@ -139,7 +187,7 @@ namespace EncosyTower.Editor.Serialization.Internals
                 input.Add(_switch);
 
                 _valueContainer = new VisualElement();
-                _valueContainer.AddToClassList(USS_CLASS_NAME + "__value");
+                _valueContainer.AddToClassList(UitkAPI.VALUE_CLASS_NAME);
 
                 var isCollectionHeader = _valueProperty.isArray
                     && _valueProperty.propertyType != SerializedPropertyType.String;
@@ -175,22 +223,22 @@ namespace EncosyTower.Editor.Serialization.Internals
                 }
 
                 _valueField = _valueProperty.propertyType switch {
-                    SerializedPropertyType.Vector4 when OverridableImguiRow.HasCustomDrawer(valueType) == false
+                    SerializedPropertyType.Vector4 when ImguiAPI.HasCustomDrawer(valueType) == false
                         => (VisualElement)new Vector4Field(),
-                    SerializedPropertyType.Quaternion when OverridableImguiRow.HasCustomDrawer(valueType) == false
+                    SerializedPropertyType.Quaternion when ImguiAPI.HasCustomDrawer(valueType) == false
                         => new OverridableQuaternionField(),
                     _ => new PropertyField { label = string.Empty },
                 };
 
-                _valueField.AddToClassList(VALUE_FIELD_CLASS_NAME);
+                _valueField.AddToClassList(UitkAPI.VALUE_FIELD_CLASS_NAME);
                 _valueContainer.Add(_valueField);
 
                 _valueField.RegisterCallback<GeometryChangedEvent>(OnValueGeometryChanged);
             }
 
-            if (choices?.Count > 0 && _listsOnlyChoices == false)
+            if (choices?.Count > 0 && _isExclusive == false)
             {
-                _moreButton = CreateMenuButton(
+                _moreButton = UitkAPI.CreateMenuButton(
                       _locked ? string.Empty : ValueChoicesPropertyDrawer.CHOICES_TOOLTIP
                     , _locked
                 );
@@ -206,7 +254,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             if (_isListElement && (_moreButton != null || _warning != null))
             {
-                AlignListElementRow(row);
+                UitkAPI.AlignListElementRow(row);
             }
 
             row.RegisterCallback<PointerUpEvent>(OnPointerUp, TrickleDown.TrickleDown);
@@ -222,9 +270,9 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             if (_attribute != null && _settingsTracker == null && _locked == false)
             {
-                var boxType = typeof(OverridableDefaultBox<>).MakeGenericType(_valueType);
+                var boxType = typeof(SerializedValueBox<>).MakeGenericType(_valueType);
                 _defaultSnapshotBox = Activator.CreateInstance(boxType);
-                _defaultSnapshotValue = boxType.GetField(nameof(OverridableDefaultBox<int>.value));
+                _defaultSnapshotValue = boxType.GetField(nameof(SerializedValueBox<int>.value));
                 _defaultRefresh = Root.schedule.Execute(TickDefaultSource).Every(DEFAULT_REFRESH_INTERVAL);
                 _defaultRefresh.Pause();
             }
@@ -235,65 +283,25 @@ namespace EncosyTower.Editor.Serialization.Internals
             Refresh();
         }
 
+        /// <summary>
+        /// The root of the row. Add it to the Inspector.
+        /// </summary>
         public VisualElement Root { get; }
 
+        /// <summary>
+        /// Adds the Overridable class, the theme style sheet and the shared style sheet to an element.
+        /// </summary>
+        /// <remarks>
+        /// The theme is the dark or the light style sheet, by the Editor skin. The plain field of
+        /// <see cref="ValueChoicesPropertyDrawer"/> uses it too.
+        /// </remarks>
+        /// <param name="root">The element that receives the style sheets.</param>
         public static void AddStyleSheets(VisualElement root)
         {
+            UitkAPI.AddRowStyleSheets(root);
             root.AddToClassList(USS_CLASS_NAME);
             root.styleSheets.Add(GetThemeStyleSheet());
             root.styleSheets.Add(EditorAPI.GetOrLoadAsset(ref s_styleSheet, OverridableStyleSheetPaths.USS_PATH));
-            root.RegisterCallback<GeometryChangedEvent>(OnValueSubtreeGeometryChanged);
-        }
-
-        public static void AlignListElementRow(VisualElement row)
-        {
-            _ = new ListElementAlignment(row);
-        }
-
-        public static Button CreateMenuButton(string tooltip, bool locked)
-        {
-            var button = new Button { tooltip = tooltip };
-            button.AddToClassList(USS_CLASS_NAME + "__more");
-            button.SetEnabled(locked == false);
-
-            var iconName = EditorGUIUtility.isProSkin ? "d__menu@2x" : "_menu@2x";
-
-            var icon = new Image {
-                image = EditorGUIUtility.IconContent(iconName).image,
-                pickingMode = PickingMode.Ignore,
-            };
-
-            icon.AddToClassList(USS_CLASS_NAME + "__more-icon");
-            button.Add(icon);
-            return button;
-        }
-
-        public static void AlignCollectionMenu(Button button, VisualElement sizeField)
-        {
-            var parent = button?.hierarchy.parent;
-
-            if (parent == null
-                || sizeField?.panel == null
-                || button.panel != sizeField.panel
-                || sizeField.layout.height <= 0f
-                || button.layout.height <= 0f
-            )
-            {
-                return;
-            }
-
-            var center = parent.WorldToLocal(sizeField.worldBound.center).y;
-            var offset = center - button.layout.center.y;
-
-            if (float.IsNaN(offset) || float.IsInfinity(offset))
-            {
-                return;
-            }
-
-            if (Mathf.Approximately(button.style.translate.value.y.value, offset) == false)
-            {
-                button.style.translate = new Translate(x: 0f, y: offset, z: 0f);
-            }
         }
 
         private static StyleSheet GetThemeStyleSheet()
@@ -304,6 +312,14 @@ namespace EncosyTower.Editor.Serialization.Internals
                 , OverridableStyleSheetPaths.LIGHT_USS_PATH
             );
 
+        /// <summary>
+        /// Brings the row in line with the property and the default.
+        /// </summary>
+        /// <remarks>
+        /// It does nothing while the row is detached or the target object is destroyed. A dropdown row refreshes its
+        /// items. Otherwise it updates the switch, the dimmed label and the tooltip, and binds the value field to the
+        /// real value or to the default holder; see the type remarks.
+        /// </remarks>
         public void Refresh()
         {
             if (_detached || _property.serializedObject.targetObject.IsInvalid())
@@ -336,7 +352,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             {
                 if (_holder.IsInvalid())
                 {
-                    _holder = OverridableDefaultHolder.Create(_valueType);
+                    _holder = SerializedValueHolder.Create(_valueType);
                 }
 
                 bindingProperty = _holder.Write(
@@ -388,20 +404,28 @@ namespace EncosyTower.Editor.Serialization.Internals
             SynchronizeHeader();
         }
 
-        public (GUIContent Content, bool IsChecked, GenericMenu.MenuFunction Callback)[] GetChoiceMenuItems()
+        /// <summary>
+        /// Gets the items of the menu of choices.
+        /// </summary>
+        /// <returns>
+        /// No items when the row has no choices, is exclusive, is locked or is disabled. Otherwise one item for each
+        /// choice, checked against the current value, which is the shown default while not overridden. An item
+        /// applies the choice and turns the override on.
+        /// </returns>
+        public ValueChoiceMenuItem[] GetChoiceMenuItems()
         {
-            if (_choices == null || _listsOnlyChoices || _locked || Root.enabledInHierarchy == false)
+            if (_choices == null || _isExclusive || _locked || Root.enabledInHierarchy == false)
             {
-                return Array.Empty<(GUIContent, bool, GenericMenu.MenuFunction)>();
+                return Array.Empty<ValueChoiceMenuItem>();
             }
 
             _property.serializedObject.UpdateIfRequiredOrScript();
 
             var currentValue = _isOverriddenProperty.boolValue
-                ? ValueChoicesPropertyDrawer.ReadValue(_valueProperty, _valueType)
+                ? SerializedValueAPI.Read(_valueProperty, _valueType)
                 : OverridableEditorAPI.GetShownDefault(_attribute, _valueType);
 
-            return ValueChoicesPropertyDrawer.CreateMenuItems(
+            return ValueChoicesEditorAPI.CreateChoiceMenuItems(
                   _choices
                 , currentValue
                 , OverridableEditorAPI.IsMixed(_property)
@@ -424,13 +448,21 @@ namespace EncosyTower.Editor.Serialization.Internals
             return menu;
         }
 
+        /// <summary>
+        /// Builds the context menu that opens on a right click.
+        /// </summary>
+        /// <param name="shiftPressed">Whether Shift was held when the menu opened.</param>
+        /// <returns>
+        /// An empty menu when the row is locked, detached, disabled or destroyed; otherwise the result of
+        /// <c>OverridableEditorAPI.BuildPropertyContextMenu</c>.
+        /// </returns>
         public GenericMenu BuildContextMenu(bool shiftPressed = false)
         {
             if (_locked
                 || _detached
                 || Root.enabledInHierarchy == false
                 || _property.serializedObject.targetObject.IsInvalid()
-                || OverridableImguiRow.IsLocked(_property)
+                || PropertyLockAPI.IsLocked(_property)
             )
             {
                 return new GenericMenu();
@@ -439,6 +471,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             return OverridableEditorAPI.BuildPropertyContextMenu(_property, LocateDefaultSource, shiftPressed);
         }
 
+        /// <summary>
+        /// Runs one poll of a default that is not a settings asset.
+        /// </summary>
+        /// <remarks>
+        /// It refreshes the row when the JSON snapshot of the default changed. It pauses the poll while the field is
+        /// overridden or mixed. The scheduler calls it; it is public for tests.
+        /// </remarks>
         public void TickDefaultSource()
         {
             if (_defaultRefresh == null
@@ -543,13 +582,13 @@ namespace EncosyTower.Editor.Serialization.Internals
 
         private void RefreshChoices()
         {
-            if (_popupChoices != null)
+            if (_selectableChoices != null)
             {
                 RefreshValueChoices();
                 return;
             }
 
-            var values = OverridableEditorAPI.GetValueChoices(_valueType);
+            var values = ValueDisplayAPI.GetValueChoices(_valueType);
             var choices = new string[values.Length + 1];
             choices[0] = OverridableEditorAPI.GetDefaultChoiceLabel(_attribute, _valueType);
             Array.Copy(values, 0, choices, 1, values.Length);
@@ -566,17 +605,17 @@ namespace EncosyTower.Editor.Serialization.Internals
 
         private void RefreshValueChoices()
         {
-            var count = _popupChoices.Count;
+            var count = _selectableChoices.Count;
             var labels = new string[count + 1];
             labels[0] = GetDefaultChoiceLabel();
 
             for (var i = 0; i < count; i++)
             {
-                labels[i + 1] = _popupChoices[i].label;
+                labels[i + 1] = _selectableChoices[i].Label;
             }
 
-            var value = ValueChoicesPropertyDrawer.ReadValue(_valueProperty, _valueType);
-            var valueIndex = ValueChoicesPropertyDrawer.GetChoiceIndex(_popupChoices, value);
+            var value = SerializedValueAPI.Read(_valueProperty, _valueType);
+            var valueIndex = ValueChoicesEditorAPI.GetChoiceIndex(_selectableChoices, value);
             var isOverridden = _isOverriddenProperty.boolValue;
             var isMixed = OverridableEditorAPI.IsMixed(_property);
             var index = 0;
@@ -590,7 +629,7 @@ namespace EncosyTower.Editor.Serialization.Internals
                 index = valueIndex + 1;
             }
 
-            var text = OverridableEditorAPI.GetDisplayText(_valueType, value);
+            var text = ValueDisplayAPI.GetDisplayText(_valueType, value);
             _choiceField.Choices = labels;
             _choiceField.UnlistedValueText = text;
             _choiceField.showMixedValue = isMixed;
@@ -603,7 +642,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             if (_warning != null)
             {
                 var isUnlisted = isOverridden && isMixed == false && valueIndex < 0;
-                ValueChoicesPropertyDrawer.RefreshWarning(_warning, isUnlisted, text, _locked);
+                UitkAPI.RefreshWarning(_warning, isUnlisted, text, _locked);
             }
         }
 
@@ -616,11 +655,11 @@ namespace EncosyTower.Editor.Serialization.Internals
                 return label;
             }
 
-            var index = ValueChoicesPropertyDrawer.GetChoiceIndex(_choices, value);
+            var index = ValueChoicesEditorAPI.GetChoiceIndex(_choices, value);
 
             var text = index >= 0
-                ? _choices[index].label
-                : OverridableEditorAPI.GetDisplayText(_valueType, value);
+                ? _choices[index].Label
+                : ValueDisplayAPI.GetDisplayText(_valueType, value);
 
             return $"{label} ({text})";
         }
@@ -637,7 +676,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
 
             _property.serializedObject.UpdateIfRequiredOrScript();
-            ValueChoicesPropertyDrawer.WriteValue(_valueProperty, value);
+            SerializedValueAPI.Write(_valueProperty, value);
             _isOverriddenProperty.boolValue = true;
             _property.serializedObject.ApplyModifiedProperties();
             Refresh();
@@ -685,10 +724,10 @@ namespace EncosyTower.Editor.Serialization.Internals
             static void Restore(VisualElement element)
             {
                 if (element.ClassListContains(BaseField<int>.alignedFieldUssClassName)
-                    || element.ClassListContains(LOCAL_LABEL_CLASS)
+                    || element.ClassListContains(UitkAPI.LOCAL_LABEL_CLASS_NAME)
                 )
                 {
-                    ConfigureLocalLabel(element);
+                    UitkAPI.ConfigureLocalLabel(element);
                 }
 
                 var hierarchy = element.hierarchy;
@@ -701,230 +740,11 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
-        private static void ConfigureLocalLabel(VisualElement field)
-        {
-            field.AddToClassList(LOCAL_LABEL_CLASS);
-            field.RemoveFromClassList(BaseField<int>.alignedFieldUssClassName);
-            field.RegisterCallback<GeometryChangedEvent>(OnLocalFieldGeometryChanged);
-            field.RegisterCallback<CustomStyleResolvedEvent>(OnLocalFieldStyleResolved);
-            RestoreLocalLabelWidth(field);
-        }
-
-        private static void OnLocalFieldGeometryChanged(GeometryChangedEvent evt)
-        {
-            RestoreLocalLabelWidth((VisualElement)evt.currentTarget);
-        }
-
-        private static void OnLocalFieldStyleResolved(CustomStyleResolvedEvent evt)
-        {
-            RestoreLocalLabelWidth((VisualElement)evt.currentTarget);
-        }
-
-        private static void OnLocalLabelGeometryChanged(GeometryChangedEvent evt)
-        {
-            var field = ((VisualElement)evt.currentTarget).hierarchy.parent;
-
-            if (field != null)
-            {
-                RestoreLocalLabelWidth(field);
-            }
-        }
-
-        private static void RestoreLocalLabelWidth(VisualElement field)
-        {
-            field.RemoveFromClassList(BaseField<int>.alignedFieldUssClassName);
-            var hierarchy = field.hierarchy;
-            var count = hierarchy.childCount;
-
-            for (var i = 0; i < count; i++)
-            {
-                if (hierarchy[i] is not Label label
-                    || label.ClassListContains(BaseField<int>.labelUssClassName) == false
-                )
-                {
-                    continue;
-                }
-
-                label.RegisterCallback<GeometryChangedEvent>(OnLocalLabelGeometryChanged);
-                label.style.width = StyleKeyword.Null;
-                label.style.flexShrink = 0;
-
-                if (label.panel == null)
-                {
-                    continue;
-                }
-
-                var measured = label.MeasureTextSize(
-                      label.text
-                    , 0
-                    , VisualElement.MeasureMode.Undefined
-                    , 0
-                    , VisualElement.MeasureMode.Undefined
-                );
-                var style = label.resolvedStyle;
-                var width = measured.x + style.paddingLeft + style.paddingRight
-                    + style.borderLeftWidth + style.borderRightWidth;
-
-                if (float.IsNaN(width) == false && float.IsInfinity(width) == false)
-                {
-                    label.style.minWidth = Mathf.Ceil(width);
-                }
-            }
-        }
-
         private void NormalizeValueLayout()
         {
             if (_detached == false)
             {
-                NormalizeValueLayout(_valueField);
-            }
-        }
-
-        private static void OnValueSubtreeGeometryChanged(GeometryChangedEvent evt)
-        {
-            NormalizeValueLayout((VisualElement)evt.currentTarget);
-        }
-
-        private static void NormalizeValueLayout(VisualElement element)
-        {
-            if (element is PropertyField || element is BaseListView)
-            {
-                element.RegisterCallback<GeometryChangedEvent>(OnValueSubtreeGeometryChanged);
-            }
-
-            if (element is BaseListView list && list.ClassListContains(LIST_LAYOUT_CLASS) == false)
-            {
-                list.AddToClassList(LIST_LAYOUT_CLASS);
-                var normalize = list.schedule.Execute(() => NormalizeValueLayout(list));
-                normalize.Pause();
-                list.itemsAdded += _ => normalize.ExecuteLater(0);
-                list.itemsRemoved += _ => normalize.ExecuteLater(0);
-                list.itemsSourceChanged += () => normalize.ExecuteLater(0);
-                var scroll = list.Q<ScrollView>();
-
-                if (scroll != null)
-                {
-                    scroll.verticalScroller.valueChanged += _ => normalize.ExecuteLater(0);
-                }
-            }
-
-            if (element.ClassListContains(BaseCompositeField<Vector3, FloatField, float>.inputUssClassName)
-                || element.ClassListContains(BaseCompositeField<Vector3, FloatField, float>.fieldGroupUssClassName)
-            )
-            {
-                element.RegisterCallback<GeometryChangedEvent>(OnCompositeGeometryChanged);
-                NormalizeCompositeMargins(element);
-            }
-
-            var parent = element.hierarchy.parent;
-
-            if (element.ClassListContains(BaseCompositeField<Vector3, FloatField, float>.fieldUssClassName)
-                || parent?.ClassListContains(BoundsField.inputUssClassName) == true
-                || parent?.ClassListContains(BoundsIntField.inputUssClassName) == true
-            )
-            {
-                ConfigureLocalLabel(element);
-            }
-
-            var hierarchy = element.hierarchy;
-            var count = hierarchy.childCount;
-            var imguiProperty = element is PropertyField
-                && element.ClassListContains(PropertyField.ussClassName + "__imgui-container-property");
-
-            for (var i = 0; i < count; i++)
-            {
-                var child = hierarchy[i];
-
-                if (imguiProperty && child is IMGUIContainer container)
-                {
-                    for (var scope = element.hierarchy.parent; scope != null; scope = scope.hierarchy.parent)
-                    {
-                        if (scope.ClassListContains(USS_CLASS_NAME + "__value"))
-                        {
-                            ConfigureImguiValue(container);
-                            break;
-                        }
-                    }
-                }
-
-                NormalizeValueLayout(child);
-            }
-        }
-
-        private static void ConfigureImguiValue(IMGUIContainer container)
-        {
-            container.style.marginLeft = -EditorStyles.inspectorDefaultMargins.padding.left;
-            container.style.marginRight = 0;
-
-            if (container.ClassListContains(IMGUI_LAYOUT_CLASS))
-            {
-                return;
-            }
-
-            container.AddToClassList(IMGUI_LAYOUT_CLASS);
-            var draw = container.onGUIHandler;
-
-            container.onGUIHandler = () => {
-                var width = container.contentRect.width;
-
-                if (float.IsNaN(width) || float.IsInfinity(width) || width <= 0f)
-                {
-                    draw();
-                    return;
-                }
-
-                width += EditorStyles.inspectorDefaultMargins.padding.right;
-                GUILayout.BeginVertical(GUIStyle.none, GUILayout.Width(width));
-
-                try
-                {
-                    draw();
-                }
-                finally
-                {
-                    GUILayout.EndVertical();
-                }
-            };
-        }
-
-        private static void OnCompositeGeometryChanged(GeometryChangedEvent evt)
-        {
-            NormalizeValueLayout((VisualElement)evt.currentTarget);
-        }
-
-        private static void NormalizeCompositeMargins(VisualElement element)
-        {
-            var hierarchy = element.hierarchy;
-            var count = hierarchy.childCount;
-            VisualElement first = null;
-            VisualElement previous = null;
-            var spacing = 0f;
-
-            for (var i = 0; i < count; i++)
-            {
-                var child = hierarchy[i];
-
-                if (child.ClassListContains(BaseCompositeField<Vector3, FloatField, float>.fieldUssClassName) == false)
-                {
-                    continue;
-                }
-
-                if (first == null)
-                {
-                    first = child;
-                    spacing = child.resolvedStyle.marginRight;
-                }
-                else if (previous != first)
-                {
-                    previous.style.marginRight = spacing;
-                }
-
-                previous = child;
-            }
-
-            if (previous != null && previous != first)
-            {
-                previous.style.marginRight = 0;
+                UitkAPI.NormalizeValueLayout(_valueField);
             }
         }
 
@@ -1019,7 +839,7 @@ namespace EncosyTower.Editor.Serialization.Internals
                 return;
             }
 
-            if (_popupChoices != null)
+            if (_selectableChoices != null)
             {
                 _property.serializedObject.UpdateIfRequiredOrScript();
 
@@ -1027,9 +847,9 @@ namespace EncosyTower.Editor.Serialization.Internals
                 {
                     OverridableEditorAPI.EndOverride(_property);
                 }
-                else if ((uint)(evt.newValue - 1) < (uint)_popupChoices.Count)
+                else if ((uint)(evt.newValue - 1) < (uint)_selectableChoices.Count)
                 {
-                    ApplyPreset(_popupChoices[evt.newValue - 1].value);
+                    ApplyPreset(_selectableChoices[evt.newValue - 1].Value);
                 }
             }
             else
@@ -1053,7 +873,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
         private void OnCollectionGeometryChanged(GeometryChangedEvent evt)
         {
-            AlignCollectionMenu(_moreButton, _sizeField);
+            UitkAPI.AlignCollectionMenu(_moreButton, _sizeField);
         }
 
         private void OnUndoRedoPerformed()
@@ -1077,7 +897,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             InitializeTracking();
             Refresh();
-            AlignCollectionMenu(_moreButton, _sizeField);
+            UitkAPI.AlignCollectionMenu(_moreButton, _sizeField);
         }
 
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
@@ -1107,55 +927,6 @@ namespace EncosyTower.Editor.Serialization.Internals
             {
                 UnityEngine.Object.DestroyImmediate(_holder);
                 _holder = null;
-            }
-        }
-
-        private sealed class ListElementAlignment
-        {
-            private readonly VisualElement _row;
-            private VisualElement _field;
-            private float _rightMargin;
-
-            public ListElementAlignment(VisualElement row)
-            {
-                _row = row;
-                row.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-
-                if (row.hierarchy.childCount > 0 && row.hierarchy[0] is PropertyField propertyField)
-                {
-                    propertyField.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-                }
-            }
-
-            private void OnGeometryChanged(GeometryChangedEvent evt)
-            {
-                if (_row.hierarchy.childCount == 0)
-                {
-                    return;
-                }
-
-                var field = _row.hierarchy[0];
-
-                if (field is PropertyField)
-                {
-                    field = field.Q(className: BaseField<int>.ussClassName);
-                }
-
-                if (field?.panel == null || field.layout.width <= 0f)
-                {
-                    return;
-                }
-
-                if (_field != field)
-                {
-                    _field?.UnregisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-                    _field = field;
-                    _rightMargin = field.resolvedStyle.marginRight;
-                    field.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-                }
-
-                _row.style.marginRight = _rightMargin;
-                field.style.marginRight = 0;
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using EncosyTower.Common;
 using EncosyTower.Editor;
 using EncosyTower.Editor.Serialization;
@@ -10,6 +11,7 @@ using EncosyTower.Settings;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace EncosyTower.Tests.Editor.Serialization
@@ -89,9 +91,9 @@ namespace EncosyTower.Tests.Editor.Serialization
         {
             CollectionAssert.AreEqual(
                   new[] { "First", "Second Choice", "Third Value" }
-                , OverridableEditorAPI.GetValueChoices(typeof(OverridableTestEnum))
+                , ValueDisplayAPI.GetValueChoices(typeof(OverridableTestEnum))
             );
-            CollectionAssert.IsEmpty(OverridableEditorAPI.GetValueChoices(typeof(int)));
+            CollectionAssert.IsEmpty(ValueDisplayAPI.GetValueChoices(typeof(int)));
         }
 
         [Test]
@@ -136,40 +138,12 @@ namespace EncosyTower.Tests.Editor.Serialization
             using var serializedObject = new SerializedObject(_first);
             var property = serializedObject.FindProperty(nameof(OverridableTestAsset.intValue));
 
-            Assert.IsTrue(OverridableEditorAPI.CanReset(property));
+            Assert.IsTrue(_first.intValue.isOverridden);
 
             OverridableEditorAPI.EndOverride(property);
 
             Assert.IsFalse(_first.intValue.isOverridden);
             Assert.AreEqual(expected: 4, actual: _first.intValue.value);
-            Assert.IsFalse(OverridableEditorAPI.CanReset(property));
-        }
-
-        [Test]
-        public void GetEffectiveText_ShowsOverrideDefaultOrNothing()
-        {
-            _first.enumWithoutDefault = NotOverridden(OverridableTestEnum.First);
-
-            using var serializedObject = new SerializedObject(_first);
-            var withDefault = serializedObject.FindProperty(nameof(OverridableTestAsset.enumWithDefault));
-            var withoutDefault = serializedObject.FindProperty(nameof(OverridableTestAsset.enumWithoutDefault));
-            var attribute = GetAttribute(nameof(OverridableTestAsset.enumWithDefault));
-            var enumType = typeof(OverridableTestEnum);
-
-            Assert.AreEqual("Third Value", OverridableEditorAPI.GetEffectiveText(withDefault, attribute, enumType));
-
-            Assert.AreEqual(
-                  string.Empty
-                , OverridableEditorAPI.GetEffectiveText(
-                        property: withoutDefault
-                      , attribute: null
-                      , valueType: enumType
-                  )
-            );
-
-            OverridableEditorAPI.ApplyChoice(property: withDefault, valueType: enumType, choiceIndex: 2);
-
-            Assert.AreEqual("Second Choice", OverridableEditorAPI.GetEffectiveText(withDefault, attribute, enumType));
         }
 
         [Test]
@@ -180,12 +154,10 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             using var serializedObject = new SerializedObject(new Object[] { _first, _second });
             var property = serializedObject.FindProperty(nameof(OverridableTestAsset.enumWithDefault));
-            var attribute = GetAttribute(nameof(OverridableTestAsset.enumWithDefault));
             var enumType = typeof(OverridableTestEnum);
 
             Assert.IsTrue(OverridableEditorAPI.IsMixed(property));
             Assert.AreEqual(expected: -1, actual: OverridableEditorAPI.GetSelectedIndex(property, enumType));
-            Assert.AreEqual("Mixed", OverridableEditorAPI.GetEffectiveText(property, attribute, enumType));
         }
 
         [Test]
@@ -229,6 +201,95 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(attribute, out var value));
             Assert.IsNull(value);
+        }
+
+        [Test]
+        public void TryGetDefaultValue_ReadsNonPublicStaticMembers()
+        {
+            var internalField = NonPublicDefault(nameof(NonPublicDefaults.InternalField));
+            var internalValue = NonPublicDefault(nameof(NonPublicDefaults.InternalValue));
+            var privateText = NonPublicDefault("PrivateText");
+
+            Assert.IsTrue(OverridableEditorAPI.TryGetDefaultValue(internalField, out var field));
+            Assert.AreEqual(expected: 11, actual: field);
+            Assert.IsTrue(OverridableEditorAPI.TryGetDefaultValue(internalValue, out var value));
+            Assert.AreEqual(expected: 12, actual: value);
+            Assert.IsTrue(OverridableEditorAPI.TryGetDefaultValue(privateText, out var text));
+            Assert.AreEqual(expected: "private", actual: text);
+        }
+
+        [Test]
+        public void TryGetDefaultValue_ReadsNonPublicSettingsMember()
+        {
+            using var scope = new OverridableTestSettingsScope();
+            var previousMaxRetries = scope.Settings.maxRetries;
+
+            try
+            {
+                scope.Settings.maxRetries = 5;
+
+                var hidden = new OverridableDefaultAttribute(typeof(OverridableTestSettings), "HiddenRetries");
+                var missing = new OverridableDefaultAttribute(typeof(OverridableTestSettings), "Missing");
+
+                Assert.IsTrue(OverridableEditorAPI.TryGetDefaultValue(hidden, out var value));
+                Assert.AreEqual(expected: 6, actual: value);
+
+                Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(missing, out var missingValue, out var error));
+                Assert.IsNull(missingValue);
+                Assert.IsTrue(error.TryGetValue(out var failure));
+                Assert.IsTrue(failure.TryGetValue(out OverridableDefaultError.MemberNotFound notFound));
+                Assert.IsTrue(notFound.IsInstanceMember);
+            }
+            finally
+            {
+                scope.Settings.maxRetries = previousMaxRetries;
+            }
+        }
+
+        [Test]
+        public void TryGetDefaultValue_MissingMemberReportsMemberNotFound()
+        {
+            var attribute = new OverridableDefaultAttribute(typeof(OverridableTestDefaults), "Missing");
+
+            Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(attribute, out var value, out var error));
+            Assert.IsNull(value);
+            Assert.IsTrue(error.TryGetValue(out var failure));
+            Assert.IsTrue(failure.TryGetValue(out OverridableDefaultError.MemberNotFound notFound));
+            Assert.AreEqual(expected: typeof(OverridableTestDefaults), actual: notFound.SourceType);
+            Assert.AreEqual(expected: "Missing", actual: notFound.MemberName);
+            Assert.IsFalse(notFound.IsInstanceMember);
+
+            Assert.AreEqual(
+                  expected: $"Overridable default member '{typeof(OverridableTestDefaults).FullName}.Missing': "
+                    + "no readable static field or property with this name was found."
+                , actual: failure.ToMessage()
+            );
+        }
+
+        [Test]
+        public void TryGetDefaultValue_ThrowingMemberReportsReadFailure()
+        {
+            var attribute = new OverridableDefaultAttribute(typeof(ThrowingDefaultSource), "IntValue");
+
+            Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(attribute, out var value, out var error));
+            Assert.IsNull(value);
+            Assert.IsTrue(error.TryGetValue(out var failure));
+            Assert.IsTrue(failure.TryGetValue(out OverridableDefaultError.ReadFailure readFailure));
+            Assert.IsTrue(readFailure.Exception is FormatException);
+        }
+
+        [Test]
+        public void TryGetDefaultValue_MissingMemberLogsOneWarning()
+        {
+            var memberName = "Missing" + Guid.NewGuid().ToString("N");
+            var attribute = new OverridableDefaultAttribute(typeof(OverridableTestDefaults), memberName);
+
+            LogAssert.Expect(LogType.Warning, new Regex(memberName));
+
+            Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(attribute, out _));
+            Assert.IsFalse(OverridableEditorAPI.TryGetDefaultValue(attribute, out _));
+
+            LogAssert.NoUnexpectedReceived();
         }
 
         [TestCase(typeof(ThrowingDefaultSource))]
@@ -305,21 +366,21 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void GetDisplayText_FormatsScalarsAndNull()
         {
-            Assert.AreEqual("True", OverridableEditorAPI.GetDisplayText(valueType: typeof(bool), value: true));
-            Assert.AreEqual("False", OverridableEditorAPI.GetDisplayText(valueType: typeof(bool), value: false));
+            Assert.AreEqual("True", ValueDisplayAPI.GetDisplayText(valueType: typeof(bool), value: true));
+            Assert.AreEqual("False", ValueDisplayAPI.GetDisplayText(valueType: typeof(bool), value: false));
             Assert.AreEqual(
                   "Second Choice"
-                , OverridableEditorAPI.GetDisplayText(typeof(OverridableTestEnum), OverridableTestEnum.Second)
+                , ValueDisplayAPI.GetDisplayText(typeof(OverridableTestEnum), OverridableTestEnum.Second)
             );
 
             var flags = OverridableTestFlags.A | OverridableTestFlags.B;
             Assert.AreEqual(
                   flags.ToString()
-                , OverridableEditorAPI.GetDisplayText(typeof(OverridableTestFlags), flags)
+                , ValueDisplayAPI.GetDisplayText(typeof(OverridableTestFlags), flags)
             );
             Assert.AreEqual(
                   string.Empty
-                , OverridableEditorAPI.GetDisplayText(valueType: typeof(string), value: null)
+                , ValueDisplayAPI.GetDisplayText(valueType: typeof(string), value: null)
             );
         }
 
@@ -333,17 +394,17 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             var waves = TestDefaults.SpawnWaves;
             var steps = OverridableTestDefaults.NestedArrayValue;
-            Assert.AreEqual("[1, 2, 4]", OverridableEditorAPI.GetDisplayText(waves.GetType(), waves));
-            Assert.AreEqual("[2, Default]", OverridableEditorAPI.GetDisplayText(steps.GetType(), steps));
+            Assert.AreEqual("[1, 2, 4]", ValueDisplayAPI.GetDisplayText(waves.GetType(), waves));
+            Assert.AreEqual("[2, Default]", ValueDisplayAPI.GetDisplayText(steps.GetType(), steps));
 
-            Assert.AreEqual("[Default, 3]", OverridableEditorAPI.GetDisplayText(values.GetType(), values));
+            Assert.AreEqual("[Default, 3]", ValueDisplayAPI.GetDisplayText(values.GetType(), values));
             Assert.AreEqual(
                   "[True, False]"
-                , OverridableEditorAPI.GetDisplayText(typeof(bool[]), new[] { true, false })
+                , ValueDisplayAPI.GetDisplayText(typeof(bool[]), new[] { true, false })
             );
-            Assert.AreEqual("[]", OverridableEditorAPI.GetDisplayText(typeof(int[]), Array.Empty<int>()));
-            Assert.AreEqual("Default", OverridableEditorAPI.GetDisplayText(typeof(Overridable<int>), values[0]));
-            Assert.AreEqual("3", OverridableEditorAPI.GetDisplayText(typeof(Overridable<int>), values[1]));
+            Assert.AreEqual("[]", ValueDisplayAPI.GetDisplayText(typeof(int[]), Array.Empty<int>()));
+            Assert.AreEqual("Default", ValueDisplayAPI.GetDisplayText(typeof(Overridable<int>), values[0]));
+            Assert.AreEqual("3", ValueDisplayAPI.GetDisplayText(typeof(Overridable<int>), values[1]));
         }
 
         [Test]
@@ -520,12 +581,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             SerializableGuid actual = default;
             Assert.IsTrue(actual.TryCopyFrom(value));
             Assert.AreEqual(expected, actual);
-            Assert.AreEqual(expected, ValueChoicesPropertyDrawer.ReadValue(value, typeof(SerializableGuid)));
-            Assert.AreEqual(expected.ToString(), OverridableEditorAPI.GetEffectiveText(
-                  property
-                , attribute
-                , typeof(SerializableGuid)
-            ));
+            Assert.AreEqual(expected, SerializedValueAPI.Read(value, typeof(SerializableGuid)));
 
             Undo.PerformUndo();
             serializedObject.Update();
@@ -536,7 +592,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             using var writableValue = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             Undo.IncrementCurrentGroup();
-            ValueChoicesPropertyDrawer.WriteValue(writableValue, expected);
+            SerializedValueAPI.Write(writableValue, expected);
             Assert.IsTrue(serializedObject.hasModifiedProperties);
             Assert.AreEqual(firstStored, _first.guidValue.value);
             serializedObject.ApplyModifiedProperties();
@@ -574,7 +630,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             CollectionAssert.AreEqual(multipleTargets ? expected.ToArray() : secondStored, _second.guidList.value);
 
             using var value = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
-            var readBack = (List<SerializableGuid>)ValueChoicesPropertyDrawer.ReadValue(
+            var readBack = (List<SerializableGuid>)SerializedValueAPI.Read(
                   value
                 , typeof(List<SerializableGuid>)
             );
@@ -606,14 +662,14 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             using var writableValue = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             Undo.IncrementCurrentGroup();
-            ValueChoicesPropertyDrawer.WriteValue(writableValue, expected);
+            SerializedValueAPI.Write(writableValue, expected);
             Assert.IsTrue(serializedObject.hasModifiedProperties);
             Assert.AreEqual(firstStored[0], _first.guidList.value[0]);
             Assert.AreEqual(secondStored[0], _second.guidList.value[0]);
 
             CollectionAssert.AreEqual(
                   expected
-                , (List<SerializableGuid>)ValueChoicesPropertyDrawer.ReadValue(
+                , (List<SerializableGuid>)SerializedValueAPI.Read(
                       writableValue
                     , typeof(List<SerializableGuid>)
                 )
@@ -642,7 +698,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var shorter = new List<SerializableGuid> { expected[0] };
             using var shorterValue = property.FindPropertyRelative(OverridableEditorAPI.VALUE);
             Undo.IncrementCurrentGroup();
-            ValueChoicesPropertyDrawer.WriteValue(shorterValue, shorter);
+            SerializedValueAPI.Write(shorterValue, shorter);
             serializedObject.ApplyModifiedProperties();
             CollectionAssert.AreEqual(shorter, _first.guidList.value);
             CollectionAssert.AreEqual(multipleTargets ? shorter.ToArray() : secondStored, _second.guidList.value);
@@ -1161,21 +1217,6 @@ namespace EncosyTower.Tests.Editor.Serialization
         }
 
         [Test]
-        public void GetEffectiveText_BoolUsesTrueAndFalse()
-        {
-            using var serializedObject = new SerializedObject(_first);
-            var property = serializedObject.FindProperty(nameof(OverridableTestAsset.boolWithDefault));
-            var attribute = GetAttribute(nameof(OverridableTestAsset.boolWithDefault));
-
-            Assert.AreEqual("True", OverridableEditorAPI.GetEffectiveText(property, attribute, typeof(bool)));
-
-            _first.boolWithDefault = new(value: false, isOverridden: true);
-            serializedObject.Update();
-
-            Assert.AreEqual("False", OverridableEditorAPI.GetEffectiveText(property, attribute, typeof(bool)));
-        }
-
-        [Test]
         public void BeginOverride_WithoutAttributeCopiesTypeDefault()
         {
             _first.intValue = new(value: 9, isOverridden: false);
@@ -1197,6 +1238,9 @@ namespace EncosyTower.Tests.Editor.Serialization
 
         private static OverridableDefaultAttribute DefaultAttribute(string memberName)
             => new(typeof(OverridableTestDefaults), memberName);
+
+        private static OverridableDefaultAttribute NonPublicDefault(string memberName)
+            => new(typeof(NonPublicDefaults), memberName);
 
         private static Overridable<OverridableTestEnum> Overridden(OverridableTestEnum value)
             => new(value: value, isOverridden: true);
@@ -1220,6 +1264,15 @@ namespace EncosyTower.Tests.Editor.Serialization
         private static class ThrowingDefaultSource
         {
             public static int IntValue => int.Parse("Unreadable default");
+        }
+
+        private static class NonPublicDefaults
+        {
+            internal static readonly int InternalField = 11;
+
+            internal static int InternalValue => 12;
+
+            private static string PrivateText => "private";
         }
 
         private abstract class UnavailableSettings : Settings<UnavailableSettings>

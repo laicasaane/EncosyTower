@@ -10,6 +10,14 @@ using UnityEngine;
 
 namespace EncosyTower.Editor.Internals
 {
+    /// <summary>
+    /// Resolves a <see cref="ValueChoicesAttribute"/> into <see cref="ValueChoice"/> lists and holds the choice
+    /// helpers shared by both drawers and the Overridable rows.
+    /// </summary>
+    /// <remarks>
+    /// Resolution reads the member by reflection. Non-public static members are accepted, and a property or method
+    /// is evaluated on every resolution. Failures are returned as <see cref="ValueChoicesError"/>, not thrown.
+    /// </remarks>
     internal static class ValueChoicesEditorAPI
     {
         private const BindingFlags STATIC_FLAGS = BindingFlags.Static | BindingFlags.Public
@@ -18,14 +26,34 @@ namespace EncosyTower.Editor.Internals
         private const BindingFlags INSTANCE_FLAGS = BindingFlags.Instance | BindingFlags.Public
             | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
 
-        private static readonly Dictionary<string, (Type type, ValueChoicesError error)> s_sourceTypes
+        private static readonly Dictionary<string, SourceTypeResult> s_sourceTypes
             = new(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Resolves the choices that an attribute names.
+        /// </summary>
+        /// <remarks>
+        /// The checks run in this order, and the first failure is reported: member name, string source type name,
+        /// source and value type, <c>applyToCollection</c> with the value type, <c>applyToCollection</c> with
+        /// <c>IsExclusive</c>, then the member read and the choice checks. An exception thrown while reading the
+        /// member is returned as <c>ReadFailure</c> with its base exception.
+        /// </remarks>
+        /// <param name="attribute">The attribute that names the member.</param>
+        /// <param name="declaringType">The type that declares the field. It is the source type when the attribute
+        /// names none.</param>
+        /// <param name="valueType">The element type, or the array or list type when the attribute sets
+        /// <c>applyToCollection</c>.</param>
+        /// <param name="choices">Receives the choices, or an empty list on failure.</param>
+        /// <param name="error">Receives the failure, or the default value on success.</param>
+        /// <returns>
+        /// <see langword="true"/> when the choices were resolved; otherwise a failure; see
+        /// <see cref="ValueChoicesError"/>.
+        /// </returns>
         public static bool TryGetChoices(
               ValueChoicesAttribute attribute
             , Type declaringType
             , Type valueType
-            , out IReadOnlyList<(string label, object value)> choices
+            , out IReadOnlyList<ValueChoice> choices
             , out ValueChoicesError error
         )
         {
@@ -96,10 +124,23 @@ namespace EncosyTower.Editor.Internals
             }
 
         FAILED:
-            choices = Array.Empty<(string label, object value)>();
+            choices = Array.Empty<ValueChoice>();
             return false;
         }
 
+        /// <summary>
+        /// Compares two choice values. The result decides which menu item is checked and which dropdown item is
+        /// selected.
+        /// </summary>
+        /// <remarks>
+        /// Two references to the same object match. A null value, or a Unity object that is not the same object,
+        /// does not match. Two lists match when their elements match in order; a list never matches a non-list.
+        /// Value types and strings compare with <see cref="object.Equals(object, object)"/>. Other objects match when
+        /// their <see cref="EditorJsonUtility.ToJson(object)"/> text is equal.
+        /// </remarks>
+        /// <param name="a">The first value.</param>
+        /// <param name="b">The second value.</param>
+        /// <returns><see langword="true"/> when the values match.</returns>
         public static bool Matches(object a, object b)
         {
             if (ReferenceEquals(a, b))
@@ -145,21 +186,137 @@ namespace EncosyTower.Editor.Internals
             return string.Equals(EditorJsonUtility.ToJson(a), EditorJsonUtility.ToJson(b), StringComparison.Ordinal);
         }
 
+        /// <summary>
+        /// Checks whether a value type accepts <c>applyToCollection</c>.
+        /// </summary>
+        /// <param name="valueType">The field value type.</param>
+        /// <returns><see langword="true"/> for a one-dimensional array or a <c>List&lt;T&gt;</c>.</returns>
         public static bool IsCollectionType(Type valueType)
             => valueType != null
                 && ((valueType.IsArray && valueType.GetArrayRank() == 1)
                     || (valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(List<>))
                 );
 
+        /// <summary>
+        /// Checks whether a field is drawn as a dropdown instead of its normal input with a menu button.
+        /// </summary>
+        /// <param name="attribute">The attribute of the field.</param>
+        /// <param name="valueType">The field value type.</param>
+        /// <returns>
+        /// <see langword="true"/> when the attribute does not set <c>applyToCollection</c> and the value type is a
+        /// non-flags enum or the attribute is exclusive.
+        /// </returns>
         public static bool UsesDropdown(ValueChoicesAttribute attribute, Type valueType)
             => attribute?.applyToCollection != true
                 && (OverridableEditorAPI.GetMode(valueType) == OverridableMode.Dropdown
                     || attribute?.IsExclusive == true
                 );
 
-        public static bool ListsOnlyChoices(ValueChoicesAttribute attribute, Type valueType)
+        public static bool IsExclusive(ValueChoicesAttribute attribute)
             => attribute?.IsExclusive == true;
 
+        /// <summary>
+        /// Gets the choices that a dropdown lists.
+        /// </summary>
+        /// <remarks>
+        /// An exclusive attribute lists only its own choices. Otherwise the dropdown lists every value of the enum
+        /// and ignores <paramref name="choices"/>; those choices then feed only the menu button.
+        /// </remarks>
+        /// <param name="attribute">The attribute of the field.</param>
+        /// <param name="valueType">The field value type.</param>
+        /// <param name="choices">The resolved choices.</param>
+        /// <returns>The choices to list.</returns>
+        /// <exception cref="System.ArgumentException">
+        /// Thrown if the attribute is not exclusive and <paramref name="valueType"/> is not an enum.
+        /// </exception>
+        public static IReadOnlyList<ValueChoice> GetSelectableChoices(
+              ValueChoicesAttribute attribute
+            , Type valueType
+            , IReadOnlyList<ValueChoice> choices
+        )
+        {
+            if (IsExclusive(attribute))
+            {
+                return choices;
+            }
+
+            var values = Enum.GetValues(valueType);
+            var labels = ValueDisplayAPI.GetValueChoices(valueType);
+            var count = values.Length;
+            var result = new ValueChoice[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                result[i] = new ValueChoice(labels[i], values.GetValue(i));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Finds the first choice whose value matches a value.
+        /// </summary>
+        /// <param name="choices">The choices to search.</param>
+        /// <param name="value">The value to find.</param>
+        /// <returns>The index of the choice, or -1 when no choice matches; see <see cref="Matches"/>.</returns>
+        public static int GetChoiceIndex(IReadOnlyList<ValueChoice> choices, object value)
+        {
+            var count = choices.Count;
+
+            for (var i = 0; i < count; i++)
+            {
+                if (Matches(choices[i].Value, value))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Creates one menu item for each choice.
+        /// </summary>
+        /// <remarks>
+        /// The caller renders the items, as a UI Toolkit or an IMGUI menu.
+        /// </remarks>
+        /// <param name="choices">The choices to list.</param>
+        /// <param name="currentValue">The value of the field, used to check an item.</param>
+        /// <param name="isMixed">Whether the selected objects differ; no item is checked then.</param>
+        /// <param name="onSelected">Called with the value of the choice that the user picks.</param>
+        /// <returns>The items, in the order of <paramref name="choices"/>.</returns>
+        public static ValueChoiceMenuItem[] CreateChoiceMenuItems(
+              IReadOnlyList<ValueChoice> choices
+            , object currentValue
+            , bool isMixed
+            , Action<object> onSelected
+        )
+        {
+            var count = choices.Count;
+            var result = new ValueChoiceMenuItem[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                var choice = choices[i];
+                var isChecked = isMixed == false && Matches(choice.Value, currentValue);
+                result[i] = new ValueChoiceMenuItem(new GUIContent(choice.Label), isChecked, SelectChoice);
+
+                void SelectChoice()
+                {
+                    onSelected(choice.Value);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Resolves a source type name once for each name.
+        /// </summary>
+        /// <remarks>
+        /// The result of <see cref="ResolveSourceType"/> is cached by name, failures included, and the cache is
+        /// never invalidated while the domain lives.
+        /// </remarks>
         private static bool TryResolveSourceType(
               string sourceTypeName
             , out Type sourceType
@@ -172,12 +329,21 @@ namespace EncosyTower.Editor.Internals
                 s_sourceTypes.Add(sourceTypeName, result);
             }
 
-            sourceType = result.type;
-            error = result.error;
+            sourceType = result.Type;
+            error = result.Error;
             return sourceType != null;
         }
 
-        private static (Type type, ValueChoicesError error) ResolveSourceType(string sourceTypeName)
+        /// <summary>
+        /// Finds the type that a source type name denotes.
+        /// </summary>
+        /// <remarks>
+        /// A name with a comma outside brackets is assembly-qualified and is first tried with
+        /// <see cref="Type.GetType(string, bool, bool)"/>. Then the loaded assemblies are scanned, only the assembly
+        /// that matches the given assembly name when there is one. Two different types are
+        /// <c>AmbiguousSourceType</c>, none is <c>SourceTypeNotFound</c>, and so is any exception.
+        /// </remarks>
+        private static SourceTypeResult ResolveSourceType(string sourceTypeName)
         {
             try
             {
@@ -200,7 +366,7 @@ namespace EncosyTower.Editor.Internals
 
                     if (type != null)
                     {
-                        return (type, default);
+                        return new SourceTypeResult(type, default);
                     }
 
                     typeName = sourceTypeName[..assemblySeparator].Trim();
@@ -229,19 +395,19 @@ namespace EncosyTower.Editor.Internals
 
                     if (sourceType != null && sourceType != candidate)
                     {
-                        return (null, ValueChoicesError.AmbiguousSourceType(sourceTypeName));
+                        return new SourceTypeResult(null, ValueChoicesError.AmbiguousSourceType(sourceTypeName));
                     }
 
                     sourceType = candidate;
                 }
 
                 return sourceType != null
-                    ? (sourceType, default)
-                    : (null, ValueChoicesError.SourceTypeNotFound(sourceTypeName));
+                    ? new SourceTypeResult(sourceType, default)
+                    : new SourceTypeResult(null, ValueChoicesError.SourceTypeNotFound(sourceTypeName));
             }
             catch (Exception)
             {
-                return (null, ValueChoicesError.SourceTypeNotFound(sourceTypeName));
+                return new SourceTypeResult(null, ValueChoicesError.SourceTypeNotFound(sourceTypeName));
             }
 
             static bool MatchesAssemblyName(Assembly assembly, string name)
@@ -321,6 +487,14 @@ namespace EncosyTower.Editor.Internals
             return IsCollectionType(choiceType);
         }
 
+        /// <summary>
+        /// Reads the member that supplies the choices.
+        /// </summary>
+        /// <remarks>
+        /// The lookup order is a static field, a static property, the first parameterless non-generic static method,
+        /// which is invoked, then instance members, which are an error. Non-public and inherited static members are
+        /// found. A property needs a static getter and no index parameters.
+        /// </remarks>
         private static bool TryReadMember(
               Type sourceType
             , string memberName
@@ -402,6 +576,15 @@ namespace EncosyTower.Editor.Internals
             return false;
         }
 
+        /// <summary>
+        /// Reads the choices from the value of the member.
+        /// </summary>
+        /// <remarks>
+        /// The member type must be an enumerable of <c>ValueChoice&lt;TValue&gt;</c>, of <see cref="ValueChoice"/> or
+        /// of <c>TValue</c>, where <c>TValue</c> is the value type. A <see langword="null"/> value is accepted only
+        /// for a reference type or a nullable type. A choice without a label gets the <c>[InspectorName]</c> of an
+        /// enum member, otherwise the display text of the value.
+        /// </remarks>
         private static bool TryCollectChoices(
               Type sourceType
             , string memberName
@@ -409,7 +592,7 @@ namespace EncosyTower.Editor.Internals
             , object source
             , Type valueType
             , bool applyToCollection
-            , out IReadOnlyList<(string label, object value)> choices
+            , out IReadOnlyList<ValueChoice> choices
             , out ValueChoicesError error
         )
         {
@@ -433,9 +616,7 @@ namespace EncosyTower.Editor.Internals
                 goto FAILED;
             }
 
-            var enumerable = source as IEnumerable;
-
-            if (enumerable == null)
+            if (source is not IEnumerable enumerable)
             {
                 error = ValueChoicesError.InvalidCollection(sourceType, memberName);
                 goto FAILED;
@@ -444,7 +625,7 @@ namespace EncosyTower.Editor.Internals
             var labelProperty = isLabelled ? choiceType.GetProperty(nameof(ValueChoice<int>.Label)) : null;
             var valueProperty = isLabelled ? choiceType.GetProperty(nameof(ValueChoice<int>.Value)) : null;
             var acceptsNull = valueType.IsValueType == false || Nullable.GetUnderlyingType(valueType) != null;
-            var result = new List<(string label, object value)>();
+            var result = new List<ValueChoice>();
 
             foreach (var item in enumerable)
             {
@@ -485,10 +666,10 @@ namespace EncosyTower.Editor.Internals
                         ? valueType.GetField(name)?.GetCustomAttribute<InspectorNameAttribute>()?.displayName
                         : null;
 
-                    label ??= OverridableEditorAPI.GetDisplayText(valueType, value);
+                    label ??= ValueDisplayAPI.GetDisplayText(valueType, value);
                 }
 
-                result.Add((label, value));
+                result.Add(new ValueChoice(label, value));
             }
 
             choices = result;
@@ -496,9 +677,11 @@ namespace EncosyTower.Editor.Internals
             return true;
 
         FAILED:
-            choices = Array.Empty<(string label, object value)>();
+            choices = Array.Empty<ValueChoice>();
             return false;
         }
+
+        private readonly record struct SourceTypeResult(Type Type, ValueChoicesError Error);
     }
 }
 

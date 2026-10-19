@@ -27,7 +27,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         private string _previousRegion;
         private TestQuality _previousTierLimit;
 
-        private static string GetPopupText(OverridableChoiceField field)
+        private static string GetPopupText(ChoicePopupField field)
             => field.Q<TextElement>(className: BasePopupField<string, string>.textUssClassName).text;
 
         [SetUp]
@@ -84,7 +84,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void Region_PopupUsesLabelsAndWritesValuesThenReturnsToDefault()
         {
             var row = BindField(nameof(OverridableChoiceTestAsset.region));
-            var popup = row.Q<OverridableChoiceField>();
+            var popup = row.Q<ChoicePopupField>();
 
             Assert.IsNotNull(popup);
             CollectionAssert.AreEqual(new[] { "Default (Asia)", "Asia", "Europe", "North America" }, popup.Choices);
@@ -112,8 +112,8 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void StrictTierLimit_UnlistedValueWarnsUntilAnAllowedChoiceIsSelected()
         {
             var row = BindField(nameof(OverridableChoiceTestAsset.strictTierLimit));
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             CollectionAssert.AreEqual(new[] { "Default (High)", "Low", "High", "Ultra (Experimental)" }, popup.Choices);
             Assert.AreEqual(expected: -1, actual: popup.value);
@@ -144,9 +144,9 @@ namespace EncosyTower.Tests.Editor.Serialization
             _asset.strictTierLimit = new(value: TestQuality.Medium, isOverridden: false);
             _serializedObject.Update();
             var row = BindField(nameof(OverridableChoiceTestAsset.strictTierLimit));
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
-            Assert.AreEqual(expected: 0, actual: row.Q<OverridableChoiceField>().value);
+            Assert.AreEqual(expected: 0, actual: row.Q<ChoicePopupField>().value);
             Assert.AreEqual(DisplayStyle.None, warning.style.display.value);
             Assert.AreEqual(TestQuality.Medium, _asset.strictTierLimit.value);
             Assert.IsFalse(_asset.strictTierLimit.isOverridden);
@@ -156,7 +156,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void TierLimit_NonExclusivePopupIncludesEveryEnumValueAndInspectorName()
         {
             var row = BindField(nameof(OverridableChoiceTestAsset.tierLimit));
-            var popup = row.Q<OverridableChoiceField>();
+            var popup = row.Q<ChoicePopupField>();
 
             CollectionAssert.AreEqual(
                   new[] { "Default (High)", "Low", "Medium", "High", "Ultra (Experimental)" }
@@ -167,7 +167,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.AreEqual(TestQuality.Medium, _asset.tierLimit.value);
             Assert.IsTrue(_asset.tierLimit.isOverridden);
-            Assert.IsNull(row.Q<Image>(className: "encosy-overridable__warning"));
+            Assert.IsNull(row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME));
 
             popup.value = 4;
 
@@ -179,8 +179,8 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void RegionCode_PlainPopupWarnsAndWritesTheChoiceValueWithoutADefaultEntry()
         {
             var row = BindField(nameof(OverridableChoiceTestAsset.regionCode));
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             CollectionAssert.AreEqual(new[] { "Asia", "Europe", "North America" }, popup.Choices);
             Assert.IsFalse(popup.HasDefaultChoice);
@@ -190,7 +190,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.AreEqual(DisplayStyle.Flex, warning.style.display.value);
             StringAssert.Contains("xx", warning.tooltip);
             Assert.AreEqual("xx", _asset.regionCode);
-            Assert.IsNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(row.Q<Button>(className: "encosy-row__more"));
 
             popup.value = 0;
 
@@ -208,8 +208,8 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsNotNull(input);
             Assert.AreEqual(expected: 75, actual: input.value);
             Assert.AreEqual(expected: 75, actual: _asset.targetFrameRate);
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
-            Assert.IsNull(row.Q<OverridableChoiceField>());
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
+            Assert.IsNull(row.Q<ChoicePopupField>());
 
             input.value = 91;
 
@@ -228,7 +228,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsNotNull(input);
             Assert.AreEqual(expected, input.value);
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
 
             input.value = 77;
 
@@ -283,7 +283,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var strict = CreateBuilder(nameof(OverridableChoiceTestAsset.strictTierLimit));
 
             Assert.IsEmpty(strict.GetChoiceMenuItems());
-            Assert.IsNull(strict.Root.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(strict.Root.Q<Button>(className: "encosy-row__more"));
         }
 
         [Test]
@@ -298,8 +298,8 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsNotNull(mask);
             Assert.AreEqual(TestLayers.None, mask.value);
             Assert.IsFalse(mask.enabledInHierarchy);
-            Assert.IsNull(row.Q<OverridableChoiceField>());
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(row.Q<ChoicePopupField>());
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
 
             toggle.value = true;
             mask = row.Q<EnumFlagsField>();
@@ -309,7 +309,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.AreEqual(TestLayers.Ground | TestLayers.Water, _asset.layerPresets.value);
             Assert.IsTrue(_asset.layerPresets.isOverridden);
-            Assert.IsNull(row.Q<Image>(className: "encosy-overridable__warning"));
+            Assert.IsNull(row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME));
             LogAssert.NoUnexpectedReceived();
         }
 
@@ -349,12 +349,12 @@ namespace EncosyTower.Tests.Editor.Serialization
         }
 
         [Test]
-        public void StrictLayerPresets_PopupWarnsForAirAndListsOnlyPresetsWithBareDefault()
+        public void StrictLayerPresets_PopupWarnsForAirAndExclusiveChoicesWithBareDefault()
         {
             var builder = CreateBuilder(nameof(OverridableChoiceTestAsset.strictLayerPresets));
             var row = builder.Root;
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             Assert.IsNull(row.Q<OverridableSwitch>());
             Assert.IsNull(row.Q<EnumFlagsField>());
@@ -366,7 +366,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             StringAssert.Contains("Air", warning.tooltip);
             Assert.IsEmpty(builder.GetChoiceMenuItems());
             Assert.AreEqual(expected: 0, actual: builder.BuildChoiceMenu().GetItemCount());
-            Assert.IsNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(row.Q<Button>(className: "encosy-row__more"));
 
             popup.value = 2;
 
@@ -406,8 +406,8 @@ namespace EncosyTower.Tests.Editor.Serialization
             _serializedObject.Dispose();
             _serializedObject = new SerializedObject(new Object[] { _asset, _secondAsset });
             var row = BindField(nameof(OverridableChoiceTestAsset.strictTierLimit));
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             Assert.IsTrue(popup.showMixedValue);
             Assert.AreEqual(DisplayStyle.None, warning.style.display.value);
@@ -425,13 +425,13 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void PlainEnum_NonExclusivePopupIncludesUnlistedEnumValuesAndChoicesButton()
         {
             var row = BindPlainField(nameof(PlainChoicesTestAsset.quality));
-            var popup = row.Q<OverridableChoiceField>();
+            var popup = row.Q<ChoicePopupField>();
 
             CollectionAssert.AreEqual(new[] { "Low", "Medium", "High", "Ultra (Experimental)" }, popup.Choices);
             Assert.IsFalse(popup.HasDefaultChoice);
             Assert.AreEqual(expected: 1, actual: popup.value);
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
-            Assert.IsNull(row.Q<Image>(className: "encosy-overridable__warning"));
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
+            Assert.IsNull(row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME));
 
             popup.value = 3;
 
@@ -448,9 +448,9 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsNotNull(mask);
             Assert.AreEqual(TestLayers.Air, mask.value);
             Assert.IsTrue(mask.enabledInHierarchy);
-            Assert.IsNull(row.Q<OverridableChoiceField>());
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
-            Assert.IsNull(row.Q<Image>(className: "encosy-overridable__warning"));
+            Assert.IsNull(row.Q<ChoicePopupField>());
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
+            Assert.IsNull(row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME));
 
             mask.value = TestLayers.Ground | TestLayers.Water;
 
@@ -462,8 +462,8 @@ namespace EncosyTower.Tests.Editor.Serialization
         public void PlainFlags_ExclusivePopupWarnsAndWritesAllowedCombination()
         {
             var row = BindPlainField(nameof(PlainChoicesTestAsset.strictLayers));
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             Assert.IsNull(row.Q<EnumFlagsField>());
             Assert.IsFalse(popup.HasDefaultChoice);
@@ -472,7 +472,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.AreEqual("Air", GetPopupText(popup));
             Assert.AreEqual(DisplayStyle.Flex, warning.style.display.value);
             StringAssert.Contains("Air", warning.tooltip);
-            Assert.IsNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(row.Q<Button>(className: "encosy-row__more"));
 
             popup.value = 1;
 
@@ -491,7 +491,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsNotNull(input);
             Assert.AreEqual(expected, input.value);
-            Assert.IsNotNull(row.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNotNull(row.Q<Button>(className: "encosy-row__more"));
 
             input.value = 87;
 
@@ -508,8 +508,8 @@ namespace EncosyTower.Tests.Editor.Serialization
             _serializedObject.Dispose();
             _serializedObject = new SerializedObject(new Object[] { _asset, _secondAsset });
             var row = BindField(nameof(OverridableChoiceTestAsset.regionCode));
-            var popup = row.Q<OverridableChoiceField>();
-            var warning = row.Q<Image>(className: "encosy-overridable__warning");
+            var popup = row.Q<ChoicePopupField>();
+            var warning = row.Q<Image>(className: UitkAPI.WARNING_ICON_CLASS_NAME);
 
             Assert.IsTrue(popup.showMixedValue);
             Assert.AreEqual(DisplayStyle.None, warning.style.display.value);

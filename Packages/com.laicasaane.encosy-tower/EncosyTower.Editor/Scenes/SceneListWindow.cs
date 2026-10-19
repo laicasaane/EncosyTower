@@ -27,11 +27,11 @@ namespace EncosyTower.Editor.Scenes
         private static readonly string[] s_folders1 = new[] { "Assets" };
         private static readonly string[] s_folders2 = new[] { "Assets", "Packages" };
 
-        private readonly List<ItemInfo> _items = new();
+        private readonly List<SceneEntry> _items = new();
 
-        private ItemCollectionAsset _asset;
+        private SceneEntryCollectionAsset _asset;
         private SerializedObject _serializedObject;
-        private SimpleTableView<ItemInfo> _table;
+        private SimpleTableView<SceneEntry> _table;
         private Toggle _includePackagesToggle;
 
         [MenuItem("Encosy Tower/Scenes", priority = 83_67_00_00)]
@@ -104,8 +104,8 @@ namespace EncosyTower.Editor.Scenes
 
         private void CreateTable()
         {
-            var table = _table = new SimpleTableView<ItemInfo>() {
-                bindingPath = nameof(ItemCollectionAsset.items),
+            var table = _table = new SimpleTableView<SceneEntry>() {
+                bindingPath = nameof(SceneEntryCollectionAsset.items),
                 showBoundCollectionSize = false,
             }.WithEditorStyleSheets();
 
@@ -118,7 +118,7 @@ namespace EncosyTower.Editor.Scenes
                 , 200
                 , TableColumn_MakeCell_Scene
                 , TableColumn_BindCell_Scene
-                , header: new(ItemInfo.CompareNames)
+                , header: new(SceneEntry.CompareNames)
             );
 
             column.resizable = true;
@@ -128,13 +128,13 @@ namespace EncosyTower.Editor.Scenes
                 , 200
                 , TableColumn_MakeCell_Path
                 , TableColumn_BindCell_Path
-                , header: new(ItemInfo.ComparePaths)
+                , header: new(SceneEntry.ComparePaths)
             );
 
             column.resizable = true;
             column.sortable = true;
 
-            _asset = CreateInstance<ItemCollectionAsset>();
+            _asset = CreateInstance<SceneEntryCollectionAsset>();
             _asset.items = _table.Items;
 
             _serializedObject = new SerializedObject(_asset);
@@ -156,7 +156,7 @@ namespace EncosyTower.Editor.Scenes
             return button;
         }
 
-        private static void TableColumn_BindCell_Scene(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Scene(VisualElement element, SceneEntry item)
         {
             if (element is not Button button || item is null)
             {
@@ -182,7 +182,7 @@ namespace EncosyTower.Editor.Scenes
             return label;
         }
 
-        private static void TableColumn_BindCell_Path(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Path(VisualElement element, SceneEntry item)
         {
             if (element is not Label label || item is null)
             {
@@ -193,7 +193,7 @@ namespace EncosyTower.Editor.Scenes
             label.userData = item.asset;
         }
 
-        private static void FindItems(List<ItemInfo> result, bool includePackages)
+        private static void FindItems(List<SceneEntry> result, bool includePackages)
         {
             result.Clear();
 
@@ -206,7 +206,7 @@ namespace EncosyTower.Editor.Scenes
                 return;
             }
 
-            var items = new List<ItemInfo>(guids.Length);
+            var items = new List<SceneEntry>(guids.Length);
 
             for (var i = 0; i < guids.Length; i++)
             {
@@ -226,7 +226,7 @@ namespace EncosyTower.Editor.Scenes
                     continue;
                 }
 
-                items.Add(new ItemInfo {
+                items.Add(new SceneEntry {
                     asset = asset,
                     name = asset.name,
                     path = path,
@@ -237,35 +237,35 @@ namespace EncosyTower.Editor.Scenes
             result.AddRange(items);
             return;
 
-            static int Sort(ItemInfo x, ItemInfo y)
+            static int Sort(SceneEntry x, SceneEntry y)
                 => StringComparer.OrdinalIgnoreCase.Compare(x.path, y.path);
         }
 
         [Serializable]
-        private class ItemInfo
+        private class SceneEntry
         {
             public SceneAsset asset;
             public string name;
             public string path;
 
-            public static int CompareNames(ItemInfo a, ItemInfo b)
+            public static int CompareNames(SceneEntry a, SceneEntry b)
                 => string.Compare(a.asset.name, b.asset.name, StringComparison.Ordinal);
 
-            public static int ComparePaths(ItemInfo a, ItemInfo b)
+            public static int ComparePaths(SceneEntry a, SceneEntry b)
                 => string.Compare(a.path, b.path, StringComparison.Ordinal);
         }
 
-        private class ItemCollectionAsset : ScriptableObject
+        private class SceneEntryCollectionAsset : ScriptableObject
         {
-            public List<ItemInfo> items;
+            public List<SceneEntry> items;
         }
 
-        private readonly struct SearchValidator : ISearchValidator<ItemInfo>
+        private readonly struct SearchValidator : ISearchValidator<SceneEntry>
         {
-            public bool IsSearchable(ItemInfo item)
+            public bool IsSearchable(SceneEntry item)
                 => item.path.IsNotEmpty();
 
-            public string GetSearchableString(ItemInfo item)
+            public string GetSearchableString(SceneEntry item)
                 => item.name;
         }
     }

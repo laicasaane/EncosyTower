@@ -11,11 +11,11 @@ using UnityEngine;
 
 namespace EncosyTower.Tests.Editor.Serialization
 {
-    public sealed class OverridableDefaultHolderTests
+    public sealed class SerializedValueHolderTests
     {
-        private const string VALUE_PATH = "_overridableDefault.value";
+        private const string VALUE_PATH = "_box.value";
 
-        private OverridableDefaultHolder _holder;
+        private SerializedValueHolder _holder;
         private OverridableTestAsset _asset;
         private SerializedObject _source;
         private PropertyField _field;
@@ -43,7 +43,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Write_IntPersistsDefaultWithoutChangingSource()
         {
-            _holder = OverridableDefaultHolder.Create(typeof(int));
+            _holder = SerializedValueHolder.Create(typeof(int));
             var source = GetSource(nameof(OverridableTestAsset.intValue));
             var property = _holder.Write(value: 3, expandedSource: source);
 
@@ -62,7 +62,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [TestCase(false)]
         public void Write_ClassCopiesMembersAndExpansion(bool expanded)
         {
-            _holder = OverridableDefaultHolder.Create(typeof(OverridableTestPayload));
+            _holder = SerializedValueHolder.Create(typeof(OverridableTestPayload));
             var source = GetSource(nameof(OverridableTestAsset.payloadValue));
             source.isExpanded = expanded;
             var value = new OverridableTestPayload { number = 7, text = "Default" };
@@ -91,7 +91,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Write_ListCopiesElementsAndRefreshesExistingHolder()
         {
-            _holder = OverridableDefaultHolder.Create(typeof(List<int>));
+            _holder = SerializedValueHolder.Create(typeof(List<int>));
             var source = GetSource(nameof(OverridableTestAsset.listValue));
             source.isExpanded = true;
             var value = new List<int> { 3, 5 };
@@ -125,7 +125,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Write_ArrayCopiesElementsAndNullClearsCollection()
         {
-            _holder = OverridableDefaultHolder.Create(typeof(int[]));
+            _holder = SerializedValueHolder.Create(typeof(int[]));
             var source = GetSource(nameof(OverridableTestAsset.arrayValue));
             var property = _holder.Write(new[] { 3, 5 }, source);
 
@@ -145,7 +145,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Write_NullObjectDefaultKeepsDeclaredType()
         {
-            _holder = OverridableDefaultHolder.Create(typeof(GameObject));
+            _holder = SerializedValueHolder.Create(typeof(GameObject));
             var source = GetSource(nameof(OverridableTestAsset.objectValue));
             var property = _holder.Write(value: null, expandedSource: source);
 
@@ -157,7 +157,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         [Test]
         public void Write_ReturnedPropertySurvivesBindPass()
         {
-            _holder = OverridableDefaultHolder.Create(typeof(int));
+            _holder = SerializedValueHolder.Create(typeof(int));
             var source = GetSource(nameof(OverridableTestAsset.intValue));
             var property = _holder.Write(value: 3, expandedSource: source);
             _field = new PropertyField(property);
@@ -182,7 +182,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var original = new SerializableGuid(new System.Guid("fedcba98-7654-4321-8fed-cba987654321"));
             _asset.guidValue = new(value: original, isOverridden: false);
             _source.Update();
-            _holder = OverridableDefaultHolder.Create(typeof(SerializableGuid));
+            _holder = SerializedValueHolder.Create(typeof(SerializableGuid));
             var source = GetSource(nameof(OverridableTestAsset.guidValue));
             var expected = OverridableTestDefaults.GuidValue;
             var property = _holder.Write(expected, source);
@@ -190,14 +190,14 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsTrue(actual.TryCopyFrom(property));
             Assert.AreEqual(expected, actual);
-            Assert.AreEqual(expected, ValueChoicesPropertyDrawer.ReadValue(property, typeof(SerializableGuid)));
+            Assert.AreEqual(expected, SerializedValueAPI.Read(property, typeof(SerializableGuid)));
             Assert.AreEqual(original, _asset.guidValue.value);
             Assert.IsFalse(_asset.guidValue.isOverridden);
 
-            ValueChoicesPropertyDrawer.WriteValue(property, original);
+            SerializedValueAPI.Write(property, original);
             Assert.IsTrue(property.serializedObject.hasModifiedProperties);
             property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-            Assert.AreEqual(original, ValueChoicesPropertyDrawer.ReadValue(property, typeof(SerializableGuid)));
+            Assert.AreEqual(original, SerializedValueAPI.Read(property, typeof(SerializableGuid)));
             Assert.AreEqual(original, _asset.guidValue.value);
         }
 
@@ -207,11 +207,11 @@ namespace EncosyTower.Tests.Editor.Serialization
             var original = new List<SerializableGuid> { SerializableGuid.Empty };
             _asset.guidList = new(value: original, isOverridden: false);
             _source.Update();
-            _holder = OverridableDefaultHolder.Create(typeof(List<SerializableGuid>));
+            _holder = SerializedValueHolder.Create(typeof(List<SerializableGuid>));
             var source = GetSource(nameof(OverridableTestAsset.guidList));
             var expected = OverridableTestDefaults.GuidListValue;
             var property = _holder.Write(expected, source);
-            var readBack = (List<SerializableGuid>)ValueChoicesPropertyDrawer.ReadValue(
+            var readBack = (List<SerializableGuid>)SerializedValueAPI.Read(
                   property
                 , typeof(List<SerializableGuid>)
             );
@@ -221,11 +221,11 @@ namespace EncosyTower.Tests.Editor.Serialization
             readBack[0] = SerializableGuid.Empty;
             CollectionAssert.AreEqual(
                   expected
-                , (List<SerializableGuid>)ValueChoicesPropertyDrawer.ReadValue(property, typeof(List<SerializableGuid>))
+                , (List<SerializableGuid>)SerializedValueAPI.Read(property, typeof(List<SerializableGuid>))
             );
 
             using var element = property.GetArrayElementAtIndex(0);
-            ValueChoicesPropertyDrawer.WriteValue(element, SerializableGuid.Empty);
+            SerializedValueAPI.Write(element, SerializableGuid.Empty);
             property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
             SerializableGuid actual = default;
             Assert.IsTrue(actual.TryCopyFrom(element));
@@ -255,7 +255,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                     alias = node,
                 };
 
-                _holder = OverridableDefaultHolder.Create(typeof(OverridableFixedBufferPayload));
+                _holder = SerializedValueHolder.Create(typeof(OverridableFixedBufferPayload));
                 var property = _holder.Write(value: value, expandedSource: null);
                 using var storedTarget = property.FindPropertyRelative(nameof(OverridableFixedBufferPayload.target));
                 using var writtenNode = property.FindPropertyRelative(nameof(OverridableFixedBufferPayload.node));
@@ -263,7 +263,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                 Assert.AreSame(target, storedTarget.objectReferenceValue, "Holder write lost the root reference.");
                 Assert.AreSame(target, nodeTarget.objectReferenceValue, "Holder write lost the node reference.");
 
-                var copy = (OverridableFixedBufferPayload)ValueChoicesPropertyDrawer.ReadValue(
+                var copy = (OverridableFixedBufferPayload)SerializedValueAPI.Read(
                       property
                     , typeof(OverridableFixedBufferPayload)
                 );
@@ -288,7 +288,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                 SerializableGuid.Empty.TryCopyTo(storedGuid);
                 Assert.IsTrue(property.serializedObject.hasModifiedProperties);
 
-                var pending = (OverridableFixedBufferPayload)ValueChoicesPropertyDrawer.ReadValue(
+                var pending = (OverridableFixedBufferPayload)SerializedValueAPI.Read(
                       property
                     , typeof(OverridableFixedBufferPayload)
                 );

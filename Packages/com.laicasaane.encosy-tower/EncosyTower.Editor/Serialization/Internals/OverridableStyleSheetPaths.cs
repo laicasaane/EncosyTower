@@ -4,6 +4,9 @@ using EncosyTower.Editor.UIElements;
 
 namespace EncosyTower.Editor.Serialization.Internals
 {
+    /// <summary>
+    /// The asset paths of the style sheets of the Overridable rows.
+    /// </summary>
     internal static class OverridableStyleSheetPaths
     {
         public const string ROOT = $"{EditorStyleSheetPaths.ROOT}/EncosyTower.Editor/Serialization/Internals";

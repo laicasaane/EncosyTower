@@ -282,7 +282,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             var field = typeof(OverridableTestAsset).GetField(fieldName);
             var builder = CreateBuilder(property, field);
 
-            Assert.IsNull(builder.Root.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(builder.Root.Q<Button>(className: "encosy-row__more"));
             Assert.AreEqual(expected: 0, actual: builder.BuildChoiceMenu().GetItemCount());
 
             Assert.AreEqual(
@@ -331,7 +331,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             {
                 var builder = CreateBuilder(property, field, choices, attribute);
                 menu = builder.BuildChoiceMenu();
-                var button = builder.Root.Q<Button>(className: "encosy-overridable__more");
+                var button = builder.Root.Q<Button>(className: "encosy-row__more");
                 Assert.AreEqual(attribute.IsExclusive == false, button != null);
             }
 
@@ -340,7 +340,7 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             for (var i = 0; i < expected.Length; i++)
             {
-                expected[i] = choices[i].label;
+                expected[i] = choices[i].Label;
                 Assert.IsFalse(items[i].Separator);
                 Assert.IsNotNull(items[i].Callback);
             }
@@ -396,10 +396,10 @@ namespace EncosyTower.Tests.Editor.Serialization
             var property = _choicesSource.FindProperty(nameof(OverridableChoiceTestAsset.frameRate));
             var field = typeof(OverridableChoiceTestAsset).GetField(property.name);
             var attribute = field.GetCustomAttribute<ValueChoicesAttribute>();
-            var choices = System.Array.Empty<(string label, object value)>();
+            var choices = System.Array.Empty<ValueChoice>();
             var builder = CreateBuilder(property, field, choices, attribute);
 
-            Assert.IsNull(builder.Root.Q<Button>(className: "encosy-overridable__more"));
+            Assert.IsNull(builder.Root.Q<Button>(className: "encosy-row__more"));
             Assert.AreEqual(expected: 0, actual: builder.BuildChoiceMenu().GetItemCount());
 
             Assert.AreEqual(
@@ -422,7 +422,7 @@ namespace EncosyTower.Tests.Editor.Serialization
         private OverridableRowBuilder CreateBuilder(
               SerializedProperty property
             , FieldInfo field
-            , IReadOnlyList<(string label, object value)> choices = null
+            , IReadOnlyList<ValueChoice> choices = null
             , ValueChoicesAttribute attribute = null
         )
         {

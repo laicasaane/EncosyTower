@@ -24,7 +24,7 @@ namespace EncosyTower.Editor.ProjectSetup
 
         public const string THEME_STYLE_SHEET = $"{STYLE_SHEETS_PATH}/{FILE_NAME}.uss";
 
-        private SimpleTableView<ItemInfo> _table;
+        private SimpleTableView<EmptyFolderEntry> _table;
 
         [MenuItem("Encosy Tower/Empty Folders", priority = 69_77_00_00)]
         public static void OpenWindow()
@@ -66,14 +66,14 @@ namespace EncosyTower.Editor.ProjectSetup
         {
             var span = _table.Items.AsSpan();
             var length = span.Length;
-            var items = new List<ItemInfo>(length);
+            var items = new List<EmptyFolderEntry>(length);
             var paths = new List<string>(length);
 
             for (var i = length - 1; i >= 0; i--)
             {
                 var item = span[i];
 
-                if (item.selected == false)
+                if (item.markedForDeletion == false)
                 {
                     items.Add(item);
                     continue;
@@ -97,8 +97,8 @@ namespace EncosyTower.Editor.ProjectSetup
 
         private void CreateTable()
         {
-            var table = _table = new SimpleTableView<ItemInfo>() {
-                bindingPath = nameof(ItemCollectionAsset.items),
+            var table = _table = new SimpleTableView<EmptyFolderEntry>() {
+                bindingPath = nameof(EmptyFolderEntryCollectionAsset.items),
                 showBoundCollectionSize = false,
             }.WithEditorStyleSheets();
 
@@ -115,7 +115,7 @@ namespace EncosyTower.Editor.ProjectSetup
                 , 200
                 , TableColumn_MakeCell_Folder
                 , TableColumn_BindCell_Folder
-                , header: new(ItemInfo.CompareNames)
+                , header: new(EmptyFolderEntry.CompareNames)
             );
 
             column.resizable = true;
@@ -125,13 +125,13 @@ namespace EncosyTower.Editor.ProjectSetup
                 , 200
                 , TableColumn_MakeCell_Path
                 , TableColumn_BindCell_Path
-                , header: new(ItemInfo.ComparePaths)
+                , header: new(EmptyFolderEntry.ComparePaths)
             );
 
             column.resizable = true;
             column.sortable = true;
 
-            var asset = CreateInstance<ItemCollectionAsset>();
+            var asset = CreateInstance<EmptyFolderEntryCollectionAsset>();
             asset.items = _table.Items;
 
             var serializedObject = new SerializedObject(asset);
@@ -146,14 +146,14 @@ namespace EncosyTower.Editor.ProjectSetup
             return field;
         }
 
-        private static void TableColumn_BindCell_Select(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Select(VisualElement element, EmptyFolderEntry item)
         {
             if (element is not Toggle field || item is null)
             {
                 return;
             }
 
-            field.value = item.selected;
+            field.value = item.markedForDeletion;
         }
 
         private static ObjectField TableColumn_MakeCell_Folder()
@@ -167,7 +167,7 @@ namespace EncosyTower.Editor.ProjectSetup
             return field;
         }
 
-        private static void TableColumn_BindCell_Folder(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Folder(VisualElement element, EmptyFolderEntry item)
         {
             if (element is not ObjectField field || item is null)
             {
@@ -192,7 +192,7 @@ namespace EncosyTower.Editor.ProjectSetup
             return label;
         }
 
-        private static void TableColumn_BindCell_Path(VisualElement element, ItemInfo item)
+        private static void TableColumn_BindCell_Path(VisualElement element, EmptyFolderEntry item)
         {
             if (element is not Label label || item is null)
             {
@@ -203,14 +203,14 @@ namespace EncosyTower.Editor.ProjectSetup
             label.userData = item.asset;
         }
 
-        private static void FindItems(List<ItemInfo> result)
+        private static void FindItems(List<EmptyFolderEntry> result)
         {
             result.Clear();
 
             var projectPath = new RootPath(EditorAPI.ProjectPath);
             var assetsDirectory = new DirectoryInfo(projectPath.GetFolderAbsolutePath("Assets"));
             var packagesDirectory = new DirectoryInfo(projectPath.GetFolderAbsolutePath("Packages"));
-            var items = new List<ItemInfo>();
+            var items = new List<EmptyFolderEntry>();
 
             FindEmptyFolders(projectPath, assetsDirectory, items);
             FindEmptyFolders(projectPath, packagesDirectory, items);
@@ -229,7 +229,7 @@ namespace EncosyTower.Editor.ProjectSetup
                 return file.FullName.EndsWith(".meta", StringComparison.Ordinal) == false;
             }
 
-            static void FindEmptyFolders(RootPath rootPath, DirectoryInfo directory, List<ItemInfo> result)
+            static void FindEmptyFolders(RootPath rootPath, DirectoryInfo directory, List<EmptyFolderEntry> result)
             {
                 foreach (var subDirectory in directory.GetDirectories("*.*", SearchOption.AllDirectories))
                 {
@@ -260,32 +260,32 @@ namespace EncosyTower.Editor.ProjectSetup
                         continue;
                     }
 
-                    result.Add(new ItemInfo {
+                    result.Add(new EmptyFolderEntry {
                         asset = asset,
                         path = path,
-                        selected = true,
+                        markedForDeletion = true,
                     });
                 }
             }
         }
 
         [Serializable]
-        private class ItemInfo
+        private class EmptyFolderEntry
         {
             public DefaultAsset asset;
             public string path;
-            public bool selected;
+            public bool markedForDeletion;
 
-            public static int CompareNames(ItemInfo a, ItemInfo b)
+            public static int CompareNames(EmptyFolderEntry a, EmptyFolderEntry b)
                 => string.Compare(a.asset.name, b.asset.name, StringComparison.Ordinal);
 
-            public static int ComparePaths(ItemInfo a, ItemInfo b)
+            public static int ComparePaths(EmptyFolderEntry a, EmptyFolderEntry b)
                 => string.Compare(a.path, b.path, StringComparison.Ordinal);
         }
 
-        private class ItemCollectionAsset : ScriptableObject
+        private class EmptyFolderEntryCollectionAsset : ScriptableObject
         {
-            public List<ItemInfo> items;
+            public List<EmptyFolderEntry> items;
         }
     }
 }

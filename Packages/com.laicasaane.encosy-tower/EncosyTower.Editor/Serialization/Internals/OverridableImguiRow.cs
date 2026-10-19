@@ -10,29 +10,35 @@ using EncosyTower.UnityExtensions;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using static EncosyTower.Editor.ImguiAPI;
 
 namespace EncosyTower.Editor.Serialization.Internals
 {
+    /// <summary>
+    /// Draws the IMGUI row of an <see cref="Overridable{T}"/> field.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// It is the IMGUI counterpart of <see cref="OverridableRowBuilder"/> and follows the same rules: an override
+    /// switch or an enum dropdown, the shown default through an <see cref="SerializedValueHolder"/>, a menu of
+    /// choices, a context menu and a mixed state. The switch is painted by hand and moves with a 120 ms animation.
+    /// </para>
+    /// <para>
+    /// <see cref="Get"/> keeps one row for each serialized object, compared by reference, and property path.
+    /// <see cref="ClearCache"/> runs before an assembly reload and when the selection changes. A cleared row
+    /// destroys its holder, and its later calls do nothing.
+    /// </para>
+    /// </remarks>
     internal sealed class OverridableImguiRow
     {
-        public const float MENU_WIDTH = 12f;
-        public const float MENU_SPACING = 2f;
 
         private const float PREFIX_PADDING_RIGHT = 2f;
         private const float SWITCH_WIDTH = 26f;
         private const float SWITCH_SPACING = 4f;
-        private const float COLLECTION_SIZE_WIDTH = 48f;
         private const float TRANSITION_DURATION = 0.12f;
         private const float DISABLED_SWATCH_OPACITY = 0.5f;
         private const float DARK_VIEW_BACKGROUND_INTENSITY = 0.22f;
         private const float LIGHT_VIEW_BACKGROUND_INTENSITY = 0.76f;
-
-        private static readonly GUIContent[] s_vector4Labels = {
-            new("X"),
-            new("Y"),
-            new("Z"),
-            new("W"),
-        };
 
         private static readonly Color s_darkBackground = new Color32(r: 42, g: 42, b: 42, a: 255);
         private static readonly Color s_lightBackground = new Color32(r: 240, g: 240, b: 240, a: 255);
@@ -51,9 +57,6 @@ namespace EncosyTower.Editor.Serialization.Internals
         private static readonly Dictionary<(SerializedObject Object, string Path), OverridableImguiRow> s_rows
             = new(new CacheComparer());
 
-        private static readonly Dictionary<Type, bool> s_customDrawers = new();
-        private static readonly ConditionalWeakTable<ReorderableList, CompositeListDrawer> s_compositeLists = new();
-
         private readonly SerializedObject _serializedObject;
         private readonly string _propertyPath;
         private readonly Type _valueType;
@@ -61,7 +64,7 @@ namespace EncosyTower.Editor.Serialization.Internals
         private readonly bool _isListElement;
         private readonly bool _hasCustomClassDrawer;
 
-        private OverridableDefaultHolder _holder;
+        private SerializedValueHolder _holder;
         private bool _cleared;
         private bool _hasSwitchPosition;
         private float _switchPosition;
@@ -91,6 +94,12 @@ namespace EncosyTower.Editor.Serialization.Internals
             _attribute = _isListElement ? null : fieldInfo.GetCustomAttribute<OverridableDefaultAttribute>();
         }
 
+        /// <summary>
+        /// Gets the row of a property.
+        /// </summary>
+        /// <param name="property">The <see cref="Overridable{T}"/> property.</param>
+        /// <param name="fieldInfo">The field that holds the property.</param>
+        /// <returns>The cached row for the serialized object and path. The first call creates it.</returns>
         public static OverridableImguiRow Get(SerializedProperty property, FieldInfo fieldInfo)
         {
             var key = (property.serializedObject, property.propertyPath);
@@ -104,6 +113,12 @@ namespace EncosyTower.Editor.Serialization.Internals
             return row;
         }
 
+        /// <summary>
+        /// Clears every cached row.
+        /// </summary>
+        /// <remarks>
+        /// Each row is marked cleared and its holder is destroyed. Calls on a cleared row do nothing.
+        /// </remarks>
         public static void ClearCache()
         {
             foreach (var row in s_rows.Values)
@@ -121,245 +136,22 @@ namespace EncosyTower.Editor.Serialization.Internals
             s_rows.Clear();
         }
 
-        public static bool IsLocked(SerializedProperty property)
-        {
-            if (property.serializedObject.targetObject is OverridableDefaultHolder)
-            {
-                return true;
-            }
-
-            const string VALUE_SEGMENT = "." + OverridableEditorAPI.VALUE + ".";
-            var path = property.propertyPath;
-            var index = path.LastIndexOf(VALUE_SEGMENT, StringComparison.Ordinal);
-
-            while (index >= 0)
-            {
-                path = path[..index];
-                using var parent = property.serializedObject.FindProperty(path);
-                using var overridden = parent?.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN);
-
-                if (overridden != null
-                    && overridden.propertyType == SerializedPropertyType.Boolean
-                    && overridden.hasMultipleDifferentValues == false
-                    && overridden.boolValue == false
-                )
-                {
-                    return true;
-                }
-
-                index = path.LastIndexOf(VALUE_SEGMENT, StringComparison.Ordinal);
-            }
-
-            return false;
-        }
-
-        public static Rect GetCollectionSizeRect(Rect header, int indent)
-        {
-            var previousIndent = EditorGUI.indentLevel;
-            EditorGUI.indentLevel = indent;
-            var indentWidth = EditorGUI.IndentedRect(header).x - header.x;
-            EditorGUI.indentLevel = previousIndent;
-            header.height = EditorGUIUtility.singleLineHeight;
-            header.xMin = header.xMax - COLLECTION_SIZE_WIDTH - indentWidth * indent;
-            return header;
-        }
-
-        public static bool DrawMoreButton(Rect rect, string tooltip)
-        {
-            var iconName = EditorGUIUtility.isProSkin ? "d__menu@2x" : "_menu@2x";
-            var content = new GUIContent(EditorGUIUtility.IconContent(iconName).image, tooltip);
-
-            if (Event.current.type == EventType.Repaint && GUI.enabled && rect.Contains(Event.current.mousePosition))
-            {
-                var shade = EditorGUIUtility.isProSkin ? 103f / 255f : 236f / 255f;
-                EditorGUI.DrawRect(rect, new Color(shade, shade, shade));
-            }
-
-            var clicked = GUI.Button(position: rect, content: GUIContent.none, style: GUIStyle.none);
-            var iconRect = new Rect(rect.x, rect.center.y - MENU_WIDTH * 0.5f, MENU_WIDTH, MENU_WIDTH);
-            GUI.Label(iconRect, content, GUIStyle.none);
-            return clicked;
-        }
-
-        public static Rect DrawWarning(Rect rect, string valueText, bool locked)
-        {
-            const float WARNING_SIZE = 16f;
-            const float WARNING_SPACING = 4f;
-            var iconName = EditorGUIUtility.isProSkin ? "d_console.warnicon" : "console.warnicon";
-            var tooltip = locked ? string.Empty : $"\"{valueText}\" is not one of the allowed values.";
-            var content = new GUIContent(EditorGUIUtility.IconContent(iconName).image, tooltip);
-            var warningRect = new Rect(rect.xMax - WARNING_SIZE, rect.y, WARNING_SIZE, WARNING_SIZE);
-            GUI.Label(warningRect, content, GUIStyle.none);
-            rect.width = Mathf.Max(0f, rect.width - WARNING_SIZE - WARNING_SPACING);
-            return rect;
-        }
-
-        public static bool DrawPopupButton(Rect rect, string text, string tooltip, bool mixed)
-        {
-            var previousMixed = EditorGUI.showMixedValue;
-
-            try
-            {
-                EditorGUI.showMixedValue = mixed;
-                var content = new GUIContent(mixed ? "—" : text, tooltip);
-                return EditorGUI.DropdownButton(rect, content, FocusType.Keyboard, EditorStyles.popup);
-            }
-            finally
-            {
-                EditorGUI.showMixedValue = previousMixed;
-            }
-        }
-
+        /// <summary>
+        /// Checks whether a value is drawn under a foldout header.
+        /// </summary>
+        /// <remarks>
+        /// The UI Toolkit row uses the same rule.
+        /// </remarks>
+        /// <param name="property">The value property.</param>
+        /// <param name="valueType">The type of the value.</param>
+        /// <returns>
+        /// <see langword="true"/> for a collection, and for a generic value that is a class or has no custom drawer.
+        /// </returns>
         public static bool UsesHeader(SerializedProperty property, Type valueType)
             => IsCollection(property)
                 || (property.propertyType == SerializedPropertyType.Generic
                     && (valueType.IsClass || HasCustomDrawer(valueType) == false)
                 );
-
-        public static bool TryGetNativeList(SerializedProperty property, out ReorderableList list)
-        {
-            EditorGUI.GetPropertyHeight(property: property, label: GUIContent.none, includeChildren: true);
-            list = ReorderableList.GetReorderableListFromSerializedProperty(property);
-            return list != null;
-        }
-
-        public static void DrawNativeList(Rect position, ReorderableList list)
-        {
-            if (list.drawElementCallback != null
-                || CompositeListDrawer.IsSupported == false
-                || list.serializedProperty.arraySize == 0
-            )
-            {
-                list.DoList(position);
-                return;
-            }
-
-            using var first = list.serializedProperty.GetArrayElementAtIndex(0);
-
-            if (UsesFullWidthComposite(first) == false)
-            {
-                list.DoList(position);
-                return;
-            }
-
-            var drawer = s_compositeLists.GetValue(list, static value => new CompositeListDrawer(value));
-            list.drawElementCallback = drawer.Draw;
-
-            try
-            {
-                list.DoList(position);
-            }
-            finally
-            {
-                list.drawElementCallback = null;
-            }
-        }
-
-        public static bool TryDrawFullWidthComposite(Rect position, SerializedProperty property, GUIContent label)
-        {
-            if (UsesFullWidthComposite(property) == false)
-            {
-                return false;
-            }
-
-            var indent = EditorGUI.indentLevel;
-            var mixed = EditorGUI.showMixedValue;
-            label = EditorGUI.BeginProperty(position, label, property);
-
-            try
-            {
-                var input = EditorGUI.PrefixLabel(position, label);
-                EditorGUI.indentLevel = 0;
-
-                if (property.propertyType == SerializedPropertyType.Vector4)
-                {
-                    using var component = property.FindPropertyRelative("x");
-                    EditorGUI.MultiPropertyField(input, s_vector4Labels, component, GUIContent.none);
-                }
-                else
-                {
-                    EditorGUI.PropertyField(input, property, GUIContent.none, includeChildren: false);
-                }
-            }
-            finally
-            {
-                EditorGUI.EndProperty();
-                EditorGUI.indentLevel = indent;
-                EditorGUI.showMixedValue = mixed;
-            }
-
-            return true;
-        }
-
-        public static bool HasCustomDrawer(Type valueType)
-        {
-            if (s_customDrawers.TryGetValue(valueType, out var result))
-            {
-                return result;
-            }
-
-            var types = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
-            var count = types.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                var type = types[i];
-
-                if (typeof(PropertyDrawer).IsAssignableFrom(type) == false)
-                {
-                    continue;
-                }
-
-                var attributes = CustomAttributeData.GetCustomAttributes(type);
-                var attributeCount = attributes.Count;
-
-                for (var j = 0; j < attributeCount; j++)
-                {
-                    var attribute = attributes[j];
-
-                    if (attribute.AttributeType != typeof(CustomPropertyDrawer))
-                    {
-                        continue;
-                    }
-
-                    var arguments = attribute.ConstructorArguments;
-                    var target = (Type)arguments[0].Value;
-                    var useForChildren = arguments.Count > 1 && (bool)arguments[1].Value;
-
-                    for (var current = valueType; current != null; current = current.BaseType)
-                    {
-                        var matches = current == target
-                            || (current.IsGenericType && current.GetGenericTypeDefinition() == target);
-
-                        if (matches && (current == valueType || useForChildren))
-                        {
-                            s_customDrawers[valueType] = true;
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            s_customDrawers[valueType] = false;
-            return false;
-        }
-
-        private static bool UsesFullWidthComposite(SerializedProperty property)
-        {
-            var type = property.propertyType switch {
-                SerializedPropertyType.Vector2 => typeof(Vector2),
-                SerializedPropertyType.Vector2Int => typeof(Vector2Int),
-                SerializedPropertyType.Vector4 => typeof(Vector4),
-                SerializedPropertyType.Rect => typeof(Rect),
-                SerializedPropertyType.RectInt => typeof(RectInt),
-                _ => null,
-            };
-
-            return type != null && HasCustomDrawer(type) == false;
-        }
-
-        private static bool IsCollection(SerializedProperty property)
-            => property.isArray && property.propertyType != SerializedPropertyType.String;
 
         private static void DrawDisabledColorSwatch(Rect position, SerializedProperty property, bool hasLabel)
         {
@@ -447,7 +239,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
         private static void AddItems(
               GenericMenu menu
-            , IReadOnlyList<(GUIContent Content, bool IsChecked, GenericMenu.MenuFunction Callback)> items
+            , IReadOnlyList<ValueChoiceMenuItem> items
         )
         {
             var count = items.Count;
@@ -505,6 +297,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             );
         }
 
+        /// <summary>
+        /// Gets the property that the row draws as its value.
+        /// </summary>
+        /// <returns>
+        /// The real value property while the field is overridden or mixed. Otherwise the value property of the
+        /// holder, which was written with the shown default and copies the expanded state of the real property.
+        /// </returns>
         public SerializedProperty GetDrawnProperty()
         {
             var property = _serializedObject.FindProperty(_propertyPath);
@@ -518,14 +317,23 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             if (_holder.IsInvalid())
             {
-                _holder = OverridableDefaultHolder.Create(_valueType);
+                _holder = SerializedValueHolder.Create(_valueType);
             }
 
             return _holder.Write(OverridableEditorAPI.GetShownDefault(_attribute, _valueType), value);
         }
 
+        /// <summary>
+        /// Gets the height of the row.
+        /// </summary>
+        /// <param name="choices">The resolved choices, or <see langword="null"/>.</param>
+        /// <param name="choicesAttribute">The choices attribute, or <see langword="null"/>.</param>
+        /// <returns>
+        /// One line for a dropdown or a collapsed header, the height of the value for a value without a header, and
+        /// for an expanded header the header line plus the height of the body.
+        /// </returns>
         public float GetHeight(
-              IReadOnlyList<(string label, object value)> choices = null
+              IReadOnlyList<ValueChoice> choices = null
             , ValueChoicesAttribute choicesAttribute = null
         )
         {
@@ -582,15 +390,28 @@ namespace EncosyTower.Editor.Serialization.Internals
             return height;
         }
 
+        /// <summary>
+        /// Draws the row.
+        /// </summary>
+        /// <remarks>
+        /// The context menu is handled before and after the row is drawn, and a right click on the row is used even
+        /// when the row is locked. A locked row is disabled. The switch calls <see cref="SetOverride"/>. The method
+        /// restores the indent level, the label width and the mixed flag, and ends the property, even when drawing
+        /// throws.
+        /// </remarks>
+        /// <param name="position">The rectangle of the row.</param>
+        /// <param name="label">The label of the field.</param>
+        /// <param name="choices">The resolved choices, or <see langword="null"/>.</param>
+        /// <param name="choicesAttribute">The choices attribute, or <see langword="null"/>.</param>
         public void Draw(
               Rect position
             , GUIContent label
-            , IReadOnlyList<(string label, object value)> choices = null
+            , IReadOnlyList<ValueChoice> choices = null
             , ValueChoicesAttribute choicesAttribute = null
         )
         {
             var property = _serializedObject.FindProperty(_propertyPath);
-            var locked = IsLocked(property);
+            var locked = PropertyLockAPI.IsLocked(property);
             var overridden = property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN);
             var useValue = overridden.boolValue || overridden.hasMultipleDifferentValues;
             var line = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
@@ -613,7 +434,7 @@ namespace EncosyTower.Editor.Serialization.Internals
                     var input = DrawLabel(line, label, property, drawn, header, dropdown || useValue);
                     EditorGUI.indentLevel = 0;
                     var hasChoiceMenu = choices?.Count > 0
-                        && ValueChoicesEditorAPI.ListsOnlyChoices(choicesAttribute, _valueType) == false;
+                        && ValueChoicesEditorAPI.IsExclusive(choicesAttribute) == false;
 
                     var menuRect = new Rect(line.xMax - MENU_WIDTH, line.y, MENU_WIDTH, line.height);
 
@@ -670,6 +491,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
+        /// <summary>
+        /// Turns the override on or off.
+        /// </summary>
+        /// <remarks>
+        /// It does nothing when the row is cleared, the target is destroyed or the property is locked.
+        /// </remarks>
+        /// <param name="isOverridden">Whether to turn the override on.</param>
         public void SetOverride(bool isOverridden)
         {
             if (TryGetEditableProperty(out var property) == false)
@@ -687,6 +515,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
+        /// <summary>
+        /// Writes a choice into the value and turns the override on.
+        /// </summary>
+        /// <remarks>
+        /// It does nothing when the row is cleared, the target is destroyed or the property is locked.
+        /// </remarks>
+        /// <param name="value">The value of the choice.</param>
         public void ApplyPreset(object value)
         {
             if (TryGetEditableProperty(out var property) == false)
@@ -694,20 +529,29 @@ namespace EncosyTower.Editor.Serialization.Internals
                 return;
             }
 
-            ValueChoicesPropertyDrawer.WriteValue(property.FindPropertyRelative(OverridableEditorAPI.VALUE), value);
+            SerializedValueAPI.Write(property.FindPropertyRelative(OverridableEditorAPI.VALUE), value);
             property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN).boolValue = true;
             _serializedObject.ApplyModifiedProperties();
         }
 
+        /// <summary>
+        /// Builds the menu of choices.
+        /// </summary>
+        /// <param name="choices">The resolved choices, or <see langword="null"/>.</param>
+        /// <param name="choicesAttribute">The choices attribute, or <see langword="null"/>.</param>
+        /// <returns>
+        /// An empty menu when there are no choices, the attribute is exclusive, or the property is not editable;
+        /// otherwise one item for each choice.
+        /// </returns>
         public GenericMenu BuildChoiceMenu(
-              IReadOnlyList<(string label, object value)> choices
+              IReadOnlyList<ValueChoice> choices
             , ValueChoicesAttribute choicesAttribute
         )
         {
             var menu = new GenericMenu();
 
             if (choices == null
-                || ValueChoicesEditorAPI.ListsOnlyChoices(choicesAttribute, _valueType)
+                || ValueChoicesEditorAPI.IsExclusive(choicesAttribute)
                 || TryGetEditableProperty(out var property) == false
             )
             {
@@ -717,13 +561,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             var overridden = property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN).boolValue;
 
             var value = overridden
-                ? ValueChoicesPropertyDrawer.ReadValue(
+                ? SerializedValueAPI.Read(
                       property.FindPropertyRelative(OverridableEditorAPI.VALUE)
                     , _valueType
                 )
                 : OverridableEditorAPI.GetShownDefault(_attribute, _valueType);
 
-            var items = ValueChoicesPropertyDrawer.CreateMenuItems(
+            var items = ValueChoicesEditorAPI.CreateChoiceMenuItems(
                   choices
                 , value
                 , OverridableEditorAPI.IsMixed(property)
@@ -734,6 +578,15 @@ namespace EncosyTower.Editor.Serialization.Internals
             return menu;
         }
 
+        /// <summary>
+        /// Builds the context menu of the row.
+        /// </summary>
+        /// <param name="label">The label of the field, used by "Locate Default Source".</param>
+        /// <param name="shiftPressed">Whether Shift was held when the menu opened.</param>
+        /// <returns>
+        /// An empty menu when the property is not editable; otherwise the result of
+        /// <c>OverridableEditorAPI.BuildPropertyContextMenu</c>.
+        /// </returns>
         public GenericMenu BuildContextMenu(string label, bool shiftPressed = false)
         {
             if (TryGetEditableProperty(out var property) == false)
@@ -756,7 +609,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             => UsesHeader(property, _valueType);
 
         private bool UsesDropdown(
-              IReadOnlyList<(string label, object value)> choices
+              IReadOnlyList<ValueChoice> choices
             , ValueChoicesAttribute choicesAttribute
         )
             => choices != null
@@ -774,7 +627,7 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             _serializedObject.UpdateIfRequiredOrScript();
             property = _serializedObject.FindProperty(_propertyPath);
-            return property != null && IsLocked(property) == false;
+            return property != null && PropertyLockAPI.IsLocked(property) == false;
         }
 
         private void DrawValue(
@@ -808,7 +661,7 @@ namespace EncosyTower.Editor.Serialization.Internals
                     if (drawn.propertyType == SerializedPropertyType.Vector4 && HasCustomDrawer(_valueType) == false)
                     {
                         using var component = drawn.FindPropertyRelative("x");
-                        EditorGUI.MultiPropertyField(input, s_vector4Labels, component, content);
+                        EditorGUI.MultiPropertyField(input, VECTOR4_LABELS, component, content);
                     }
                     else
                     {
@@ -917,24 +770,26 @@ namespace EncosyTower.Editor.Serialization.Internals
         private void DrawDropdown(
               Rect rect
             , SerializedProperty property
-            , IReadOnlyList<(string label, object value)> choices
+            , IReadOnlyList<ValueChoice> choices
             , ValueChoicesAttribute choicesAttribute
             , bool locked
         )
         {
             var overridden = property.FindPropertyRelative(OverridableEditorAPI.IS_OVERRIDDEN).boolValue;
             var mixed = OverridableEditorAPI.IsMixed(property);
-            var popupChoices = choices == null
+            var selectableChoices = choices == null
                 ? null
-                : ValueChoicesPropertyDrawer.GetPopupChoices(choicesAttribute, _valueType, choices);
+                : ValueChoicesEditorAPI.GetSelectableChoices(choicesAttribute, _valueType, choices);
 
-            var value = ValueChoicesPropertyDrawer.ReadValue(
+            var value = SerializedValueAPI.Read(
                   property.FindPropertyRelative(OverridableEditorAPI.VALUE)
                 , _valueType
             );
 
-            var text = OverridableEditorAPI.GetDisplayText(_valueType, value);
-            var valueIndex = popupChoices == null ? -1 : ValueChoicesPropertyDrawer.GetChoiceIndex(popupChoices, value);
+            var text = ValueDisplayAPI.GetDisplayText(_valueType, value);
+            var valueIndex = selectableChoices == null
+                ? -1
+                : ValueChoicesEditorAPI.GetChoiceIndex(selectableChoices, value);
 
             if (overridden == false)
             {
@@ -942,13 +797,13 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
             else if (valueIndex >= 0)
             {
-                text = popupChoices[valueIndex].label;
+                text = selectableChoices[valueIndex].Label;
             }
 
             if (overridden
                 && mixed == false
-                && popupChoices != null
-                && ValueChoicesEditorAPI.ListsOnlyChoices(choicesAttribute, _valueType)
+                && selectableChoices != null
+                && ValueChoicesEditorAPI.IsExclusive(choicesAttribute)
                 && valueIndex < 0
             )
             {
@@ -974,10 +829,10 @@ namespace EncosyTower.Editor.Serialization.Internals
 
             menu.AddSeparator(string.Empty);
 
-            if (popupChoices != null)
+            if (selectableChoices != null)
             {
-                var items = ValueChoicesPropertyDrawer.CreateMenuItems(
-                      popupChoices
+                var items = ValueChoicesEditorAPI.CreateChoiceMenuItems(
+                      selectableChoices
                     , value
                     , mixed || overridden == false
                     , ApplyPreset
@@ -987,7 +842,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
             else
             {
-                var labels = OverridableEditorAPI.GetValueChoices(_valueType);
+                var labels = ValueDisplayAPI.GetValueChoices(_valueType);
                 var selected = OverridableEditorAPI.GetSelectedIndex(property, _valueType);
                 var count = labels.Length;
 
@@ -1014,7 +869,7 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
         }
 
-        private string GetDefaultChoiceLabel(IReadOnlyList<(string label, object value)> choices)
+        private string GetDefaultChoiceLabel(IReadOnlyList<ValueChoice> choices)
         {
             if (choices == null)
             {
@@ -1028,8 +883,8 @@ namespace EncosyTower.Editor.Serialization.Internals
                 return label;
             }
 
-            var index = ValueChoicesPropertyDrawer.GetChoiceIndex(choices, value);
-            var text = index >= 0 ? choices[index].label : OverridableEditorAPI.GetDisplayText(_valueType, value);
+            var index = ValueChoicesEditorAPI.GetChoiceIndex(choices, value);
+            var text = index >= 0 ? choices[index].Label : ValueDisplayAPI.GetDisplayText(_valueType, value);
             return $"{label} ({text})";
         }
 
@@ -1197,55 +1052,6 @@ namespace EncosyTower.Editor.Serialization.Internals
             }
 
             return _switchPosition;
-        }
-
-        private sealed class CompositeListDrawer
-        {
-            private static readonly Func<Rect, SerializedProperty, float> s_labelWidth
-                = typeof(ReorderableList.Defaults)
-                    .GetMethod("FieldLabelSize", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?.CreateDelegate(
-                          typeof(Func<Rect, SerializedProperty, float>)
-                        , ReorderableList.defaultBehaviours
-                    ) as Func<Rect, SerializedProperty, float>;
-
-            private static readonly Func<float, float> s_padding
-                = typeof(ReorderableList.Defaults)
-                    .GetMethod("ElementPadding", BindingFlags.Static | BindingFlags.NonPublic)
-                    ?.CreateDelegate(typeof(Func<float, float>)) as Func<float, float>;
-
-            private readonly ReorderableList _list;
-
-            public CompositeListDrawer(ReorderableList list)
-            {
-                _list = list;
-            }
-
-            public static bool IsSupported => s_labelWidth != null && s_padding != null;
-
-            public void Draw(Rect position, int index, bool selected, bool focused)
-            {
-                var collection = _list.serializedProperty;
-
-                if ((uint)index >= (uint)collection.arraySize)
-                {
-                    return;
-                }
-
-                using var element = collection.GetArrayElementAtIndex(index);
-                var labelWidth = EditorGUIUtility.labelWidth;
-                position.y += s_padding(position.height) / 2f;
-                EditorGUIUtility.labelWidth = s_labelWidth(position, element);
-
-                try
-                {
-                    TryDrawFullWidthComposite(position, element, new GUIContent(element.displayName));
-                }
-                finally
-                {
-                    EditorGUIUtility.labelWidth = labelWidth;
-                }
-            }
         }
 
         private sealed class CacheComparer : IEqualityComparer<(SerializedObject Object, string Path)>

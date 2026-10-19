@@ -83,7 +83,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsTrue(success, error.ToMessage());
             Assert.IsTrue(error.Is(ValueChoicesError.Type.Undefined));
             Assert.IsEmpty(error.ToMessage());
-            CollectionAssert.AreEqual(new[] { ("3", (object)3), ("5", (object)5) }, choices);
+            CollectionAssert.AreEqual(new[] { new ValueChoice("3", 3), new ValueChoice("5", 5) }, choices);
         }
 
         [TestCase("s_fieldChoices")]
@@ -115,7 +115,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                     Assert.IsTrue(success, error.ToMessage());
                     Assert.IsTrue(error.Is(ValueChoicesError.Type.Undefined));
                     Assert.IsEmpty(error.ToMessage());
-                    CollectionAssert.AreEqual(new[] { ("3", (object)3), ("5", (object)5) }, choices);
+                    CollectionAssert.AreEqual(new[] { new ValueChoice("3", 3), new ValueChoice("5", 5) }, choices);
                 }
             }
         }
@@ -136,7 +136,10 @@ namespace EncosyTower.Tests.Editor.Serialization
             );
 
             Assert.IsTrue(success, error.ToMessage());
-            CollectionAssert.AreEqual(new[] { ("Three", (object)3), ("5", (object)5), ("7", (object)7) }, choices);
+            CollectionAssert.AreEqual(
+                  new[] { new ValueChoice("Three", 3), new ValueChoice("5", 5), new ValueChoice("7", 7) }
+                , choices
+            );
         }
 
         [Test]
@@ -154,7 +157,10 @@ namespace EncosyTower.Tests.Editor.Serialization
             Assert.IsTrue(success, error.ToMessage());
 
             CollectionAssert.AreEqual(
-                  new[] { ("First Value", (object)ChoiceEnum.FirstValue), ("Second choice", (object)ChoiceEnum.Second) }
+                  new[] {
+                      new ValueChoice("First Value", ChoiceEnum.FirstValue),
+                      new ValueChoice("Second choice", ChoiceEnum.Second),
+                  }
                 , choices
             );
         }
@@ -177,10 +183,10 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             CollectionAssert.AreEqual(
                   new[] {
-                      ("Second choice", (object)ChoiceEnum.Second),
-                      ("Second choice", (object)ChoiceEnum.Second),
-                      ("Custom label", (object)ChoiceEnum.Second),
-                      ("First Value", (object)ChoiceEnum.FirstValue),
+                      new ValueChoice("Second choice", ChoiceEnum.Second),
+                      new ValueChoice("Second choice", ChoiceEnum.Second),
+                      new ValueChoice("Custom label", ChoiceEnum.Second),
+                      new ValueChoice("First Value", ChoiceEnum.FirstValue),
                   }
                 , choices
             );
@@ -204,10 +210,10 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             CollectionAssert.AreEqual(
                   new[] {
-                      ("Ground layer", (object)ChoiceFlags.Ground),
-                      ("Ground layer", (object)ChoiceFlags.Ground),
-                      ("Custom label", (object)ChoiceFlags.Ground),
-                      ("Ground, Air", (object)(ChoiceFlags.Ground | ChoiceFlags.Air)),
+                      new ValueChoice("Ground layer", ChoiceFlags.Ground),
+                      new ValueChoice("Ground layer", ChoiceFlags.Ground),
+                      new ValueChoice("Custom label", ChoiceFlags.Ground),
+                      new ValueChoice("Ground, Air", ChoiceFlags.Ground | ChoiceFlags.Air),
                   }
                 , choices
             );
@@ -227,9 +233,9 @@ namespace EncosyTower.Tests.Editor.Serialization
 
             Assert.IsTrue(success, error.ToMessage());
             Assert.AreEqual(expected: 2, actual: choices.Count);
-            Assert.AreEqual(("", (object)null), choices[0]);
-            Assert.AreEqual("Derived", choices[1].label);
-            Assert.AreSame(ChoiceSource.ReferenceValue, choices[1].value);
+            Assert.AreEqual(new ValueChoice("", null), choices[0]);
+            Assert.AreEqual("Derived", choices[1].Label);
+            Assert.AreSame(ChoiceSource.ReferenceValue, choices[1].Value);
         }
 
         [Test]
@@ -245,7 +251,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             );
 
             Assert.IsTrue(success, error.ToMessage());
-            CollectionAssert.AreEqual(new[] { ("", (object)null), ("3", (object)3) }, choices);
+            CollectionAssert.AreEqual(new[] { new ValueChoice("", null), new ValueChoice("3", 3) }, choices);
         }
 
         [Test]
@@ -407,7 +413,7 @@ namespace EncosyTower.Tests.Editor.Serialization
             );
 
             Assert.IsTrue(success, error.ToMessage());
-            CollectionAssert.AreEqual(new[] { ("3", (object)3), ("5", (object)5) }, choices);
+            CollectionAssert.AreEqual(new[] { new ValueChoice("3", 3), new ValueChoice("5", 5) }, choices);
 
             static void AssertSourceError(string typeName, ValueChoicesError.Type expected)
             {
@@ -543,13 +549,13 @@ namespace EncosyTower.Tests.Editor.Serialization
               Type valueType
             , bool isExclusive
             , bool usesDropdown
-            , bool listsOnlyChoices
+            , bool expectedExclusive
         )
         {
             var attribute = new ValueChoicesAttribute("Choices") { IsExclusive = isExclusive };
 
             Assert.AreEqual(usesDropdown, ValueChoicesEditorAPI.UsesDropdown(attribute, valueType));
-            Assert.AreEqual(listsOnlyChoices, ValueChoicesEditorAPI.ListsOnlyChoices(attribute, valueType));
+            Assert.AreEqual(expectedExclusive, ValueChoicesEditorAPI.IsExclusive(attribute));
         }
 
         [Test]
@@ -561,13 +567,7 @@ namespace EncosyTower.Tests.Editor.Serialization
                   attribute: null
                 , valueType: typeof(OverridableTestFlags)
             ));
-            Assert.IsFalse(ValueChoicesEditorAPI.ListsOnlyChoices(attribute: null, valueType: typeof(ChoiceEnum)));
-            Assert.IsFalse(ValueChoicesEditorAPI.ListsOnlyChoices(attribute: null, valueType: typeof(int)));
-
-            Assert.IsFalse(ValueChoicesEditorAPI.ListsOnlyChoices(
-                  attribute: null
-                , valueType: typeof(OverridableTestFlags)
-            ));
+            Assert.IsFalse(ValueChoicesEditorAPI.IsExclusive(attribute: null));
         }
 
         private enum ChoiceEnum

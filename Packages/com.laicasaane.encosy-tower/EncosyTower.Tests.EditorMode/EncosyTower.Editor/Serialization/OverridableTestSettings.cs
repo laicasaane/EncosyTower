@@ -14,6 +14,8 @@ namespace EncosyTower.Tests.Editor.Serialization
     {
         public int maxRetries = 5;
         public Overridable<int>[] limitSteps = { new(value: 2, isOverridden: true), default };
+
+        private int HiddenRetries => maxRetries + 1;
     }
 
     internal sealed class OverridableTestSettingsScope : IDisposable

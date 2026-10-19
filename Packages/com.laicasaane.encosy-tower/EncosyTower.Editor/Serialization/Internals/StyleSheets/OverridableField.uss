@@ -2,32 +2,7 @@
     flex-direction: column;
 }
 
-.encosy-overridable__row {
-    flex-direction: row;
-    align-items: center;
-}
-
-.encosy-overridable__row > .unity-base-field,
-.encosy-overridable__row > .unity-property-field {
-    flex-grow: 1;
-    flex-shrink: 1;
-}
-
-.encosy-overridable__row--collection {
-    align-items: flex-start;
-}
-
-.encosy-overridable__row--collection > .encosy-overridable__more {
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.encosy-overridable__row--collection .encosy-overridable__plain-collection-size--choices {
-    right: 14px;
-}
-
-.encosy-overridable__row > .encosy-overridable__collection-size--choices {
+.encosy-row > .encosy-overridable__collection-size--choices {
     position: relative;
     right: auto;
 }
@@ -47,39 +22,8 @@
     margin-right: 4px;
 }
 
-.encosy-overridable__value {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-width: 0;
-}
-
-.encosy-overridable__value > .unity-property-field {
-    flex-grow: 1;
-    min-width: 0;
-}
-
-.encosy-overridable__value > .unity-base-field,
-.encosy-overridable__quaternion > .unity-vector3-field,
-.encosy-overridable__value > .unity-property-field > .unity-base-field {
-    margin: 0;
-    min-width: 0;
-}
-
 .encosy-overridable .unity-composite-field__field-spacer {
     display: none;
-}
-
-.encosy-overridable__value .unity-property-field__imgui-container-property {
-    margin-left: 0;
-    margin-right: 0;
-    min-width: 0;
-}
-
-.encosy-overridable__value .unity-property-field__imgui-container-property > .unity-imgui-container {
-    align-self: stretch;
-    width: auto;
-    min-width: 0;
-    flex-shrink: 1;
 }
 
 .encosy-overridable__label--default {
@@ -93,36 +37,6 @@
 .encosy-overridable__value--locked > .unity-property-field .unity-disabled,
 .encosy-overridable__value--locked > .unity-property-field .encosy-overridable__label--default {
     opacity: 1;
-}
-
-.encosy-overridable__more {
-    width: 12px;
-    min-width: 12px;
-    height: 20px;
-    flex-shrink: 0;
-    padding: 0;
-    margin: 0 0 0 2px;
-    border-width: 0;
-    background-color: transparent;
-    align-items: center;
-    justify-content: center;
-}
-
-.encosy-overridable__more:hover {
-    background-color: var(--unity-colors-button-background-hover);
-}
-
-.encosy-overridable__more-icon {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-}
-
-.encosy-overridable__warning {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    margin-left: 4px;
 }
 
 .encosy-overridable__header > .encosy-overridable__field {
@@ -151,7 +65,7 @@
     flex-grow: 1;
 }
 
-.encosy-overridable__row > .encosy-overridable__collection-size {
+.encosy-row > .encosy-overridable__collection-size {
     flex-grow: 0;
     flex-shrink: 0;
     top: 0;
@@ -235,4 +149,9 @@
     height: 2px;
     border-radius: 0;
     background-color: var(--encosy-overridable-switch-knob);
+}
+
+.encosy-overridable__quaternion > .unity-vector3-field {
+    margin: 0;
+    min-width: 0;
 }

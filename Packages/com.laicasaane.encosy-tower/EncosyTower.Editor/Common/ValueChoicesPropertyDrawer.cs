@@ -15,141 +15,88 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor
 {
+    /// <summary>
+    /// Draws a field marked with <see cref="ValueChoicesAttribute"/> as a dropdown or as free input with a menu
+    /// of choices.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The drawer resolves the choices once for each combination of declaring type, member name, source type,
+    /// source type name, value type, <c>applyToCollection</c> and <c>IsExclusive</c>, and resolves them again only
+    /// when one of these changes. When resolution fails, it logs one warning with the failure message and draws the
+    /// field normally.
+    /// </para>
+    /// <para>
+    /// A field of <see cref="Overridable{T}"/> is drawn as the row of <see cref="OverridablePropertyDrawer"/>
+    /// with the choices added. Any other field is drawn as a plain field. An array or list field without
+    /// <c>applyToCollection</c> is drawn by Unity, which calls this drawer for each element.
+    /// </para>
+    /// <para>
+    /// A dropdown is used when the attribute does not set <c>applyToCollection</c> and the value type is a non-flags
+    /// enum or the attribute is exclusive. Otherwise the field keeps its normal input, and a non-exclusive field
+    /// gets a menu button with the choices.
+    /// </para>
+    /// <para>
+    /// A locked field, as defined for <see cref="OverridablePropertyDrawer"/>, is disabled.
+    /// A selection writes the value and applies it in one Undo step.
+    /// </para>
+    /// </remarks>
     [CustomPropertyDrawer(typeof(ValueChoicesAttribute))]
     public sealed class ValueChoicesPropertyDrawer : PropertyDrawer
     {
         internal const string CHOICES_TOOLTIP = "Choose from preset values (custom values allowed)";
 
         private ChoicesKey _choicesKey;
-        private IReadOnlyList<(string label, object value)> _choices;
+        private IReadOnlyList<ValueChoice> _choices;
         private ValueChoicesError _choicesError;
         private bool _hasChoiceResolution;
-
-        public static IReadOnlyList<(string label, object value)> GetPopupChoices(
-              ValueChoicesAttribute attribute
-            , Type valueType
-            , IReadOnlyList<(string label, object value)> choices
-        )
-        {
-            if (ValueChoicesEditorAPI.ListsOnlyChoices(attribute, valueType))
-            {
-                return choices;
-            }
-
-            var values = Enum.GetValues(valueType);
-            var labels = OverridableEditorAPI.GetValueChoices(valueType);
-            var count = values.Length;
-            var result = new (string label, object value)[count];
-
-            for (var i = 0; i < count; i++)
-            {
-                result[i] = (labels[i], values.GetValue(i));
-            }
-
-            return result;
-        }
-
-        public static int GetChoiceIndex(IReadOnlyList<(string label, object value)> choices, object value)
-        {
-            var count = choices.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                if (ValueChoicesEditorAPI.Matches(choices[i].value, value))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        public static object ReadValue(SerializedProperty property, Type valueType)
-            => SerializedValueCopy.Read(property, valueType);
-
-        public static void WriteValue(SerializedProperty property, object value)
-            => SerializedValueCopy.Write(property, value);
-
-        public static (GUIContent Content, bool IsChecked, GenericMenu.MenuFunction Callback)[] CreateMenuItems(
-              IReadOnlyList<(string label, object value)> choices
-            , object currentValue
-            , bool isMixed
-            , Action<object> onSelected
-        )
-        {
-            var count = choices.Count;
-            var result = new (GUIContent Content, bool IsChecked, GenericMenu.MenuFunction Callback)[count];
-
-            for (var i = 0; i < count; i++)
-            {
-                var choice = choices[i];
-                var isChecked = isMixed == false && ValueChoicesEditorAPI.Matches(choice.value, currentValue);
-                result[i] = (new GUIContent(choice.label), isChecked, SelectChoice);
-
-                void SelectChoice()
-                {
-                    onSelected(choice.value);
-                }
-            }
-
-            return result;
-        }
-
-        public static Image CreateWarningIcon()
-        {
-            var iconName = EditorGUIUtility.isProSkin ? "d_console.warnicon" : "console.warnicon";
-            var icon = new Image { image = EditorGUIUtility.IconContent(iconName).image };
-            icon.AddToClassList("encosy-overridable__warning");
-            icon.style.display = DisplayStyle.None;
-            return icon;
-        }
-
-        public static void RefreshWarning(Image icon, bool isUnlisted, string valueText, bool locked)
-        {
-            icon.style.display = isUnlisted ? DisplayStyle.Flex : DisplayStyle.None;
-            icon.tooltip = isUnlisted && locked == false
-                ? $"\"{valueText}\" is not one of the allowed values."
-                : string.Empty;
-        }
 
         private static void DrawPlainPopup(
               Rect rect
             , SerializedProperty property
             , Type valueType
-            , IReadOnlyList<(string label, object value)> choices
-            , bool onlyChoices
+            , IReadOnlyList<ValueChoice> choices
+            , bool isExclusive
             , bool locked
         )
         {
-            var value = ReadValue(property, valueType);
-            var index = GetChoiceIndex(choices, value);
+            var value = SerializedValueAPI.Read(property, valueType);
+            var index = ValueChoicesEditorAPI.GetChoiceIndex(choices, value);
             var mixed = property.hasMultipleDifferentValues;
-            var text = index >= 0 ? choices[index].label : OverridableEditorAPI.GetDisplayText(valueType, value);
+            var text = index >= 0 ? choices[index].Label : ValueDisplayAPI.GetDisplayText(valueType, value);
 
-            if (onlyChoices && index < 0 && mixed == false)
+            if (isExclusive && index < 0 && mixed == false)
             {
-                rect = OverridableImguiRow.DrawWarning(rect, text, locked);
+                rect = ImguiAPI.DrawWarning(rect, text, locked);
             }
 
-            if (OverridableImguiRow.DrawPopupButton(rect, text, string.Empty, mixed))
+            if (ImguiAPI.DrawPopupButton(rect, text, string.Empty, mixed))
             {
                 BuildPlainMenu(property, valueType, choices).DropDown(rect);
             }
         }
 
+        /// <summary>
+        /// Builds the IMGUI menu of choices for a plain field.
+        /// </summary>
+        /// <remarks>
+        /// A selection finds the property again by its path, and does nothing when the target is destroyed or the
+        /// property is locked. Otherwise it writes the value with <see cref="SerializedValueAPI.Write"/> and
+        /// applies it.
+        /// </remarks>
         private static GenericMenu BuildPlainMenu(
               SerializedProperty property
             , Type valueType
-            , IReadOnlyList<(string label, object value)> choices
+            , IReadOnlyList<ValueChoice> choices
         )
         {
             var serializedObject = property.serializedObject;
             var path = property.propertyPath;
             var menu = new GenericMenu();
 
-            var items = CreateMenuItems(
+            var items = ValueChoicesEditorAPI.CreateChoiceMenuItems(
                   choices
-                , ReadValue(property, valueType)
+                , SerializedValueAPI.Read(property, valueType)
                 , property.hasMultipleDifferentValues
                 , Apply
             );
@@ -174,16 +121,23 @@ namespace EncosyTower.Editor
                 serializedObject.UpdateIfRequiredOrScript();
                 var current = serializedObject.FindProperty(path);
 
-                if (current == null || OverridableImguiRow.IsLocked(current))
+                if (current == null || PropertyLockAPI.IsLocked(current))
                 {
                     return;
                 }
 
-                WriteValue(current, value);
+                SerializedValueAPI.Write(current, value);
                 serializedObject.ApplyModifiedProperties();
             }
         }
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// UI Toolkit path. An array or list field without <c>applyToCollection</c> gets a <see cref="PropertyField"/>
+        /// so that Unity calls this drawer for each element. A field of <see cref="Overridable{T}"/> gets an
+        /// <see cref="OverridableRowBuilder"/> row with the choices. A field with resolved choices gets the plain
+        /// field. When the choices cannot be resolved, the result is a <see cref="PropertyField"/>.
+        /// </remarks>
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var label = preferredLabel ?? property.displayName;
@@ -240,6 +194,12 @@ namespace EncosyTower.Editor
                 : new PropertyField(property, label);
         }
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// IMGUI path. A field of <see cref="Overridable{T}"/> has the height of its row. A resolved dropdown is
+        /// one line high. A collection with <c>applyToCollection</c> is one line when collapsed, otherwise a header
+        /// line plus the list height.
+        /// </remarks>
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var resolved = TryResolveImgui(property, out var valueType, out var isOverridable, out var choices);
@@ -266,7 +226,7 @@ namespace EncosyTower.Editor
                     return height;
                 }
 
-                if (OverridableImguiRow.TryGetNativeList(property, out var list))
+                if (ImguiAPI.TryGetNativeList(property, out var list))
                 {
                     return height + EditorGUIUtility.standardVerticalSpacing + list.GetHeight();
                 }
@@ -286,6 +246,12 @@ namespace EncosyTower.Editor
             return EditorGUI.GetPropertyHeight(property: property, label: label, includeChildren: true);
         }
 
+        /// <inheritdoc/>
+        /// <remarks>
+        /// IMGUI path with the same cases as <see cref="CreatePropertyGUI"/>. A non-exclusive field gets a menu
+        /// button at the right edge. The method restores the indent level and the mixed-value flag even when
+        /// drawing throws.
+        /// </remarks>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             label = new GUIContent(label ?? GUIContent.none);
@@ -310,8 +276,8 @@ namespace EncosyTower.Editor
                 return;
             }
 
-            var locked = OverridableImguiRow.IsLocked(property);
-            var onlyChoices = ValueChoicesEditorAPI.ListsOnlyChoices(choicesAttribute, valueType);
+            var locked = PropertyLockAPI.IsLocked(property);
+            var isExclusive = ValueChoicesEditorAPI.IsExclusive(choicesAttribute);
             var previousMixed = EditorGUI.showMixedValue;
             var indent = EditorGUI.indentLevel;
             label = locked ? new GUIContent(label.text) : label;
@@ -323,20 +289,20 @@ namespace EncosyTower.Editor
                 {
                     var fieldRect = position;
                     var menuRect = new Rect(
-                          position.xMax - OverridableImguiRow.MENU_WIDTH
+                          position.xMax - ImguiAPI.MENU_WIDTH
                         , position.y
-                        , OverridableImguiRow.MENU_WIDTH
+                        , ImguiAPI.MENU_WIDTH
                         , EditorGUIUtility.singleLineHeight
                     );
 
-                    if (onlyChoices == false)
+                    if (isExclusive == false)
                     {
-                        fieldRect.xMax = Mathf.Max(fieldRect.x, menuRect.x - OverridableImguiRow.MENU_SPACING);
+                        fieldRect.xMax = Mathf.Max(fieldRect.x, menuRect.x - ImguiAPI.MENU_SPACING);
                     }
 
                     if (choicesAttribute.applyToCollection)
                     {
-                        var sizeRect = OverridableImguiRow.GetCollectionSizeRect(fieldRect, indent);
+                        var sizeRect = ImguiAPI.GetCollectionSizeRect(fieldRect, indent);
                         menuRect.y = sizeRect.y;
                         menuRect.height = sizeRect.height;
                     }
@@ -345,8 +311,13 @@ namespace EncosyTower.Editor
                     {
                         var input = EditorGUI.PrefixLabel(fieldRect, label);
                         EditorGUI.indentLevel = 0;
-                        var popupChoices = GetPopupChoices(choicesAttribute, valueType, choices);
-                        DrawPlainPopup(input, property, valueType, popupChoices, onlyChoices, locked);
+                        var selectableChoices = ValueChoicesEditorAPI.GetSelectableChoices(
+                              choicesAttribute
+                            , valueType
+                            , choices
+                        );
+
+                        DrawPlainPopup(input, property, valueType, selectableChoices, isExclusive, locked);
                     }
                     else
                     {
@@ -356,7 +327,7 @@ namespace EncosyTower.Editor
                         {
                             DrawPlainCollection(position, fieldRect, property, label, indent);
                         }
-                        else if (OverridableImguiRow.TryDrawFullWidthComposite(fieldRect, property, label) == false)
+                        else if (ImguiAPI.TryDrawFullWidthComposite(fieldRect, property, label) == false)
                         {
                             EditorGUI.PropertyField(
                                   position: fieldRect
@@ -372,8 +343,8 @@ namespace EncosyTower.Editor
                         }
                     }
 
-                    if (onlyChoices == false
-                        && OverridableImguiRow.DrawMoreButton(menuRect, locked ? string.Empty : CHOICES_TOOLTIP)
+                    if (isExclusive == false
+                        && ImguiAPI.DrawMoreButton(menuRect, locked ? string.Empty : CHOICES_TOOLTIP)
                     )
                     {
                         BuildPlainMenu(property, valueType, choices).DropDown(menuRect);
@@ -397,7 +368,7 @@ namespace EncosyTower.Editor
         )
         {
             header.height = EditorGUIUtility.singleLineHeight;
-            var sizeRect = OverridableImguiRow.GetCollectionSizeRect(header, indent);
+            var sizeRect = ImguiAPI.GetCollectionSizeRect(header, indent);
             var foldout = header;
             foldout.xMax = sizeRect.xMin;
             property.isExpanded = EditorGUI.Foldout(
@@ -426,9 +397,9 @@ namespace EncosyTower.Editor
             var body = position;
             body.yMin = header.yMax + EditorGUIUtility.standardVerticalSpacing;
 
-            if (OverridableImguiRow.TryGetNativeList(property, out var list))
+            if (ImguiAPI.TryGetNativeList(property, out var list))
             {
-                OverridableImguiRow.DrawNativeList(EditorGUI.IndentedRect(body), list);
+                ImguiAPI.DrawNativeList(EditorGUI.IndentedRect(body), list);
                 return;
             }
 
@@ -465,7 +436,7 @@ namespace EncosyTower.Editor
               SerializedProperty property
             , out Type valueType
             , out bool isOverridable
-            , out IReadOnlyList<(string label, object value)> choices
+            , out IReadOnlyList<ValueChoice> choices
         )
         {
             valueType = fieldInfo.FieldType;
@@ -504,7 +475,17 @@ namespace EncosyTower.Editor
             return TryResolveChoices(valueType, out choices);
         }
 
-        private bool TryResolveChoices(Type valueType, out IReadOnlyList<(string label, object value)> choices)
+        /// <summary>
+        /// Resolves the choices once for the current <see cref="ChoicesKey"/>.
+        /// </summary>
+        /// <remarks>
+        /// A failed resolution is logged as a warning with the message of <see cref="ValueChoicesError"/>, and
+        /// <paramref name="choices"/> is empty. The result is kept until the key changes.
+        /// </remarks>
+        /// <param name="valueType">The element or collection type the choices must fit.</param>
+        /// <param name="choices">Receives the resolved choices.</param>
+        /// <returns><see langword="true"/> when the choices were resolved.</returns>
+        private bool TryResolveChoices(Type valueType, out IReadOnlyList<ValueChoice> choices)
         {
             var choicesAttribute = (ValueChoicesAttribute)attribute;
 
@@ -552,14 +533,23 @@ namespace EncosyTower.Editor
             , bool IsExclusive
         );
 
+        /// <summary>
+        /// The UI Toolkit drawing of a field that is not an <see cref="Overridable{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// It uses a choice field when the attribute asks for a dropdown, otherwise a <see cref="PropertyField"/>
+        /// with a menu button for a non-exclusive attribute. A field on an <see cref="SerializedValueHolder"/> is
+        /// locked: it is disabled and has no tooltip. Only an exclusive dropdown has a warning icon.
+        /// The row reads the value again when the property changes and when it attaches to or detaches from a panel.
+        /// </remarks>
         private sealed class PlainField
         {
             private readonly SerializedProperty _property;
             private readonly Type _valueType;
-            private readonly IReadOnlyList<(string label, object value)> _choices;
-            private readonly IReadOnlyList<(string label, object value)> _popupChoices;
+            private readonly IReadOnlyList<ValueChoice> _choices;
+            private readonly IReadOnlyList<ValueChoice> _selectableChoices;
             private readonly bool _locked;
-            private readonly OverridableChoiceField _choiceField;
+            private readonly ChoicePopupField _choiceField;
             private readonly Image _warning;
             private readonly Button _choicesButton;
             private readonly PropertyField _collectionField;
@@ -570,47 +560,47 @@ namespace EncosyTower.Editor
                   SerializedProperty property
                 , Type valueType
                 , ValueChoicesAttribute attribute
-                , IReadOnlyList<(string label, object value)> choices
+                , IReadOnlyList<ValueChoice> choices
                 , string label
             )
             {
                 _property = property.Copy();
                 _valueType = valueType;
                 _choices = choices;
-                _locked = property.serializedObject.targetObject is OverridableDefaultHolder;
+                _locked = property.serializedObject.targetObject is SerializedValueHolder;
 
                 Root = new VisualElement();
-                OverridableRowBuilder.AddStyleSheets(Root);
+                UitkAPI.AddRowStyleSheets(Root);
                 var row = new VisualElement();
-                row.AddToClassList(OverridableRowBuilder.ROW_CLASS_NAME);
+                row.AddToClassList(UitkAPI.ROW_CLASS_NAME);
 
                 if (attribute.applyToCollection)
                 {
-                    row.AddToClassList("encosy-overridable__row--collection");
+                    row.AddToClassList(UitkAPI.ROW_COLLECTION_CLASS_NAME);
                 }
 
                 Root.Add(row);
-                var onlyChoices = ValueChoicesEditorAPI.ListsOnlyChoices(attribute, valueType);
+                var isExclusive = ValueChoicesEditorAPI.IsExclusive(attribute);
 
                 if (ValueChoicesEditorAPI.UsesDropdown(attribute, valueType))
                 {
-                    _popupChoices = GetPopupChoices(attribute, valueType, choices);
-                    var count = _popupChoices.Count;
+                    _selectableChoices = ValueChoicesEditorAPI.GetSelectableChoices(attribute, valueType, choices);
+                    var count = _selectableChoices.Count;
                     var labels = new string[count];
 
                     for (var i = 0; i < count; i++)
                     {
-                        labels[i] = _popupChoices[i].label;
+                        labels[i] = _selectableChoices[i].Label;
                     }
 
-                    _choiceField = new OverridableChoiceField(label) { HasDefaultChoice = false, Choices = labels };
+                    _choiceField = new ChoicePopupField(label) { HasDefaultChoice = false, Choices = labels };
                     _choiceField.AddToClassList(BaseField<int>.alignedFieldUssClassName);
                     _choiceField.RegisterValueChangedCallback(OnChoiceChanged);
                     row.Add(_choiceField);
 
-                    if (onlyChoices)
+                    if (isExclusive)
                     {
-                        _warning = CreateWarningIcon();
+                        _warning = UitkAPI.CreateWarningIcon();
                         row.Add(_warning);
                     }
                 }
@@ -626,9 +616,9 @@ namespace EncosyTower.Editor
                     }
                 }
 
-                if (onlyChoices == false)
+                if (isExclusive == false)
                 {
-                    _choicesButton = OverridableRowBuilder.CreateMenuButton(
+                    _choicesButton = UitkAPI.CreateMenuButton(
                           _locked ? string.Empty : CHOICES_TOOLTIP
                         , _locked
                     );
@@ -647,7 +637,7 @@ namespace EncosyTower.Editor
                     && (_choicesButton != null || _warning != null)
                 )
                 {
-                    OverridableRowBuilder.AlignListElementRow(row);
+                    UitkAPI.AlignListElementRow(row);
                 }
 
                 Root.SetEnabled(_locked == false);
@@ -669,17 +659,17 @@ namespace EncosyTower.Editor
                 }
 
                 _property.serializedObject.UpdateIfRequiredOrScript();
-                var value = ReadValue(_property, _valueType);
-                var index = GetChoiceIndex(_popupChoices, value);
+                var value = SerializedValueAPI.Read(_property, _valueType);
+                var index = ValueChoicesEditorAPI.GetChoiceIndex(_selectableChoices, value);
                 var isMixed = _property.hasMultipleDifferentValues;
-                var text = OverridableEditorAPI.GetDisplayText(_valueType, value);
+                var text = ValueDisplayAPI.GetDisplayText(_valueType, value);
                 _choiceField.UnlistedValueText = text;
                 _choiceField.showMixedValue = isMixed;
                 _choiceField.SetValueWithoutNotify(index);
 
                 if (_warning != null)
                 {
-                    RefreshWarning(_warning, index < 0 && isMixed == false, text, _locked);
+                    UitkAPI.RefreshWarning(_warning, index < 0 && isMixed == false, text, _locked);
                 }
             }
 
@@ -714,17 +704,17 @@ namespace EncosyTower.Editor
                 {
                     ClearCollectionSizeField();
                     _collectionSizeField = sizeField;
-                    sizeField?.AddToClassList("encosy-overridable__plain-collection-size--choices");
+                    sizeField?.AddToClassList(UitkAPI.PLAIN_COLLECTION_SIZE_CHOICES_CLASS_NAME);
                     sizeField?.RegisterCallback<GeometryChangedEvent>(OnCollectionGeometryChanged);
                     sizeField?.RegisterCallback<DetachFromPanelEvent>(OnCollectionSizeDetached);
                 }
 
-                OverridableRowBuilder.AlignCollectionMenu(_choicesButton, sizeField);
+                UitkAPI.AlignCollectionMenu(_choicesButton, sizeField);
             }
 
             private void ClearCollectionSizeField()
             {
-                _collectionSizeField?.RemoveFromClassList("encosy-overridable__plain-collection-size--choices");
+                _collectionSizeField?.RemoveFromClassList(UitkAPI.PLAIN_COLLECTION_SIZE_CHOICES_CLASS_NAME);
                 _collectionSizeField?.UnregisterCallback<GeometryChangedEvent>(OnCollectionGeometryChanged);
                 _collectionSizeField?.UnregisterCallback<DetachFromPanelEvent>(OnCollectionSizeDetached);
                 _collectionSizeField = null;
@@ -747,9 +737,9 @@ namespace EncosyTower.Editor
 
             private void OnChoiceChanged(ChangeEvent<int> evt)
             {
-                if ((uint)evt.newValue < (uint)_popupChoices.Count)
+                if ((uint)evt.newValue < (uint)_selectableChoices.Count)
                 {
-                    ApplyChoice(_popupChoices[evt.newValue].value);
+                    ApplyChoice(_selectableChoices[evt.newValue].Value);
                 }
 
                 evt.StopPropagation();
@@ -768,9 +758,9 @@ namespace EncosyTower.Editor
 
                 _property.serializedObject.UpdateIfRequiredOrScript();
 
-                var items = CreateMenuItems(
+                var items = ValueChoicesEditorAPI.CreateChoiceMenuItems(
                       _choices
-                    , ReadValue(_property, _valueType)
+                    , SerializedValueAPI.Read(_property, _valueType)
                     , _property.hasMultipleDifferentValues
                     , ApplyChoice
                 );
@@ -799,7 +789,7 @@ namespace EncosyTower.Editor
                 }
 
                 _property.serializedObject.UpdateIfRequiredOrScript();
-                WriteValue(_property, value);
+                SerializedValueAPI.Write(_property, value);
                 _property.serializedObject.ApplyModifiedProperties();
                 Refresh();
             }

@@ -6,10 +6,21 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Editor.Serialization.Internals
 {
+    /// <summary>
+    /// A field that edits a <see cref="Quaternion"/> as Euler angles in a vector field.
+    /// </summary>
+    /// <remarks>
+    /// The angles shown are <see cref="Quaternion.eulerAngles"/> of the value, so a round trip through the field can
+    /// normalize them. The inner vector field ignores <c>SerializedObjectBindEvent</c>, so the bind of the
+    /// surrounding row does not take it over.
+    /// </remarks>
     internal sealed class OverridableQuaternionField : BaseField<Quaternion>
     {
         private readonly EulerField _eulerField;
 
+        /// <summary>
+        /// Creates the field without a label.
+        /// </summary>
         public OverridableQuaternionField() : this(new EulerField())
         {
         }
@@ -21,12 +32,14 @@ namespace EncosyTower.Editor.Serialization.Internals
             _eulerField.RegisterValueChangedCallback(OnEulerChanged);
         }
 
+        /// <inheritdoc/>
         public override void SetValueWithoutNotify(Quaternion newValue)
         {
             base.SetValueWithoutNotify(newValue);
             _eulerField.SetValueWithoutNotify(rawValue.eulerAngles);
         }
 
+        /// <inheritdoc/>
         protected override void UpdateMixedValueContent()
         {
             _eulerField.showMixedValue = showMixedValue;
