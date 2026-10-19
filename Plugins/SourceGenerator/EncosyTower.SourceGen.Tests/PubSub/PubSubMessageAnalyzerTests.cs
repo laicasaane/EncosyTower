@@ -52,6 +52,10 @@ public sealed class PubSubMessageAnalyzerTests
     }
 
     [TestMethod]
+    public void DiagnosticContractProvider_MatchesProductionDescriptors()
+        => DiagnosticContractTestHelper.VerifyDiagnostics(new PubSubDiagnosticContractProvider());
+
+    [TestMethod]
     public Task AllowedScopes_ProduceNoDiagnostics()
         => RunAsync("""
             using EncosyTower.PubSub;
@@ -243,10 +247,11 @@ public sealed class PubSubMessageAnalyzerTests
 internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProvider
 {
     private const string OWNER = "EncosyTower.PubSub.Analyzers.PubSubMessageAnalyzer";
+    private const string PUBLISH_RESULT_OWNER = "EncosyTower.PubSub.Analyzers.PublishResultAnalyzer";
 
     public string FeaturePath => "PubSub";
 
-    public IReadOnlyList<Type> ComponentTypes { get; } = [typeof(PubSubMessageAnalyzer)];
+    public IReadOnlyList<Type> ComponentTypes { get; } = [typeof(PubSubMessageAnalyzer), typeof(PublishResultAnalyzer)];
 
     public IReadOnlyList<DiagnosticDescriptorContract> Diagnostics { get; } = [
         new(
@@ -309,6 +314,19 @@ internal sealed class PubSubDiagnosticContractProvider : IDiagnosticContractProv
             , DiagnosticSeverity.Error
             , true
             , "PubSub state mode must be Stateless, Stateful, or Both."
+            , ""
+            , Array.Empty<string>()
+        ),
+        new(
+              PUBLISH_RESULT_OWNER
+            , "SG_PUBSUB_0006"
+            , "PubSub publish result is discarded"
+            , "The result of '{0}' is discarded. PubSub never logs a failure it returns; read the result and "
+                + "log each failure you react to."
+            , "PubSub"
+            , DiagnosticSeverity.Warning
+            , true
+            , "PubSub never logs a failure it returns; read the result and log each failure you react to."
             , ""
             , Array.Empty<string>()
         ),

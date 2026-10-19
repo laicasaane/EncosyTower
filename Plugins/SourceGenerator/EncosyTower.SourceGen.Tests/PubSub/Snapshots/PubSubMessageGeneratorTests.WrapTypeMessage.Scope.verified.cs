@@ -346,7 +346,7 @@ partial class Points
     public readonly partial struct Async
     {
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, Async message, g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, Async message, g__ETPS.PublishingContext context = default)
         {
             return publisher.PublishAsync(message, context);
         }
@@ -521,7 +521,7 @@ partial class Points
 
 
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(Async message, g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(Async message, g__ETPS.PublishingContext context = default)
         {
             var publisher = g__ETPS.GlobalMessenger.Publisher.Global();
             return publisher.PublishAsync(message, context);

@@ -358,13 +358,13 @@ partial class Message
     public readonly partial struct Async
     {
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, g__ETPS.PublishingContext context = default)
         {
             return publisher.PublishAsync(new Async(new global::TestProject.Message()), context);
         }
 
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, Async message, g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(in g__ETPS.MessagePublisher.Publisher<g__ET.GlobalScope> publisher, Async message, g__ETPS.PublishingContext context = default)
         {
             return publisher.PublishAsync(message, context);
         }
@@ -539,14 +539,14 @@ partial class Message
 
 
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(g__ETPS.PublishingContext context = default)
         {
             var publisher = g__ETPS.GlobalMessenger.Publisher.Global();
             return publisher.PublishAsync(new Async(new global::TestProject.Message()), context);
         }
 
         [g__SRCS.MethodImpl(g__SRCS.MethodImplOptions.AggressiveInlining)]
-        public static g__ETT.UnityTask Publish(Async message, g__ETPS.PublishingContext context = default)
+        public static g__ETT.UnityTask<g__ET.Success<g__ETPS.PublishError>> Publish(Async message, g__ETPS.PublishingContext context = default)
         {
             var publisher = g__ETPS.GlobalMessenger.Publisher.Global();
             return publisher.PublishAsync(message, context);

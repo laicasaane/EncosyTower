@@ -71,6 +71,13 @@ internal static class PubSubRuntimeFixture
         namespace EncosyTower.Tasks
         {
             public readonly struct UnityTask { }
+
+            public readonly struct UnityTask<T> { }
+        }
+
+        namespace EncosyTower.Common
+        {
+            public readonly struct Success<T> { }
         }
 
         namespace EncosyTower.UnityExtensions
@@ -92,6 +99,7 @@ internal static class PubSubRuntimeFixture
         {
             using System;
             using System.Threading;
+            using EncosyTower.Common;
             using EncosyTower.Tasks;
             using EncosyTower.Logging;
 
@@ -100,6 +108,8 @@ internal static class PubSubRuntimeFixture
             public interface ISubscription { }
 
             public readonly struct PublishingContext { }
+
+            public readonly struct PublishError { }
 
             public readonly struct CachedPublisher<TScope, TMessage> { }
 
@@ -117,10 +127,13 @@ internal static class PubSubRuntimeFixture
 
                     public void Publish<TMessage>(PublishingContext context) { }
 
-                    public UnityTask PublishAsync<TMessage>(TMessage message, PublishingContext context)
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(
+                          TMessage message
+                        , PublishingContext context
+                    )
                         => default;
 
-                    public UnityTask PublishAsync<TMessage>(PublishingContext context)
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(PublishingContext context)
                         => default;
                 }
 
@@ -134,10 +147,13 @@ internal static class PubSubRuntimeFixture
 
                     public void Publish<TMessage>(PublishingContext context) { }
 
-                    public UnityTask PublishAsync<TMessage>(TMessage message, PublishingContext context)
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(
+                          TMessage message
+                        , PublishingContext context
+                    )
                         => default;
 
-                    public UnityTask PublishAsync<TMessage>(PublishingContext context)
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(PublishingContext context)
                         => default;
                 }
             }
@@ -247,6 +263,128 @@ internal static class PubSubRuntimeFixture
             public static class StaticScope { }
 
             public sealed class OpenScope<T> { }
+        }
+        """;
+
+    internal const string PublishResultSource = """
+        global using EncosyTower.CodeGen;
+
+        namespace EncosyTower.PubSub
+        {
+            using System;
+            using System.Threading;
+            using EncosyTower.Common;
+            using EncosyTower.Logging;
+            using EncosyTower.Tasks;
+
+            [AttributeUsage(
+                  AttributeTargets.Class | AttributeTargets.Struct
+                , AllowMultiple = true
+                , Inherited = false
+            )]
+            public sealed class PubSubAttribute : Attribute
+            {
+                public PubSubAttribute(ApiMode mode)
+                {
+                    Mode = mode;
+                }
+
+                public ApiMode Mode { get; }
+
+                public StateMode State { get; set; } = StateMode.Both;
+
+                public Type Scope { get; set; }
+            }
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public sealed class SkipSourceGeneratorsForAssemblyAttribute : Attribute { }
+
+            public interface IMessage { }
+
+            public interface ISubscription { }
+
+            public readonly struct PublishingContext { }
+
+            public readonly struct PublishError { }
+
+            public readonly struct CachedPublisher<TScope, TMessage> { }
+
+            public sealed class MessagePublisher
+            {
+                public Publisher<GlobalScope> Global()
+                    => default;
+
+                public readonly struct Publisher<TScope>
+                {
+                    public CachedPublisher<TScope, TMessage> Cache<TMessage>(Func<TMessage> factory, ILogger logger)
+                        => default;
+
+                    public void Publish<TMessage>(TMessage message, PublishingContext context = default) { }
+
+                    public void Publish<TMessage>(PublishingContext context = default) { }
+
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(
+                          TMessage message
+                        , PublishingContext context = default
+                    )
+                        => default;
+
+                    public UnityTask<Success<PublishError>> PublishAsync<TMessage>(
+                        PublishingContext context = default
+                    )
+                        => default;
+                }
+            }
+
+            public sealed class MessageSubscriber
+            {
+                public Subscriber<GlobalScope> Global()
+                    => default;
+
+                public readonly struct Subscriber<TScope>
+                {
+                    public ISubscription Subscribe<TMessage>(Delegate handler, int order, ILogger logger)
+                        => default;
+
+                    public void Subscribe<TMessage>(
+                          Delegate handler
+                        , CancellationToken token
+                        , int order
+                        , ILogger logger
+                    ) { }
+                }
+
+                public readonly struct Subscriber<TScope, TState>
+                    where TState : class
+                {
+                    public ISubscription Subscribe<TMessage>(Delegate handler, int order, ILogger logger)
+                        => default;
+
+                    public void Subscribe<TMessage>(
+                          Delegate handler
+                        , CancellationToken token
+                        , int order
+                        , ILogger logger
+                    ) { }
+                }
+            }
+
+            public static class MessageSubscriberExtensions
+            {
+                public static MessageSubscriber.Subscriber<TScope, TState> WithState<TScope, TState>(
+                      in MessageSubscriber.Subscriber<TScope> subscriber
+                    , TState state
+                )
+                    where TState : class
+                    => default;
+            }
+
+            public static class GlobalMessenger
+            {
+                public static MessagePublisher Publisher { get; } = new MessagePublisher();
+
+                public static MessageSubscriber Subscriber { get; } = new MessageSubscriber();
+            }
         }
         """;
 

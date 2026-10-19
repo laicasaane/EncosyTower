@@ -623,7 +623,9 @@ namespace EncosyTower.PubSub.Generators
         {
             if (asynchronous)
             {
-                printer.Print(PubSubAliasSet.TASKS).Print(".UnityTask");
+                printer.Print(PubSubAliasSet.TASKS).Print(".UnityTask<")
+                    .Print(PubSubAliasSet.COMMON).Print(".Success<")
+                    .Print(PubSubAliasSet.PUBSUB).Print(".PublishError>>");
             }
             else
             {
