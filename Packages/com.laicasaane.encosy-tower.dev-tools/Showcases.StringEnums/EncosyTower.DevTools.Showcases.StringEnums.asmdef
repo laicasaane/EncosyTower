@@ -1,0 +1,19 @@
+{
+    "name": "EncosyTower.DevTools.Showcases.StringEnums",
+    "rootNamespace": "EncosyTower.DevTools.Showcases.StringEnums",
+    "references": [
+        "EncosyTower.Core",
+        "EncosyTower.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
