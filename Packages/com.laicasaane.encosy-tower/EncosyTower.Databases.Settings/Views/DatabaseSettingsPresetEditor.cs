@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace EncosyTower.Databases.Settings.Views
 {
     [UnityEditor.CustomEditor(typeof(DatabaseSettingsPreset), true)]
-    public class DatabaseSettingsTemplateEditor : UnityEditor.Editor
+    public class DatabaseSettingsPresetEditor : UnityEditor.Editor
     {
         private DatabaseSettingsView _dbView;
 
@@ -24,7 +24,7 @@ namespace EncosyTower.Databases.Settings.Views
 
             var dbView = _dbView = new DatabaseSettingsView(true, resources) { userData = context };
             dbView.DatabaseTypeSelected += DbView_OnDatabaseTypeSelected;
-            dbView.OtherValueUpdated += DbView_OnOtherValueUpdated;
+            dbView.DataSourceSettingsChanged += DbView_OnDataSourceSettingsChanged;
             dbView.Bind(context);
 
             root.Add(dbView);
@@ -50,14 +50,14 @@ namespace EncosyTower.Databases.Settings.Views
                 nameProperty.stringValue = Constants.UNDEFINED;
                 authorProperty.stringValue = Constants.UNDEFINED;
                 databaseProperty.stringValue = Constants.UNDEFINED;
-                dbView.ToggleDisplayContainer(false);
+                dbView.SetDatabaseTypeChosen(false);
             }
             else
             {
                 nameProperty.stringValue = record.Name;
                 authorProperty.stringValue = record.AuthorType.AssemblyQualifiedName;
                 databaseProperty.stringValue = record.DatabaseType.AssemblyQualifiedName;
-                dbView.ToggleDisplayContainer(true);
+                dbView.SetDatabaseTypeChosen(true);
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -67,7 +67,7 @@ namespace EncosyTower.Databases.Settings.Views
             AssetDatabase.SaveAssetIfDirty(serializedObject.targetObject);
         }
 
-        private void DbView_OnOtherValueUpdated(DatabaseSettingsView dbView)
+        private void DbView_OnDataSourceSettingsChanged(DatabaseSettingsView dbView)
         {
             var context = dbView.userData as DatabaseSettingsContext;
             var serializedObject = context.SerializedObject;

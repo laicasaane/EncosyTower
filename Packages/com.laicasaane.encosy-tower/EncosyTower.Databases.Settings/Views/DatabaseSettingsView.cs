@@ -15,20 +15,20 @@ namespace EncosyTower.Databases.Settings.Views
         private const float SAVE_DELAY = 0.5f;
 
         public event Action<DatabaseSettingsView, DatabaseRecord> DatabaseTypeSelected;
-        public event Action<DatabaseSettingsView> OtherValueUpdated;
+        public event Action<DatabaseSettingsView> DataSourceSettingsChanged;
 
         private readonly GenericMenuPopup _menu = new(new MenuItemNode(), "Databases");
 
         private readonly DropdownField _dbDropdown;
         private readonly HelpBox _databaseHelp;
-        private readonly VisualElement _container;
+        private readonly VisualElement _dataSources;
         private readonly GoogleSheetSettingsView _googleSheetView;
         private readonly LocalCsvFolderSettingsView _csvView;
         private readonly LocalExcelFolderSettingsView _excelView;
 
         // An optimization to limit the chance the
-        // frequent of OtherValueUpdated being invoked.
-        private bool _otherValueUpdated;
+        // frequent of DataSourceSettingsChanged being invoked.
+        private bool _dataSourceSettingsChanged;
         private double _markTime;
 
         public DatabaseSettingsView(bool visible, ViewResources resources) : base()
@@ -39,28 +39,28 @@ namespace EncosyTower.Databases.Settings.Views
 
             InitMenu();
 
-            var dbDropdown = _dbDropdown = new DropdownField("Database") { value = Constants.UNDEFINED };
+            var dbDropdown = _dbDropdown = new DropdownField("Database Type") { value = Constants.UNDEFINED };
             dbDropdown.AddToClassList(Constants.NAME_DROPDOWN);
             dbDropdown.RegisterCallback<PointerUpEvent>(NameDropdown_OnPointerUpEvent);
 
             hierarchy.Add(dbDropdown.WithAlignFieldClass());
             hierarchy.Add(new VisualSeparator("section"));
 
-            _databaseHelp = new(resources.DatabaseInvalid, HelpBoxMessageType.Error);
+            _databaseHelp = new(resources.DatabaseTypeMissing, HelpBoxMessageType.Error);
             hierarchy.Add(_databaseHelp.WithDisplay(DisplayStyle.None));
 
-            var container = _container = new();
-            container.AddToClassList("settings-groups-list");
-            hierarchy.Add(container.WithDisplay(DisplayStyle.None));
+            var dataSources = _dataSources = new();
+            dataSources.AddToClassList("settings-groups-list");
+            hierarchy.Add(dataSources.WithDisplay(DisplayStyle.None));
 
             var googleSheetView = _googleSheetView = new(resources);
-            container.Add(googleSheetView);
+            dataSources.Add(googleSheetView);
 
             var csvView = _csvView = new("Csv", "csv", resources, DataSourceFlags.Csv);
-            container.Add(csvView);
+            dataSources.Add(csvView);
 
             var excelView = _excelView = new("Excel", "excel", resources, DataSourceFlags.Excel);
-            container.Add(excelView);
+            dataSources.Add(excelView);
 
             RegisterValueChangedCallbacks();
         }
@@ -72,7 +72,7 @@ namespace EncosyTower.Databases.Settings.Views
                 _dbDropdown.WithBindProperty(prop);
 
                 var typeNameValid = string.Equals(prop.stringValue, Constants.UNDEFINED) == false;
-                ToggleDisplayContainer(typeNameValid);
+                SetDatabaseTypeChosen(typeNameValid);
             }
 
             _googleSheetView.Bind(context.GoogleSheet);
@@ -90,9 +90,9 @@ namespace EncosyTower.Databases.Settings.Views
 
         public void Update()
         {
-            // Only invoke `OtherValueUpdated` once if possible,
+            // Only invoke `DataSourceSettingsChanged` once if possible,
             // because it is going to invoke saving asset to disk.
-            if (_otherValueUpdated == false)
+            if (_dataSourceSettingsChanged == false)
             {
                 return;
             }
@@ -107,17 +107,17 @@ namespace EncosyTower.Databases.Settings.Views
 
         public void Save()
         {
-            if (_otherValueUpdated)
+            if (_dataSourceSettingsChanged)
             {
-                OtherValueUpdated?.Invoke(this);
-                _otherValueUpdated = false;
+                DataSourceSettingsChanged?.Invoke(this);
+                _dataSourceSettingsChanged = false;
             }
         }
 
-        public void ToggleDisplayContainer(bool value)
+        public void SetDatabaseTypeChosen(bool isChosen)
         {
-            _databaseHelp.WithDisplay(value ? DisplayStyle.None : DisplayStyle.Flex);
-            _container.WithDisplay(value ? DisplayStyle.Flex : DisplayStyle.None);
+            _databaseHelp.WithDisplay(isChosen ? DisplayStyle.None : DisplayStyle.Flex);
+            _dataSources.WithDisplay(isChosen ? DisplayStyle.Flex : DisplayStyle.None);
         }
 
         private void RegisterValueChangedCallbacks()
@@ -161,7 +161,7 @@ namespace EncosyTower.Databases.Settings.Views
         private void OnValueUpdated()
         {
             _markTime = EditorApplication.timeSinceStartup;
-            _otherValueUpdated = true;
+            _dataSourceSettingsChanged = true;
         }
     }
 }

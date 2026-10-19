@@ -29,7 +29,7 @@ namespace EncosyTower.Databases.Settings.Views
         {
             ViewAPI.ApplyStyleSheetsTo(root, true);
 
-            var resources = ViewAPI.GetResources();
+            ViewResources resources = ViewAPI.GetResources();
             var context = new Context(settings);
             var titleBar = new VisualElement();
             var titleLabel = new Label() {
@@ -46,39 +46,41 @@ namespace EncosyTower.Databases.Settings.Views
             container.AddToClassList(Constants.DATABASE_COLLECTION);
             root.Add(container);
 
-            var splitter = new TwoPaneSplitView(0, 200f, TwoPaneSplitViewOrientation.Horizontal);
-            container.Add(splitter);
+            var scrollView = new ScrollView();
+            scrollView.AddToClassList(Constants.CONTENT_PANEL);
+            container.Add(scrollView);
 
-            var leftPanel = new ScrollView();
-            leftPanel.AddToClassList(Constants.LEFT_PANEL);
-            splitter.Add(leftPanel);
-
-            var rightPanel = new ScrollView();
-            rightPanel.AddToClassList(Constants.RIGHT_PANEL);
-            splitter.Add(rightPanel);
-
-            var leftPanelContainer = leftPanel.Q("unity-content-container");
-            var rightPanelContainer = rightPanel.Q("unity-content-container");
+            var content = scrollView.Q("unity-content-container");
 
             var dbListProperty = _dbListProperty
                 = serializedSettings.FindProperty(nameof(DatabaseCollectionSettings._databases));
-
-            var presetListView = new DatabasePresetListView();
-            presetListView.PresetSelected += PresetListView_PresetSelected;
-            rightPanelContainer.Add(presetListView);
-            rightPanelContainer.Add(new VisualSeparator());
-
-            var dbView = _dbView = new DatabaseSettingsView(false, resources) { userData = context };
-            dbView.DatabaseTypeSelected += DbView_OnDatabaseTypeSelected;
-            dbView.OtherValueUpdated += DbView_OnOtherValueUpdated;
-            rightPanelContainer.Add(dbView);
 
             var dbListView = _dbListView = CreateDatabaseListView(dbListProperty);
             dbListView.selectedIndicesChanged += DbListView_SelectedIndicesChanged;
             dbListView.itemsAdded += DbListView_ItemsAdded;
             dbListView.itemsRemoved += DbListView_ItemRemoved;
             dbListView.itemIndexChanged += DbListView_ItemIndexChanged;
-            leftPanelContainer.Add(dbListView);
+
+            var listRow = new VisualElement();
+            listRow.AddToClassList(Constants.DATABASE_LIST_ROW);
+
+            var listLabel = new Label { text = resources.DatabaseCollectionLabel };
+            listLabel.AddToClassList(Constants.DATABASE_LIST_LABEL);
+
+            listRow.Add(listLabel);
+            listRow.Add(dbListView);
+            content.Add(listRow);
+            content.Add(new VisualSeparator(Constants.LIST_SEPARATOR));
+
+            var presetPicker = new DatabasePresetPicker();
+            presetPicker.CopyRequested += PresetPicker_OnCopyRequested;
+            content.Add(presetPicker);
+            content.Add(new VisualSeparator());
+
+            var dbView = _dbView = new DatabaseSettingsView(false, resources) { userData = context };
+            dbView.DatabaseTypeSelected += DbView_OnDatabaseTypeSelected;
+            dbView.DataSourceSettingsChanged += DbView_OnDataSourceSettingsChanged;
+            content.Add(dbView);
 
             container.Bind(serializedSettings);
         }
@@ -100,7 +102,7 @@ namespace EncosyTower.Databases.Settings.Views
             var dbListView = _dbListView;
             var dbListProperty = _dbListProperty;
             var currentIndex = (uint)dbListView.selectedIndex;
-            var oldIndex = (uint)EditorPrefs.GetInt(PrefKeys.SELECTED_INDEX, -1);
+            var oldIndex = (uint)EditorPrefs.GetInt(PrefKeys.SELECTED_DATABASE_INDEX, -1);
             var size = (uint)dbListProperty.arraySize;
 
             if (size < 1)
@@ -122,7 +124,7 @@ namespace EncosyTower.Databases.Settings.Views
             }
         }
 
-        private void PresetListView_PresetSelected(DatabaseSettingsPreset preset)
+        private void PresetPicker_OnCopyRequested(DatabaseSettingsPreset preset)
         {
             if (_dbView.userData is not Context context)
             {
@@ -140,11 +142,11 @@ namespace EncosyTower.Databases.Settings.Views
 
             if (string.IsNullOrEmpty(context.Database.GetAuthorTypeProperty().stringValue))
             {
-                _dbView.ToggleDisplayContainer(false);
+                _dbView.SetDatabaseTypeChosen(false);
             }
             else
             {
-                _dbView.ToggleDisplayContainer(true);
+                _dbView.SetDatabaseTypeChosen(true);
             }
         }
 
@@ -248,14 +250,14 @@ namespace EncosyTower.Databases.Settings.Views
                 nameProperty.stringValue = Constants.UNDEFINED;
                 authorTypeProperty.stringValue = Constants.UNDEFINED;
                 databaseTypeProperty.stringValue = Constants.UNDEFINED;
-                dbView.ToggleDisplayContainer(false);
+                dbView.SetDatabaseTypeChosen(false);
             }
             else
             {
                 nameProperty.stringValue = record.Name;
                 authorTypeProperty.stringValue = record.AuthorType.AssemblyQualifiedName;
                 databaseTypeProperty.stringValue = record.DatabaseType.AssemblyQualifiedName;
-                dbView.ToggleDisplayContainer(true);
+                dbView.SetDatabaseTypeChosen(true);
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -265,7 +267,7 @@ namespace EncosyTower.Databases.Settings.Views
             AssetDatabase.SaveAssetIfDirty(serializedObject.targetObject);
         }
 
-        private void DbView_OnOtherValueUpdated(DatabaseSettingsView dbView)
+        private void DbView_OnDataSourceSettingsChanged(DatabaseSettingsView dbView)
         {
             var context = dbView.userData as Context;
             var serializedObject = context.SerializedObject;
@@ -284,7 +286,7 @@ namespace EncosyTower.Databases.Settings.Views
                 _dbListView.selectedIndex = value;
             }
 
-            EditorPrefs.SetInt(PrefKeys.SELECTED_INDEX, value);
+            EditorPrefs.SetInt(PrefKeys.SELECTED_DATABASE_INDEX, value);
         }
 
         private static ListView CreateDatabaseListView(SerializedProperty dbListProperty)

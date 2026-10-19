@@ -17,8 +17,10 @@ namespace EncosyTower.Databases.Settings.Views
         public const string DATABASE_SELECTOR_LIST = "database-selector-list";
         public const string DATABASE_SELECTOR = "database-selector";
         public const string NAME = "name";
-        public const string LEFT_PANEL = "left-panel";
-        public const string RIGHT_PANEL = "right-panel";
+        public const string CONTENT_PANEL = "content-panel";
+        public const string LIST_SEPARATOR = "database-list-separator";
+        public const string DATABASE_LIST_ROW = "database-list-row";
+        public const string DATABASE_LIST_LABEL = "database-list-label";
         public const string PRESET_DROPDOWN = "preset-dropdown";
         public const string NAME_DROPDOWN = "name-dropdown";
         public const string SETTINGS_GROUP = "settings-group";

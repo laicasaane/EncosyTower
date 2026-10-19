@@ -5,6 +5,7 @@
     xmlns:editor="UnityEditor.UIElements"
     xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
 >
+    <engine:Label name="database-collection-label" text="Choose a Collection" />
     <engine:Label name="database-invalid" text="MUST select a database type." />
     <engine:Label name="relative-path" text="The path must be relative to the project folder." />
 

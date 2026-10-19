@@ -9,11 +9,11 @@ using UnityEngine.UIElements;
 
 namespace EncosyTower.Databases.Settings.Views
 {
-    internal sealed class DatabasePresetListView : VisualElement
+    internal sealed class DatabasePresetPicker : VisualElement
     {
-        private const string USS_CLASS_NAME = "database-preset-list";
+        private const string USS_CLASS_NAME = "database-preset-picker";
 
-        public event Action<DatabaseSettingsPreset> PresetSelected;
+        public event Action<DatabaseSettingsPreset> CopyRequested;
 
         private readonly GenericMenuPopup _menu = new(new MenuItemNode(), "Presets");
 
@@ -21,7 +21,7 @@ namespace EncosyTower.Databases.Settings.Views
         private readonly Button _copyButton;
         private readonly Button _locateButton;
 
-        public DatabasePresetListView() : base()
+        public DatabasePresetPicker() : base()
         {
             AddToClassList(USS_CLASS_NAME);
 
@@ -60,7 +60,7 @@ namespace EncosyTower.Databases.Settings.Views
                 var iconImage = Background.FromTexture2D(icon.image as Texture2D);
                 var button = new Button(iconImage, RefreshPresets);
 
-                button.tooltip = "Refresh Preset List";
+                button.tooltip = "Refresh Presets";
                 button.AddToClassList(Constants.ICON_BUTTON);
                 hierarchy.Add(button);
             }
@@ -163,7 +163,7 @@ namespace EncosyTower.Databases.Settings.Views
                 return;
             }
 
-            PresetSelected?.Invoke(preset);
+            CopyRequested?.Invoke(preset);
         }
     }
 }

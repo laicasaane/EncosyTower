@@ -224,7 +224,7 @@ namespace EncosyTower.Databases.Settings
                 {
                     instance = default;
                     StaticDevLogger.LogException(ex);
-                    return ValidationResult.Success;
+                    return ValidationResult.CannotCreateAnInstanceOfSheetContainerType;
                 }
             }
 

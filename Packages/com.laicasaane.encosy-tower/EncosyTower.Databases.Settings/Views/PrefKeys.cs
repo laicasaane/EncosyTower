@@ -4,6 +4,6 @@ namespace EncosyTower.Databases.Settings.Views
     {
         private const string BASE = "database_collection_settings";
 
-        public const string SELECTED_INDEX = $"{BASE}__selected_index";
+        public const string SELECTED_DATABASE_INDEX = $"{BASE}__selected_index";
     }
 }
