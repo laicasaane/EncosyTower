@@ -89,7 +89,12 @@ namespace EncosyTower.Samples.PubSub
                 : PublishingContext.DropIfNoSubscriber(logger: _logger, token: token);
 
             var publisher = GlobalMessenger.Publisher.UnityScope(this);
-            await LogMsg.Async.Publish(in publisher, new LogMsg(_messageToPublish), context);
+            var published = await LogMsg.Async.Publish(in publisher, new LogMsg(_messageToPublish), context);
+
+            if (published.TryGetFailure(out var error))
+            {
+                error.Log(_logger);
+            }
 
             _asyncIndicator.SetActive(false);
         }

@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:dialogs="EncosyTower.Samples.UitkPages.Dialogs" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <dialogs:IncantationDialog name="tower-incantation-dialog" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" />
+        <ui:VisualElement name="root" class="tower-book-dialog tower-book-incantation">
+            <ui:Label name="label-title" text="Tower Incantation" class="tower-book-heading" />
+            <ui:Label name="label-body" text="Through hidden space and time, the tower recalls its name." class="tower-book-dialog__body" />
+            <ui:VisualElement name="pose-container" class="tower-book-incantation__pose">
+                <views:RuneView name="rune-0" />
+                <views:RuneView name="rune-1" />
+                <views:RuneView name="rune-2" />
+                <views:RuneView name="rune-3" />
+                <views:RuneView name="rune-4" />
+                <views:RuneView name="rune-5" />
+            </ui:VisualElement>
+            <ui:Button name="button-write-in-the-book" text="Write it down" class="tower-book-button" />
+        </ui:VisualElement>
+    </dialogs:IncantationDialog>
+</ui:UXML>

@@ -1,0 +1,83 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:dialogs="EncosyTower.Samples.UitkPages.Dialogs" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <dialogs:MapPopup name="map-popup" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" style="background-color: rgba(0, 0, 0, 0);" />
+        <ui:VisualElement name="root" class="tower-book-map">
+            <ui:VisualElement class="tower-book-map__header">
+                <ui:Label name="label-title" text="Map" class="tower-book-heading" />
+                <ui:Button name="button-close-map" text="Close" class="tower-book-button" />
+            </ui:VisualElement>
+            <ui:VisualElement class="tower-book-map__board">
+                <ui:VisualElement class="tower-book-map__entrance">
+                    <ui:VisualElement name="entrance-wrap" class="tower-book-map__entrance-wrap" picking-mode="Ignore">
+                        <ui:Button name="button-node-entrance" text="Entrance" class="tower-book-button tower-book-map__entrance-button" />
+                        <views:DottedBorder name="entrance-dots" />
+                        <ui:VisualElement name="entrance-halo" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="entrance-outline" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="map-grid" class="tower-book-map__grid">
+                    <views:MapLines style="position: absolute; left: 0; top: 0; right: 0; bottom: 0;" />
+                    <ui:VisualElement name="node-wrap-0" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-0" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-0" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-0" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-0" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-0" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-1" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-1" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-1" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-1" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-1" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-1" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-2" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-2" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-2" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-2" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-2" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-2" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-3" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-3" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-3" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-3" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-3" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-3" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-4" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-4" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-4" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-4" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-4" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-4" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-5" class="tower-book-map__node" picking-mode="Ignore">
+                        <ui:Button name="node-5" class="tower-book-button tower-book-node">
+                            <ui:Label name="label-node-5" text="???" picking-mode="Ignore" />
+                            <views:RuneView name="node-rune-5" class="tower-book-rune--small" />
+                        </ui:Button>
+                        <ui:VisualElement name="node-halo-5" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-5" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="node-wrap-6" class="tower-book-map__node tower-book-map__node--core" picking-mode="Ignore">
+                        <ui:Button name="node-6" class="tower-book-button tower-book-node tower-book-node--core">
+                            <ui:Label name="label-node-6" text="???" picking-mode="Ignore" />
+                            <ui:Image name="core-glyph" class="tower-book-core__glyph" picking-mode="Ignore" />
+                        </ui:Button>
+                        <ui:Label name="core-lock" text="Gather six runes" class="tower-book-map__lock" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-halo-6" class="tower-book-map__current-halo" picking-mode="Ignore" />
+                        <ui:VisualElement name="node-outline-6" class="tower-book-map__current-outline" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="label-current" class="tower-book-map__status" />
+        </ui:VisualElement>
+    </dialogs:MapPopup>
+</ui:UXML>

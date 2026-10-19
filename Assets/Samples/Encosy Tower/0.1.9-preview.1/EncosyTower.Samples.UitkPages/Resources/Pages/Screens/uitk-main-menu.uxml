@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:screens="EncosyTower.Samples.UitkPages.Screens">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <screens:MainMenuScreen name="main-menu-screen" class="tower-book-menu">
+        <ui:Label name="label-title" text="The Tower Book" class="tower-book-title" />
+        <ui:Label name="label-subtitle" text="Six signs. Seven dimensions. One tower to remember." class="tower-book-subtitle" />
+        <ui:Button name="button-continue" text="Continue" class="tower-book-button tower-book-menu__button" />
+        <ui:Button name="button-new-game" text="New Game" class="tower-book-button tower-book-menu__button" />
+    </screens:MainMenuScreen>
+</ui:UXML>

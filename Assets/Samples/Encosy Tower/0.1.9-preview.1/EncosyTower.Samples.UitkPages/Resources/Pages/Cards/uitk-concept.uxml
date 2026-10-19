@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:cards="EncosyTower.Samples.UitkPages.Cards">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <cards:ConceptCard name="concept-card" class="tower-book-card tower-book-concept">
+        <ui:VisualElement class="tower-book-card__header">
+            <ui:Label name="label-title" text="Concept" class="tower-book-heading" />
+            <ui:Button name="button-close" text="Close" class="tower-book-button" />
+        </ui:VisualElement>
+        <ui:Label name="label-body" class="tower-book-card__body" />
+    </cards:ConceptCard>
+</ui:UXML>

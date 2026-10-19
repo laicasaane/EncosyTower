@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:screens="EncosyTower.Samples.UitkPages.Screens">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <screens:DimensionScreen name="dimension-screen" class="tower-book-dimension">
+        <ui:VisualElement class="tower-book-dimension__header">
+            <ui:VisualElement class="tower-book-dimension__titles">
+                <ui:Label name="label-title" class="tower-book-title tower-book-title--left" />
+                <ui:Label name="label-motif" class="tower-book-subtitle tower-book-subtitle--left" />
+            </ui:VisualElement>
+            <ui:VisualElement class="tower-book-dimension__actions">
+                <ui:Button name="button-echo" text="Echo" class="tower-book-button" />
+                <ui:Button name="button-more" text="More" class="tower-book-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="tower-book-tab-strip">
+            <ui:Button name="button-chronicle" text="Chronicle" class="tower-book-button" />
+            <ui:Button name="button-inscription" text="Inscription" class="tower-book-button" />
+        </ui:VisualElement>
+        <ui:VisualElement class="tower-book-card-strip">
+            <ui:Button name="button-concept" text="Concept" class="tower-book-button" />
+            <ui:Button name="button-in-practice" text="In practice" class="tower-book-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="navigation-bar-host" class="tower-book-host" picking-mode="Ignore" />
+        <ui:VisualElement name="detail-host" class="tower-book-host" picking-mode="Ignore" />
+        <ui:VisualElement name="cards-host" class="tower-book-host" picking-mode="Ignore" />
+    </screens:DimensionScreen>
+</ui:UXML>

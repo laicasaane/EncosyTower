@@ -1,0 +1,1351 @@
+.unity-label {
+    margin: 0;
+    padding: 0;
+}
+
+.tower-book-app {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    background-color: var(--tb-color-page-map);
+    color: var(--tb-color-ink);
+    font-size: 18px;
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LiberationSans.ttf");
+}
+
+.tower-book-app,
+.tower-book-app * {
+    --tb-color-ink: #303030;
+    --tb-color-ink-navigation: #F7F5F3;
+    --tb-color-ink-entrance: #4A3425;
+    --tb-color-navigation-bar: #E9EFEE;
+    --tb-color-page-main-menu: #DCEFE7;
+    --tb-color-page-entrance: #E9D9BD;
+    --tb-color-page-map: #CADDF2;
+    --tb-color-page-more: #D8C0C8;
+    --tb-color-page-confirmation: #C0D8D4;
+    --tb-color-page-echo: #EFE9EB;
+    --tb-color-page-dimension-default: #C9E3DF;
+    --tb-color-toast-failure: #CEB6BE;
+    --tb-color-toast-cancelled: #B6CECA;
+    --tb-color-toast-info: #CADDF2;
+    --tb-color-locked: #C8CBCB;
+    --tb-color-cast-gold: #8A6410;
+    --tb-color-core-glow: #F0D99E;
+    --tb-color-backdrop: rgba(0, 0, 0, 0.70);
+    --tb-color-map-line: #647C98;
+    --tb-color-map-entrance-idle: rgba(255, 255, 255, 0);
+    --tb-color-map-entrance-border: #303030;
+    --tb-color-button-border: #777777;
+    --tb-color-rune-border: #888888;
+    --tb-color-border: #888888;
+    --tb-color-border-dialog: #777777;
+    --tb-color-border-translucent-panel: rgba(48, 48, 48, 0.45);
+    --tb-color-border-translucent-dialog: rgba(48, 48, 48, 0.6);
+    --tb-color-menu-hover-background: #365E58;
+    --tb-color-menu-hover-ink: #FFFFFF;
+    --tb-color-entrance-card-border-locked: #94816A;
+    --tb-color-entrance-card-ink-disabled: #6B5746;
+    --tb-color-entrance-navigation-border: #917D61;
+    --tb-color-card-hover-border: #4A3425;
+    --tb-color-rune-default-ink: #303030;
+    --tb-color-focus-on-light: #0A4FC4;
+    --tb-color-focus-on-dark: #66E0FF;
+    --tb-color-settings-theme-selected-background: #1F6F64;
+    --tb-color-settings-theme-selected-ink: #FFFFFF;
+    --tb-color-settings-theme-unselected-hover: #A6BAB6;
+    --tb-color-button-hover: #C8CDCC;
+    --tb-color-button-press: #A6AAAA;
+    --tb-color-menu-press-background: #62817D;
+    --tb-color-entrance-card-locked-hover: #ADB6B6;
+
+    --tb-dimension-0-surface: #C7E5DD;
+    --tb-dimension-0-navigation: #563B4B;
+    --tb-dimension-1-surface: #F0CDDA;
+    --tb-dimension-1-navigation: #345F50;
+    --tb-dimension-2-surface: #D5DDF0;
+    --tb-dimension-2-navigation: #594832;
+    --tb-dimension-3-surface: #E5D6EC;
+    --tb-dimension-3-navigation: #455537;
+    --tb-dimension-4-surface: #DCE7C8;
+    --tb-dimension-4-navigation: #533E55;
+    --tb-dimension-5-surface: #EBCFC6;
+    --tb-dimension-5-navigation: #2C5758;
+    --tb-dimension-core-surface: #E8C56A;
+    --tb-dimension-core-navigation: #4A587A;
+
+    --tb-amount-button-outline-mix: 0.45;
+    --tb-amount-button-disabled-alpha: 0.45;
+    --tb-amount-navigation-bar-button-fill-mix: 0.09;
+    --tb-amount-navigation-bar-border-mix: 0.45;
+    --tb-amount-navigation-bar-border-mix-selected: 0.9;
+    --tb-amount-navigation-bar-reopen-seconds: 4;
+    --tb-amount-settings-theme-unselected-alpha: 0.7;
+    --tb-amount-menu-disabled-alpha: 0.42;
+    --tb-amount-rune-blank-alpha: 0.55;
+    --tb-amount-focus-padding: 2;
+    --tb-amount-focus-stroke: 3;
+    --tb-amount-button-press-inset: 2;
+    --tb-amount-button-press-offset: 1;
+    --tb-amount-button-state-seconds: 0.12;
+    --tb-amount-button-snap-seconds: 0.05;
+    --tb-amount-navigation-bar-hover-mix: 0.24;
+    --tb-amount-navigation-bar-press-mix: 0.38;
+    --tb-amount-dimension-hover-mix: 0.12;
+    --tb-amount-dimension-press-mix: 0.24;
+    --tb-amount-entrance-card-hover-mix: 0.16;
+    --tb-amount-map-node-hover-mix: 0.15;
+    --tb-amount-toast-seconds: 4;
+    --tb-amount-entrance-blink-seconds: 2;
+    --tb-amount-entrance-glow-outset: 7;
+    --tb-amount-entrance-glow-pulse-seconds: 0.5;
+    --tb-amount-entrance-rune-slot-border-mix: 0.65;
+    --tb-amount-card-split-fraction: 0.5;
+    --tb-amount-card-gap: 5;
+    --tb-amount-button-selection-height: 3;
+    --tb-amount-floating-context-selection-height: 2;
+    --tb-amount-floating-context-disabled-alpha: 0.7;
+    --tb-amount-incantation-slot-pitch: 0.17;
+    --tb-amount-incantation-row-width: 570;
+    --tb-amount-incantation-row-top: 25;
+    --tb-amount-incantation-arc-height: 20;
+    --tb-amount-incantation-fade-end: 0.2;
+    --tb-amount-incantation-move-start: 0.1;
+    --tb-amount-incantation-move-stagger: 0.03;
+    --tb-amount-incantation-move-span: 0.45;
+    --tb-amount-incantation-turn-start: 0.6;
+    --tb-amount-incantation-turn-stagger: 0.056;
+    --tb-amount-incantation-turn-span: 0.12;
+    --tb-amount-incantation-turn-degrees: 180;
+    --tb-amount-incantation-cast-seconds: 3.6;
+    --tb-amount-incantation-fade-seconds: 0.25;
+    --tb-amount-rune-frame-alpha: 0.1;
+    --tb-amount-rune-border-alpha: 0.5;
+    --tb-amount-rune-border-alpha-blank: 0.3;
+    --tb-amount-history-entries: 32;
+    --tb-amount-history-log-entries: 64;
+    --tb-amount-demo-primary-dimension-index: 0;
+    --tb-amount-demo-switch-dimension-index: 1;
+    --tb-amount-demo-newest-first-dimension-index: 2;
+    --tb-amount-demo-newest-second-dimension-index: 3;
+    --tb-amount-demo-abort-delay-seconds: 0.15;
+    --tb-amount-demo-quick-abort-delay-seconds: 0.06;
+    --tb-amount-demo-incantation-abort-delay-seconds: 0.8;
+    --tb-amount-transition-screen-seconds: 0.6;
+    --tb-amount-transition-auxiliary-seconds: 0.25;
+    --tb-amount-transition-popup-seconds: 0.25;
+    --tb-amount-transition-echo-seconds: 0.7;
+    --tb-amount-map-line-width: 2;
+    --tb-amount-map-center-x: 50;
+    --tb-amount-map-center-y: 50;
+    --tb-amount-map-node0-x: 28;
+    --tb-amount-map-node0-y: 28.5;
+    --tb-amount-map-node1-x: 50;
+    --tb-amount-map-node1-y: 12;
+    --tb-amount-map-node2-x: 72;
+    --tb-amount-map-node2-y: 28.5;
+    --tb-amount-map-node3-x: 72;
+    --tb-amount-map-node3-y: 71.5;
+    --tb-amount-map-node4-x: 50;
+    --tb-amount-map-node4-y: 88;
+    --tb-amount-map-node5-x: 28;
+    --tb-amount-map-node5-y: 71.5;
+    --tb-amount-map-core-locked-alpha: 0.85;
+    --tb-amount-map-node-border-mix: 0.4;
+    --tb-amount-map-current-outline-width: 3;
+    --tb-amount-map-current-outline-offset: 2;
+    --tb-amount-map-current-halo-width: 6;
+    --tb-amount-map-current-halo-offset: 0;
+    --tb-amount-map-current-halo-alpha: 0.25;
+    --tb-amount-map-entrance-border-width: 2;
+    --tb-amount-tone-button-hue: 0;
+    --tb-amount-tone-button-saturation: 0.42;
+    --tb-amount-tone-button-lightness: 0.7;
+    --tb-amount-tone-button-saturation-dark: 0.34;
+    --tb-amount-tone-button-lightness-dark: 0.34;
+    --tb-amount-tone-near-a-hue: -25;
+    --tb-amount-tone-near-a-saturation: 0.4;
+    --tb-amount-tone-near-a-lightness: 0.76;
+    --tb-amount-tone-near-a-saturation-dark: 0.36;
+    --tb-amount-tone-near-a-lightness-dark: 0.32;
+    --tb-amount-tone-near-b-hue: 25;
+    --tb-amount-tone-near-b-saturation: 0.4;
+    --tb-amount-tone-near-b-lightness: 0.76;
+    --tb-amount-tone-near-b-saturation-dark: 0.36;
+    --tb-amount-tone-near-b-lightness-dark: 0.32;
+    --tb-amount-tone-complement-a-hue: 155;
+    --tb-amount-tone-complement-a-saturation: 0.4;
+    --tb-amount-tone-complement-a-lightness: 0.76;
+    --tb-amount-tone-complement-a-saturation-dark: 0.36;
+    --tb-amount-tone-complement-a-lightness-dark: 0.32;
+    --tb-amount-tone-complement-b-hue: 205;
+    --tb-amount-tone-complement-b-saturation: 0.4;
+    --tb-amount-tone-complement-b-lightness: 0.76;
+    --tb-amount-tone-complement-b-saturation-dark: 0.36;
+    --tb-amount-tone-complement-b-lightness-dark: 0.32;
+}
+
+.tower-book-app--dark,
+.tower-book-app--dark * {
+    --tb-color-ink: #F1EBEE;
+    --tb-color-ink-navigation: #F7F5F3;
+    --tb-color-ink-entrance: #F8EEDC;
+    --tb-color-navigation-bar: #4B625E;
+    --tb-color-page-main-menu: #4B6B61;
+    --tb-color-page-entrance: #745D43;
+    --tb-color-page-map: #4B668B;
+    --tb-color-page-more: #69515C;
+    --tb-color-page-confirmation: #4E6A63;
+    --tb-color-page-echo: #65515A;
+    --tb-color-page-dimension-default: #426C61;
+    --tb-color-toast-failure: #735664;
+    --tb-color-toast-cancelled: #526F6B;
+    --tb-color-toast-info: #4B668B;
+    --tb-color-locked: #4B5152;
+    --tb-color-cast-gold: #F0C75E;
+    --tb-color-core-glow: #AC9A75;
+    --tb-color-backdrop: rgba(0, 0, 0, 0.82);
+    --tb-color-map-line: #B8CDE2;
+    --tb-color-map-entrance-idle: rgba(255, 255, 255, 0);
+    --tb-color-map-entrance-border: #A99DA5;
+    --tb-color-button-border: #A99DA5;
+    --tb-color-rune-border: #A99DA5;
+    --tb-color-border: #888888;
+    --tb-color-border-dialog: #777777;
+    --tb-color-border-translucent-panel: rgba(241, 235, 238, 0.45);
+    --tb-color-border-translucent-dialog: rgba(241, 235, 238, 0.6);
+    --tb-color-menu-hover-background: #D5EBE4;
+    --tb-color-menu-hover-ink: #203B35;
+    --tb-color-entrance-card-border-locked: #B7A386;
+    --tb-color-entrance-card-ink-disabled: #F8EEDC;
+    --tb-color-entrance-navigation-border: #CDB696;
+    --tb-color-card-hover-border: #E2CDA9;
+    --tb-color-rune-default-ink: #F1EBEE;
+    --tb-color-focus-on-light: #0A4FC4;
+    --tb-color-focus-on-dark: #66E0FF;
+    --tb-color-settings-theme-selected-background: #9FE3D6;
+    --tb-color-settings-theme-selected-ink: #0E4F47;
+    --tb-color-settings-theme-unselected-hover: #6B817C;
+    --tb-color-button-hover: #697B78;
+    --tb-color-button-press: #879392;
+    --tb-color-menu-press-background: #ADC4BE;
+    --tb-color-entrance-card-locked-hover: #5A6464;
+
+    --tb-dimension-0-surface: #426C61;
+    --tb-dimension-0-navigation: #6A4B5E;
+    --tb-dimension-1-surface: #744A5C;
+    --tb-dimension-1-navigation: #456C5D;
+    --tb-dimension-2-surface: #4D5F81;
+    --tb-dimension-2-navigation: #705A3C;
+    --tb-dimension-3-surface: #654F70;
+    --tb-dimension-3-navigation: #5B6B48;
+    --tb-dimension-4-surface: #596B45;
+    --tb-dimension-4-navigation: #6B526D;
+    --tb-dimension-5-surface: #70534C;
+    --tb-dimension-5-navigation: #3D6869;
+    --tb-dimension-core-surface: #80632B;
+    --tb-dimension-core-navigation: #566688;
+}
+
+.tower-book-app--booting {
+    background-color: var(--tb-color-page-main-menu);
+}
+
+.tower-book-app Label {
+    white-space: normal;
+}
+
+.tower-book-navigation-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    height: 62px;
+    padding-left: 14px;
+    padding-right: 14px;
+    background-color: var(--tb-color-navigation-bar);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-navigation-bar .tower-book-button {
+    min-width: 40px;
+    min-height: 40px;
+    height: 40px;
+    margin-left: 0;
+    margin-right: 8px;
+    padding: 0 11px;
+    font-size: 16px;
+}
+
+.tower-book-navigation-bar #button-settings {
+    margin-right: 0;
+}
+
+.tower-book-navigation-bar #button-entrance {
+    width: 85px;
+    min-width: 84px;
+    padding: 0 6px;
+}
+
+.tower-book-navigation-bar #button-forward {
+    margin-right: 0;
+}
+
+.tower-book-navigation-bar #button-back,
+.tower-book-navigation-bar #button-forward {
+    align-items: center;
+    justify-content: center;
+}
+
+.tower-book-navigation-bar__icon {
+    width: 18px;
+    height: 18px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--tb-color-ink);
+}
+
+.tower-book-navigation-bar__icon--back {
+    background-image: url("../UI/Icons/arrow-left.png");
+}
+
+.tower-book-navigation-bar__icon--forward {
+    background-image: url("../UI/Icons/arrow-right.png");
+}
+
+.tower-book-navigation-bar__spacer {
+    flex-grow: 1;
+}
+
+.tower-book-navigation-bar__placeholder {
+    width: 84px;
+    height: 40px;
+    margin-right: 8px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.tower-book-navigation-bar__placeholder .tower-book-dotted-border {
+    left: -1px;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+}
+
+.tower-book-button {
+    min-height: 44px;
+    margin: 0;
+    padding: 0 12px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: var(--tb-color-button-border);
+    background-color: var(--tb-color-navigation-bar);
+    background-image: none;
+    color: var(--tb-color-ink);
+    font-size: 17px;
+    -unity-text-align: middle-center;
+    -unity-font-style: normal;
+}
+
+.tower-book-button:focus {
+    border-color: var(--tb-color-button-border);
+}
+
+.tower-book-button--selected:focus,
+.tower-book-button--pressed:focus {
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-button:hover {
+    background-color: var(--tb-color-button-hover);
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-button:active {
+    background-color: var(--tb-color-button-press);
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-button:disabled {
+    opacity: var(--tb-amount-button-disabled-alpha);
+}
+
+.tower-book-button--selected {
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-button--pressed {
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-press-inset {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 3px;
+    border-color: var(--tb-color-ink);
+    display: none;
+}
+
+.tower-book-press-inset--shown {
+    display: flex;
+}
+
+.tower-book-focus-corners {
+    position: absolute;
+    background-image: url("../UI/Sprites/uitk-corners3-r9.png");
+    -unity-slice-left: 18;
+    -unity-slice-top: 18;
+    -unity-slice-right: 18;
+    -unity-slice-bottom: 18;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.tower-book-host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+#navigation-bar-host {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    height: 62px;
+}
+
+#detail-host {
+    left: 28px;
+    right: 28px;
+    top: 199px;
+    bottom: auto;
+    height: 116px;
+}
+
+#cards-host {
+    left: 28px;
+    right: 28px;
+    top: 375px;
+    bottom: auto;
+    height: 156px;
+}
+
+.tower-book-title {
+    height: 33px;
+    font-size: 30px;
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LibertinusSerif-Regular.ttf");
+    -unity-font-style: bold;
+    margin: 0;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-subtitle {
+    height: 22px;
+    font-size: 16px;
+    -unity-text-align: middle-center;
+    margin-top: 7px;
+}
+
+.tower-book-menu {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: var(--tb-color-page-main-menu);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-menu .tower-book-title {
+    height: 51px;
+    margin-bottom: 22px;
+    font-size: 46px;
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LibertinusSerif-Regular.ttf");
+}
+
+.tower-book-menu .tower-book-subtitle {
+    margin-top: 0;
+    margin-bottom: 23px;
+}
+
+.tower-book-menu__button {
+    width: 310px;
+    min-height: 50px;
+    margin-bottom: 12px;
+    border-width: 2px;
+    border-color: var(--tb-color-ink);
+    background-color: var(--tb-color-ink);
+    color: var(--tb-color-page-main-menu);
+    font-size: 20px;
+}
+
+.tower-book-menu #button-new-game {
+    margin-bottom: 0;
+}
+
+.tower-book-menu__button:focus {
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-menu__button:hover {
+    border-color: var(--tb-color-menu-hover-background);
+    background-color: var(--tb-color-menu-hover-background);
+    color: var(--tb-color-menu-hover-ink);
+}
+
+.tower-book-menu__button:active {
+    border-color: var(--tb-color-menu-hover-background);
+    background-color: var(--tb-color-menu-press-background);
+    color: var(--tb-color-menu-hover-ink);
+}
+
+.tower-book-menu__button:disabled {
+    border-width: 1px;
+    border-color: var(--tb-color-button-border);
+    background-color: var(--tb-color-navigation-bar);
+    color: var(--tb-color-ink);
+    opacity: var(--tb-amount-menu-disabled-alpha);
+}
+
+.tower-book-entrance {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 90px 28px 18px 28px;
+    background-color: var(--tb-color-page-entrance);
+    color: var(--tb-color-ink-entrance);
+}
+
+.tower-book-entrance .tower-book-title {
+    margin-bottom: 15px;
+}
+
+.tower-book-entrance--named {
+    justify-content: flex-start;
+    padding-top: 82px;
+}
+
+.tower-book-entrance--named .tower-book-title {
+    margin-bottom: 0;
+}
+
+.tower-book-entrance--named .tower-book-entrance__title-tail {
+    margin-bottom: 16px;
+}
+
+.tower-book-entrance--named .tower-book-board {
+    margin-top: 33px;
+}
+
+.tower-book-entrance--named .tower-book-entrance__footer {
+    margin-top: 14px;
+}
+
+.tower-book-entrance__read {
+    width: 125px;
+    height: 44px;
+    font-size: 15px;
+}
+
+.tower-book-entrance__instruction {
+    height: 23px;
+    margin-top: 15px;
+    font-size: 17px;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-rune-row {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    min-height: 52px;
+}
+
+.tower-book-board {
+    width: 820px;
+    margin-top: 18px;
+    margin-bottom: -10px;
+}
+
+.tower-book-board__row {
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.tower-book-entry {
+    width: 267px;
+    height: 64px;
+    min-height: 64px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 0 14px 0 14px;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: var(--tb-color-entrance-card-border-locked);
+    color: var(--tb-color-ink-entrance);
+    font-size: 18px;
+    -unity-text-align: middle-left;
+}
+
+.tower-book-entry:focus {
+    border-color: var(--tb-color-entrance-card-border-locked);
+}
+
+.tower-book-entry:hover {
+    border-color: var(--tb-color-card-hover-border);
+}
+
+.tower-book-entry:disabled {
+    opacity: 1;
+    border-color: var(--tb-color-entrance-card-border-locked);
+    color: var(--tb-color-entrance-card-ink-disabled);
+}
+
+.tower-book-entry--locked {
+    background-color: var(--tb-color-locked);
+}
+
+.tower-book-entry--dashed,
+.tower-book-entry--dashed:focus,
+.tower-book-entry--dashed:hover,
+.tower-book-entry--dashed:disabled {
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.tower-book-entry__glow {
+    position: absolute;
+    border-radius: 11px;
+    background-color: var(--tb-color-core-glow);
+    opacity: 0;
+}
+
+.tower-book-entry__title {
+    flex-shrink: 1;
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.tower-book-entry__hint {
+    font-size: 12px;
+}
+
+.tower-book-entrance__footer {
+    margin-top: 10px;
+}
+
+.tower-book-rune {
+    width: 48px;
+    height: 48px;
+    margin: 0 5px;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: var(--tb-color-rune-border);
+}
+
+.tower-book-rune Image {
+    width: 40px;
+    height: 40px;
+}
+
+.tower-book-rune Label {
+    font-size: 32px;
+    -unity-font-style: bold;
+}
+
+.tower-book-rune--blank {
+    border-width: 0;
+    opacity: var(--tb-amount-rune-blank-alpha);
+}
+
+.tower-book-entrance .tower-book-rune-row .tower-book-rune--blank {
+    opacity: 1;
+}
+
+.tower-book-rune .tower-book-dotted-border {
+    display: none;
+}
+
+.tower-book-rune--blank .tower-book-dotted-border {
+    display: flex;
+}
+
+.tower-book-rune--small .tower-book-dotted-border {
+    display: none;
+}
+
+.tower-book-rune--small {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    border-width: 0;
+}
+
+.tower-book-rune--small Image {
+    width: 30px;
+    height: 30px;
+}
+
+.tower-book-rune--small Label {
+    font-size: 22px;
+}
+
+.tower-book-rune--latin Label {
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LibertinusSerif-Regular.ttf");
+    -unity-font-style: normal;
+}
+
+.tower-book-dimension {
+    flex-grow: 1;
+    padding: 76px 28px 8px 28px;
+    background-color: var(--tb-color-page-dimension-default);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-dimension__header {
+    flex-direction: row;
+    flex-shrink: 0;
+    justify-content: space-between;
+    height: 69px;
+}
+
+.tower-book-dimension__titles {
+    flex-shrink: 1;
+}
+
+.tower-book-dimension__actions {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.tower-book-dimension__actions .tower-book-button {
+    margin-left: 6px;
+    min-width: 62px;
+}
+
+.tower-book-tab-strip {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: 44px;
+    margin-top: 10px;
+    align-items: flex-end;
+}
+
+.tower-book-tab-strip .tower-book-button {
+    min-width: 128px;
+    height: 44px;
+    margin-right: 4px;
+    border-bottom-width: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.tower-book-card-strip {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: 44px;
+    margin-top: 124px;
+    align-items: center;
+}
+
+.tower-book-card-strip .tower-book-button {
+    min-width: 104px;
+    margin-right: 8px;
+}
+
+.tower-book-panel {
+    flex-grow: 1;
+    padding: 14px 18px;
+    border-width: 1px;
+    border-radius: 0 6px 6px 6px;
+    border-color: var(--tb-color-border-translucent-panel);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-chronicle,
+.tower-book-inscription {
+    flex-grow: 1;
+}
+
+.tower-book-chronicle Image {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    width: 104px;
+    height: 52px;
+}
+
+.tower-book-inscription {
+    flex-direction: row;
+    align-items: center;
+}
+
+.tower-book-inscription .tower-book-rune {
+    margin: 0 16px 0 0;
+    flex-shrink: 0;
+}
+
+.tower-book-heading {
+    height: 24px;
+    font-size: 22px;
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LibertinusSerif-Regular.ttf");
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.tower-book-chronicle Label,
+.tower-book-inscription Label {
+    min-height: 24px;
+}
+
+.tower-book-inscription #label-body {
+    margin-bottom: 7px;
+}
+
+.tower-book-card {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    padding: 10px;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: var(--tb-color-border-translucent-panel);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-card__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 32px;
+    margin-bottom: 5px;
+}
+
+.tower-book-card__header .tower-book-heading {
+    height: 22px;
+    margin-bottom: 0;
+    font-size: 16px;
+}
+
+.tower-book-card__header .tower-book-button {
+    min-width: 52px;
+    min-height: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 14px;
+}
+
+.tower-book-card__body {
+    font-size: 15px;
+}
+
+.tower-book-card__note {
+    margin-top: 4px;
+    font-size: 15px;
+}
+
+.tower-book-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--tb-color-backdrop);
+}
+
+.tower-book-popup {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.tower-book-popup--nested .tower-book-backdrop {
+    display: none;
+}
+
+.tower-book-dialog {
+    flex-shrink: 0;
+    margin-top: 105px;
+    width: 650px;
+    max-height: 400px;
+    padding: 24px;
+    border-width: 1px;
+    border-radius: 8px;
+    border-color: var(--tb-color-border-dialog);
+    align-items: center;
+    color: var(--tb-color-ink);
+}
+
+.tower-book-dialog .tower-book-heading {
+    height: 30px;
+    -unity-text-align: middle-center;
+    font-size: 27px;
+    margin-bottom: 12px;
+}
+
+.tower-book-dialog__body {
+    min-height: 24px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-dialog__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.tower-book-dialog__actions .tower-book-button {
+    margin: 0 6px;
+    min-width: 67px;
+}
+
+.tower-book-more {
+    background-color: var(--tb-color-page-more);
+}
+
+.tower-book-settings {
+    background-color: var(--tb-color-page-confirmation);
+    border-color: var(--tb-color-button-border);
+}
+
+.tower-book-settings .tower-book-heading {
+    margin-bottom: 16px;
+}
+
+.tower-book-settings__row {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-self: stretch;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    margin-bottom: 16px;
+}
+
+.tower-book-settings__label {
+    font-size: 18px;
+}
+
+.tower-book-settings__exit {
+    flex-shrink: 0;
+    align-self: stretch;
+    height: 44px;
+}
+
+.tower-book-theme-switch {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    width: 168px;
+    height: 40px;
+    padding: 3px;
+    border-width: 1px;
+    border-radius: 20px;
+    border-color: var(--tb-color-button-border);
+}
+
+.tower-book-theme-switch__segment {
+    width: 78px;
+    min-height: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border-width: 1px;
+    border-radius: 16px;
+    border-color: transparent;
+    background-color: transparent;
+    background-image: none;
+    font-size: 16px;
+    -unity-text-align: middle-center;
+    -unity-font-style: normal;
+}
+
+.tower-book-theme-switch #button-theme-dark {
+    margin-right: 4px;
+}
+
+.tower-book-theme-switch Button:focus {
+    border-color: transparent;
+}
+
+.tower-book-theme-switch__segment:hover,
+.tower-book-theme-switch__segment:active {
+    border-color: transparent;
+    background-color: var(--tb-color-settings-theme-unselected-hover);
+}
+
+.tower-book-theme-switch__segment--selected,
+.tower-book-theme-switch__segment--selected:hover,
+.tower-book-theme-switch__segment--selected:focus,
+.tower-book-theme-switch__segment--selected:active {
+    background-color: var(--tb-color-settings-theme-selected-background);
+}
+
+.tower-book-echo,
+.tower-book-incantation {
+    background-color: var(--tb-color-page-echo);
+}
+
+.tower-book-echo {
+    min-height: 241px;
+}
+
+.tower-book-incantation {
+    height: 298px;
+    overflow: hidden;
+}
+
+.tower-book-incantation #button-write-in-the-book {
+    width: 128px;
+}
+
+.tower-book-incantation__pose {
+    position: relative;
+    flex-shrink: 0;
+    width: 570px;
+    height: 110px;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.tower-book-incantation__pose .tower-book-rune {
+    position: absolute;
+    margin: 0;
+}
+
+.tower-book-incantation__pose .tower-book-rune Label {
+    -unity-font-style: normal;
+}
+
+.tower-book-core {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 100px 130px 0 130px;
+    background-color: var(--tb-dimension-core-surface);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-core .tower-book-title {
+    margin-top: 5px;
+}
+
+.tower-book-core .tower-book-rune-row {
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.tower-book-core__seal {
+    width: 130px;
+    height: 100px;
+}
+
+.tower-book-core__lore {
+    min-height: 24px;
+    margin-top: 8px;
+    font-size: 18px;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-map {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    padding: 18px 28px;
+    background-color: var(--tb-color-page-map);
+    color: var(--tb-color-ink);
+}
+
+.tower-book-map__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 44px;
+}
+
+.tower-book-map__header .tower-book-heading {
+    height: 44px;
+    margin-bottom: 0;
+    font-size: 36px;
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/LiberationSans.ttf");
+}
+
+.tower-book-map__board {
+    flex-direction: row;
+    height: 420px;
+    flex-shrink: 0;
+}
+
+.tower-book-map__entrance {
+    flex-shrink: 0;
+    width: 112px;
+    margin-right: 14px;
+    justify-content: center;
+    align-items: center;
+}
+
+.tower-book-map__entrance-wrap {
+    flex-shrink: 0;
+    width: 112px;
+    height: 44px;
+}
+
+.tower-book-map__grid {
+    position: relative;
+    flex-grow: 1;
+}
+
+.tower-book-map__node {
+    position: absolute;
+    width: 158px;
+    height: 44px;
+    border-radius: 8px;
+    background-color: var(--tb-color-page-map);
+}
+
+.tower-book-map__node--core {
+    width: 176px;
+    height: auto;
+    padding: 2px;
+}
+
+.tower-book-node {
+    width: 158px;
+    min-height: 44px;
+    height: 44px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px;
+    border-width: 1px;
+    border-radius: 4px;
+    font-size: 15px;
+    -unity-text-align: middle-left;
+}
+
+.tower-book-node .tower-book-rune--small {
+    width: 26px;
+    height: 26px;
+}
+
+.tower-book-node .tower-book-rune--small Image {
+    width: 24px;
+    height: 24px;
+}
+
+.tower-book-node .tower-book-core__glyph {
+    width: 26px;
+    height: 26px;
+}
+
+.tower-book-node--core {
+    width: 172px;
+}
+
+.tower-book-node:disabled {
+    opacity: 1;
+}
+
+.tower-book-node--current {
+    -unity-font-style: bold;
+}
+
+.tower-book-node--locked {
+    background-color: var(--tb-color-navigation-bar);
+}
+
+.tower-book-node--core-locked {
+    background-color: var(--tb-color-page-map);
+}
+
+.tower-book-node--core-locked,
+.tower-book-node--core-locked:disabled {
+    opacity: var(--tb-amount-map-core-locked-alpha);
+}
+
+.tower-book-node--centered Label {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-map__current-halo,
+.tower-book-map__current-outline {
+    display: none;
+    position: absolute;
+}
+
+.tower-book-map__current-halo {
+    border-radius: 10px;
+}
+
+.tower-book-map__current-outline {
+    border-radius: 9px;
+}
+
+.tower-book-map__entrance-wrap .tower-book-map__current-halo {
+    border-radius: 14px;
+}
+
+.tower-book-map__entrance-wrap .tower-book-map__current-outline {
+    border-radius: 13px;
+}
+
+.tower-book-map__node--current .tower-book-map__current-halo,
+.tower-book-map__node--current .tower-book-map__current-outline {
+    display: flex;
+}
+
+.tower-book-dotted-border {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.tower-book-map__entrance-button {
+    width: 112px;
+    min-height: 44px;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: rgba(0, 0, 0, 0);
+    font-size: 15px;
+}
+
+.tower-book-map__entrance-button:disabled {
+    opacity: 1;
+}
+
+.tower-book-map__status {
+    flex-shrink: 0;
+    height: 40px;
+    margin-top: 0;
+    font-size: 18px;
+    -unity-text-align: middle-center;
+}
+
+.tower-book-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.tower-book-overlay--floating-context {
+    bottom: 18px;
+}
+
+.tower-book-overlay--toast {
+    bottom: 16px;
+}
+
+.tower-book-floating-context-actions {
+    flex-direction: row;
+    padding: 7px 10px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: var(--tb-color-border);
+}
+
+.tower-book-floating-context-actions .tower-book-button {
+    margin: 0 8px 0 0;
+    padding: 0 12px;
+}
+
+.tower-book-floating-context-actions #button-reopen {
+    margin-right: 0;
+}
+
+.tower-book-floating-context-actions .tower-book-button:enabled {
+    border-color: var(--tb-color-ink);
+}
+
+.tower-book-floating-context-actions .tower-book-button:disabled {
+    opacity: var(--tb-amount-floating-context-disabled-alpha);
+}
+
+.tower-book-toast {
+    max-width: 720px;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 20px;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: var(--tb-color-border);
+    color: var(--tb-color-ink);
+    font-size: 18px;
+}
+
+.tower-book-toast Label {
+    white-space: normal;
+}
+
+.tower-book-toast--failure {
+    background-color: var(--tb-color-toast-failure);
+}
+
+.tower-book-toast--cancelled {
+    background-color: var(--tb-color-toast-cancelled);
+}
+
+.tower-book-toast--info {
+    background-color: var(--tb-color-toast-info);
+}
+
+.tower-book-toast--core {
+    background-color: var(--tb-dimension-core-surface);
+}
+
+.tower-book-title--left {
+    -unity-text-align: middle-left;
+}
+
+.tower-book-subtitle--left {
+    -unity-text-align: middle-left;
+    margin-top: 7px;
+}
+
+.tower-book-core__glyph {
+    width: 56px;
+    height: 44px;
+    flex-shrink: 0;
+}
+
+.tower-book-map__lock {
+    height: 16px;
+    margin-top: 8px;
+    font-size: 12px;
+    -unity-text-align: middle-center;
+}

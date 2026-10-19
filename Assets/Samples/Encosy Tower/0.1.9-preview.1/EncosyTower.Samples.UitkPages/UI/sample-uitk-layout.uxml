@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="sample-uitk-pages.uss" />
+    <ui:VisualElement name="tower-book-app" class="tower-book-app tower-book-app--booting">
+        <ui:VisualElement name="screen-host" class="tower-book-host" picking-mode="Ignore" />
+        <ui:VisualElement name="popup-host" class="tower-book-host" picking-mode="Ignore" />
+        <ui:VisualElement name="floating-context-host" class="tower-book-host" picking-mode="Ignore" />
+        <ui:VisualElement name="toast-host" class="tower-book-host" picking-mode="Ignore" />
+    </ui:VisualElement>
+</ui:UXML>

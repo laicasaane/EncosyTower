@@ -1,0 +1,65 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:screens="EncosyTower.Samples.UitkPages.Screens" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <screens:EntranceScreen name="entrance-screen" class="tower-book-entrance">
+        <ui:Label name="label-title" text="The unnamed tower" class="tower-book-title" />
+        <ui:Label name="label-title-tail" class="tower-book-title tower-book-entrance__title-tail" style="display: none;" />
+        <ui:VisualElement class="tower-book-rune-row">
+            <views:RuneView name="rune-0" />
+            <views:RuneView name="rune-1" />
+            <views:RuneView name="rune-2" />
+            <views:RuneView name="rune-3" />
+            <views:RuneView name="rune-4" />
+            <views:RuneView name="rune-5" />
+        </ui:VisualElement>
+        <ui:Label name="label-instruction" text="Enter a dimension to learn its rune" class="tower-book-entrance__instruction" />
+        <ui:VisualElement class="tower-book-board">
+            <ui:VisualElement class="tower-book-board__row">
+                <ui:Button name="button-dimension-0" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-0" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-0" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-0" class="tower-book-rune--small" />
+                </ui:Button>
+                <ui:Button name="button-dimension-1" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-1" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-1" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-1" class="tower-book-rune--small" />
+                </ui:Button>
+                <ui:Button name="button-dimension-2" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-2" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-2" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-2" class="tower-book-rune--small" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement class="tower-book-board__row">
+                <ui:Button name="button-dimension-6" class="tower-book-button tower-book-entry tower-book-entry--core">
+                    <views:DottedBorder name="core-dashes" />
+                    <ui:Label name="label-entry-6" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-6" text="Gather six runes" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <ui:Image name="core-glyph" class="tower-book-core__glyph" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-6" class="tower-book-rune--small" style="display: none;" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement class="tower-book-board__row">
+                <ui:Button name="button-dimension-3" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-3" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-3" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-3" class="tower-book-rune--small" />
+                </ui:Button>
+                <ui:Button name="button-dimension-4" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-4" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-4" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-4" class="tower-book-rune--small" />
+                </ui:Button>
+                <ui:Button name="button-dimension-5" class="tower-book-button tower-book-entry">
+                    <ui:Label name="label-entry-5" text="???" class="tower-book-entry__title" picking-mode="Ignore" />
+                    <ui:Label name="label-hint-5" class="tower-book-entry__hint" picking-mode="Ignore" />
+                    <views:RuneView name="entry-rune-5" class="tower-book-rune--small" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="tower-book-entrance__footer">
+            <ui:Button name="button-read-name" text="Read the name" class="tower-book-button tower-book-entrance__read" />
+        </ui:VisualElement>
+        <ui:VisualElement name="navigation-bar-host" class="tower-book-host" picking-mode="Ignore" />
+    </screens:EntranceScreen>
+</ui:UXML>

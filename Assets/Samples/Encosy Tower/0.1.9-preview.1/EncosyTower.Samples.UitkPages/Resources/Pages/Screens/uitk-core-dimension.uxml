@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:screens="EncosyTower.Samples.UitkPages.Screens" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <screens:CoreScreen name="core-screen" class="tower-book-core">
+        <ui:Image name="image-seal" class="tower-book-core__seal" />
+        <ui:Label name="label-title" text="The Core" class="tower-book-title" />
+        <ui:Label name="label-lore" class="tower-book-core__lore" />
+        <ui:Label name="label-spell" class="tower-book-core__lore" />
+        <ui:VisualElement class="tower-book-rune-row">
+            <views:RuneView name="rune-0" />
+            <views:RuneView name="rune-1" />
+            <views:RuneView name="rune-2" />
+            <views:RuneView name="rune-3" />
+            <views:RuneView name="rune-4" />
+            <views:RuneView name="rune-5" />
+        </ui:VisualElement>
+        <ui:VisualElement class="tower-book-dialog__actions">
+            <ui:Button name="button-cast" text="Cast Incantation" class="tower-book-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="navigation-bar-host" class="tower-book-host" picking-mode="Ignore" />
+    </screens:CoreScreen>
+</ui:UXML>

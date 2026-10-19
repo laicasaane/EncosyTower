@@ -1,0 +1,607 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d28e6db1558740641a51da7e7a7ec639, type: 3}
+  m_Name: tower-book-config
+  m_EditorClassIdentifier: EncosyTower.Samples.UguiPages::EncosyTower.Samples.UguiPages.Config.AppConfig
+  _namedColors:
+  - _type: 0
+    _value:
+      light: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 1}
+      dark: {r: 0.94509804, g: 0.92156863, b: 0.93333334, a: 1}
+  - _type: 1
+    _value:
+      light: {r: 0.96862745, g: 0.9607843, b: 0.9529412, a: 1}
+      dark: {r: 0.96862745, g: 0.9607843, b: 0.9529412, a: 1}
+  - _type: 2
+    _value:
+      light: {r: 0.2901961, g: 0.20392157, b: 0.14509805, a: 1}
+      dark: {r: 0.972549, g: 0.93333334, b: 0.8627451, a: 1}
+  - _type: 3
+    _value:
+      light: {r: 0.9137255, g: 0.9372549, b: 0.93333334, a: 1}
+      dark: {r: 0.29411766, g: 0.38431373, b: 0.36862746, a: 1}
+  - _type: 4
+    _value:
+      light: {r: 0.8627451, g: 0.9372549, b: 0.90588236, a: 1}
+      dark: {r: 0.29411766, g: 0.41960785, b: 0.38039216, a: 1}
+  - _type: 5
+    _value:
+      light: {r: 0.9137255, g: 0.8509804, b: 0.7411765, a: 1}
+      dark: {r: 0.45490196, g: 0.3647059, b: 0.2627451, a: 1}
+  - _type: 6
+    _value:
+      light: {r: 0.7921569, g: 0.8666667, b: 0.9490196, a: 1}
+      dark: {r: 0.29411766, g: 0.4, b: 0.54509807, a: 1}
+  - _type: 7
+    _value:
+      light: {r: 0.84705883, g: 0.7529412, b: 0.78431374, a: 1}
+      dark: {r: 0.4117647, g: 0.31764707, b: 0.36078432, a: 1}
+  - _type: 8
+    _value:
+      light: {r: 0.7529412, g: 0.84705883, b: 0.83137256, a: 1}
+      dark: {r: 0.30588236, g: 0.41568628, b: 0.3882353, a: 1}
+  - _type: 9
+    _value:
+      light: {r: 0.9372549, g: 0.9137255, b: 0.92156863, a: 1}
+      dark: {r: 0.39607844, g: 0.31764707, b: 0.3529412, a: 1}
+  - _type: 10
+    _value:
+      light: {r: 0.80784315, g: 0.7137255, b: 0.74509805, a: 1}
+      dark: {r: 0.4509804, g: 0.3372549, b: 0.39215687, a: 1}
+  - _type: 11
+    _value:
+      light: {r: 0.7137255, g: 0.80784315, b: 0.7921569, a: 1}
+      dark: {r: 0.32156864, g: 0.43529412, b: 0.41960785, a: 1}
+  - _type: 12
+    _value:
+      light: {r: 0.7921569, g: 0.8666667, b: 0.9490196, a: 1}
+      dark: {r: 0.29411766, g: 0.4, b: 0.54509807, a: 1}
+  - _type: 13
+    _value:
+      light: {r: 0.78431374, g: 0.79607844, b: 0.79607844, a: 1}
+      dark: {r: 0.29411766, g: 0.31764707, b: 0.32156864, a: 1}
+  - _type: 14
+    _value:
+      light: {r: 0.5411765, g: 0.39215687, b: 0.0627451, a: 1}
+      dark: {r: 0.9411765, g: 0.78039217, b: 0.36862746, a: 1}
+  - _type: 15
+    _value:
+      light: {r: 0.9411765, g: 0.8509804, b: 0.61960787, a: 1}
+      dark: {r: 0.6745098, g: 0.6039216, b: 0.45882353, a: 1}
+  - _type: 16
+    _value:
+      light: {r: 0, g: 0, b: 0, a: 0.7}
+      dark: {r: 0, g: 0, b: 0, a: 0.82}
+  - _type: 17
+    _value:
+      light: {r: 0.39215687, g: 0.4862745, b: 0.59607846, a: 1}
+      dark: {r: 0.72156864, g: 0.8039216, b: 0.8862745, a: 1}
+  - _type: 18
+    _value:
+      light: {r: 1, g: 1, b: 1, a: 0}
+      dark: {r: 1, g: 1, b: 1, a: 0}
+  - _type: 19
+    _value:
+      light: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 1}
+      dark: {r: 0.6627451, g: 0.6156863, b: 0.64705884, a: 1}
+  - _type: 20
+    _value:
+      light: {r: 0.46666667, g: 0.46666667, b: 0.46666667, a: 1}
+      dark: {r: 0.6627451, g: 0.6156863, b: 0.64705884, a: 1}
+  - _type: 21
+    _value:
+      light: {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 1}
+      dark: {r: 0.6627451, g: 0.6156863, b: 0.64705884, a: 1}
+  - _type: 22
+    _value:
+      light: {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 1}
+      dark: {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 1}
+  - _type: 23
+    _value:
+      light: {r: 0.46666667, g: 0.46666667, b: 0.46666667, a: 1}
+      dark: {r: 0.46666667, g: 0.46666667, b: 0.46666667, a: 1}
+  - _type: 24
+    _value:
+      light: {r: 0.21176471, g: 0.36862746, b: 0.34509805, a: 1}
+      dark: {r: 0.8352941, g: 0.92156863, b: 0.89411765, a: 1}
+  - _type: 25
+    _value:
+      light: {r: 1, g: 1, b: 1, a: 1}
+      dark: {r: 0.1254902, g: 0.23137255, b: 0.20784314, a: 1}
+  - _type: 26
+    _value:
+      light: {r: 0.5803922, g: 0.5058824, b: 0.41568628, a: 1}
+      dark: {r: 0.7176471, g: 0.6392157, b: 0.5254902, a: 1}
+  - _type: 27
+    _value:
+      light: {r: 0.41960785, g: 0.34117648, b: 0.27450982, a: 1}
+      dark: {r: 0.972549, g: 0.93333334, b: 0.8627451, a: 1}
+  - _type: 28
+    _value:
+      light: {r: 0.5686275, g: 0.49019608, b: 0.38039216, a: 1}
+      dark: {r: 0.8039216, g: 0.7137255, b: 0.5882353, a: 1}
+  - _type: 29
+    _value:
+      light: {r: 0.2901961, g: 0.20392157, b: 0.14509805, a: 1}
+      dark: {r: 0.8862745, g: 0.8039216, b: 0.6627451, a: 1}
+  - _type: 30
+    _value:
+      light: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 1}
+      dark: {r: 0.94509804, g: 0.92156863, b: 0.93333334, a: 1}
+  - _type: 31
+    _value:
+      light: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 0.45}
+      dark: {r: 0.94509804, g: 0.92156863, b: 0.93333334, a: 0.45}
+  - _type: 32
+    _value:
+      light: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 0.6}
+      dark: {r: 0.94509804, g: 0.92156863, b: 0.93333334, a: 0.6}
+  - _type: 33
+    _value:
+      light: {r: 0.7882353, g: 0.8901961, b: 0.8745098, a: 1}
+      dark: {r: 0.25882354, g: 0.42352942, b: 0.38039216, a: 1}
+  - _type: 34
+    _value:
+      light: {r: 0.039215688, g: 0.30980393, b: 0.76862746, a: 1}
+      dark: {r: 0.039215688, g: 0.30980393, b: 0.76862746, a: 1}
+  - _type: 35
+    _value:
+      light: {r: 0.4, g: 0.8784314, b: 1, a: 1}
+      dark: {r: 0.4, g: 0.8784314, b: 1, a: 1}
+  - _type: 36
+    _value:
+      light: {r: 0.12156863, g: 0.43529412, b: 0.39215687, a: 1}
+      dark: {r: 0.62352943, g: 0.8901961, b: 0.8392157, a: 1}
+  - _type: 37
+    _value:
+      light: {r: 1, g: 1, b: 1, a: 1}
+      dark: {r: 0.05490196, g: 0.30980393, b: 0.2784314, a: 1}
+  - _type: 38
+    _value:
+      light: {r: 0.6509804, g: 0.7294118, b: 0.7137255, a: 1}
+      dark: {r: 0.41960785, g: 0.5058824, b: 0.4862745, a: 1}
+  - _type: 39
+    _value:
+      light: {r: 0.78431374, g: 0.8039216, b: 0.8, a: 1}
+      dark: {r: 0.4117647, g: 0.48235294, b: 0.47058824, a: 1}
+  - _type: 40
+    _value:
+      light: {r: 0.6509804, g: 0.6666667, b: 0.6666667, a: 1}
+      dark: {r: 0.5294118, g: 0.5764706, b: 0.57254905, a: 1}
+  - _type: 41
+    _value:
+      light: {r: 0.38431373, g: 0.5058824, b: 0.49019608, a: 1}
+      dark: {r: 0.6784314, g: 0.76862746, b: 0.74509805, a: 1}
+  - _type: 42
+    _value:
+      light: {r: 0.6784314, g: 0.7137255, b: 0.7137255, a: 1}
+      dark: {r: 0.3529412, g: 0.39215687, b: 0.39215687, a: 1}
+  _namedAmounts:
+  - _type: 0
+    _value: 0.45
+  - _type: 1
+    _value: 0.45
+  - _type: 2
+    _value: 3
+  - _type: 3
+    _value: 2
+  - _type: 4
+    _value: 0.7
+  - _type: 5
+    _value: 0.09
+  - _type: 6
+    _value: 0.45
+  - _type: 7
+    _value: 0.9
+  - _type: 8
+    _value: 4
+  - _type: 9
+    _value: 4
+  - _type: 10
+    _value: 2
+  - _type: 11
+    _value: 7
+  - _type: 12
+    _value: 0.5
+  - _type: 13
+    _value: 0.65
+  - _type: 14
+    _value: 0.5
+  - _type: 15
+    _value: 5
+  - _type: 16
+    _value: 0.17
+  - _type: 17
+    _value: 570
+  - _type: 18
+    _value: 25
+  - _type: 19
+    _value: 20
+  - _type: 20
+    _value: 0.2
+  - _type: 21
+    _value: 0.1
+  - _type: 22
+    _value: 0.03
+  - _type: 23
+    _value: 0.45
+  - _type: 24
+    _value: 0.6
+  - _type: 25
+    _value: 0.056
+  - _type: 26
+    _value: 0.12
+  - _type: 27
+    _value: 180
+  - _type: 28
+    _value: 3.6
+  - _type: 29
+    _value: 0.25
+  - _type: 30
+    _value: 0
+  - _type: 31
+    _value: 0.5
+  - _type: 32
+    _value: 0.3
+  - _type: 33
+    _value: 32
+  - _type: 34
+    _value: 64
+  - _type: 35
+    _value: 0
+  - _type: 36
+    _value: 1
+  - _type: 37
+    _value: 2
+  - _type: 38
+    _value: 3
+  - _type: 39
+    _value: 0.15
+  - _type: 40
+    _value: 0.06
+  - _type: 41
+    _value: 0.8
+  - _type: 42
+    _value: 0.6
+  - _type: 43
+    _value: 0.25
+  - _type: 44
+    _value: 0.25
+  - _type: 45
+    _value: 0.7
+  - _type: 46
+    _value: 2
+  - _type: 47
+    _value: 50
+  - _type: 48
+    _value: 50
+  - _type: 49
+    _value: 28
+  - _type: 50
+    _value: 28.5
+  - _type: 51
+    _value: 50
+  - _type: 52
+    _value: 12
+  - _type: 53
+    _value: 72
+  - _type: 54
+    _value: 28.5
+  - _type: 55
+    _value: 72
+  - _type: 56
+    _value: 71.5
+  - _type: 57
+    _value: 50
+  - _type: 58
+    _value: 88
+  - _type: 59
+    _value: 28
+  - _type: 60
+    _value: 71.5
+  - _type: 61
+    _value: 0.85
+  - _type: 62
+    _value: 0.4
+  - _type: 63
+    _value: 3
+  - _type: 64
+    _value: 2
+  - _type: 65
+    _value: 6
+  - _type: 66
+    _value: 0
+  - _type: 67
+    _value: 0.25
+  - _type: 68
+    _value: 2
+  - _type: 69
+    _value: 0
+  - _type: 70
+    _value: 0.42
+  - _type: 71
+    _value: 0.7
+  - _type: 72
+    _value: 0.34
+  - _type: 73
+    _value: 0.34
+  - _type: 74
+    _value: -25
+  - _type: 75
+    _value: 0.4
+  - _type: 76
+    _value: 0.76
+  - _type: 77
+    _value: 0.36
+  - _type: 78
+    _value: 0.32
+  - _type: 79
+    _value: 25
+  - _type: 80
+    _value: 0.4
+  - _type: 81
+    _value: 0.76
+  - _type: 82
+    _value: 0.36
+  - _type: 83
+    _value: 0.32
+  - _type: 84
+    _value: 155
+  - _type: 85
+    _value: 0.4
+  - _type: 86
+    _value: 0.76
+  - _type: 87
+    _value: 0.36
+  - _type: 88
+    _value: 0.32
+  - _type: 89
+    _value: 205
+  - _type: 90
+    _value: 0.4
+  - _type: 91
+    _value: 0.76
+  - _type: 92
+    _value: 0.36
+  - _type: 93
+    _value: 0.32
+  - _type: 94
+    _value: 0.7
+  - _type: 95
+    _value: 0.42
+  - _type: 96
+    _value: 0.55
+  - _type: 97
+    _value: 2
+  - _type: 98
+    _value: 3
+  - _type: 99
+    _value: 2
+  - _type: 100
+    _value: 1
+  - _type: 101
+    _value: 0.12
+  - _type: 102
+    _value: 0.05
+  - _type: 103
+    _value: 0.24
+  - _type: 104
+    _value: 0.38
+  - _type: 105
+    _value: 0.12
+  - _type: 106
+    _value: 0.24
+  - _type: 107
+    _value: 0.16
+  - _type: 108
+    _value: 0.15
+  _namedTexts:
+  - _type: 0
+    _value: That page is missing from this edition.
+  - _type: 1
+    _value: "The Book couldn\u2019t open this page. Please try again."
+  - _type: 2
+    _value: "The Book couldn\u2019t remember this visit."
+  - _type: 3
+    _value: "The saved game can\u2019t be opened in this edition."
+  - _type: 4
+    _value: Kept open.
+  - _type: 5
+    _value: Echo closed.
+  - _type: 6
+    _value: The incantation is waiting for you in The Core.
+  - _type: 7
+    _value: Rune discovered in Dimension of {0}.
+  - _type: 8
+    _value: Tower Incantation learned.
+  - _type: 9
+    _value: The Core is unlocked.
+  - _type: 10
+    _value: 'The Tower
+
+      of'
+  - _type: 11
+    _value: The unnamed tower
+  - _type: 12
+    _value: ???
+  - _type: 13
+    _value: Dimension of {0}
+  - _type: 14
+    _value: Tower Incantation learned
+  - _type: 15
+    _value: The foundation awaits your arrival.
+  - _type: 16
+    _value: Cast Incantation
+  - _type: 17
+    _value: Read the name
+  - _type: 18
+    _value: The {0} yields a sign.
+  - _type: 19
+    _value: A sign waits within this dimension.
+  - _type: 20
+    _value: Concept
+  - _type: 21
+    _value: In practice
+  - _type: 22
+    _value: 'Watch for: {0}'
+  - _type: 23
+    _value: The echo of {0}
+  - _type: 24
+    _value: '{0} A page beyond this one still calls to you.'
+  - _type: 25
+    _value: You are at the Entrance
+  - _type: 26
+    _value: You are at the Core
+  - _type: 27
+    _value: You are inside the Dimension of {0}
+  - _type: 28
+    _value: Collected sign {0}
+  - _type: 29
+    _value: Empty sign slot
+  - _type: 30
+    _value: Back
+  - _type: 31
+    _value: Forward
+  - _type: 32
+    _value: Settings
+  - _type: 33
+    _value: Settings
+  - _type: 34
+    _value: Theme
+  - _type: 35
+    _value: Dark
+  - _type: 36
+    _value: Light
+  - _type: 37
+    _value: Exit to Main Menu
+  _dimensions:
+  - _id: 0
+    title: PubSub
+    lore: Messengers carry a promise to every listening lantern.
+    motif: Six lanterns surround a central bell.
+    inscriptionObject: bell
+    concept: Publishers send messages without knowing their subscribers; listeners
+      choose what to receive.
+    practice: Broadcast a discovery once so independent listeners update themselves.
+    watch: Release subscriptions when listeners leave to avoid stale reactions.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.78039217, g: 0.8980392, b: 0.8666667, a: 1}
+      dark: {r: 0.25882354, g: 0.42352942, b: 0.38039216, a: 1}
+    navigation:
+      light: {r: 0.3372549, g: 0.23137255, b: 0.29411766, a: 1}
+      dark: {r: 0.41568628, g: 0.29411766, b: 0.36862746, a: 1}
+  - _id: 1
+    title: Processing
+    lore: A request reaches the hand prepared to answer it.
+    motif: One sealed request rests beside an open hand.
+    inscriptionObject: request
+    concept: A request reaches one handler and returns a result to its caller.
+    practice: Use requests when a caller needs an answer or a clear failure.
+    watch: Broadcast events do not promise a direct reply.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.9411765, g: 0.8039216, b: 0.85490197, a: 1}
+      dark: {r: 0.45490196, g: 0.2901961, b: 0.36078432, a: 1}
+    navigation:
+      light: {r: 0.20392157, g: 0.37254903, b: 0.3137255, a: 1}
+      dark: {r: 0.27058825, g: 0.42352942, b: 0.3647059, a: 1}
+  - _id: 2
+    title: Databases
+    lore: "Named records preserve the tower\u2019s memory."
+    motif: Indexed shelves surround an engraved register.
+    inscriptionObject: register
+    concept: Stable record keys and query paths make related data easy to find.
+    practice: Look up a record by key or index instead of scanning every entry.
+    watch: Migrate old records when their stored shape changes.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.8352941, g: 0.8666667, b: 0.9411765, a: 1}
+      dark: {r: 0.3019608, g: 0.37254903, b: 0.5058824, a: 1}
+    navigation:
+      light: {r: 0.34901962, g: 0.28235295, b: 0.19607843, a: 1}
+      dark: {r: 0.4392157, g: 0.3529412, b: 0.23529412, a: 1}
+  - _id: 3
+    title: MVVM
+    lore: A reflection changes with the thing it represents.
+    motif: Two facing mirrors repeat the same sigil.
+    inscriptionObject: mirror
+    concept: A ViewModel exposes state and actions; bindings update the View when
+      state changes.
+    practice: Keep presentation decisions in the ViewModel so views can share state.
+    watch: Prevent feedback loops in two-way bindings.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.8980392, g: 0.8392157, b: 0.9254902, a: 1}
+      dark: {r: 0.39607844, g: 0.30980393, b: 0.4392157, a: 1}
+    navigation:
+      light: {r: 0.27058825, g: 0.33333334, b: 0.21568628, a: 1}
+      dark: {r: 0.35686275, g: 0.41960785, b: 0.28235295, a: 1}
+  - _id: 4
+    title: PageFlows
+    lore: Doorways remember where a traveler has been.
+    motif: An arch connects the current chamber to remembered paths.
+    inscriptionObject: arch
+    concept: Screens, Popups, Tabs and companion pages have separate scopes and lifecycles.
+    practice: Grant progress only after navigation reports an applied result.
+    watch: An accepted request may still be canceled or fail.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.8627451, g: 0.90588236, b: 0.78431374, a: 1}
+      dark: {r: 0.34901962, g: 0.41960785, b: 0.27058825, a: 1}
+    navigation:
+      light: {r: 0.3254902, g: 0.24313726, b: 0.33333334, a: 1}
+      dark: {r: 0.41960785, g: 0.32156864, b: 0.42745098, a: 1}
+  - _id: 5
+    title: Persistence
+    lore: What is remembered remains after the lantern goes dark.
+    motif: A closed book keeps its luminous mark.
+    inscriptionObject: book
+    concept: Versioned saves keep progress separate from the current browsing session.
+    practice: Save rune assignment and acquisition order, then verify both after
+      loading.
+    watch: Validate the saved version before restoring data.
+    hasKnowledge: 1
+    surface:
+      light: {r: 0.92156863, g: 0.8117647, b: 0.7764706, a: 1}
+      dark: {r: 0.4392157, g: 0.3254902, b: 0.29803923, a: 1}
+    navigation:
+      light: {r: 0.17254902, g: 0.34117648, b: 0.34509805, a: 1}
+      dark: {r: 0.23921569, g: 0.40784314, b: 0.4117647, a: 1}
+  - _id: 6
+    title: The Core
+    lore: Names, choices, collections and time share one foundation.
+    motif: 
+    inscriptionObject: 
+    concept: 
+    practice: 
+    watch: 
+    hasKnowledge: 0
+    surface:
+      light: {r: 0.9098039, g: 0.77254903, b: 0.41568628, a: 1}
+      dark: {r: 0.5019608, g: 0.3882353, b: 0.16862746, a: 1}
+    navigation:
+      light: {r: 0.2901961, g: 0.34509805, b: 0.47843137, a: 1}
+      dark: {r: 0.3372549, g: 0.4, b: 0.53333336, a: 1}
+  _runes:
+  - _id: 0
+    letter: E
+  - _id: 1
+    letter: N
+  - _id: 2
+    letter: C
+  - _id: 3
+    letter: O
+  - _id: 4
+    letter: S
+  - _id: 5
+    letter: Y

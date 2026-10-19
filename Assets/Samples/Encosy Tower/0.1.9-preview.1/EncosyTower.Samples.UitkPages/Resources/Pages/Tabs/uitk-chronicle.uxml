@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:tabs="EncosyTower.Samples.UitkPages.Tabs">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <tabs:ChronicleTab name="chronicle-tab" class="tower-book-panel tower-book-chronicle">
+        <ui:Image name="image-motif" />
+        <ui:Label name="label-title" text="Chronicle" class="tower-book-heading" />
+        <ui:Label name="label-body" />
+    </tabs:ChronicleTab>
+</ui:UXML>

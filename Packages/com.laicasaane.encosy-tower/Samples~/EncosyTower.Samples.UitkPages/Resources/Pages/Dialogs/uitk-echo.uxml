@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:dialogs="EncosyTower.Samples.UitkPages.Dialogs">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <dialogs:EchoDialog name="echo-dialog" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" />
+        <ui:VisualElement name="root" class="tower-book-dialog tower-book-echo">
+            <ui:Label name="label-title" class="tower-book-heading" />
+            <ui:Label name="label-body" class="tower-book-dialog__body" />
+            <ui:Label name="label-note" class="tower-book-dialog__body" />
+            <ui:VisualElement class="tower-book-dialog__actions">
+                <ui:Button name="button-appendix" text="Read the lost appendix" class="tower-book-button" />
+                <ui:Button name="button-done" text="Done" class="tower-book-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </dialogs:EchoDialog>
+</ui:UXML>

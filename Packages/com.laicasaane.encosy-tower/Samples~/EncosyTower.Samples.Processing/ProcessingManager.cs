@@ -70,7 +70,11 @@ namespace EncosyTower.Samples.Processing
             var context = ProcessingContext.DropIfNoHandler(logger: _logger, token: destroyCancellationToken);
             var result = FormatTextRequest.TryProcess(in hub, new(_text), context);
 
-            if (result.TryGetValue(out var text))
+            if (result.TryGetError(out var error))
+            {
+                error.Log(_logger);
+            }
+            else if (result.TryGetValue(out var text))
             {
                 Log($"Sync result: {text}");
             }
@@ -91,7 +95,11 @@ namespace EncosyTower.Samples.Processing
 
                 var result = await FormatTextRequest.Async.TryProcess(in hub, request, context);
 
-                if (result.TryGetValue(out var text))
+                if (result.TryGetError(out var error))
+                {
+                    error.Log(_logger);
+                }
+                else if (result.TryGetValue(out var text))
                 {
                     Log($"Async result: {text}");
                 }

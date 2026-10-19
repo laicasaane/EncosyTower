@@ -4,9 +4,11 @@
     "references": [
         "EncosyTower.Core",
         "EncosyTower.PageFlows",
+        "EncosyTower.Persistence",
         "EncosyTower.Processing",
         "EncosyTower.PubSub",
         "UniTask",
+        "Unity.InputSystem",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],
@@ -19,6 +21,12 @@
     "defineConstraints": [
         "UNITY_EDITOR || INCLUDE_ENCOSY_SAMPLES_UGUI_PAGES"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "ENCOSY_SAMPLES_INPUT_SYSTEM"
+        }
+    ],
     "noEngineReferences": false
 }

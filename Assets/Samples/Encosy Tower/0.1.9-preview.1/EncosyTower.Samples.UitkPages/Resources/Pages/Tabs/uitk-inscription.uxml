@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:tabs="EncosyTower.Samples.UitkPages.Tabs" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <tabs:InscriptionTab name="inscription-tab" class="tower-book-panel tower-book-inscription">
+        <views:RuneView name="rune" />
+        <ui:VisualElement>
+            <ui:Label name="label-title" text="The inscription" class="tower-book-heading" />
+            <ui:Label name="label-body" />
+        </ui:VisualElement>
+    </tabs:InscriptionTab>
+</ui:UXML>

@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:dialogs="EncosyTower.Samples.UitkPages.Dialogs" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <dialogs:SettingsDialog name="settings-dialog" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" />
+        <ui:VisualElement name="root" class="tower-book-dialog tower-book-settings">
+            <ui:Label name="label-title" class="tower-book-heading" />
+            <ui:VisualElement class="tower-book-settings__row">
+                <ui:Label name="label-theme" class="tower-book-settings__label" />
+                <views:ThemeSwitch name="theme-switch" />
+            </ui:VisualElement>
+            <ui:Button name="button-settings-exit" text="Exit to Main Menu" class="tower-book-button tower-book-settings__exit" />
+        </ui:VisualElement>
+    </dialogs:SettingsDialog>
+</ui:UXML>

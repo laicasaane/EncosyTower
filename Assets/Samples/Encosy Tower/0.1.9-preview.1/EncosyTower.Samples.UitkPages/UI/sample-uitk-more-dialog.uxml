@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="sample-uitk-pages.uss" />
+    <ui:VisualElement name="more-dialog" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" />
+        <ui:VisualElement name="root" class="tower-book-dialog tower-book-more">
+            <ui:Label name="label-title" class="tower-book-heading" />
+            <ui:Label name="label-body" text="Listen a little longer, or close this page." class="tower-book-dialog__body" />
+            <ui:VisualElement class="tower-book-dialog__actions">
+                <ui:Button name="button-echo" text="Read the echo" class="tower-book-button" />
+                <ui:Button name="button-close" text="Close" class="tower-book-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

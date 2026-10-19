@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:overlays="EncosyTower.Samples.UitkPages.Overlays">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <overlays:ToastPage name="toast-page" class="tower-book-overlay tower-book-overlay--toast" picking-mode="Ignore">
+        <ui:VisualElement name="toast-pill" class="tower-book-toast" picking-mode="Ignore">
+            <ui:Label name="label-toast" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </overlays:ToastPage>
+</ui:UXML>

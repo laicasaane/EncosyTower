@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:overlays="EncosyTower.Samples.UitkPages.Overlays">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <overlays:FloatingContextPage name="floating-context-page" class="tower-book-overlay tower-book-overlay--floating-context" picking-mode="Ignore">
+        <ui:VisualElement name="floating-context" class="tower-book-floating-context-actions">
+            <ui:Button name="button-cancel" text="Cancel" class="tower-book-button" />
+            <ui:Button name="button-stop-closing" text="Stop closing" class="tower-book-button" />
+            <ui:Button name="button-keep-reading" text="Keep reading" class="tower-book-button" />
+            <ui:Button name="button-reopen" text="Reopen" class="tower-book-button" />
+        </ui:VisualElement>
+    </overlays:FloatingContextPage>
+</ui:UXML>

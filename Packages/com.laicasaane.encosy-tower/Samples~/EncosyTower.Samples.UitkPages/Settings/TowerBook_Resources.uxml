@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:engine="UnityEngine.UIElements"
+>
+    <engine:Label name="text.toast-missing-page" text="That page is missing from this edition." />
+    <engine:Label name="text.toast-open-failed" text="The Book couldn’t open this page. Please try again." />
+    <engine:Label name="text.toast-save-failed" text="The Book couldn’t remember this visit." />
+    <engine:Label name="text.toast-save-unreadable" text="The saved game can’t be opened in this edition." />
+    <engine:Label name="text.toast-kept-open" text="Kept open." />
+    <engine:Label name="text.toast-echo-closed" text="Echo closed." />
+    <engine:Label name="text.toast-incantation-waiting" text="The incantation is waiting for you in The Core." />
+    <engine:Label name="text.toast-rune-discovered" text="Rune discovered in Dimension of {0}." />
+    <engine:Label name="text.toast-incantation-learned" text="Tower Incantation learned." />
+    <engine:Label name="text.toast-core-unlocked" text="The Core is unlocked." />
+
+    <engine:Label name="text.navigation-bar-back" text="Back" />
+    <engine:Label name="text.navigation-bar-forward" text="Forward" />
+    <engine:Label name="text.navigation-bar-settings" text="Settings" />
+
+    <engine:Label name="text.entrance-title-cast" text="The Tower&#10;of" />
+    <engine:Label name="text.entrance-title-uncast" text="The unnamed tower" />
+
+    <engine:Label name="text.dimension-locked-title" text="???" />
+    <engine:Label name="text.dimension-page-title" text="Dimension of {0}" />
+
+    <engine:Label name="dimensions__0-id" text="PubSub" />
+    <engine:Label name="dimensions__0-title" text="PubSub" />
+    <engine:Label name="dimensions__0-lore" text="Messengers carry a promise to every listening lantern." />
+    <engine:Label name="dimensions__0-motif" text="Six lanterns surround a central bell." />
+    <engine:Label name="dimensions__0-inscription-object" text="bell" />
+    <engine:Label name="dimensions__0-concept" text="Publishers send messages without knowing their subscribers; listeners choose what to receive." />
+    <engine:Label name="dimensions__0-practice" text="Broadcast a discovery once so independent listeners update themselves." />
+    <engine:Label name="dimensions__0-watch" text="Release subscriptions when listeners leave to avoid stale reactions." />
+
+    <engine:Label name="dimensions__1-id" text="Processing" />
+    <engine:Label name="dimensions__1-title" text="Processing" />
+    <engine:Label name="dimensions__1-lore" text="A request reaches the hand prepared to answer it." />
+    <engine:Label name="dimensions__1-motif" text="One sealed request rests beside an open hand." />
+    <engine:Label name="dimensions__1-inscription-object" text="request" />
+    <engine:Label name="dimensions__1-concept" text="A request reaches one handler and returns a result to its caller." />
+    <engine:Label name="dimensions__1-practice" text="Use requests when a caller needs an answer or a clear failure." />
+    <engine:Label name="dimensions__1-watch" text="Broadcast events do not promise a direct reply." />
+
+    <engine:Label name="dimensions__2-id" text="Databases" />
+    <engine:Label name="dimensions__2-title" text="Databases" />
+    <engine:Label name="dimensions__2-lore" text="Named records preserve the tower’s memory." />
+    <engine:Label name="dimensions__2-motif" text="Indexed shelves surround an engraved register." />
+    <engine:Label name="dimensions__2-inscription-object" text="register" />
+    <engine:Label name="dimensions__2-concept" text="Stable record keys and query paths make related data easy to find." />
+    <engine:Label name="dimensions__2-practice" text="Look up a record by key or index instead of scanning every entry." />
+    <engine:Label name="dimensions__2-watch" text="Migrate old records when their stored shape changes." />
+
+    <engine:Label name="dimensions__3-id" text="Mvvm" />
+    <engine:Label name="dimensions__3-title" text="MVVM" />
+    <engine:Label name="dimensions__3-lore" text="A reflection changes with the thing it represents." />
+    <engine:Label name="dimensions__3-motif" text="Two facing mirrors repeat the same sigil." />
+    <engine:Label name="dimensions__3-inscription-object" text="mirror" />
+    <engine:Label name="dimensions__3-concept" text="A ViewModel exposes state and actions; bindings update the View when state changes." />
+    <engine:Label name="dimensions__3-practice" text="Keep presentation decisions in the ViewModel so views can share state." />
+    <engine:Label name="dimensions__3-watch" text="Prevent feedback loops in two-way bindings." />
+
+    <engine:Label name="dimensions__4-id" text="PageFlows" />
+    <engine:Label name="dimensions__4-title" text="PageFlows" />
+    <engine:Label name="dimensions__4-lore" text="Doorways remember where a traveler has been." />
+    <engine:Label name="dimensions__4-motif" text="An arch connects the current chamber to remembered paths." />
+    <engine:Label name="dimensions__4-inscription-object" text="arch" />
+    <engine:Label name="dimensions__4-concept" text="Screens, Popups, Tabs and companion pages have separate scopes and lifecycles." />
+    <engine:Label name="dimensions__4-practice" text="Grant progress only after navigation reports an applied result." />
+    <engine:Label name="dimensions__4-watch" text="An accepted request may still be canceled or fail." />
+
+    <engine:Label name="dimensions__5-id" text="Persistence" />
+    <engine:Label name="dimensions__5-title" text="Persistence" />
+    <engine:Label name="dimensions__5-lore" text="What is remembered remains after the lantern goes dark." />
+    <engine:Label name="dimensions__5-motif" text="A closed book keeps its luminous mark." />
+    <engine:Label name="dimensions__5-inscription-object" text="book" />
+    <engine:Label name="dimensions__5-concept" text="Versioned saves keep progress separate from the current browsing session." />
+    <engine:Label name="dimensions__5-practice" text="Save rune assignment and acquisition order, then verify both after loading." />
+    <engine:Label name="dimensions__5-watch" text="Validate the saved version before restoring data." />
+
+    <engine:Label name="dimensions__core-title" text="The Core" />
+    <engine:Label name="dimensions__core-lore" text="Names, choices, collections and time share one foundation." />
+
+    <engine:Label name="text.core-spell-learned" text="Tower Incantation learned" />
+    <engine:Label name="text.core-spell-waiting" text="The foundation awaits your arrival." />
+    <engine:Label name="text.core-cast-button" text="Cast Incantation" />
+    <engine:Label name="text.core-read-name-button" text="Read the name" />
+
+    <engine:Label name="text.tab-inscription-found" text="The {0} yields a sign." />
+    <engine:Label name="text.tab-inscription-empty" text="A sign waits within this dimension." />
+
+    <engine:Label name="text.card-concept-title" text="Concept" />
+    <engine:Label name="text.card-in-practice-title" text="In practice" />
+    <engine:Label name="text.card-watch-for" text="Watch for: {0}" />
+
+    <engine:Label name="text.echo-title" text="The echo of {0}" />
+    <engine:Label name="text.echo-note" text="{0} A page beyond this one still calls to you." />
+
+    <engine:Label name="text.settings-title" text="Settings" />
+    <engine:Label name="text.settings-theme" text="Theme" />
+    <engine:Label name="text.settings-theme-dark" text="Dark" />
+    <engine:Label name="text.settings-theme-light" text="Light" />
+    <engine:Label name="text.settings-exit" text="Exit to Main Menu" />
+
+    <engine:Label name="text.map-status-entrance" text="You are at the Entrance" />
+    <engine:Label name="text.map-status-core" text="You are at the Core" />
+    <engine:Label name="text.map-status-dimension" text="You are inside the Dimension of {0}" />
+
+    <engine:Label name="runes__0-id" text="Ehwaz" />
+    <engine:Label name="runes__0-letter" text="E" />
+    <engine:Label name="runes__1-id" text="Naudiz" />
+    <engine:Label name="runes__1-letter" text="N" />
+    <engine:Label name="runes__2-id" text="Kaun" />
+    <engine:Label name="runes__2-letter" text="C" />
+    <engine:Label name="runes__3-id" text="Othala" />
+    <engine:Label name="runes__3-letter" text="O" />
+    <engine:Label name="runes__4-id" text="Sowilo" />
+    <engine:Label name="runes__4-letter" text="S" />
+    <engine:Label name="runes__5-id" text="Isa" />
+    <engine:Label name="runes__5-letter" text="Y" />
+    <engine:Label name="text.rune-tooltip-collected" text="Collected sign {0}" />
+    <engine:Label name="text.rune-tooltip-empty" text="Empty sign slot" />
+</engine:UXML>
