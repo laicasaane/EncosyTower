@@ -13,7 +13,7 @@ The current solution contains 41 projects:
 
 Production projects target .NET Standard 2.0, compile with C# 10, and use Roslyn 4.3.1. The test
 project targets .NET 8 with C# 12, while samples target .NET Standard 2.1 with C# 11. The production
-inventory currently contains 33 incremental generators, 31 diagnostic analyzers, eight diagnostic
+inventory currently contains 33 incremental generators, 34 diagnostic analyzers, eight diagnostic
 suppressors, six exported code-fix providers, and 12 formatting refactoring providers.
 
 ## Project layout
