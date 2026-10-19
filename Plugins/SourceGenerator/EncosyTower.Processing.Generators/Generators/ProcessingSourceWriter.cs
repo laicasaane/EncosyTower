@@ -193,7 +193,7 @@ namespace EncosyTower.Processing.Generators
         )
         {
             printer.PrintLine(AGGRESSIVE_INLINING);
-            printer.PrintBeginLine("public static g__ETP.ProcessRegistry Register")
+            printer.PrintBeginLine("public static g__ETC.Result<g__ETP.ProcessRegistry, g__ETP.ProcessError> Register")
                 .PrintIf(statefulHub, "<TState>", string.Empty).PrintEndLine("(");
 
             if (globalShortcut == false)
@@ -238,7 +238,9 @@ namespace EncosyTower.Processing.Generators
         )
         {
             printer.PrintLine(AGGRESSIVE_INLINING);
-            printer.PrintLine("public static g__ETP.ProcessRegistry Register<TState>(");
+            printer.PrintLine(
+                  "public static g__ETC.Result<g__ETP.ProcessRegistry, g__ETP.ProcessError> Register<TState>("
+            );
 
             if (hubBound)
             {
@@ -394,11 +396,11 @@ namespace EncosyTower.Processing.Generators
 
                 if (tryProcess && spec.HasResult)
                 {
-                    printer.Print("g__ETC.Option<").Print(spec.ResultTypeName).Print(">");
+                    printer.Print("g__ETC.Result<").Print(spec.ResultTypeName).Print(", g__ETP.ProcessError>");
                 }
                 else if (tryProcess)
                 {
-                    printer.Print("bool");
+                    printer.Print("g__ETC.Success<g__ETP.ProcessError>");
                 }
                 else if (spec.HasResult)
                 {
@@ -409,11 +411,11 @@ namespace EncosyTower.Processing.Generators
             }
             else if (tryProcess && spec.HasResult)
             {
-                printer.Print("g__ETC.Option<").Print(spec.ResultTypeName).Print(">");
+                printer.Print("g__ETC.Result<").Print(spec.ResultTypeName).Print(", g__ETP.ProcessError>");
             }
             else if (tryProcess)
             {
-                printer.Print("bool");
+                printer.Print("g__ETC.Success<g__ETP.ProcessError>");
             }
             else if (spec.HasResult)
             {
