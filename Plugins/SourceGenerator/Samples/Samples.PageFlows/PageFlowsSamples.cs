@@ -1,4 +1,5 @@
 using EncosyTower.PageFlows;
+using EncosyTower.PageFlows.PubSub;
 
 namespace Samples.PageFlows
 {
