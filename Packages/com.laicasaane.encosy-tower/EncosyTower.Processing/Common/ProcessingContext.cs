@@ -10,8 +10,6 @@ namespace EncosyTower.Processing
 
         public ProcessingStrategy Strategy { get; init; }
 
-        public bool WarnNoHandler { get; init; }
-
         public ILogger Logger
         {
             get => _logger ?? DevLogger.Default;
@@ -24,26 +22,23 @@ namespace EncosyTower.Processing
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ProcessingContext Default(
-              bool warnNoHandler = true
-            , ILogger logger = null
+              ILogger logger = null
             , in CallerInfo callerInfo = default
             , CancellationToken token = default
         )
         {
-            return DropIfNoHandler(warnNoHandler, logger, callerInfo, token);
+            return DropIfNoHandler(logger, callerInfo, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ProcessingContext DropIfNoHandler(
-              bool warnNoHandler = true
-            , ILogger logger = null
+              ILogger logger = null
             , in CallerInfo callerInfo = default
             , CancellationToken token = default
         )
         {
             return new ProcessingContext() {
                 Strategy = ProcessingStrategy.DropIfNoHandler,
-                WarnNoHandler = warnNoHandler,
                 Logger = logger,
                 CallerInfo = callerInfo,
                 Token = token,
@@ -59,7 +54,6 @@ namespace EncosyTower.Processing
         {
             return new ProcessingContext() {
                 Strategy = ProcessingStrategy.WaitForHandler,
-                WarnNoHandler = false,
                 Logger = logger,
                 CallerInfo = callerInfo,
                 Token = token,

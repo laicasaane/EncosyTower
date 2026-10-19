@@ -1,9 +1,3 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -110,8 +104,12 @@ namespace EncosyTower.Processing
                 where TNewScope : UnityEngine.Object
                 => _hub.WithUnityScope(scope);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Action<TRequest> process
                 , ILogger logger = null
             )
@@ -120,8 +118,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Action<TRequest, ProcessingContext> process
                 , ILogger logger = null
             )
@@ -130,8 +132,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, TResult> process
                 , ILogger logger = null
             )
@@ -140,8 +146,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, ProcessingContext, TResult> process
                 , ILogger logger = null
             )
@@ -162,16 +172,22 @@ namespace EncosyTower.Processing
             public void Process<TRequest>(TRequest request, ProcessingContext context = default)
                 => _hub.Process(request, context);
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
+            public Success<ProcessError> TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
                 => _hub.TryProcess(request, context);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TResult Process<TRequest, TResult>(TRequest request, ProcessingContext context = default)
                 => _hub.Process<TRequest, TResult>(request, context);
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Option<TResult> TryProcess<TRequest, TResult>(
+            public Result<TResult, ProcessError> TryProcess<TRequest, TResult>(
                   TRequest request
                 , ProcessingContext context = default
             )

@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using EncosyTower.Processing;
 using EncosyTower.Types;
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace EncosyTower.Tests.Processing
@@ -58,7 +57,9 @@ namespace EncosyTower.Tests.Processing
             Assert.AreEqual(2, sameType.Scope.Value);
             Assert.AreEqual(3, otherType.Scope.Value);
             Assert.IsTrue(global.IsCreated);
-            Assert.IsFalse(source.TryProcess(new SyncRequest(5), context: default));
+            ProcessErrorAssert.IsNotFound<ScopeA, SyncRequest>(
+                  source.TryProcess(new SyncRequest(5), context: default)
+            );
             Assert.AreEqual(1, sameTypeCount);
             Assert.AreEqual(2, otherTypeCount);
             Assert.AreEqual(3, globalCount);
@@ -81,7 +82,9 @@ namespace EncosyTower.Tests.Processing
             Assert.AreSame(registries, source.Registries);
             Assert.AreSame(registries, pivot.Registries);
             Assert.AreEqual(1, registries.Count);
-            Assert.IsFalse(pivot.TryProcess(new SyncRequest(1), context: default));
+            ProcessErrorAssert.IsNotFound<ScopeA, SyncRequest>(
+                  pivot.TryProcess(new SyncRequest(1), context: default)
+            );
 
             pivot.Register<SyncRequest>(request => pivotCount += request.Value);
             source.Process(new SyncRequest(2));
@@ -138,8 +141,11 @@ namespace EncosyTower.Tests.Processing
             Assert.AreSame(source.Registries, pivot.Registries);
             LogAssert.NoUnexpectedReceived();
 
-            LogAssert.Expect(LogType.Error, "Processor.Hub must be retrieved via `Processor.Scope` API");
-            Assert.IsFalse(pivot.TryProcess(new SyncRequest(1), context: default));
+            var pivotException = Assert.Throws<InvalidOperationException>(
+                () => pivot.TryProcess(new SyncRequest(1), context: default)
+            );
+
+            StringAssert.StartsWith("EncosyTower.Processing.Processor+Hub`1[", pivotException.Message);
 
             var statefulSource = source.WithState(state);
             var statefulPivot = statefulSource.WithScope(new ScopeB(2));
@@ -150,8 +156,12 @@ namespace EncosyTower.Tests.Processing
             Assert.AreSame(statefulSource.Registries, statefulPivot.Registries);
             LogAssert.NoUnexpectedReceived();
 
-            LogAssert.Expect(LogType.Error, "Processor.Hub must be retrieved via `Processor.Scope` API");
-            Assert.IsFalse(statefulPivot.Unregister(default(TypeId)));
+            var statefulException = Assert.Throws<InvalidOperationException>(
+                () => statefulPivot.Unregister(default(TypeId))
+            );
+
+            StringAssert.StartsWith("EncosyTower.Processing.Processor+Hub`2[", statefulException.Message);
+            LogAssert.NoUnexpectedReceived();
 #endif
         }
 

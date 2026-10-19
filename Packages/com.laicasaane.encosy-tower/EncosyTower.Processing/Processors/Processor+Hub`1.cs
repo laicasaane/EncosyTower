@@ -1,7 +1,11 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
-#else
+#elif (UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS
 #define __ENCOSY_VALIDATION__
+#elif (ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS
+#define __ENCOSY_VALIDATION__
+#else
+#define __ENCOSY_NO_VALIDATION__
 #endif
 
 using System;
@@ -122,8 +126,12 @@ namespace EncosyTower.Processing
             #region    REGISTER - SYNC
             #endregion ===============
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Action<TRequest> process
                 , ILogger logger = null
             )
@@ -133,11 +141,15 @@ namespace EncosyTower.Processing
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
 
-                return Register(new Internals.Sync.ProcessHandler<TRequest>(process), logger);
+                return Register(new Internals.Sync.ProcessHandler<TRequest>(process));
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Action<TRequest, ProcessingContext> process
                 , ILogger logger = null
             )
@@ -147,11 +159,15 @@ namespace EncosyTower.Processing
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
 
-                return Register(new Internals.Sync.ContextualProcessHandler<TRequest>(process), logger);
+                return Register(new Internals.Sync.ContextualProcessHandler<TRequest>(process));
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, TResult> process
                 , ILogger logger = null
             )
@@ -161,11 +177,15 @@ namespace EncosyTower.Processing
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
 
-                return Register(new Internals.Sync.ProcessHandler<TRequest, TResult>(process), logger);
+                return Register(new Internals.Sync.ProcessHandler<TRequest, TResult>(process));
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, ProcessingContext, TResult> process
                 , ILogger logger = null
             )
@@ -175,25 +195,24 @@ namespace EncosyTower.Processing
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
 
-                return Register(new Internals.Sync.ContextualProcessHandler<TRequest, TResult>(process), logger);
+                return Register(new Internals.Sync.ContextualProcessHandler<TRequest, TResult>(process));
             }
 
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            internal ProcessRegistry Register(IProcessHandler handler, ILogger logger)
+            internal Result<ProcessRegistry, ProcessError> Register(IProcessHandler handler)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope>));
+
+                var result = _map.Register(handler);
+
+                if (result.TryGetValue(out var registry))
                 {
-                    return default;
+                    Registries.Add(registry);
                 }
-#endif
 
-                var registry = _map.Register(handler, logger);
-                Registries.Add(registry);
-
-                return registry;
+                return result;
             }
 
             #region    UNREGISTER - TYPE ID
@@ -204,12 +223,7 @@ namespace EncosyTower.Processing
 #endif
             public bool Unregister(TypeId id, ILogger logger = null)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return false;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope>));
 
                 return _map.Unregister(id);
             }
@@ -219,12 +233,7 @@ namespace EncosyTower.Processing
 #endif
             public void Clear(ILogger logger = null)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope>));
 
                 _map.Clear();
             }
@@ -236,10 +245,10 @@ namespace EncosyTower.Processing
             public void Process<TRequest>(TRequest request, ProcessingContext context = default)
             {
                 IProcessHandler<TRequest> handler = null;
-                var hasCandidate = false;
-                var found = IsCreated && TryGet(out handler, out hasCandidate);
+                IProcessHandler candidate = null;
+                var found = IsCreated && TryGet(out handler, out candidate);
 
-                ThrowHelper.ThrowIfHandlerIsNotFound(found, Scope, hasCandidate, handler);
+                ThrowHelper.ThrowIfHandlerIsNotFound(found, Scope, candidate != null, handler);
 
                 var handlerResult = handler.Process(request, context);
                 ThrowHelper.ThrowIfHandlerResultIsInvalid(handlerResult.IsValid, handler.GetType());
@@ -252,24 +261,17 @@ namespace EncosyTower.Processing
                 }
             }
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
+            public Success<ProcessError> TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(context.Logger) == false)
-                {
-                    return false;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope>));
 
-                if (TryGet(out IProcessHandler<TRequest> handler, out var hasCandidate) == false)
+                if (TryGet(out IProcessHandler<TRequest> handler, out var candidate) == false)
                 {
-                    if (context.WarnNoHandler)
-                    {
-                        ThrowHelper.LogErrorHandlerNotFound(Scope, hasCandidate, handler, context.Logger);
-                    }
-
-                    return false;
+                    return ProcessError.CreateLookupFailed<TScope, TRequest>(candidate);
                 }
 
                 var handlerResult = handler.Process(request, context);
@@ -280,25 +282,20 @@ namespace EncosyTower.Processing
                     var error = handlerResult.GetErrorOrDefault();
                     _map.Unregister(handler);
 
-                    if (context.WarnNoHandler)
-                    {
-                        ThrowHelper.LogErrorStateUnavailable(error.StateType, context.Logger);
-                    }
-
-                    return false;
+                    return ProcessError.CreateStateUnavailable(error.StateType);
                 }
 
-                return true;
+                return Success.Yes;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TResult Process<TRequest, TResult>(TRequest request, ProcessingContext context = default)
             {
                 IProcessHandler<TRequest, TResult> handler = null;
-                var hasCandidate = false;
-                var found = IsCreated && TryGet(out handler, out hasCandidate);
+                IProcessHandler candidate = null;
+                var found = IsCreated && TryGet(out handler, out candidate);
 
-                ThrowHelper.ThrowIfHandlerIsNotFound(found, Scope, hasCandidate, handler);
+                ThrowHelper.ThrowIfHandlerIsNotFound(found, Scope, candidate != null, handler);
 
                 var handlerResult = handler.Process(request, context);
                 ThrowHelper.ThrowIfHandlerResultIsInvalid(handlerResult.IsValid, handler.GetType());
@@ -313,24 +310,20 @@ namespace EncosyTower.Processing
                 return handlerResult.GetValueOrDefault();
             }
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Option<TResult> TryProcess<TRequest, TResult>(TRequest request, ProcessingContext context = default)
+            public Result<TResult, ProcessError> TryProcess<TRequest, TResult>(
+                  TRequest request
+                , ProcessingContext context = default
+            )
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(context.Logger) == false)
-                {
-                    return Option.None;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope>));
 
-                if (TryGet(out IProcessHandler<TRequest, TResult> handler, out var hasCandidate) == false)
+                if (TryGet(out IProcessHandler<TRequest, TResult> handler, out var candidate) == false)
                 {
-                    if (context.WarnNoHandler)
-                    {
-                        ThrowHelper.LogErrorHandlerNotFound(Scope, hasCandidate, handler, context.Logger);
-                    }
-
-                    return Option.None;
+                    return ProcessError.CreateLookupFailed<TScope, TRequest, TResult>(candidate);
                 }
 
                 var handlerResult = handler.Process(request, context);
@@ -341,60 +334,40 @@ namespace EncosyTower.Processing
                     var error = handlerResult.GetErrorOrDefault();
                     _map.Unregister(handler);
 
-                    if (context.WarnNoHandler)
-                    {
-                        ThrowHelper.LogErrorStateUnavailable(error.StateType, context.Logger);
-                    }
-
-                    return Option.None;
+                    return ProcessError.CreateStateUnavailable(error.StateType);
                 }
 
-                return Option.Some(handlerResult.GetValueOrDefault());
+                return Result<TResult, ProcessError>.Succeed(handlerResult.GetValueOrDefault());
             }
 
             #region    TRY GET - SYNC
             #endregion ==============
 
-            private bool TryGet<TRequest>(out IProcessHandler<TRequest> result, out bool hasCandidate)
+            private bool TryGet<TRequest>(out IProcessHandler<TRequest> result, out IProcessHandler candidate)
             {
                 var id = (TypeId)Type<Action<TRequest, ProcessingContext>>.Id;
 
-                if (TryGet(id, out var candidate))
+                if (TryGet(id, out candidate) && candidate is IProcessHandler<TRequest> handler)
                 {
-                    hasCandidate = true;
-
-                    if (candidate is IProcessHandler<TRequest> handler)
-                    {
-                        result = handler;
-                        return true;
-                    }
-                }
-                else
-                {
-                    hasCandidate = false;
+                    result = handler;
+                    return true;
                 }
 
                 result = null;
                 return false;
             }
 
-            private bool TryGet<TRequest, TResult>(out IProcessHandler<TRequest, TResult> result, out bool hasCandidate)
+            private bool TryGet<TRequest, TResult>(
+                  out IProcessHandler<TRequest, TResult> result
+                , out IProcessHandler candidate
+            )
             {
                 var id = (TypeId)Type<Func<TRequest, ProcessingContext, TResult>>.Id;
 
-                if (TryGet(id, out var candidate))
+                if (TryGet(id, out candidate) && candidate is IProcessHandler<TRequest, TResult> handler)
                 {
-                    hasCandidate = true;
-
-                    if (candidate is IProcessHandler<TRequest, TResult> handler)
-                    {
-                        result = handler;
-                        return true;
-                    }
-                }
-                else
-                {
-                    hasCandidate = false;
+                    result = handler;
+                    return true;
                 }
 
                 result = null;
@@ -419,19 +392,6 @@ namespace EncosyTower.Processing
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private Hub<TNewScope> CreateInvalid<TNewScope>(TNewScope scope)
                 => new(scope, null, _registries, true);
-
-#if __ENCOSY_VALIDATION__
-            private bool Validate(ILogger logger)
-            {
-                if (_map != null)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogErrorInvalidHub<TScope>(logger);
-                return false;
-            }
-#endif
         }
     }
 }

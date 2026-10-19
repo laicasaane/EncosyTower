@@ -5,13 +5,10 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Logging;
 using EncosyTower.Processing.Internals;
-using EncosyTower.Types;
 using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
-using ILogger = EncosyTower.Logging.ILogger;
 
 namespace EncosyTower.Processing
 {
@@ -158,7 +155,7 @@ namespace EncosyTower.Processing
 
                 return new InvalidOperationException(
                     $"Cannot find any process handler for the request `{typeof(TRequest)}` which returns " +
-                    $"a UnityTask<{typeof(TResult)}>" +
+                    $"a UnityTask<{typeof(TResult)}> " +
                     $"inside the scope `{typeof(TScope)}({scope})`"
                 );
             }
@@ -182,168 +179,22 @@ namespace EncosyTower.Processing
         internal static void ThrowStateUnavailable(Type stateType)
             => throw new InvalidOperationException(GetStateUnavailableMessage(stateType));
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorInvalidHub<TScope>(ILogger logger)
+        internal static void ThrowIfHubNotCreated<TScope>([DoesNotReturnIf(false)] bool created, Type hubType)
         {
-            (logger ?? DevLogger.Default).LogError(
-                "Processor.Hub must be retrieved via " +
-                $"`{nameof(Processor)}.{nameof(Processor.Scope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorInvalidHub<TScope, TState>(ILogger logger)
-            where TState : class
-        {
-            (logger ?? DevLogger.Default).LogError(
-                "Processor.Hub must be retrieved via " +
-                $"`{nameof(Processor)}.{nameof(Processor.Scope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorHandlerNotFound<TScope, TRequest>(
-              TScope scope
-            , bool hasCandidate
-            , IProcessHandler<TRequest> _
-            , ILogger logger
-        )
-        {
-            var target = logger ?? DevLogger.Default;
-
-            if (hasCandidate)
+            if (created == false)
             {
-                target.LogError(
-                    $"Found a candidate process handler for the request `{typeof(TRequest)}` " +
-                    $"inside the scope `{typeof(TScope)}({scope})`, " +
-                    $"but it has an invalid type."
-                );
-                return;
+                throw CreateException(hubType);
             }
 
-            target.LogError(
-                $"Cannot find any process handler for the request `{typeof(TRequest)}` " +
-                $"inside the scope `{typeof(TScope)}({scope})`"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorHandlerNotFound<TScope, TRequest, TResult>(
-              TScope scope
-            , bool hasCandidate
-            , IProcessHandler<TRequest, TResult> _
-            , ILogger logger
-        )
-        {
-            var target = logger ?? DevLogger.Default;
-
-            if (hasCandidate)
-            {
-                target.LogError(
-                    $"Found a candidate process handler for the request `{typeof(TRequest)}` " +
-                    $"inside the scope `{typeof(TScope)}({scope})`, " +
-                    $"but it has an invalid type."
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type hubType)
+                => new(
+                    $"{hubType} is not created. " +
+                    "Get a hub from Processor.Global(), Processor.Scope() or Processor.UnityScope()."
                 );
-                return;
-            }
-
-            target.LogError(
-                $"Cannot find any process handler for the request `{typeof(TRequest)}` " +
-                $"which returns a `{typeof(TResult)}` " +
-                $"inside the scope `{typeof(TScope)}({scope})`"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorHandlerNotFound<TScope, TRequest>(
-              TScope scope
-            , bool hasCandidate
-            , IAsyncProcessHandler<TRequest> _
-            , ILogger logger
-        )
-        {
-            var target = logger ?? DevLogger.Default;
-
-            if (hasCandidate)
-            {
-                target.LogError(
-                    $"Found a candidate process handler for the request `{typeof(TRequest)}` " +
-                    $"inside the scope `{typeof(TScope)}({scope})`, " +
-                    $"but it has an invalid type."
-                );
-                return;
-            }
-
-            target.LogError(
-                $"Cannot find any process handler for the request `{typeof(TRequest)}` which returns " +
-                $"a UnityTask " +
-                $"inside the scope `{typeof(TScope)}({scope})`"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorHandlerNotFound<TScope, TRequest, TResult>(
-              TScope scope
-            , bool hasCandidate
-            , IAsyncProcessHandler<TRequest, TResult> _
-            , ILogger logger
-        )
-        {
-            var target = logger ?? DevLogger.Default;
-
-            if (hasCandidate)
-            {
-                target.LogError(
-                    $"Found a candidate process handler for the request `{typeof(TRequest)}` " +
-                    $"inside the scope `{typeof(TScope)}({scope})`, " +
-                    $"but it has an invalid type."
-                );
-                return;
-            }
-
-            target.LogError(
-                $"Cannot find any process handler for the request `{typeof(TRequest)}` which returns " +
-                $"a UnityTask<{typeof(TResult)}>" +
-                $"inside the scope `{typeof(TScope)}({scope})`"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogWarningHandlerAlreadyRegistered(IProcessHandler handler, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogWarning(
-                $"A process handler of type {handler.Id.ToType()} has already been registered."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PROCESSING_CHECKS)]
-        internal static void LogErrorStateUnavailable(Type stateType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(GetStateUnavailableMessage(stateType));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

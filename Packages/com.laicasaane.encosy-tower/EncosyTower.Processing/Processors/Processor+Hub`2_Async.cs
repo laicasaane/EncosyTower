@@ -1,12 +1,17 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS
 #define __ENCOSY_NO_VALIDATION__
-#else
+#elif (UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS
 #define __ENCOSY_VALIDATION__
+#elif (ENCOSY_RUNTIME_CHECKS || ENCOSY_PROCESSING_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS
+#define __ENCOSY_VALIDATION__
+#else
+#define __ENCOSY_NO_VALIDATION__
 #endif
 
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Common;
 using EncosyTower.Logging;
 using EncosyTower.Tasks;
 
@@ -19,10 +24,14 @@ namespace EncosyTower.Processing
         public readonly partial struct Hub<TScope, TState>
             where TState : class
         {
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Func<TState, TRequest, UnityTask> process
                 , ILogger logger = null
             )
@@ -31,24 +40,19 @@ namespace EncosyTower.Processing
 #endif
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope, TState>));
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
-
-                return _hub.Register(
-                    new Internals.Async.AsyncProcessByStateHandler<TState, TRequest>(State, process),
-                    logger
-                );
+                return _hub.Register(new Internals.Async.AsyncProcessByStateHandler<TState, TRequest>(State, process));
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                 [NotNull] Func<
                       TState
                     , TRequest
@@ -61,24 +65,21 @@ namespace EncosyTower.Processing
 #endif
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
-
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope, TState>));
 
                 return _hub.Register(
-                    new Internals.Async.AsyncProcessByStateHandler<TState, TRequest, TResult>(State, process),
-                    logger
+                      new Internals.Async.AsyncProcessByStateHandler<TState, TRequest, TResult>(State, process)
                 );
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Func<
                       TState
                     , TRequest
@@ -92,27 +93,21 @@ namespace EncosyTower.Processing
 #endif
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
-
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope, TState>));
 
                 return _hub.Register(
-                    new Internals.Async.ContextualAsyncProcessByStateHandler<
-                        TState,
-                        TRequest
-                    >(State, process),
-                    logger
+                      new Internals.Async.ContextualAsyncProcessByStateHandler<TState, TRequest>(State, process)
                 );
             }
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                 [NotNull] Func<
                       TState
                     , TRequest
@@ -126,17 +121,13 @@ namespace EncosyTower.Processing
 #endif
             {
                 DebuggingThrowHelper.ThrowIfNull(process);
-
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
+                ThrowHelper.ThrowIfHubNotCreated<TScope>(IsCreated, typeof(Hub<TScope, TState>));
 
                 return _hub.Register(
-                    new Internals.Async.ContextualAsyncProcessByStateHandler<TState, TRequest, TResult>(State, process),
-                    logger
+                      new Internals.Async.ContextualAsyncProcessByStateHandler<TState, TRequest, TResult>(
+                            State
+                          , process
+                      )
                 );
             }
 

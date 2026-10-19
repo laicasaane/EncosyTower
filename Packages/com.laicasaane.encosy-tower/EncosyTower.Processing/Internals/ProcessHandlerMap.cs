@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Logging;
+using EncosyTower.Common;
 using EncosyTower.Types;
 
 using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
@@ -40,21 +40,20 @@ namespace EncosyTower.Processing.Internals
         /// </summary>
         internal Processor Owner { get; }
 
-        public ProcessRegistry Register([NotNull] IProcessHandler handler, ILogger logger = null)
+        public Result<ProcessRegistry, ProcessError> Register([NotNull] IProcessHandler handler)
         {
             DebuggingThrowHelper.ThrowIfNull(handler);
 
-            if (_map.ContainsKey(handler.Id))
-            {
-                ThrowHelper.LogWarningHandlerAlreadyRegistered(handler, logger);
-                return default;
-            }
-
             var id = handler.Id;
+
+            if (_map.ContainsKey(id))
+            {
+                return ProcessError.CreateAlreadyRegistered(handler);
+            }
 
             _map[id] = handler;
 
-            return new(this, handler);
+            return new ProcessRegistry(this, handler);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

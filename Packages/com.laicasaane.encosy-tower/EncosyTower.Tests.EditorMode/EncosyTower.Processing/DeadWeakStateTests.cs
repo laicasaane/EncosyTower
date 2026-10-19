@@ -50,8 +50,8 @@ namespace EncosyTower.Tests.Processing
                 ProcessingContext.Default(logger: logger)
             );
 
-            Assert.IsFalse(syncResult.TryGetValue(out _));
-            Assert.IsFalse(contextualSyncVoid);
+            ProcessErrorAssert.IsStateUnavailable(ProcessErrorAssert.GetError(syncResult), typeof(State));
+            ProcessErrorAssert.IsStateUnavailable(ProcessErrorAssert.GetError(contextualSyncVoid), typeof(State));
             Assert.Throws<InvalidOperationException>(
                 () => hub.Process<ContextualSyncResultRequest, int>(new ContextualSyncResultRequest())
             );
@@ -68,14 +68,14 @@ namespace EncosyTower.Tests.Processing
                 ProcessingContext.Default(logger: logger)
             );
 
-            Assert.IsFalse(asyncResult.TryGetValue(out _));
-            Assert.IsFalse(contextualAsyncVoid);
+            ProcessErrorAssert.IsStateUnavailable(ProcessErrorAssert.GetError(asyncResult), typeof(State));
+            ProcessErrorAssert.IsStateUnavailable(ProcessErrorAssert.GetError(contextualAsyncVoid), typeof(State));
             Assert.Throws<InvalidOperationException>(
                 () => hub.ProcessAsync<ContextualAsyncResultRequest, int>(new ContextualAsyncResultRequest())
             );
 
-            Assert.AreEqual(4, logger.LogEntryCount);
-            StringAssert.Contains("is not alive anymore", logger.ToString());
+            Assert.AreEqual(0, logger.LogEntryCount);
+            StringAssert.Contains("is not alive anymore", ProcessErrorAssert.GetError(syncResult).ToMessage());
             LogAssert.NoUnexpectedReceived();
 
             Assert.IsFalse(hub.Unregister((TypeId)Type<Action<SyncVoidRequest, ProcessingContext>>.Id));
@@ -134,7 +134,7 @@ namespace EncosyTower.Tests.Processing
             var replacementCount = 0;
             Action<RegistryRequest> original = static _ => { };
             Action<RegistryRequest> replacement = _ => replacementCount++;
-            var oldRegistry = hub.Register(original);
+            var oldRegistry = hub.Register(original).GetValueOrThrow();
             var originalHandler = GetOnlyRegisteredHandler(hub);
 
             oldRegistry.Unregister();
@@ -149,7 +149,7 @@ namespace EncosyTower.Tests.Processing
         }
 
         [Test]
-        public async Task RegistrationWaitCancellation_UsesDirectAndTryContracts()
+        public async Task RegistrationWaitCancellation_PropagatesOnDirectAndTryContracts()
         {
             using var processor = new Processor();
             using var cancellation = new CancellationTokenSource();
@@ -157,19 +157,33 @@ namespace EncosyTower.Tests.Processing
 
             cancellation.Cancel();
 
-            Assert.IsFalse(
+            var tryPropagated = false;
+
+            try
+            {
                 await hub.TryProcessAsync(
                     new TryWaitCancellationRequest(),
                     ProcessingContext.WaitForHandler(token: cancellation.Token)
-                )
-            );
+                );
+            }
+            catch (OperationCanceledException)
+            {
+                tryPropagated = true;
+            }
 
-            var result = await hub.TryProcessAsync<TryWaitResultCancellationRequest, int>(
-                new TryWaitResultCancellationRequest(),
-                ProcessingContext.WaitForHandler(token: cancellation.Token)
-            );
+            var tryResultPropagated = false;
 
-            Assert.IsFalse(result.TryGetValue(out _));
+            try
+            {
+                await hub.TryProcessAsync<TryWaitResultCancellationRequest, int>(
+                    new TryWaitResultCancellationRequest(),
+                    ProcessingContext.WaitForHandler(token: cancellation.Token)
+                );
+            }
+            catch (OperationCanceledException)
+            {
+                tryResultPropagated = true;
+            }
 
             var cancellationPropagated = false;
 
@@ -185,6 +199,8 @@ namespace EncosyTower.Tests.Processing
                 cancellationPropagated = true;
             }
 
+            Assert.IsTrue(tryPropagated);
+            Assert.IsTrue(tryResultPropagated);
             Assert.IsTrue(cancellationPropagated);
             LogAssert.NoUnexpectedReceived();
         }
@@ -212,7 +228,7 @@ namespace EncosyTower.Tests.Processing
             {
                 await hub.TryProcessAsync(
                     new StartedCancellationRequest(),
-                    ProcessingContext.DropIfNoHandler(warnNoHandler: false, token: cancellation.Token)
+                    ProcessingContext.DropIfNoHandler(token: cancellation.Token)
                 );
             }
             catch (OperationCanceledException)
@@ -226,7 +242,7 @@ namespace EncosyTower.Tests.Processing
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static TResult RunOnShortLivedThread<TResult>(Func<TResult> action)
+        internal static TResult RunOnShortLivedThread<TResult>(Func<TResult> action)
         {
             TResult result = default;
             Exception failure = null;
@@ -352,7 +368,7 @@ namespace EncosyTower.Tests.Processing
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CollectGarbage(params WeakReference[] references)
+        internal static void CollectGarbage(params WeakReference[] references)
         {
             for (var attempt = 0; attempt < 10; attempt++)
             {

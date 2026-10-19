@@ -251,7 +251,7 @@ public sealed class ProcessingRequestGeneratorTests
         Assert.AreEqual(16, methods.Count(HasHubParameter));
         StringAssert.Contains(run.CombinedSource, "g__S.Func<");
         StringAssert.Contains(run.CombinedSource, "g__ETT.UnityTask<int>");
-        StringAssert.Contains(run.CombinedSource, "g__ETC.Option<int>");
+        StringAssert.Contains(run.CombinedSource, "g__ETC.Result<int, g__ETP.ProcessError>");
         StringAssert.Contains(run.CombinedSource, "ProcessAsync<Async, int>");
         StringAssert.Contains(run.CombinedSource, "TryProcessAsync<Async, int>");
         StringAssert.Contains(

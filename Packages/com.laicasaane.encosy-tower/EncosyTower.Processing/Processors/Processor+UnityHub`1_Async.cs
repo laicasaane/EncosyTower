@@ -12,8 +12,12 @@ namespace EncosyTower.Processing
         public readonly partial struct UnityHub<TScope>
             where TScope : UnityEngine.Object
         {
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Func<TRequest, UnityTask> process
                 , ILogger logger = null
             )
@@ -22,8 +26,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, UnityTask<TResult>> process
                 , ILogger logger = null
             )
@@ -32,8 +40,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                   [NotNull] Func<TRequest, ProcessingContext, UnityTask> process
                 , ILogger logger = null
             )
@@ -42,8 +54,12 @@ namespace EncosyTower.Processing
 #endif
                 => _hub.Register(process, logger);
 
+            /// <param name="logger">Unused; kept for source compatibility.</param>
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProcessRegistry Register<TRequest, TResult>(
+            public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                   [NotNull] Func<TRequest, ProcessingContext, UnityTask<TResult>> process
                 , ILogger logger = null
             )
@@ -56,8 +72,14 @@ namespace EncosyTower.Processing
             public UnityTask ProcessAsync<TRequest>(TRequest request, ProcessingContext context = default)
                 => _hub.ProcessAsync(request, context);
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public UnityTask<bool> TryProcessAsync<TRequest>(TRequest request, ProcessingContext context = default)
+            public UnityTask<Success<ProcessError>> TryProcessAsync<TRequest>(
+                  TRequest request
+                , ProcessingContext context = default
+            )
                 => _hub.TryProcessAsync(request, context);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,8 +89,11 @@ namespace EncosyTower.Processing
             )
                 => _hub.ProcessAsync<TRequest, TResult>(request, context);
 
+            /// <remarks>
+            /// Returns the failure instead of logging it; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public UnityTask<Option<TResult>> TryProcessAsync<TRequest, TResult>(
+            public UnityTask<Result<TResult, ProcessError>> TryProcessAsync<TRequest, TResult>(
                   TRequest request
                 , ProcessingContext context = default
             )

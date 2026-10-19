@@ -24,73 +24,73 @@ namespace EncosyTower.Tests.Processing
             var waitFactory = ProcessingContext.WaitForHandler();
 
             Assert.AreEqual(ProcessingStrategy.DropIfNoHandler, defaultValue.Strategy);
-            Assert.IsFalse(defaultValue.WarnNoHandler);
             Assert.AreSame(DevLogger.Default, defaultValue.Logger);
             Assert.AreEqual(default(CancellationToken), defaultValue.Token);
 
             Assert.AreEqual(ProcessingStrategy.DropIfNoHandler, defaultFactory.Strategy);
-            Assert.IsTrue(defaultFactory.WarnNoHandler);
             Assert.AreSame(DevLogger.Default, defaultFactory.Logger);
             Assert.AreEqual(default(CancellationToken), defaultFactory.Token);
 
             Assert.AreEqual(ProcessingStrategy.DropIfNoHandler, dropFactory.Strategy);
-            Assert.IsTrue(dropFactory.WarnNoHandler);
             Assert.AreSame(DevLogger.Default, dropFactory.Logger);
             Assert.AreEqual(default(CancellationToken), dropFactory.Token);
 
             Assert.AreEqual(ProcessingStrategy.WaitForHandler, waitFactory.Strategy);
-            Assert.IsFalse(waitFactory.WarnNoHandler);
             Assert.AreSame(DevLogger.Default, waitFactory.Logger);
             Assert.AreEqual(default(CancellationToken), waitFactory.Token);
 
             AssertContextPreservesValues(
-                ProcessingContext.Default(false, logger, default, cancellation.Token),
+                ProcessingContext.Default(logger: logger, callerInfo: default, token: cancellation.Token),
                 ProcessingStrategy.DropIfNoHandler,
-                false,
                 logger,
                 cancellation.Token
             );
             AssertContextPreservesValues(
-                ProcessingContext.DropIfNoHandler(false, logger, default, cancellation.Token),
+                ProcessingContext.DropIfNoHandler(logger: logger, callerInfo: default, token: cancellation.Token),
                 ProcessingStrategy.DropIfNoHandler,
-                false,
                 logger,
                 cancellation.Token
             );
             AssertContextPreservesValues(
                 ProcessingContext.WaitForHandler(logger, default, cancellation.Token),
                 ProcessingStrategy.WaitForHandler,
-                false,
                 logger,
                 cancellation.Token
             );
         }
 
         [Test]
-        public void MissingTry_OmittedContextIsSilentAndDefaultFactoryUsesSuppliedLogger()
+        public void MissingTry_ReturnsHandlerNotFoundWithoutLogging()
         {
             using var processor = new Processor();
             var hub = processor.Global();
 
-            Assert.IsFalse(hub.TryProcess(new SyncRequest(), context: default));
+            ProcessErrorAssert.IsNotFound<GlobalScope, SyncRequest>(
+                  hub.TryProcess(new SyncRequest(), context: default)
+            );
             LogAssert.NoUnexpectedReceived();
 
             var logger = new StringBuilderLogger();
 
-            Assert.IsFalse(hub.TryProcess(new SyncRequest(), ProcessingContext.Default(logger: logger)));
-            Assert.AreEqual(1, logger.LogEntryCount);
-            StringAssert.Contains("Cannot find any process handler", logger.ToString());
+            ProcessErrorAssert.IsNotFound<GlobalScope, SyncRequest>(
+                  hub.TryProcess(new SyncRequest(), ProcessingContext.Default(logger: logger))
+            );
+            Assert.AreEqual(0, logger.LogEntryCount);
             LogAssert.NoUnexpectedReceived();
         }
 
         [Test]
-        public void InvalidHubAndDuplicateRegistration_UseOnlySuppliedLogger()
+        public void InvalidHubAndDuplicateRegistration_ThrowOrReturnWithoutLogging()
         {
             var invalidLogger = new StringBuilderLogger();
+
+#if !DISABLE_ENCOSY_CHECKS
             var invalidHub = default(Processor.Hub<GlobalScope>);
 
-            Assert.IsFalse(invalidHub.Unregister(default(TypeId), invalidLogger));
-            Assert.AreEqual(1, invalidLogger.LogEntryCount);
+            Assert.Throws<InvalidOperationException>(() => invalidHub.Unregister(default(TypeId), invalidLogger));
+#endif
+
+            Assert.AreEqual(0, invalidLogger.LogEntryCount);
             LogAssert.NoUnexpectedReceived();
 
             using var processor = new Processor();
@@ -99,11 +99,14 @@ namespace EncosyTower.Tests.Processing
             Action<SyncRequest> first = static _ => { };
             Action<SyncRequest> second = static _ => { };
 
-            hub.Register(first, duplicateLogger);
-            hub.Register(second, duplicateLogger);
+            Assert.IsTrue(hub.Register(first, duplicateLogger).IsSuccess);
 
-            Assert.AreEqual(1, duplicateLogger.LogEntryCount);
-            StringAssert.Contains("already been registered", duplicateLogger.ToString());
+            var duplicate = hub.Register(second, duplicateLogger);
+
+            Assert.IsTrue(duplicate.IsError);
+            Assert.IsTrue(duplicate.TryGetError(out var error));
+            StringAssert.Contains("already been registered", error.ToMessage());
+            Assert.AreEqual(0, duplicateLogger.LogEntryCount);
             LogAssert.NoUnexpectedReceived();
         }
 
@@ -131,8 +134,11 @@ namespace EncosyTower.Tests.Processing
                 logger
             );
 
-            Assert.IsTrue(hub.TryProcess(new SyncRequest(), ProcessingContext.Default(logger: logger)));
-            Assert.IsTrue(await hub.TryProcessAsync(new AsyncRequest(), ProcessingContext.Default(logger: logger)));
+            var syncResult = hub.TryProcess(new SyncRequest(), ProcessingContext.Default(logger: logger));
+            var asyncResult = await hub.TryProcessAsync(new AsyncRequest(), ProcessingContext.Default(logger: logger));
+
+            Assert.IsTrue(syncResult.IsSuccess);
+            Assert.IsTrue(asyncResult.IsSuccess);
             Assert.AreEqual(1, syncCount);
             Assert.AreEqual(1, asyncCount);
             Assert.AreEqual(0, logger.LogEntryCount);
@@ -150,7 +156,6 @@ namespace EncosyTower.Tests.Processing
             var logger = new StringBuilderLogger();
             var context = new ProcessingContext() {
                 Strategy = ProcessingStrategy.WaitForHandler,
-                WarnNoHandler = true,
                 Logger = logger,
                 Token = cancellation.Token,
             };
@@ -160,7 +165,7 @@ namespace EncosyTower.Tests.Processing
                 (_, actual) => observed = actual
             );
             hub.Process(new StatelessSyncVoidContextRequest(), context);
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             hub.Register<StatelessSyncResultContextRequest, int>(
                 (_, actual) =>
@@ -173,13 +178,13 @@ namespace EncosyTower.Tests.Processing
                 1,
                 hub.Process<StatelessSyncResultContextRequest, int>(new StatelessSyncResultContextRequest(), context)
             );
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             statefulHub.Register<StatefulSyncVoidContextRequest>(
                 (_, _, actual) => observed = actual
             );
             hub.Process(new StatefulSyncVoidContextRequest(), context);
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             statefulHub.Register<StatefulSyncResultContextRequest, int>(
                 (_, _, actual) =>
@@ -192,7 +197,7 @@ namespace EncosyTower.Tests.Processing
                 2,
                 hub.Process<StatefulSyncResultContextRequest, int>(new StatefulSyncResultContextRequest(), context)
             );
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             hub.Register<StatelessAsyncVoidContextRequest>(
                 (_, actual) =>
@@ -202,7 +207,7 @@ namespace EncosyTower.Tests.Processing
                 }
             );
             await hub.ProcessAsync(new StatelessAsyncVoidContextRequest(), context);
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             hub.Register<StatelessAsyncResultContextRequest, int>(
                 (_, actual) =>
@@ -218,7 +223,7 @@ namespace EncosyTower.Tests.Processing
                     context
                 )
             );
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             statefulHub.Register<StatefulAsyncVoidContextRequest>(
                 (_, _, actual) =>
@@ -228,7 +233,7 @@ namespace EncosyTower.Tests.Processing
                 }
             );
             await hub.ProcessAsync(new StatefulAsyncVoidContextRequest(), context);
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             statefulHub.Register<StatefulAsyncResultContextRequest, int>(
                 (_, _, actual) =>
@@ -244,7 +249,7 @@ namespace EncosyTower.Tests.Processing
                     context
                 )
             );
-            AssertContextPreservesValues(observed, context.Strategy, context.WarnNoHandler, logger, context.Token);
+            AssertContextPreservesValues(observed, context.Strategy, logger, context.Token);
 
             GC.KeepAlive(state);
             LogAssert.NoUnexpectedReceived();
@@ -269,7 +274,7 @@ namespace EncosyTower.Tests.Processing
             );
             cancellation.Cancel();
 
-            var context = ProcessingContext.DropIfNoHandler(warnNoHandler: false, token: cancellation.Token);
+            var context = ProcessingContext.DropIfNoHandler(token: cancellation.Token);
 
             hub.Process(new ContextFreeSyncRequest(), context);
             await hub.ProcessAsync(new ContextFreeAsyncRequest(), context);
@@ -309,12 +314,13 @@ namespace EncosyTower.Tests.Processing
             );
             Assert.IsFalse(boolResult);
 
-            Assert.IsFalse(
-                hub.TryProcess<StringRequest, string>(
-                    new StringRequest(),
-                    ProcessingContext.Default(logger: logger)
-                ).TryGetValue(out _)
+            var stringResult = hub.TryProcess<StringRequest, string>(
+                new StringRequest(),
+                ProcessingContext.Default(logger: logger)
             );
+
+            Assert.IsTrue(stringResult.IsSuccess);
+            Assert.IsNull(stringResult.GetValueOrDefault());
             Assert.IsNull(hub.Process<StringRequest, string>(new StringRequest()));
             Assert.AreEqual(0, logger.LogEntryCount);
             LogAssert.NoUnexpectedReceived();
@@ -323,13 +329,11 @@ namespace EncosyTower.Tests.Processing
         private static void AssertContextPreservesValues(
               in ProcessingContext context
             , ProcessingStrategy strategy
-            , bool warnNoHandler
             , ILogger logger
             , CancellationToken token
         )
         {
             Assert.AreEqual(strategy, context.Strategy);
-            Assert.AreEqual(warnNoHandler, context.WarnNoHandler);
             Assert.AreSame(logger, context.Logger);
             Assert.AreEqual(token, context.Token);
         }

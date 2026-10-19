@@ -50,6 +50,10 @@ internal static class ProcessingRuntimeFixture
         {
             public readonly struct Option<T> { }
 
+            public readonly struct Success<TFailure> { }
+
+            public readonly struct Result<TValue, TError> { }
+
             public readonly struct GlobalScope { }
         }
 
@@ -83,6 +87,8 @@ internal static class ProcessingRuntimeFixture
             public readonly struct ProcessingContext { }
 
             public readonly struct ProcessRegistry { }
+
+            public readonly struct ProcessError { }
 
             public sealed class SkipSourceGeneratorsForAssemblyAttribute : Attribute { }
 
@@ -119,46 +125,49 @@ internal static class ProcessingRuntimeFixture
 
                 public readonly struct Hub<TScope>
                 {
-                    public ProcessRegistry Register<TRequest>(Action<TRequest> process, ILogger logger = null)
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
+                          Action<TRequest> process
+                        , ILogger logger = null
+                    )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TRequest, ProcessingContext> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, ProcessingContext, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TRequest, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TRequest, ProcessingContext, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, ProcessingContext, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
@@ -166,7 +175,10 @@ internal static class ProcessingRuntimeFixture
 
                     public void Process<TRequest>(TRequest request, ProcessingContext context = default) { }
 
-                    public bool TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
+                    public Success<ProcessError> TryProcess<TRequest>(
+                          TRequest request
+                        , ProcessingContext context = default
+                    )
                         => default;
 
                     public TResult Process<TRequest, TResult>(
@@ -175,7 +187,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public Option<TResult> TryProcess<TRequest, TResult>(
+                    public Result<TResult, ProcessError> TryProcess<TRequest, TResult>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -187,7 +199,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public UnityTask<bool> TryProcessAsync<TRequest>(
+                    public UnityTask<Success<ProcessError>> TryProcessAsync<TRequest>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -199,7 +211,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public UnityTask<Option<TResult>> TryProcessAsync<TRequest, TResult>(
+                    public UnityTask<Result<TResult, ProcessError>> TryProcessAsync<TRequest, TResult>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -209,49 +221,49 @@ internal static class ProcessingRuntimeFixture
                 public readonly struct Hub<TScope, TState>
                     where TState : class
                 {
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TState, TRequest> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TState, TRequest, ProcessingContext> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, ProcessingContext, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TState, TRequest, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TState, TRequest, ProcessingContext, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, ProcessingContext, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
@@ -261,46 +273,49 @@ internal static class ProcessingRuntimeFixture
                 public readonly struct UnityHub<TScope>
                     where TScope : UnityEngine.Object
                 {
-                    public ProcessRegistry Register<TRequest>(Action<TRequest> process, ILogger logger = null)
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
+                          Action<TRequest> process
+                        , ILogger logger = null
+                    )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TRequest, ProcessingContext> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, ProcessingContext, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TRequest, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TRequest, ProcessingContext, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TRequest, ProcessingContext, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
@@ -308,7 +323,10 @@ internal static class ProcessingRuntimeFixture
 
                     public void Process<TRequest>(TRequest request, ProcessingContext context = default) { }
 
-                    public bool TryProcess<TRequest>(TRequest request, ProcessingContext context = default)
+                    public Success<ProcessError> TryProcess<TRequest>(
+                          TRequest request
+                        , ProcessingContext context = default
+                    )
                         => default;
 
                     public TResult Process<TRequest, TResult>(
@@ -317,7 +335,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public Option<TResult> TryProcess<TRequest, TResult>(
+                    public Result<TResult, ProcessError> TryProcess<TRequest, TResult>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -329,7 +347,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public UnityTask<bool> TryProcessAsync<TRequest>(
+                    public UnityTask<Success<ProcessError>> TryProcessAsync<TRequest>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -341,7 +359,7 @@ internal static class ProcessingRuntimeFixture
                     )
                         => default;
 
-                    public UnityTask<Option<TResult>> TryProcessAsync<TRequest, TResult>(
+                    public UnityTask<Result<TResult, ProcessError>> TryProcessAsync<TRequest, TResult>(
                           TRequest request
                         , ProcessingContext context = default
                     )
@@ -352,49 +370,49 @@ internal static class ProcessingRuntimeFixture
                     where TScope : UnityEngine.Object
                     where TState : class
                 {
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TState, TRequest> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Action<TState, TRequest, ProcessingContext> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, ProcessingContext, TResult> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TState, TRequest, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest>(
                           Func<TState, TRequest, ProcessingContext, UnityTask> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, UnityTask<TResult>> process
                         , ILogger logger = null
                     )
                         => default;
 
-                    public ProcessRegistry Register<TRequest, TResult>(
+                    public Result<ProcessRegistry, ProcessError> Register<TRequest, TResult>(
                           Func<TState, TRequest, ProcessingContext, UnityTask<TResult>> process
                         , ILogger logger = null
                     )

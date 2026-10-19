@@ -31,7 +31,6 @@ namespace EncosyTower.Tests.Processing
 
             Assert.AreEqual(23, await pending);
             Assert.AreEqual(expectedContext.Strategy, observedContext.Strategy);
-            Assert.AreEqual(expectedContext.WarnNoHandler, observedContext.WarnNoHandler);
             Assert.AreSame(logger, observedContext.Logger);
             Assert.AreEqual(expectedContext.Token, observedContext.Token);
         }

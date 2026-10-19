@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using EncosyTower.Processing;
 using EncosyTower.Tasks;
+using EncosyTower.UnityExtensions;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -69,7 +70,9 @@ namespace EncosyTower.Tests.Processing
             UnityEngine.Object.DestroyImmediate(scope);
 
             hub.Clear();
-            Assert.IsFalse(hub.TryProcess(new SyncRequest(), context: default));
+            ProcessErrorAssert.IsNotFound<UnityEntityId<GameObject>, SyncRequest>(
+                  hub.TryProcess(new SyncRequest(), context: default)
+            );
             Assert.AreEqual(0, count);
         }
 
@@ -89,10 +92,14 @@ namespace EncosyTower.Tests.Processing
 
             first.Clear();
 
-            Assert.IsFalse(first.TryProcess(new SyncRequest(), context: default));
-            Assert.IsTrue(second.TryProcess(new SyncRequest(), context: default));
-            Assert.IsFalse(await first.TryProcessAsync(new AsyncRequest(), context: default));
-            Assert.IsTrue(await second.TryProcessAsync(new AsyncRequest(), context: default));
+            ProcessErrorAssert.IsNotFound<Scope, SyncRequest>(
+                  first.TryProcess(new SyncRequest(), context: default)
+            );
+            Assert.IsTrue(second.TryProcess(new SyncRequest(), context: default).IsSuccess);
+            ProcessErrorAssert.IsNotFound<Scope, AsyncRequest>(
+                  await first.TryProcessAsync(new AsyncRequest(), context: default)
+            );
+            Assert.IsTrue((await second.TryProcessAsync(new AsyncRequest(), context: default)).IsSuccess);
             Assert.AreEqual(0, firstCount);
             Assert.AreEqual(1, secondCount);
         }
@@ -125,7 +132,7 @@ namespace EncosyTower.Tests.Processing
             var hub = processor.Global();
             var oldCount = 0;
             var replacementCount = 0;
-            var oldRegistry = hub.Register<SyncRequest>(_ => oldCount++);
+            var oldRegistry = hub.Register<SyncRequest>(_ => oldCount++).GetValueOrThrow();
 
             hub.Clear();
 

@@ -1,13 +1,14 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using EncosyTower.Common;
 using EncosyTower.Processing.Internals;
 
 using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
 namespace EncosyTower.Processing
 {
-    public readonly struct ProcessRegistry : IDisposable
+    public readonly struct ProcessRegistry : IDisposable, IIsCreated
     {
         private readonly WeakReference<ProcessHandlerMap> _map;
         private readonly WeakReference<IProcessHandler> _handler;
@@ -19,6 +20,12 @@ namespace EncosyTower.Processing
 
             _map = new WeakReference<ProcessHandlerMap>(map);
             _handler = new WeakReference<IProcessHandler>(handler);
+        }
+
+        public bool IsCreated
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _map != null && _handler != null;
         }
 
         public void Unregister()
