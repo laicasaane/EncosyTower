@@ -1,5 +1,4 @@
 using System;
-using EncosyTower.Logging;
 
 namespace EncosyTower.PubSub.Internals
 {
@@ -9,6 +8,6 @@ namespace EncosyTower.PubSub.Internals
 
     internal interface ICompressibleMessageBroker : IMessageBroker
     {
-        void Compress(ILogger logger);
+        void Compress();
     }
 }

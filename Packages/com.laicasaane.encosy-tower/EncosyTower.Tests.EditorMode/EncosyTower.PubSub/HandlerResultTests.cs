@@ -120,11 +120,7 @@ namespace EncosyTower.Tests.PubSub
             try
             {
                 cancellation.Cancel();
-                var canceledContext = PublishingContext.Default(
-                    warnNoSubscriber: false,
-                    logger: logger,
-                    token: cancellation.Token
-                );
+                var canceledContext = PublishingContext.Default(logger: logger, token: cancellation.Token);
 
                 foreach (var subscription in subscriptions)
                 {
@@ -136,7 +132,7 @@ namespace EncosyTower.Tests.PubSub
 
                 Assert.AreEqual(0, invocationCount);
 
-                var context = PublishingContext.Default(warnNoSubscriber: false, logger: logger);
+                var context = PublishingContext.Default(logger: logger);
 
                 foreach (var subscription in subscriptions)
                 {
@@ -167,7 +163,7 @@ namespace EncosyTower.Tests.PubSub
             var result = InvokeHandle(
                 GetHandler(subscription),
                 new Message(),
-                PublishingContext.Default(warnNoSubscriber: false)
+                PublishingContext.Default()
             );
             var actual = GetResultTask(result);
 

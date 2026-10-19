@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using EncosyTower.Logging;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 using NUnit.Framework;
@@ -32,8 +33,10 @@ namespace EncosyTower.Tests.PubSub
                 subscriber.Clear();
                 subscriber.Clear();
                 publisher.Publish(new FirstMessage(), SilentContext());
-                await publisher.PublishAsync(new SecondMessage(), SilentContext());
+                var result = await publisher.PublishAsync(new SecondMessage(), SilentContext());
 
+                Assert.IsTrue(result.TryGetFailure(out var error));
+                Assert.IsTrue(error.IsSubscriberNotFound);
                 Assert.AreEqual(0, synchronousCount);
                 Assert.AreEqual(0, asynchronousCount);
             }
@@ -230,7 +233,7 @@ namespace EncosyTower.Tests.PubSub
             => new(ArrayPool<UnityTask>.Shared);
 
         private static PublishingContext SilentContext()
-            => PublishingContext.Default(warnNoSubscriber: false);
+            => PublishingContext.Default(logger: new StringBuilderLogger());
 
         private static void DestroyImmediate(UnityEngine.Object obj)
         {

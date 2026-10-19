@@ -1,10 +1,11 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
 #endif
 
 using System.Runtime.CompilerServices;
+using EncosyTower.Common;
 using EncosyTower.PubSub.Internals;
 using EncosyTower.Tasks;
 
@@ -14,8 +15,11 @@ namespace EncosyTower.PubSub
     {
         partial struct Publisher<TScope>
         {
+            /// <remarks>
+            /// PubSub never logs a failure it returns; the caller logs each failed result it reacts to.
+            /// </remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public UnityTask PublishAsync<TMessage>(PublishingContext context = default)
+            public UnityTask<Success<PublishError>> PublishAsync<TMessage>(PublishingContext context = default)
 #if ENCOSY_PUBSUB_RELAX_MODE
                 where TMessage : new()
 #else
@@ -25,20 +29,23 @@ namespace EncosyTower.PubSub
                 return PublishAsync(new TMessage(), context);
             }
 
+            /// <remarks>
+            /// PubSub never logs a failure it returns; the caller logs each failed result it reacts to.
+            /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            public UnityTask PublishAsync<TMessage>(TMessage message, PublishingContext context = default)
+            public UnityTask<Success<PublishError>> PublishAsync<TMessage>(
+                  TMessage message
+                , PublishingContext context = default
+            )
 #if !ENCOSY_PUBSUB_RELAX_MODE
                 where TMessage : IMessage
 #endif
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(message, context.Logger) == false)
-                {
-                    return UnityTask.CompletedTask;
-                }
-#endif
+                ThrowHelper.ThrowIfPublisherNotCreated(_publisher != null, typeof(Publisher<TScope>));
+                ThrowHelper.ThrowIfScopeNull(Scope);
+                ThrowHelper.ThrowIfMessageNull(message);
 
                 if (_publisher._interceptorBrokers.HasInterceptors)
                 {
@@ -53,22 +60,28 @@ namespace EncosyTower.PubSub
                         , publisher.ObjectStack
                     );
 
-                    return ContinueAsync(publisher.PublishAsync(), publisher);
+                    return ContinueAsync(publisher);
                 }
                 else
                 {
                     return PublishAsyncInternal(Scope, message, context);
                 }
 
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                static async UnityTask ContinueAsync(
-                      UnityTask task
-                    , InterceptablePublisher<TScope, TMessage> publisher
+                static async UnityTask<Success<PublishError>> ContinueAsync(
+                      InterceptablePublisher<TScope, TMessage> publisher
                 )
                 {
+                    var logger = publisher.context.Logger;
+
                     try
                     {
-                        await task;
+                        await publisher.PublishAsync();
+                        return publisher._result;
+                    }
+                    catch
+                    {
+                        ThrowHelper.LogDisplacedFailure(publisher._result, logger);
+                        throw;
                     }
                     finally
                     {
@@ -80,22 +93,27 @@ namespace EncosyTower.PubSub
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-            internal UnityTask PublishCoreAsync<TMessage>(TScope scope, TMessage message, PublishingContext context)
+            internal UnityTask<Success<PublishError>> PublishCoreAsync<TMessage>(
+                  TScope scope
+                , TMessage message
+                , PublishingContext context
+            )
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(message, context.Logger) == false)
-                {
-                    return UnityTask.CompletedTask;
-                }
-#endif
+                ThrowHelper.ThrowIfPublisherNotCreated(_publisher != null, typeof(Publisher<TScope>));
+                ThrowHelper.ThrowIfScopeNull(Scope);
+                ThrowHelper.ThrowIfMessageNull(message);
 
                 return PublishAsyncInternal(scope, message, context);
             }
 
-            private UnityTask PublishAsyncInternal<TMessage>(TScope scope, TMessage message, PublishingContext context)
+            private UnityTask<Success<PublishError>> PublishAsyncInternal<TMessage>(
+                  TScope scope
+                , TMessage message
+                , PublishingContext context
+            )
             {
                 if (TryGetMessageBroker<TMessage>(_publisher, out var messageBroker)
-                    && messageBroker.TryPublishAsync(scope, message, context).TryGetValue(out var task)
+                    && messageBroker.TryGetPublishTask(scope, message, context).TryGetValue(out var task)
                 )
                 {
                     return task;
@@ -105,14 +123,9 @@ namespace EncosyTower.PubSub
                 {
                     return WaitThenPublishAsync(_publisher, scope, message, context);
                 }
-#if __ENCOSY_VALIDATION__
-                else
-                {
-                    ThrowHelper.LogWarningNoSubscriber<TScope, TMessage>(scope, context);
-                }
-#endif
 
-                return UnityTask.CompletedTask;
+                Success<PublishError> result = PublishError.CreateSubscriberNotFound<TScope, TMessage>();
+                return UnityTask.FromResult(result);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,43 +137,31 @@ namespace EncosyTower.PubSub
                 return publisher._messageBrokers.TryGet(out messageBroker);
             }
 
-            private static async UnityTask WaitThenPublishAsync<TMessage>(
+            private static async UnityTask<Success<PublishError>> WaitThenPublishAsync<TMessage>(
                   MessagePublisher publisher
                 , TScope scope
                 , TMessage message
                 , PublishingContext context
             )
             {
-                await UnityTask.WaitUntil(publisher, static x => HasHandlers(x), context.Token);
+                await UnityTask.WaitUntil(
+                      (publisher, scope)
+                    , static x => x.publisher._messageBrokers.TryGet(out MessageBroker<TScope, TMessage> scopedBroker)
+                        && scopedBroker.HasHandlersFor(x.scope)
+                    , context.Token
+                );
 
-                if (context.Token.IsCancellationRequested)
-                {
-                    return;
-                }
+                context.Token.ThrowIfCancellationRequested();
 
                 if (TryGetMessageBroker<TMessage>(publisher, out var broker)
-                    && broker.TryPublishAsync(scope, message, context).TryGetValue(out var task)
+                    && broker.TryGetPublishTask(scope, message, context).TryGetValue(out var task)
                 )
                 {
-                    await task;
-                    return;
+                    return await task;
                 }
 
-#if __ENCOSY_VALIDATION__
-
-                {
-                    ThrowHelper.LogErrorFailedWaitThenPublish<TScope, TMessage>(scope, context);
-                }
-#endif
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                static bool HasHandlers(MessagePublisher publisher)
-                {
-                    return publisher._messageBrokers.TryGet(out MessageBroker<TScope, TMessage> broker)
-                        && broker.HasHandlers;
-                }
+                return PublishError.CreateSubscriberNotFound<TScope, TMessage>();
             }
-
         }
     }
 }

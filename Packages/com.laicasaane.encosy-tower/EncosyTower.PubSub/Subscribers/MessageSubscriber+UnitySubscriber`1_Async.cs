@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -34,12 +34,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return Subscription<TMessage>.None;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 return _subscriber.Subscribe<TMessage>(handler, order, logger);
             }
@@ -58,12 +53,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return Subscription<TMessage>.None;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 return _subscriber.Subscribe(handler, order, logger);
             }
@@ -83,12 +73,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 _subscriber.Subscribe<TMessage>(handler, unsubscribeToken, order, logger);
             }
@@ -108,12 +93,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 _subscriber.Subscribe(handler, unsubscribeToken, order, logger);
             }
@@ -132,12 +112,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return Subscription<TMessage>.None;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 return _subscriber.Subscribe<TMessage>(handler, order, logger);
             }
@@ -156,12 +131,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return Subscription<TMessage>.None;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 return _subscriber.Subscribe(handler, order, logger);
             }
@@ -181,12 +151,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 _subscriber.Subscribe<TMessage>(handler, unsubscribeToken, order, logger);
             }
@@ -206,12 +171,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope>));
 
                 _subscriber.Subscribe(handler, unsubscribeToken, order, logger);
             }

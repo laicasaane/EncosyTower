@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using EncosyTower.Logging;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 using NUnit.Framework;
@@ -119,7 +120,7 @@ namespace EncosyTower.Tests.PubSub
         }
 
         private static PublishingContext SilentContext()
-            => PublishingContext.Default(warnNoSubscriber: false);
+            => PublishingContext.Default(logger: new StringBuilderLogger());
 
         private readonly struct Message : IMessage
         {

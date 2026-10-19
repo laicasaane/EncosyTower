@@ -52,7 +52,7 @@ namespace EncosyTower.Tests.PubSub
                         .Subscribe<BothMessage>(() => bothCount++)
                 );
 
-                var context = PublishingContext.Default(warnNoSubscriber: false);
+                var context = PublishingContext.Default();
                 messenger.Publisher.Global().Publish(new SyncMessage(), context);
                 messenger.Publisher.Global().Publish(new BothMessage(), context);
 

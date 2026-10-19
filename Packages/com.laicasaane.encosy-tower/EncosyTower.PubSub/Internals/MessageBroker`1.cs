@@ -1,18 +1,12 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using EncosyTower.Tasks;
 using UnityEngine.Pool;
 
@@ -46,42 +40,31 @@ namespace EncosyTower.PubSub.Internals
 
         public bool IsCached => _refCount > 0;
 
-        public Subscription<TMessage> Subscribe([NotNull] IHandler<TMessage> handler, int order, ILogger logger)
+        public Subscription<TMessage> Subscribe([NotNull] IHandler<TMessage> handler, int order)
         {
             DebuggingThrowHelper.ThrowIfNull(handler);
 
             lock (_orderToHandlerMap)
             {
-#if __ENCOSY_VALIDATION__
-                try
-#endif
+                var orderToHandlerMap = _orderToHandlerMap;
+                var ordering = _ordering;
+
+                if (ordering.Contains(order) == false)
                 {
-                    var orderToHandlerMap = _orderToHandlerMap;
-                    var ordering = _ordering;
-
-                    if (ordering.Contains(order) == false)
-                    {
-                        ordering.Add(order);
-                        ordering.Sort(Comparer<int>.Default);
-                    }
-
-                    if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false)
-                    {
-                        handlerMap = new ArrayMap<DelegateId, IHandler<TMessage>>();
-                        orderToHandlerMap.Add(order, handlerMap);
-                    }
-
-                    if (handlerMap.TryAdd(handler.Id, handler))
-                    {
-                        return new Subscription<TMessage>(this, handler, order);
-                    }
+                    ordering.Add(order);
+                    ordering.Sort(Comparer<int>.Default);
                 }
-#if __ENCOSY_VALIDATION__
-                catch (Exception ex)
+
+                if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false)
                 {
-                    ThrowHelper.LogException(logger, ex);
+                    handlerMap = new ArrayMap<DelegateId, IHandler<TMessage>>();
+                    orderToHandlerMap.Add(order, handlerMap);
                 }
-#endif
+
+                if (handlerMap.TryAdd(handler.Id, handler))
+                {
+                    return new Subscription<TMessage>(this, handler, order);
+                }
 
                 return Subscription<TMessage>.None;
             }
@@ -156,126 +139,97 @@ namespace EncosyTower.PubSub.Internals
         /// <summary>
         /// Remove empty handler groups to optimize performance.
         /// </summary>
-        public void Compress(ILogger logger)
+        public void Compress()
         {
             lock (_orderToHandlerMap)
             {
-#if __ENCOSY_VALIDATION__
-                try
-#endif
-                {
-                    var orderToHandlerMap = _orderToHandlerMap;
-                    var ordering = _ordering;
-                    var orders = ordering.AsListFast().AsSpan();
+                var orderToHandlerMap = _orderToHandlerMap;
+                var ordering = _ordering;
+                var orders = ordering.AsListFast().AsSpan();
 
-                    for (var i = orders.Length - 1; i >= 0; i--)
+                for (var i = orders.Length - 1; i >= 0; i--)
+                {
+                    var order = orders[i];
+
+                    if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false)
                     {
-                        var order = orders[i];
-
-                        if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false)
-                        {
-                            continue;
-                        }
-
-                        if (handlerMap.Count > 0)
-                        {
-                            continue;
-                        }
-
-                        orderToHandlerMap.Remove(order);
-                        ordering.RemoveAt(i);
+                        continue;
                     }
+
+                    if (handlerMap.Count > 0)
+                    {
+                        continue;
+                    }
+
+                    orderToHandlerMap.Remove(order);
+                    ordering.RemoveAt(i);
                 }
-#if __ENCOSY_VALIDATION__
-                catch (Exception ex)
-                {
-                    ThrowHelper.LogException(logger, ex);
-                }
-#endif
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Option<UnityTask> TryPublishAsync(TMessage message, PublishingContext context)
+        public Option<UnityTask<Success<PublishError>>> TryGetPublishTask(TMessage message, PublishingContext context)
         {
             return HasHandlers ? PublishAsync(message, context) : Option.None;
         }
 
-        private async UnityTask PublishAsync(TMessage message, PublishingContext context)
+        private async UnityTask<Success<PublishError>> PublishAsync(TMessage message, PublishingContext context)
         {
-            var handlerGroupList = GetHandlerGroupList(context.Logger);
+            var handlerGroupList = GetHandlerGroupList();
+            Success<PublishError> result = Success.Yes;
 
-#if __ENCOSY_VALIDATION__
             try
-#endif
             {
+                CollectHandlerGroups(handlerGroupList);
+
                 var taskArrayPool = TaskArrayPool;
                 var handlerGroups = handlerGroupList.AsListFast();
                 var length = handlerGroups.Count;
+                var token = context.Token;
+
+                token.ThrowIfCancellationRequested();
 
                 for (var i = 0; i < length; i++)
                 {
-                    if (context.Token.IsCancellationRequested)
-                    {
-                        break;
-                    }
+                    var groupResult = await PublishAsync(handlerGroups[i], message, context, taskArrayPool);
 
-                    await PublishAsync(handlerGroups[i], message, context, taskArrayPool);
-
-                    if (context.Token.IsCancellationRequested)
-                    {
-                        break;
-                    }
+                    result = PublishError.Merge(result, groupResult);
+                    token.ThrowIfCancellationRequested();
                 }
+
+                return result;
             }
-#if __ENCOSY_VALIDATION__
-            catch (Exception ex)
+            catch (OperationCanceledException)
             {
-                ThrowHelper.LogException(context.Logger, ex);
+                ThrowHelper.LogDisplacedFailure(result, context.Logger);
+                throw;
             }
             finally
-#endif
             {
                 Dispose(handlerGroupList);
             }
         }
 
-        private List<HandlerGroup> GetHandlerGroupList(ILogger logger)
+        private void CollectHandlerGroups(List<HandlerGroup> handlerGroupList)
         {
             var orderToHandlerMap = _orderToHandlerMap;
             var orders = _ordering.AsListFast().AsSpan();
-            var handlerGroupList = GetHandlerGroupList();
 
-#if __ENCOSY_VALIDATION__
-            try
-#endif
+            for (var i = orders.Length - 1; i >= 0; i--)
             {
-                for (var i = orders.Length - 1; i >= 0; i--)
+                var order = orders[i];
+
+                if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false || handlerMap.Count < 1)
                 {
-                    var order = orders[i];
-
-                    if (orderToHandlerMap.TryGetValue(order, out var handlerMap) == false
-                        || handlerMap.Count < 1
-                    )
-                    {
-                        continue;
-                    }
-
-                    var handlerArray = handlerMap.GetValues();
-                    var handlerList = GetHandlerList();
-                    var handlerSpan = handlerList.AsListFast().AddReplicateNoInit(handlerArray.Length);
-                    handlerArray.CopyTo(handlerSpan);
-                    handlerGroupList.Add(new HandlerGroup(order, handlerList));
+                    continue;
                 }
-            }
-#if __ENCOSY_VALIDATION__
-            catch (Exception ex)
-            {
-                ThrowHelper.LogException(logger, ex);
-            }
-#endif
 
-            return handlerGroupList;
+                var handlerArray = handlerMap.GetValues();
+                var handlerList = GetHandlerList();
+                var handlerSpan = handlerList.AsListFast().AddReplicateNoInit(handlerArray.Length);
+                handlerArray.CopyTo(handlerSpan);
+                handlerGroupList.Add(new HandlerGroup(order, handlerList));
+            }
         }
 
         private static void Dispose(List<HandlerGroup> handlerGroupList)
@@ -303,7 +257,7 @@ namespace EncosyTower.PubSub.Internals
             Release(handlerGroupList);
         }
 
-        private async UnityTask PublishAsync(
+        private async UnityTask<Success<PublishError>> PublishAsync(
               HandlerGroup handlerGroup
             , TMessage message
             , PublishingContext context
@@ -311,29 +265,53 @@ namespace EncosyTower.PubSub.Internals
         )
         {
             var handlerList = handlerGroup.Handlers.AsListFast();
+            var count = handlerList.Count;
 
-            if (handlerList.Count < 1)
+            if (count < 1)
             {
-                return;
+                return Success.Yes;
             }
 
-            var tasks = taskArrayPool.Rent(handlerList.Count);
+            var resultPool = ArrayPool<Success<PublishError>>.Shared;
+            var tasks = taskArrayPool.Rent(count);
+            var results = resultPool.Rent(count);
+            Success<PublishError> failure = Success.Yes;
+            ExceptionDispatchInfo cancelled = null;
 
             try
             {
-                GetTasks(handlerList.List, handlerGroup.Order, message, context, tasks);
+                GetTasks(handlerList.List, handlerGroup.Order, message, context, tasks, results, ref cancelled);
 
-                await UnityTask.WhenAll(tasks, handlerList.Count);
+                for (var i = 0; i < count; i++)
+                {
+                    failure = PublishError.Merge(failure, results[i]);
+
+                    try
+                    {
+                        await tasks[i];
+                    }
+                    catch (OperationCanceledException ex)
+                    {
+                        cancelled ??= ExceptionDispatchInfo.Capture(ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        failure = PublishError.Merge(failure, PublishError.CreateHandlerFaulted(ex));
+                    }
+                }
+
+                if (cancelled != null)
+                {
+                    ThrowHelper.LogDisplacedFailure(failure, context.Logger);
+                    cancelled.Throw();
+                }
+
+                return failure;
             }
-#if __ENCOSY_VALIDATION__
-            catch (Exception ex)
-            {
-                ThrowHelper.LogException(context.Logger, ex);
-            }
-#endif
             finally
             {
-                taskArrayPool.Return(tasks, true);
+                taskArrayPool.Return(tasks, clearArray: true);
+                resultPool.Return(results, clearArray: true);
             }
         }
 
@@ -343,6 +321,8 @@ namespace EncosyTower.PubSub.Internals
             , TMessage message
             , PublishingContext context
             , UnityTask[] resultTasks
+            , Success<PublishError>[] results
+            , ref ExceptionDispatchInfo cancelled
         )
         {
             var handlerListFast = handlerList.AsListFast();
@@ -351,46 +331,50 @@ namespace EncosyTower.PubSub.Internals
 
             for (var i = 0; i < handlersLength; i++)
             {
-#if __ENCOSY_VALIDATION__
-                try
-#endif
+                var handler = handlers[i];
+
+                resultTasks[i] = UnityTask.CompletedTask;
+                results[i] = Success.Yes;
+
+                if (handler == null)
                 {
-                    var handler = handlers[i];
-
-                    if (handler == null)
-                    {
-                        resultTasks[i] = UnityTask.CompletedTask;
-                        continue;
-                    }
-
-                    var result = handler.Handle(message, context);
-                    ThrowHelper.ThrowIfHandlerResultIsInvalid(result.IsValid, handler.GetType());
-
-                    if (result.TryGetValue(out var task))
-                    {
-                        resultTasks[i] = task;
-                        continue;
-                    }
-
-                    resultTasks[i] = UnityTask.CompletedTask;
-
-                    if (RemoveHandler(handler, order))
-                    {
-                        handler.Dispose();
-                    }
-
-                    if (result.TryGetError(out var error))
-                    {
-                        ThrowHelper.LogHandlerError(error, context.Logger);
-                    }
+                    continue;
                 }
-#if __ENCOSY_VALIDATION__
+
+                Result<UnityTask, StateUnavailableError> result;
+
+                try
+                {
+                    result = handler.Handle(message, context);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    cancelled ??= ExceptionDispatchInfo.Capture(ex);
+                    continue;
+                }
                 catch (Exception ex)
                 {
-                    resultTasks[i] = UnityTask.CompletedTask;
-                    ThrowHelper.LogException(context.Logger, ex);
+                    results[i] = PublishError.CreateHandlerFaulted(ex);
+                    continue;
                 }
-#endif
+
+                ThrowHelper.ThrowIfHandlerResultIsInvalid(result.IsValid, handler.GetType());
+
+                if (result.TryGetValue(out var task))
+                {
+                    resultTasks[i] = task;
+                    continue;
+                }
+
+                if (RemoveHandler(handler, order))
+                {
+                    handler.Dispose();
+                }
+
+                if (result.TryGetError(out var error))
+                {
+                    results[i] = PublishError.CreateStateUnavailable(error.StateType);
+                }
             }
         }
 

@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using EncosyTower.PubSub.Internals;
 using EncosyTower.Tasks;
 using EncosyTower.Vaults;
@@ -61,11 +60,11 @@ namespace EncosyTower.PubSub
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Compress<TScope, TMessage>(TScope scope, ILogger logger = null)
+        private void Compress<TScope, TMessage>(TScope scope)
         {
             if (_messageBrokers.TryGet<MessageBroker<TScope, TMessage>>(out var broker))
             {
-                broker.Compress(scope, logger);
+                broker.Compress(scope);
             }
         }
 
@@ -85,7 +84,6 @@ namespace EncosyTower.PubSub
             , int order
             , TScope scope
             , out Subscription<TMessage> subscription
-            , ILogger logger
         )
         {
             lock (_messageBrokers)
@@ -100,12 +98,11 @@ namespace EncosyTower.PubSub
                     if (brokers.TryAdd(broker) == false)
                     {
                         broker?.Dispose();
-                        subscription = Subscription<TMessage>.None;
-                        return false;
+                        ThrowHelper.ThrowIfFailedToRegisterBroker<TMessage>(false);
                     }
                 }
 
-                subscription = broker.Subscribe(scope, handler, order, taskArrayPool, logger);
+                subscription = broker.Subscribe(scope, handler, order, taskArrayPool);
 
                 if (ReferenceEquals(subscription, Subscription<TMessage>.None))
                 {

@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -34,9 +34,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.AddInterceptor(interceptor);
         }
@@ -48,9 +46,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.AddInterceptor(interceptor);
         }
@@ -68,9 +64,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.AddInterceptor(interceptor);
         }
@@ -88,9 +82,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.AddInterceptor(interceptor);
         }
@@ -102,9 +94,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(interceptor);
         }
@@ -116,9 +106,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(interceptor);
         }
@@ -136,9 +124,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(interceptor);
         }
@@ -156,9 +142,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(interceptor);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(interceptor);
         }
@@ -170,9 +154,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(predicate);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(predicate);
         }
@@ -184,9 +166,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(predicate);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(predicate);
         }
@@ -204,9 +184,7 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(predicate);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(predicate);
         }
@@ -224,25 +202,10 @@ namespace EncosyTower.PubSub
         {
             DebuggingThrowHelper.ThrowIfNull(predicate);
 
-#if __ENCOSY_VALIDATION__
-            if (Validate(logger) == false) return;
-#endif
+            ThrowHelper.ThrowIfInterceptorsNotCreated(IsCreated);
 
             _brokers.RemoveInterceptor(predicate);
         }
-
-#if __ENCOSY_VALIDATION__
-        private bool Validate(ILogger logger)
-        {
-            if (IsCreated)
-            {
-                return true;
-            }
-
-            ThrowHelper.LogErrorInvalidInterceptorsAccess(logger);
-            return false;
-        }
-#endif
 
 #pragma warning disable IDE0051
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,11 +3,13 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using EncosyTower.Common;
 using EncosyTower.Logging;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace EncosyTower.Tests.PubSub
 {
@@ -225,7 +227,7 @@ namespace EncosyTower.Tests.PubSub
         }
 
         [Test]
-        public void DefaultPivotedWrappers_ConsumeUsingExistingValidationContract()
+        public void DefaultPivotedWrappers_ThrowOnUseInValidationBuilds()
         {
             var logger = new StringBuilderLogger();
             var publisher = default(MessagePublisher.Publisher<ScopeA>).WithScope(new ScopeB(1));
@@ -239,13 +241,24 @@ namespace EncosyTower.Tests.PubSub
                 () => subscriber.Subscribe<Message>(() => { }, logger: logger)
             );
 #else
-            Assert.DoesNotThrow(
+            var publisherException = Assert.Throws<InvalidOperationException>(
                 () => publisher.Publish(new Message(), SilentContext(logger))
             );
-            Assert.DoesNotThrow(
+            var subscriberException = Assert.Throws<InvalidOperationException>(
                 () => subscriber.Subscribe<Message>(() => { }, logger: logger)
             );
-            Assert.AreEqual(2, logger.LogEntryCount);
+
+            Assert.AreEqual(
+                $"{typeof(MessagePublisher.Publisher<ScopeB>)} is not created. "
+                + "Get a publisher from MessagePublisher.Global() or MessagePublisher.Scope().",
+                publisherException.Message
+            );
+            Assert.AreEqual(
+                $"{typeof(MessageSubscriber.Subscriber<ScopeB>)} is not created. "
+                + "Get a subscriber from MessageSubscriber.Global() or MessageSubscriber.Scope().",
+                subscriberException.Message
+            );
+            Assert.AreEqual(0, logger.LogEntryCount);
 #endif
         }
 
@@ -459,38 +472,53 @@ namespace EncosyTower.Tests.PubSub
             using var messenger = new Messenger(taskArrayPool);
             using var subscription = messenger.Subscriber.Global()
                 .Subscribe<Message>(() => CreateHandlerTask(completion));
-            var completionObserved = completion == HandlerCompletion.Success;
+            var canceled = false;
+            Success<PublishError> result = Success.Yes;
 
             try
             {
-                await messenger.Publisher.Global().PublishAsync(new Message(), SilentContext(logger));
+                result = await messenger.Publisher.Global().PublishAsync(new Message(), SilentContext(logger));
             }
-            catch (InvalidOperationException) when (completion == HandlerCompletion.Fault)
+            catch (OperationCanceledException) when (completion == HandlerCompletion.Cancellation)
             {
-                completionObserved = true;
-            }
-            catch (OperationCanceledException) when (
-                completion == HandlerCompletion.Cancellation
-            )
-            {
-                completionObserved = true;
+                canceled = true;
             }
 
-            if (!completionObserved && logger.LogEntryCount == 1)
+            switch (completion)
             {
-                completionObserved = completion switch {
-                    HandlerCompletion.Fault => logger.ToString().Contains(nameof(InvalidOperationException)),
-                    HandlerCompletion.Cancellation => logger.ToString().Contains(nameof(OperationCanceledException))
-                        || logger.ToString().Contains(nameof(TaskCanceledException)),
-                    _ => false,
-                };
+                case HandlerCompletion.Success:
+                {
+                    Assert.IsTrue(result.IsSuccess);
+                    break;
+                }
+
+                case HandlerCompletion.Fault:
+                {
+                    AssertHandlerFaulted<InvalidOperationException>(result);
+                    break;
+                }
+
+                case HandlerCompletion.Cancellation:
+                {
+                    Assert.IsTrue(canceled);
+                    break;
+                }
             }
 
-            Assert.IsTrue(completionObserved);
+            Assert.AreEqual(0, logger.LogEntryCount);
             Assert.AreEqual(1, taskArrayPool.RentCount);
             Assert.AreEqual(1, taskArrayPool.ReturnCount);
             Assert.AreSame(taskArrayPool.RentedArray, taskArrayPool.ReturnedArray);
             Assert.IsTrue(taskArrayPool.ClearArray);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        private static void AssertHandlerFaulted<TException>(in Success<PublishError> result)
+            where TException : Exception
+        {
+            Assert.IsTrue(result.TryGetFailure(out var error));
+            Assert.IsTrue(error.TryGetException(out var exception));
+            Assert.IsInstanceOf<TException>(exception);
         }
 
         private static async UnityTask CreateHandlerTask(HandlerCompletion completion)
@@ -502,7 +530,7 @@ namespace EncosyTower.Tests.PubSub
             });
 
         private static PublishingContext SilentContext(EncosyTower.Logging.ILogger logger = null)
-            => PublishingContext.Default(warnNoSubscriber: false, logger: logger);
+            => PublishingContext.Default(logger: logger ?? new StringBuilderLogger());
 
         private static void DestroyImmediate(UnityEngine.Object obj)
         {

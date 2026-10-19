@@ -10,8 +10,6 @@ namespace EncosyTower.PubSub
 
         public PublishingStrategy Strategy { get; init; }
 
-        public bool WarnNoSubscriber { get; init; }
-
         public ILogger Logger
         {
             get => _logger ?? DevLogger.Default;
@@ -24,26 +22,23 @@ namespace EncosyTower.PubSub
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PublishingContext Default(
-              bool warnNoSubscriber = true
-            , ILogger logger = default
+              ILogger logger = default
             , in CallerInfo callerInfo = default
             , CancellationToken token = default
         )
         {
-            return DropIfNoSubscriber(warnNoSubscriber, logger, callerInfo, token);
+            return DropIfNoSubscriber(logger, callerInfo, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PublishingContext DropIfNoSubscriber(
-              bool warnNoSubscriber = true
-            , ILogger logger = default
+              ILogger logger = default
             , in CallerInfo callerInfo = default
             , CancellationToken token = default
         )
         {
             return new PublishingContext() {
                 Strategy = PublishingStrategy.DropIfNoSubscriber,
-                WarnNoSubscriber = warnNoSubscriber,
                 Logger = logger,
                 CallerInfo = callerInfo,
                 Token = token,
@@ -59,7 +54,6 @@ namespace EncosyTower.PubSub
         {
             return new PublishingContext() {
                 Strategy = PublishingStrategy.WaitForSubscriber,
-                WarnNoSubscriber = false,
                 Logger = logger,
                 CallerInfo = callerInfo,
                 Token = token

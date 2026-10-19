@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -8,7 +8,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using EncosyTower.PubSub.Internals;
 using EncosyTower.Tasks;
 
@@ -58,12 +57,7 @@ namespace EncosyTower.PubSub
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Publish(PublishingContext context = default)
         {
-#if __ENCOSY_VALIDATION__
-            if (Validate(context.Logger) == false)
-            {
-                return;
-            }
-#endif
+            ThrowHelper.ThrowIfCachedPublisherNotCreated(_broker != null, typeof(CachedPublisher<TScope, TMessage>));
 
             Publish(_createFunc(), context);
         }
@@ -71,26 +65,33 @@ namespace EncosyTower.PubSub
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Publish(TMessage message, PublishingContext context = default)
         {
-            PublishAsync(message, context).Forget();
+            PublishObserver.ForgetAndLog(PublishAsync(message, context), context.Logger);
         }
 
+        /// <remarks>
+        /// PubSub never logs a failure it returns; the caller logs each failed result it reacts to.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly UnityTask PublishAsync(PublishingContext context = default)
+        public readonly UnityTask<Success<PublishError>> PublishAsync(PublishingContext context = default)
         {
+            ThrowHelper.ThrowIfCachedPublisherNotCreated(_broker != null, typeof(CachedPublisher<TScope, TMessage>));
+
             return PublishAsync(_createFunc(), context);
         }
 
+        /// <remarks>
+        /// PubSub never logs a failure it returns; the caller logs each failed result it reacts to.
+        /// </remarks>
 #if __ENCOSY_NO_VALIDATION__
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public readonly UnityTask PublishAsync(TMessage message, PublishingContext context = default)
+        public readonly UnityTask<Success<PublishError>> PublishAsync(
+              TMessage message
+            , PublishingContext context = default
+        )
         {
-#if __ENCOSY_VALIDATION__
-            if (Validate(message, context.Logger) == false)
-            {
-                return UnityTask.CompletedTask;
-            }
-#endif
+            ThrowHelper.ThrowIfCachedPublisherNotCreated(_broker != null, typeof(CachedPublisher<TScope, TMessage>));
+            ThrowHelper.ThrowIfMessageNull(message);
 
             if (_interceptorBrokers.HasInterceptors)
             {
@@ -102,22 +103,28 @@ namespace EncosyTower.PubSub
 
                 _interceptorBrokers.GetInterceptors<TScope, TMessage>(publisher.Interceptors, publisher.ObjectStack);
 
-                return ContinueAsync(publisher.PublishAsync(), publisher);
+                return ContinueAsync(publisher);
             }
             else
             {
-                return PublishAsyncInternal(_scope, message, context);
+                return PublishAsyncInternal(message, context);
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static async UnityTask ContinueAsync(
-                  UnityTask task
-                , InterceptablePublisher<TScope, TMessage> publisher
+            static async UnityTask<Success<PublishError>> ContinueAsync(
+                  InterceptablePublisher<TScope, TMessage> publisher
             )
             {
+                var logger = publisher.context.Logger;
+
                 try
                 {
-                    await task;
+                    await publisher.PublishAsync();
+                    return publisher._result;
+                }
+                catch
+                {
+                    ThrowHelper.LogDisplacedFailure(publisher._result, logger);
+                    throw;
                 }
                 finally
                 {
@@ -127,23 +134,22 @@ namespace EncosyTower.PubSub
         }
 
 #if __ENCOSY_NO_VALIDATION__
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        internal readonly UnityTask PublishCoreAsync(TScope scope, TMessage message, PublishingContext context)
+        internal readonly UnityTask<Success<PublishError>> PublishCoreAsync(TMessage message, PublishingContext context)
         {
-#if __ENCOSY_VALIDATION__
-            if (Validate(message, context.Logger) == false)
-            {
-                return UnityTask.CompletedTask;
-            }
-#endif
+            ThrowHelper.ThrowIfCachedPublisherNotCreated(_broker != null, typeof(CachedPublisher<TScope, TMessage>));
+            ThrowHelper.ThrowIfMessageNull(message);
 
-            return PublishAsyncInternal(scope, message, context);
+            return PublishAsyncInternal(message, context);
         }
 
-        private readonly UnityTask PublishAsyncInternal(TScope scope, TMessage message, PublishingContext context)
+        private readonly UnityTask<Success<PublishError>> PublishAsyncInternal(
+              TMessage message
+            , PublishingContext context
+        )
         {
-            if (_broker.TryPublishAsync(message, context).TryGetValue(out var task))
+            if (_broker.TryGetPublishTask(message, context).TryGetValue(out var task))
             {
                 return task;
             }
@@ -152,69 +158,26 @@ namespace EncosyTower.PubSub
             {
                 return WaitThenPublishAsync(message, context);
             }
-#if __ENCOSY_VALIDATION__
-            else
-            {
-                ThrowHelper.LogWarningNoSubscriber<TScope, TMessage>(scope, context);
-            }
-#endif
 
-            return UnityTask.CompletedTask;
+            Success<PublishError> result = PublishError.CreateSubscriberNotFound<TScope, TMessage>();
+            return UnityTask.FromResult(result);
         }
 
-        private readonly async UnityTask WaitThenPublishAsync(TMessage message, PublishingContext context)
+        private readonly async UnityTask<Success<PublishError>> WaitThenPublishAsync(
+              TMessage message
+            , PublishingContext context
+        )
         {
             await UnityTask.WaitUntil(_broker, static x => x.HasHandlers, context.Token);
 
-            if (context.Token.IsCancellationRequested)
+            context.Token.ThrowIfCancellationRequested();
+
+            if (_broker.TryGetPublishTask(message, context).TryGetValue(out var task))
             {
-                return;
+                return await task;
             }
 
-            if (_broker.TryPublishAsync(message, context).TryGetValue(out var task))
-            {
-                await task;
-                return;
-            }
-
-#if __ENCOSY_VALIDATION__
-
-            {
-                ThrowHelper.LogErrorFailedWaitThenPublish<TScope, TMessage>(_scope, context);
-            }
-#endif
+            return PublishError.CreateSubscriberNotFound<TScope, TMessage>();
         }
-
-#if __ENCOSY_VALIDATION__
-        private readonly bool Validate(ILogger logger)
-        {
-            if (_broker == null)
-            {
-                ThrowHelper.LogErrorInvalidCachedPublisherAccess(GetType(), logger);
-
-                return false;
-            }
-
-            return true;
-        }
-
-        private readonly bool Validate(TMessage message, ILogger logger)
-        {
-            if (_broker == null)
-            {
-                ThrowHelper.LogErrorInvalidCachedPublisherAccess(GetType(), logger);
-
-                return false;
-            }
-
-            if (message != null)
-            {
-                return true;
-            }
-
-            ThrowHelper.LogExceptionMessageIsNull(logger);
-            return false;
-        }
-#endif
     }
 }

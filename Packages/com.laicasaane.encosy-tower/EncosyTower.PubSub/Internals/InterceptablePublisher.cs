@@ -24,6 +24,8 @@ namespace EncosyTower.PubSub.Internals
         public MessagePublisher.Publisher<TScope> publisher;
         public CachedPublisher<TScope, TMessage> cachedPublisher;
 
+        internal Success<PublishError> _result;
+
         private int _currentInterceptorIndex;
 
         public InterceptablePublisher()
@@ -49,6 +51,7 @@ namespace EncosyTower.PubSub.Internals
             context = default;
             publisher = default;
             cachedPublisher = default;
+            _result = Success.Yes;
 
             Interceptors.Clear();
             ObjectStack.Clear();
@@ -78,17 +81,7 @@ namespace EncosyTower.PubSub.Internals
                 return task;
             }
 
-            if (publisher.IsCreated)
-            {
-                return publisher.PublishCoreAsync(this.scope, this.message, this.context);
-            }
-
-            if (cachedPublisher.IsCreated)
-            {
-                return cachedPublisher.PublishCoreAsync(this.scope, this.message, this.context);
-            }
-
-            return UnityTask.CompletedTask;
+            return TerminalAsync(scope, message, context);
         }
 
         private UnityTask PublishRecursiveAsync(TMessage message, PublishingContext context)
@@ -101,17 +94,27 @@ namespace EncosyTower.PubSub.Internals
                 return task;
             }
 
+            return TerminalAsync(scope, message, context);
+        }
+
+        private async UnityTask TerminalAsync(TScope scope, TMessage message, PublishingContext context)
+        {
+            Success<PublishError> result;
+
             if (publisher.IsCreated)
             {
-                return publisher.PublishCoreAsync(this.scope, this.message, this.context);
+                result = await publisher.PublishCoreAsync(scope, message, context);
             }
-
-            if (cachedPublisher.IsCreated)
+            else if (cachedPublisher.IsCreated)
             {
-                return cachedPublisher.PublishCoreAsync(this.scope, this.message, this.context);
+                result = await cachedPublisher.PublishCoreAsync(message, context);
+            }
+            else
+            {
+                return;
             }
 
-            return UnityTask.CompletedTask;
+            _result = PublishError.Merge(_result, result);
         }
 
         private bool MoveNextInterceptor(out object nextInterceptor)

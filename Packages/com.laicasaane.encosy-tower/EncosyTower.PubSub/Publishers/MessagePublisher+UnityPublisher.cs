@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -82,12 +82,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(createFunc);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
+                ThrowHelper.ThrowIfUnityPublisherNotCreated(IsCreated, typeof(UnityPublisher<TScope>));
 
                 return _publisher.Cache<TMessage>(createFunc, logger);
             }
@@ -102,12 +97,7 @@ namespace EncosyTower.PubSub
                 where TMessage : IMessage, new()
 #endif
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(context.Logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnityPublisherNotCreated(IsCreated, typeof(UnityPublisher<TScope>));
 
                 _publisher.Publish<TMessage>(context);
             }
@@ -120,29 +110,11 @@ namespace EncosyTower.PubSub
                 where TMessage : IMessage
 #endif
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(context.Logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnityPublisherNotCreated(IsCreated, typeof(UnityPublisher<TScope>));
+                ThrowHelper.ThrowIfMessageNull(message);
 
                 _publisher.Publish(message, context);
             }
-
-#if __ENCOSY_VALIDATION__
-            private bool Validate(ILogger logger)
-            {
-                if (IsCreated)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogErrorInvalidUnityPublisherAccess(GetType(), logger);
-
-                return false;
-            }
-#endif
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             partial void RetainUsings();

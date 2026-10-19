@@ -5,8 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using EncosyTower.Logging;
-using EncosyTower.PubSub.Internals;
+using EncosyTower.Common;
 using UnityEngine;
 
 using static EncosyTower.Debugging.ValidationDefines;
@@ -48,177 +47,170 @@ namespace EncosyTower.PubSub
                 => new($"The message handler of type {handlerType} returned an invalid result.");
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
         [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
         [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogException(ILogger logger, Exception exception)
+        internal static void ThrowIfPublisherNotCreated([DoesNotReturnIf(false)] bool created, Type type)
         {
-            (logger ?? DevLogger.Default).LogException(exception);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogExceptionInvalidScope(ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogException(new NullReferenceException("Scope"));
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogExceptionMessageIsNull(ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogException(new ArgumentNullException("message"));
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidPublisherAccess(Type publisherType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{publisherType} must be retrieved via " +
-                $"`{nameof(MessagePublisher)}.{nameof(MessagePublisher.Scope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidCachedPublisherAccess(Type publisherType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{publisherType} must be retrieved via " +
-                $"`{nameof(MessagePublisher)}.{nameof(MessagePublisher.Cache)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidUnityPublisherAccess(Type publisherType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{publisherType.Name} must be retrieved via " +
-                $"`{nameof(MessagePublisher)}.{nameof(MessagePublisher.UnityScope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidSubscriberAccess(Type subscriberType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{subscriberType} must be retrieved via " +
-                $"`{nameof(MessageSubscriber)}.{nameof(MessageSubscriber.Scope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidStatefulSubscriberAccess(Type subscriberType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{subscriberType.Name} must be retrieved via " +
-                $"`{nameof(MessageSubscriber)}.{nameof(MessageSubscriber.Scope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidUnitySubscriberAccess(Type subscriberType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{subscriberType.Name} must be retrieved via " +
-                $"`{nameof(MessageSubscriber)}.{nameof(MessageSubscriber.UnityScope)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorInvalidInterceptorsAccess(ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                $"{nameof(MessageInterceptors)} must be retrieved via " +
-                $"`{nameof(Messenger)}.{nameof(Messenger.Interceptors)}` API"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorUnexpectedBrokerRegistration<TScope, TMessage>(ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(
-                "Something went wrong when registering a new instance of " +
-                $"{typeof(MessageBroker<TScope, TMessage>)}!"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogWarningNoSubscriber<TScope, TMessage>(TScope scope, PublishingContext context)
-        {
-            if (context.WarnNoSubscriber)
+            if (created == false)
             {
-                context.Logger.LogWarning(
-                    $"Found no subscription for `{typeof(TMessage)}` " +
-                    $"inside the scope `{typeof(TScope)}({scope})`."
-                );
+                throw CreateException(type);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type} is not created. " +
+                    "Get a publisher from MessagePublisher.Global() or MessagePublisher.Scope()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfCachedPublisherNotCreated([DoesNotReturnIf(false)] bool created, Type type)
+        {
+            if (created == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type} is not created. " +
+                    "Get a cached publisher from MessagePublisher.GlobalCache(), MessagePublisher.Cache(), " +
+                    "MessagePublisher.UnityCache() or Publisher.Cache()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfUnityPublisherNotCreated([DoesNotReturnIf(false)] bool created, Type type)
+        {
+            if (created == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type.Name} is not created. " +
+                    "Get a Unity publisher from MessagePublisher.UnityScope()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfSubscriberNotCreated([DoesNotReturnIf(false)] bool created, Type type)
+        {
+            if (created == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type} is not created. " +
+                    "Get a subscriber from MessageSubscriber.Global() or MessageSubscriber.Scope()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfStatefulSubscriberNotCreated([DoesNotReturnIf(false)] bool created, Type type)
+        {
+            if (created == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type.Name} is not created. " +
+                    "Get a stateful subscriber from Subscriber.WithState()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfUnitySubscriberNotCreated([DoesNotReturnIf(false)] bool created, Type type)
+        {
+            if (created == false)
+            {
+                throw CreateException(type);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(Type type)
+                => new(
+                    $"{type.Name} is not created. " +
+                    "Get a Unity subscriber from MessageSubscriber.UnityScope()."
+                );
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfInterceptorsNotCreated([DoesNotReturnIf(false)] bool created)
+        {
+            if (created == false)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException()
+                => new("MessageInterceptors is not created. Get it from Messenger.Interceptors.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
+        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
+        internal static void ThrowIfScopeNull<TScope>(TScope scope)
+        {
+            if (scope is null)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentNullException CreateException()
+                => new("scope", "The scope must not be null.");
+        }
+
+        [HideInCallstack, StackTraceHidden]
+        internal static void ThrowIfMessageNull<TMessage>(TMessage message)
+        {
+            if (message is null)
+            {
+                throw CreateException();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ArgumentNullException CreateException()
+                => new("message", "The message must not be null.");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorFailedWaitThenPublish<TScope, TMessage>(TScope scope, PublishingContext context)
+        internal static void LogDisplacedFailure(in Success<PublishError> result, ILogger logger)
         {
-            context.Logger.LogError(
-                $"Failed to wait then publish: No subscriber for message type `{typeof(TMessage)}` " +
-                $"inside the scope `{typeof(TScope)}({scope})`. This should never happen!"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogErrorStateUnavailable(Type stateType, ILogger logger)
-        {
-            (logger ?? DevLogger.Default).LogError(GetStateUnavailableMessage(stateType));
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        [Conditional(UNITY_EDITOR), Conditional(DEBUG)]
-        [Conditional(RUNTIME_CHECKS), Conditional(PUBSUB_CHECKS)]
-        internal static void LogHandlerError(in StateUnavailableError error, ILogger logger)
-        {
-            LogErrorStateUnavailable(error.StateType, logger);
+            if (result.TryGetFailure(out var error))
+            {
+                error.Log(logger);
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static string GetStateUnavailableMessage(Type stateType)
             => $"The state instance of type {stateType} is not alive anymore.";
-
     }
 }

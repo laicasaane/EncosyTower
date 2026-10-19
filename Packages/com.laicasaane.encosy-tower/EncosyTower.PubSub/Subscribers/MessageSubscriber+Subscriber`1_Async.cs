@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -34,7 +34,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new HandlerFunc<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new HandlerFunc<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -52,7 +52,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new HandlerFuncMessage<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new HandlerFuncMessage<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -71,7 +71,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new HandlerFunc<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new HandlerFunc<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -92,7 +92,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new HandlerFuncMessage<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new HandlerFuncMessage<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -112,7 +112,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new ContextualHandlerFunc<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new ContextualHandlerFunc<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -130,7 +130,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new ContextualHandlerFuncMessage<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new ContextualHandlerFuncMessage<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -149,7 +149,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new ContextualHandlerFunc<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new ContextualHandlerFunc<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -170,13 +170,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(
-                          new ContextualHandlerFuncMessage<TMessage>(handler)
-                        , order
-                        , out var subscription
-                        , logger
-                    )
-                )
+                if (TrySubscribe(new ContextualHandlerFuncMessage<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }

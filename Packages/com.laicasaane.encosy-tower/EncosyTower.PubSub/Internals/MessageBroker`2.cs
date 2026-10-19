@@ -1,17 +1,9 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
-using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
-using EncosyTower.Logging;
 using EncosyTower.Tasks;
 
 namespace EncosyTower.PubSub.Internals
@@ -59,43 +51,32 @@ namespace EncosyTower.PubSub.Internals
             }
         }
 
-        public void Compress(ILogger logger)
+        public void Compress()
         {
             lock (_scopedBrokers)
             {
-#if !__ENCOSY_NO_VALIDATION__
-                try
-#endif
+                var scopedBrokers = _scopedBrokers;
+                var scopesToRemove = _scopesToRemove.AsListFast();
+
+                scopesToRemove.IncreaseCapacityTo(scopedBrokers.Count);
+
+                foreach (var (key, broker) in scopedBrokers)
                 {
-                    var scopedBrokers = _scopedBrokers;
-                    var scopesToRemove = _scopesToRemove.AsListFast();
+                    broker.Compress();
 
-                    scopesToRemove.IncreaseCapacityTo(scopedBrokers.Count);
-
-                    foreach (var (key, broker) in scopedBrokers)
+                    if (broker.HasHandlers == false)
                     {
-                        broker.Compress(logger);
-
-                        if (broker.HasHandlers == false)
-                        {
-                            broker.Dispose();
-                            scopesToRemove.Add(key);
-                        }
-                    }
-
-                    var scopes = scopesToRemove.AsSpan();
-
-                    foreach (var scope in scopes)
-                    {
-                        scopedBrokers.Remove(scope);
+                        broker.Dispose();
+                        scopesToRemove.Add(key);
                     }
                 }
-#if !__ENCOSY_NO_VALIDATION__
-                catch (Exception ex)
+
+                var scopes = scopesToRemove.AsSpan();
+
+                foreach (var scope in scopes)
                 {
-                    ThrowHelper.LogException(logger, ex);
+                    scopedBrokers.Remove(scope);
                 }
-#endif
             }
         }
 
@@ -113,7 +94,7 @@ namespace EncosyTower.PubSub.Internals
         /// <summary>
         /// Remove empty handler groups to optimize performance.
         /// </summary>
-        public void Compress(TScope scope, ILogger logger)
+        public void Compress(TScope scope)
         {
             lock (_scopedBrokers)
             {
@@ -129,7 +110,7 @@ namespace EncosyTower.PubSub.Internals
                     return;
                 }
 
-                broker.Compress(logger);
+                broker.Compress();
 
                 if (broker.HasHandlers == false)
                 {
@@ -139,11 +120,23 @@ namespace EncosyTower.PubSub.Internals
             }
         }
 
+        public bool HasHandlersFor(TScope scope)
+        {
+            lock (_scopedBrokers)
+            {
+                return _scopedBrokers.TryGetValue(scope, out var broker) && broker.HasHandlers;
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Option<UnityTask> TryPublishAsync(TScope scope, TMessage message, PublishingContext context)
+        public Option<UnityTask<Success<PublishError>>> TryGetPublishTask(
+              TScope scope
+            , TMessage message
+            , PublishingContext context
+        )
         {
             return _scopedBrokers.TryGetValue(scope, out var broker)
-                ? broker.TryPublishAsync(message, context)
+                ? broker.TryGetPublishTask(message, context)
                 : Option.None;
         }
 
@@ -152,7 +145,6 @@ namespace EncosyTower.PubSub.Internals
             , IHandler<TMessage> handler
             , int order
             , ArrayPool<UnityTask> taskArrayPool
-            , ILogger logger
         )
         {
             lock (_scopedBrokers)
@@ -165,7 +157,7 @@ namespace EncosyTower.PubSub.Internals
                     broker.TaskArrayPool = taskArrayPool;
                 }
 
-                return broker.Subscribe(handler, order, logger);
+                return broker.Subscribe(handler, order);
             }
         }
 

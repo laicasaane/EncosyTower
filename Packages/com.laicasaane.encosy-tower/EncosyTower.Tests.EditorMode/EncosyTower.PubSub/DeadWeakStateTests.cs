@@ -3,10 +3,12 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using EncosyTower.Common;
 using EncosyTower.Logging;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 using NUnit.Framework;
+using UnityEngine.TestTools;
 
 namespace EncosyTower.Tests.PubSub
 {
@@ -29,27 +31,48 @@ namespace EncosyTower.Tests.PubSub
 
             CollectGarbage(weakState);
 
-            var context = PublishingContext.Default(warnNoSubscriber: false, logger: logger);
+            var context = PublishingContext.Default(logger: logger);
 
-            await messenger.Publisher.Global().PublishAsync(new Message(), context);
+            var result = await messenger.Publisher.Global().PublishAsync(new Message(), context);
 
             Assert.AreEqual(1, earlierCount);
             Assert.AreEqual(1, laterCount);
-            Assert.AreEqual(8, logger.LogEntryCount);
-            StringAssert.Contains(
-                $"The state instance of type {typeof(State)} is not alive anymore.",
-                logger.ToString()
-            );
+            AssertEightStateUnavailable(result);
+            Assert.AreEqual(0, logger.LogEntryCount);
 
-            await messenger.Publisher.Global().PublishAsync(new Message(), context);
+            var second = await messenger.Publisher.Global().PublishAsync(new Message(), context);
 
             Assert.AreEqual(2, earlierCount);
             Assert.AreEqual(2, laterCount);
-            Assert.AreEqual(8, logger.LogEntryCount);
+            Assert.IsTrue(second.IsSuccess);
+            Assert.AreEqual(0, logger.LogEntryCount);
+            LogAssert.NoUnexpectedReceived();
+        }
+
+        private static void AssertEightStateUnavailable(in Success<PublishError> result)
+        {
+            Assert.IsTrue(result.TryGetFailure(out var error));
+            Assert.IsTrue(error.TryGetStateType(out var stateType));
+            Assert.AreEqual(typeof(State), stateType);
+            StringAssert.Contains(
+                $"The state instance of type {typeof(State)} is not alive anymore.",
+                error.ToMessage()
+            );
+
+            var suppressed = error.SuppressedErrors;
+            var count = suppressed.Length;
+
+            Assert.AreEqual(7, count);
+
+            for (var i = 0; i < count; i++)
+            {
+                Assert.IsTrue(suppressed[i].TryGetStateType(out var suppressedStateType));
+                Assert.AreEqual(typeof(State), suppressedStateType);
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static WeakReference RegisterDeadHandlers(Messenger messenger)
+        internal static WeakReference RegisterDeadHandlers(Messenger messenger)
         {
             var state = new State();
             var subscriber = messenger.Subscriber.Global().WithState(state);
@@ -88,7 +111,7 @@ namespace EncosyTower.Tests.PubSub
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static WeakReference RunOnShortLivedThread(Func<WeakReference> action)
+        internal static WeakReference RunOnShortLivedThread(Func<WeakReference> action)
         {
             WeakReference result = null;
             Exception failure = null;
@@ -114,7 +137,7 @@ namespace EncosyTower.Tests.PubSub
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CollectGarbage(WeakReference reference)
+        internal static void CollectGarbage(WeakReference reference)
         {
             for (var attempt = 0; attempt < 10; attempt++)
             {
@@ -131,11 +154,11 @@ namespace EncosyTower.Tests.PubSub
             Assert.IsFalse(reference.IsAlive);
         }
 
-        private sealed class Message : IMessage
+        internal sealed class Message : IMessage
         {
         }
 
-        private sealed class State
+        internal sealed class State
         {
         }
     }

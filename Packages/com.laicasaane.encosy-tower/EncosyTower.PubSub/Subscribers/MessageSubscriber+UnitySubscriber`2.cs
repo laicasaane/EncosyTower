@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -121,6 +121,7 @@ namespace EncosyTower.PubSub
             /// <summary>
             /// Remove empty handler groups to optimize performance.
             /// </summary>
+            /// <param name="logger">Unused; kept for source compatibility.</param>
 #if __ENCOSY_NO_VALIDATION__
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -129,21 +130,14 @@ namespace EncosyTower.PubSub
                 where TMessage : IMessage
 #endif
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.Compress<TMessage>(logger);
             }
 
             public void Clear(ILogger logger = null)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.Clear(logger);
             }
@@ -162,15 +156,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return Subscription<TMessage>.None;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.TrySubscribe(
                       new StatefulHandlerAction<TState, TMessage>(State, handler)
                     , order
                     , out var subscription
-                    , logger
                 );
                 return subscription;
             }
@@ -189,15 +180,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return Subscription<TMessage>.None;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.TrySubscribe(
                       new StatefulHandlerActionMessage<TState, TMessage>(State, handler)
                     , order
                     , out var subscription
-                    , logger
                 );
                 return subscription;
             }
@@ -217,15 +205,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 if (_subscriber.TrySubscribe(
                           new StatefulHandlerAction<TState, TMessage>(State, handler)
                         , order
                         , out var subscription
-                        , logger
                     )
                 )
                 {
@@ -248,15 +233,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 if (_subscriber.TrySubscribe(
                           new StatefulHandlerActionMessage<TState, TMessage>(State, handler)
                         , order
                         , out var subscription
-                        , logger
                     )
                 )
                 {
@@ -278,15 +260,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return Subscription<TMessage>.None;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.TrySubscribe(
                       new StatefulContextualHandlerAction<TState, TMessage>(State, handler)
                     , order
                     , out var subscription
-                    , logger
                 );
                 return subscription;
             }
@@ -305,15 +284,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return Subscription<TMessage>.None;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 _subscriber.TrySubscribe(
                       new StatefulContextualHandlerActionMessage<TState, TMessage>(State, handler)
                     , order
                     , out var subscription
-                    , logger
                 );
                 return subscription;
             }
@@ -333,15 +309,12 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 if (_subscriber.TrySubscribe(
                           new StatefulContextualHandlerAction<TState, TMessage>(State, handler)
                         , order
                         , out var subscription
-                        , logger
                     )
                 )
                 {
@@ -364,35 +337,18 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false) return;
-#endif
+                ThrowHelper.ThrowIfUnitySubscriberNotCreated(IsCreated, typeof(UnitySubscriber<TScope, TState>));
 
                 if (_subscriber.TrySubscribe(
                           new StatefulContextualHandlerActionMessage<TState, TMessage>(State, handler)
                         , order
                         , out var subscription
-                        , logger
                     )
                 )
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
             }
-
-#if __ENCOSY_VALIDATION__
-            private bool Validate(ILogger logger)
-            {
-                if (IsCreated)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogErrorInvalidUnitySubscriberAccess(GetType(), logger);
-
-                return false;
-            }
-#endif
         }
     }
 }

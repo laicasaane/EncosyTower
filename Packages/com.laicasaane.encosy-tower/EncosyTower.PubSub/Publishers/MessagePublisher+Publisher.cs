@@ -1,16 +1,9 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
-#define __ENCOSY_NO_VALIDATION__
-#else
-#define __ENCOSY_VALIDATION__
-#endif
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using EncosyTower.Common;
 using EncosyTower.Logging;
 using EncosyTower.PubSub.Internals;
-using EncosyTower.Tasks;
 
 using DebuggingThrowHelper = EncosyTower.Debugging.ThrowHelper;
 
@@ -101,12 +94,8 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(createFunc);
 
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return default;
-                }
-#endif
+                ThrowHelper.ThrowIfPublisherNotCreated(_publisher != null, typeof(Publisher<TScope>));
+                ThrowHelper.ThrowIfScopeNull(Scope);
 
                 lock (_publisher._messageBrokers)
                 {
@@ -118,12 +107,8 @@ namespace EncosyTower.PubSub
 
                         if (brokers.TryAdd(scopedBroker) == false)
                         {
-#if __ENCOSY_VALIDATION__
-                            ThrowHelper.LogErrorUnexpectedBrokerRegistration<TScope, TMessage>(logger);
-#endif
-
                             scopedBroker.Dispose();
-                            return default;
+                            ThrowHelper.ThrowIfFailedToRegisterBroker<TMessage>(false);
                         }
                     }
 
@@ -153,52 +138,8 @@ namespace EncosyTower.PubSub
                 where TMessage : IMessage
 #endif
             {
-                PublishAsync(message, context).Forget();
+                PublishObserver.ForgetAndLog(PublishAsync(message, context), context.Logger);
             }
-
-#if __ENCOSY_VALIDATION__
-            private bool Validate(ILogger logger)
-            {
-                if (_publisher == null)
-                {
-                    ThrowHelper.LogErrorInvalidPublisherAccess(GetType(), logger);
-
-                    return false;
-                }
-
-                if (Scope != null)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogExceptionInvalidScope(logger);
-                return false;
-            }
-
-            private bool Validate<TMessage>(TMessage message, ILogger logger)
-            {
-                if (_publisher == null)
-                {
-                    ThrowHelper.LogErrorInvalidPublisherAccess(GetType(), logger);
-
-                    return false;
-                }
-
-                if (Scope == null)
-                {
-                    ThrowHelper.LogExceptionInvalidScope(logger);
-                    return false;
-                }
-
-                if (message != null)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogExceptionMessageIsNull(logger);
-                return false;
-            }
-#endif
         }
     }
 }

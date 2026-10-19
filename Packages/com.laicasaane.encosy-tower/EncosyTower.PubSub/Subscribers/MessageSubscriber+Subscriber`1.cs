@@ -1,4 +1,4 @@
-#if !(UNITY_EDITOR || DEBUG || ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) || DISABLE_ENCOSY_CHECKS
+#if DISABLE_ENCOSY_CHECKS || !(((UNITY_EDITOR || DEBUG) && !DISABLE_ENCOSY_EDITOR_CHECKS) || ((ENCOSY_RUNTIME_CHECKS || ENCOSY_PUBSUB_RUNTIME_CHECKS) && !DISABLE_ENCOSY_RUNTIME_CHECKS))
 #define __ENCOSY_NO_VALIDATION__
 #else
 #define __ENCOSY_VALIDATION__
@@ -160,30 +160,21 @@ namespace EncosyTower.PubSub
             /// <summary>
             /// Remove empty handler groups to optimize performance.
             /// </summary>
+            /// <param name="logger">Unused; kept for source compatibility.</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Compress<TMessage>(ILogger logger = null)
 #if !ENCOSY_PUBSUB_RELAX_MODE
                 where TMessage : IMessage
 #endif
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfSubscriberNotCreated(IsCreated, typeof(Subscriber<TScope>));
 
-                _subscriber.Compress<TScope, TMessage>(Scope, logger);
+                _subscriber.Compress<TScope, TMessage>(Scope);
             }
 
             public void Clear(ILogger logger = null)
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    return;
-                }
-#endif
+                ThrowHelper.ThrowIfSubscriberNotCreated(IsCreated, typeof(Subscriber<TScope>));
 
                 _subscriber.Clear(Scope);
             }
@@ -200,7 +191,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new HandlerAction<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new HandlerAction<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -216,7 +207,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new HandlerActionMessage<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new HandlerActionMessage<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -233,7 +224,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new HandlerAction<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new HandlerAction<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -252,7 +243,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new HandlerActionMessage<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new HandlerActionMessage<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -270,7 +261,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(new ContextualHandlerAction<TMessage>(handler), order, out var subscription, logger);
+                TrySubscribe(new ContextualHandlerAction<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -286,12 +277,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                TrySubscribe(
-                      new ContextualHandlerActionMessage<TMessage>(handler)
-                    , order
-                    , out var subscription
-                    , logger
-                );
+                TrySubscribe(new ContextualHandlerActionMessage<TMessage>(handler), order, out var subscription);
                 return subscription;
             }
 
@@ -308,7 +294,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(new ContextualHandlerAction<TMessage>(handler), order, out var subscription, logger))
+                if (TrySubscribe(new ContextualHandlerAction<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -327,13 +313,7 @@ namespace EncosyTower.PubSub
             {
                 DebuggingThrowHelper.ThrowIfNull(handler);
 
-                if (TrySubscribe(
-                          new ContextualHandlerActionMessage<TMessage>(handler)
-                        , order
-                        , out var subscription
-                        , logger
-                    )
-                )
+                if (TrySubscribe(new ContextualHandlerActionMessage<TMessage>(handler), order, out var subscription))
                 {
                     subscription.RegisterTo(unsubscribeToken);
                 }
@@ -346,18 +326,11 @@ namespace EncosyTower.PubSub
                   IHandler<TMessage> handler
                 , int order
                 , out Subscription<TMessage> subscription
-                , ILogger logger
             )
             {
-#if __ENCOSY_VALIDATION__
-                if (Validate(logger) == false)
-                {
-                    subscription = Subscription<TMessage>.None;
-                    return false;
-                }
-#endif
+                ThrowHelper.ThrowIfSubscriberNotCreated(IsCreated, typeof(Subscriber<TScope>));
 
-                if (_subscriber.TrySubscribe(handler, order, Scope, out subscription, logger))
+                if (_subscriber.TrySubscribe(handler, order, Scope, out subscription))
                 {
                     Subscriptions.Add(subscription);
                     return true;
@@ -365,20 +338,6 @@ namespace EncosyTower.PubSub
 
                 return false;
             }
-
-#if __ENCOSY_VALIDATION__
-            private bool Validate(ILogger logger)
-            {
-                if (IsCreated)
-                {
-                    return true;
-                }
-
-                ThrowHelper.LogErrorInvalidSubscriberAccess(GetType(), logger);
-
-                return false;
-            }
-#endif
         }
     }
 }
