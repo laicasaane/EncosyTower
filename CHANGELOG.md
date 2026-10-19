@@ -4,6 +4,90 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.9-preview.1
+
+### PageFlows
+
+- Added abort contracts and a transition context so that shows and hides can be aborted in the generic flows and in the uGUI and UI Toolkit wrappers
+- Added `PageNavigatedMessage`, published after an applied navigation call
+- Added a navigation history core with Back, Forward, and Restore, plus history snapshots and stores
+- Added the `Identifiers` constants generated for scope collections
+- Added show and hide of every page of a multi-page flow at once, per-page transition messages, duplicate page rejection, and factory release
+- Changed flow operations to return `Success<PageFlowError>`, and page loading, page pool, prepool, history replay, and cleanup failures to be returned instead of logged; callers now log failed page-flow results (breaking: read and log the returned result)
+- Changed page keys to `AssetKey` and page loading to typed keys (breaking: pass `AssetKey` values)
+- Changed the runtime to sub-namespaces, flow kind names to put the structure first, `PageAssetLease` to `PageAssetHandle`, and the UI backend to an explicit contract (breaking: update `using` directives and renamed types)
+- Changed the flow settings to the `Encosy Tower > Page Flows` group, and `WarnNoSubscriber` to report unheard notifications when it is on
+- Changed UI Toolkit pages to be revealed after lifecycle preparation, and uGUI pages rented from the pool to stay hidden until their show transition starts
+- Fixed transitions to finish once they have begun, UI Toolkit transitions to be bypassed under `NoTransition`, and flows to recover from transition failures
+- Fixed wrapper, transition, codex, detach, origin, and `Initialize` defects, including `Initialize` placing the uGUI pool root under its parent
+- Fixed wrapper exceptions to be reported to the history before they are rethrown
+- Removed `PageAsyncOperation.DropError`, the history flow logger, and the `MovedFrom` attributes (breaking: remove their uses)
+- Removed the shelved history snapshots, persistence, and restore from the public flow API
+
+### Core
+
+- Changed key loaders to stop swallowing cancellation
+- Changed the publish path to stop boxing struct scopes
+- Fixed fixed-string and `Guid` spans that outlived their storage, native view ranges and memory validation, borrowed buffer ownership and empty views, and unsafe container aliases and construction
+- Fixed shared list removal to reject negative lengths, shared collection state and recycling, pooled object returns and activation, string vault ranges and UTF-8 text, temporary fixed-string encoding storage, and overlapping native array range copies
+- Fixed GUID parsing to reject input beyond the complete parse range, and read-only native reference pointer acquisition
+- Fixed uncreated unsafe references to return empty spans
+- Removed the unused popup field extensions
+
+### Processing
+
+- Changed `TryProcess` and `Register` to return `ProcessError` (breaking: handle the returned error)
+
+### PubSub
+
+- Changed publish to return failures and to throw on misuse (breaking: read the returned result)
+
+### Mvvm
+
+- Removed the `MovedFrom` attributes (breaking: remove their uses)
+
+### Editor
+
+- Added the `StringEnum` property drawer, with a showcase and tests
+- Changed value choice tuples to named types, and the shared drawer APIs to be extracted from the `Overridable<T>` and `[ValueChoices]` drawers
+- Changed the drawers to report unresolved `Overridable<T>` defaults
+- Changed the assembly reference, choices, and entry names to describe what they are
+
+### Editor.PageFlows
+
+- Added a setting to reject duplicate pages, and a `PolyEnumStruct` description of flow definition errors
+- Changed the settings pages and menu items to live under `Page Flows`, with the settings fields aligned at one value column using USS
+- Changed `TransitionFloat` to draw with UI Toolkit, and the problem tooltip text to `TooltipAPI`
+- Fixed scope resolver, settings foldout, and sorting layer defects, and the read-only field display
+
+### Editor.Mvvm
+
+- Changed the names of binders, targets, and adapters in the inspector
+
+### Databases.Settings
+
+- Added a report when a sheet container cannot be created
+- Changed the settings page to show the collection list above the settings in one column, and the preset picker and database type names to describe their domain
+
+### SourceGen
+
+- Added the `SG_PUBSUB_0006` warning when a publish result is discarded
+- Changed shipped source generator assemblies for `0.1.9-preview.1`
+
+### Tests
+
+- Added EditMode tests for every flow outcome, and tests for the navigation history and the Core fixes above
+
+### Samples
+
+- Changed the uGUI and UI Toolkit samples to log failed page message publishes, merge user data, and use renamed codex types
+- Changed the samples to split `AppCodex` into controller, service, and presenter modules, and to extract `AttachmentSetFactory` from `PageAttachments`
+- Changed imported sample paths and database preset references to `0.1.9-preview.1`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.9-preview.1`
+
 ## 0.1.8-preview.8
 
 ### General
