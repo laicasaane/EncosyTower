@@ -30,6 +30,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
     public Task ValidCollectionAndUnrelatedStruct_ProduceNoDiagnostics()
         => RunAsync("""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             namespace TestProject;
 
@@ -71,6 +72,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync(
               """
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -93,6 +95,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync(
               """
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -121,6 +124,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync(
               """
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -142,6 +146,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync(
               """
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -168,6 +173,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync(
               """
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -191,6 +197,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
               """
               using System;
               using EncosyTower.PageFlows;
+              using EncosyTower.PageFlows.PubSub;
 
               namespace TestProject;
 
@@ -225,6 +232,7 @@ public sealed class PageFlowScopeCollectionAnalyzerTests
         => RunAsync("""
             using System;
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             [assembly: SkipSourceGeneratorsForAssembly]
 

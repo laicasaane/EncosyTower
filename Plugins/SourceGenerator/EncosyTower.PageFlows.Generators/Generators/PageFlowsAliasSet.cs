@@ -5,12 +5,14 @@ namespace EncosyTower.PageFlows.Generators
         public const string SYSTEM = "g__S";
         public const string CODE_DOM_COMPILER = "g__SCDC";
         public const string PAGE_FLOWS = "g__ETPF";
+        public const string PAGE_FLOWS_PUBSUB = "g__ETPFPS";
 
         public static void WriteAliases(ref Printer printer)
         {
             printer.PrintLine("using g__S = global::System;");
             printer.PrintLine("using g__SCDC = global::System.CodeDom.Compiler;");
             printer.PrintLine("using g__ETPF = global::EncosyTower.PageFlows;");
+            printer.PrintLine("using g__ETPFPS = global::EncosyTower.PageFlows.PubSub;");
         }
     }
 }

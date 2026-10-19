@@ -8,6 +8,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
 {
     private const string BASIC_SOURCE = """
         using EncosyTower.PageFlows;
+        using EncosyTower.PageFlows.PubSub;
 
         namespace TestProject;
 
@@ -73,6 +74,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
     {
         var run = await PageFlowsRuntimeFixture.RunAsync("""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             namespace TestProject;
 
@@ -126,6 +128,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
     {
         var run = await PageFlowsRuntimeFixture.RunAsync("""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             namespace TestProject;
 
@@ -172,6 +175,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
 
         var run = await PageFlowsRuntimeFixture.RunAsync($$"""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             namespace TestProject;
 
@@ -187,6 +191,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
     {
         var run = await PageFlowsRuntimeFixture.RunAsync("""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             namespace TestProject;
 
@@ -208,6 +213,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
     {
         var run = await PageFlowsRuntimeFixture.RunAsync("""
             using EncosyTower.PageFlows;
+            using EncosyTower.PageFlows.PubSub;
 
             [assembly: SkipSourceGeneratorsForAssembly]
 
@@ -233,7 +239,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
 
                       public partial struct Scopes
                       {
-                          public EncosyTower.PageFlows.PageFlowScope Screen { get; set; }
+                          public EncosyTower.PageFlows.PubSub.PageFlowScope Screen { get; set; }
                       }
                       """),
                   new NamedSource("B.cs", """
@@ -242,7 +248,7 @@ public sealed class PageFlowScopeCollectionGeneratorTests
                       [EncosyTower.PageFlows.PageFlowScopeCollection]
                       public partial struct Scopes
                       {
-                          public EncosyTower.PageFlows.PageFlowScope Popup { get; set; }
+                          public EncosyTower.PageFlows.PubSub.PageFlowScope Popup { get; set; }
                       }
                       """),
               ]
@@ -259,8 +265,8 @@ public sealed class PageFlowScopeCollectionGeneratorTests
             .OfType<VariableDeclaratorSyntax>()
             .Single(static declarator => declarator.Identifier.ValueText == "s_scopeIdentifiers")
             .DescendantNodes()
-            .OfType<InvocationExpressionSyntax>()
-            .Select(static invocation => invocation.ArgumentList.Arguments.Single().ToString())
+            .OfType<MemberAccessExpressionSyntax>()
+            .Select(static access => access.Name.Identifier.ValueText)
             .ToArray();
 
     private static string GetSnapshotDirectory()

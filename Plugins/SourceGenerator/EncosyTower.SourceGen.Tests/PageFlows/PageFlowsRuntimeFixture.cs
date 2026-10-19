@@ -17,6 +17,8 @@ internal static class PageFlowsRuntimeFixture
         .WithLanguageVersion(LanguageVersion.CSharp10);
 
     internal const string MarkerSource = """
+        using EncosyTower.PageFlows.PubSub;
+
         namespace EncosyTower.PageFlows
         {
             [System.AttributeUsage(System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
@@ -25,14 +27,17 @@ internal static class PageFlowsRuntimeFixture
             [System.AttributeUsage(System.AttributeTargets.Assembly)]
             public sealed class SkipSourceGeneratorsForAssemblyAttribute : System.Attribute { }
 
-            public readonly record struct PageFlowScope(int Value);
-
             public interface IPageFlowScopeCollection
             {
                 System.ReadOnlyMemory<string> ScopeIdentifiers { get; }
 
                 bool TrySetScope(string identifier, PageFlowScope scope);
             }
+        }
+
+        namespace EncosyTower.PageFlows.PubSub
+        {
+            public readonly record struct PageFlowScope(int Value);
         }
         """;
 

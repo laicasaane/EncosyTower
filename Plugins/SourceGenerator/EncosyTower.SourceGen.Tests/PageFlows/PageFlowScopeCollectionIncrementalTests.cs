@@ -7,6 +7,7 @@ public sealed class PageFlowScopeCollectionIncrementalTests
 
     private const string SCREEN_SOURCE = """
         using EncosyTower.PageFlows;
+        using EncosyTower.PageFlows.PubSub;
 
         namespace TestProject;
 
@@ -19,6 +20,7 @@ public sealed class PageFlowScopeCollectionIncrementalTests
 
     private const string POPUP_SOURCE = """
         using EncosyTower.PageFlows;
+        using EncosyTower.PageFlows.PubSub;
 
         namespace TestProject;
 
@@ -78,7 +80,7 @@ public sealed class PageFlowScopeCollectionIncrementalTests
 
         Assert.AreEqual(firstSources[screenHint], secondSources[screenHint]);
         Assert.AreNotEqual(firstSources[popupHint], secondSources[popupHint]);
-        StringAssert.Contains(secondSources[popupHint], "nameof(Toast)");
+        StringAssert.Contains(secondSources[popupHint], "Identifiers.Toast");
         AssertReasonsInclude(second, IncrementalStepRunReason.Modified);
         AssertReasonsInclude(second, IncrementalStepRunReason.Cached);
         PageFlowsRuntimeFixture.AssertNoOutputErrors(second);

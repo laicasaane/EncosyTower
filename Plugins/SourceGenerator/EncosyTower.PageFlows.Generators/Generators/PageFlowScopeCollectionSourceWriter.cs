@@ -51,11 +51,26 @@ namespace EncosyTower.PageFlows.Generators
             var count = propertyNames.Count;
 
             printer.PrintLine(GENERATED_CODE);
+            printer.PrintLine("public static class Identifiers");
+            printer.OpenScope();
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    var propertyName = propertyNames[i];
+
+                    printer.PrintBeginLine("public const string ").Print(propertyName)
+                        .Print(" = nameof(").Print(propertyName).PrintEndLine(");");
+                }
+            }
+            printer.CloseScope();
+            printer.PrintEndLine();
+
+            printer.PrintLine(GENERATED_CODE);
             printer.PrintBeginLine("private static readonly string[] s_scopeIdentifiers = new string[] { ");
 
             for (var i = 0; i < count; i++)
             {
-                printer.Print("nameof(").Print(propertyNames[i]).Print("), ");
+                printer.Print("Identifiers.").Print(propertyNames[i]).Print(", ");
             }
 
             printer.PrintEndLine("};");
@@ -71,7 +86,8 @@ namespace EncosyTower.PageFlows.Generators
             var count = propertyNames.Count;
 
             printer.PrintLine(GENERATED_CODE);
-            printer.PrintBeginLine("public bool TrySetScope(string identifier, ").Print(PageFlowsAliasSet.PAGE_FLOWS)
+            printer.PrintBeginLine("public bool TrySetScope(string identifier, ")
+                .Print(PageFlowsAliasSet.PAGE_FLOWS_PUBSUB)
                 .PrintEndLine(".PageFlowScope scope)");
             printer.OpenScope();
             {

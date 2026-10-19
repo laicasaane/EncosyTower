@@ -8,7 +8,7 @@ namespace EncosyTower.PageFlows.Analyzers
         private const string ATTRIBUTE = "global::EncosyTower.PageFlows.PageFlowScopeCollectionAttribute";
         private const string COLLECTION_INTERFACE = "global::EncosyTower.PageFlows.IPageFlowScopeCollection";
         private const string COLLECTION_INTERFACE_NAME = "IPageFlowScopeCollection";
-        private const string SCOPE = "global::EncosyTower.PageFlows.PageFlowScope";
+        private const string SCOPE = "global::EncosyTower.PageFlows.PubSub.PageFlowScope";
         private const string SKIP_ATTRIBUTE = "global::EncosyTower.PageFlows.SkipSourceGeneratorsForAssemblyAttribute";
 
         private static readonly SymbolDisplayFormat s_displayFormat = SymbolDisplayFormat.FullyQualifiedFormat;
