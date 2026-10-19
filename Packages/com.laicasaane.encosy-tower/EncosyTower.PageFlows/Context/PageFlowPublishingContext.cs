@@ -6,8 +6,16 @@
 
 namespace EncosyTower.PageFlows
 {
+    /// <summary>The caller info setting of the messages that page flows publish.</summary>
     public readonly struct PageFlowPublishingContext
     {
+        /// <summary>Gets whether the flows add the caller info of their publish calls to messages.</summary>
+        /// <value>
+        /// <see cref="PubSubCallerInfoOption.ForDevelopment"/> in the Editor and in development builds when the
+        /// scripting define <c>ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO_DEV</c> is set; otherwise
+        /// <see cref="PubSubCallerInfoOption.Always"/> when <c>ENCOSY_PAGE_FLOW_PUBSUB_INCLUDE_CALLER_INFO</c> is
+        /// set; otherwise <see cref="PubSubCallerInfoOption.Never"/>.
+        /// </value>
         public PubSubCallerInfoOption CallerInfoOption
         {
             get
@@ -23,6 +31,7 @@ namespace EncosyTower.PageFlows
         }
     }
 
+    /// <summary>When page flows add the caller info of their publish calls to messages.</summary>
     public enum PubSubCallerInfoOption : byte
     {
         /// <summary>

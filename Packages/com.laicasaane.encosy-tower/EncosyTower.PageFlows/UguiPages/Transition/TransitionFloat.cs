@@ -1,22 +1,22 @@
 #if UNITY_UGUI
 
 using System;
-using UnityEngine.Scripting.APIUpdating;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Transitions
 {
+    /// <summary>A pair of values that a transition moves from the start to the end.</summary>
     [Serializable]
-    [MovedFrom(
-          true
-        , sourceNamespace: "EncosyTower.PageFlows.MonoPages"
-        , sourceAssembly: "EncosyTower.PageFlows.MonoPages"
-        , sourceClassName: "TransitionFloat"
-    )]
     public struct TransitionFloat
     {
+        /// <summary>The value the transition starts with.</summary>
         public float start;
+
+        /// <summary>The value the transition ends with.</summary>
         public float end;
 
+        /// <summary>Creates a pair.</summary>
+        /// <param name="start">The value the transition starts with.</param>
+        /// <param name="end">The value the transition ends with.</param>
         public TransitionFloat(float start, float end)
         {
             this.start = start;

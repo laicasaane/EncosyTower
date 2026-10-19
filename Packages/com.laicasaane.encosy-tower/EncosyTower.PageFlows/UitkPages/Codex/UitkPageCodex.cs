@@ -1,11 +1,14 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using EncosyTower.Collections;
 using EncosyTower.Common;
 using EncosyTower.Logging;
+using EncosyTower.PageFlows.Codex;
+using EncosyTower.PageFlows.PubSub;
+using EncosyTower.PageFlows.UitkPages.Internals;
 using EncosyTower.Processing;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
@@ -13,15 +16,56 @@ using EncosyTower.UnityExtensions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Codex
 {
-    using UnityObject = UnityEngine.Object;
-
+    /// <summary>Creates the page flows of a screen from flow definitions, and gives each one a scope.</summary>
+    /// <remarks>
+    /// <para>
+    /// Put the component on a GameObject with a component that implements
+    /// <see cref="IUitkPageCodexOnInitialize"/>, such as a <see cref="UitkPageCodexInitializer{TScopes}"/>. Each flow
+    /// definition of the codex creates one flow, and its identifier must match a scope property of the scope
+    /// collection. Check Auto Initialize On Awake of the flow context, or call <see cref="Initialize"/> or
+    /// <see cref="InitializeAsync"/>.
+    /// </para>
+    /// <para>
+    /// The codex draws on a UIDocument or, from Unity 6000.5, a PanelRenderer on its GameObject, and adds it when
+    /// missing. It puts a root element, <see cref="CodexRoot"/>, under the panel root. A flow goes into the
+    /// element of the panel that its container name names, or under <see cref="CodexRoot"/> when the name is empty
+    /// or not found.
+    /// </para>
+    /// <para>
+    /// All page flow operations and callbacks run on the Unity main thread. A failure to initialize comes back as a
+    /// <see cref="PageFlowCodexError"/>; initializing again replaces the flows.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// [PageFlowScopeCollection]
+    /// public partial struct GamePageFlowScopes
+    /// {
+    ///     public PageFlowScope Screen { get; private set; }
+    ///
+    ///     public PageFlowScope Popup { get; private set; }
+    /// }
+    ///
+    /// // On the GameObject of the UitkPageCodex, with flow definitions named Screen and Popup.
+    /// public sealed class GameUitkCodex : UitkPageCodexInitializer&lt;GamePageFlowScopes&gt;
+    /// {
+    ///     protected override UnityTask OnInitializeAsync(UitkPageCodex codex, GamePageFlowScopes scopes)
+    ///         => UnityTask.CompletedTask;
+    /// }
+    /// </code>
+    /// </example>
     [DisallowMultipleComponent]
     public class UitkPageCodex : MonoBehaviour
     {
+        /// <summary>The name of the <see cref="CodexRoot"/> element.</summary>
         public const string CODEX_ROOT_NAME = "uitk-page-codex";
+
+        /// <summary>The USS class of the <see cref="CodexRoot"/> element.</summary>
         public const string CODEX_ROOT_USS_CLASS_NAME = "uitk-page-codex";
+
+        /// <summary>The name of the hidden GameObject that parents the page behaviours the flows create.</summary>
         public const string BEHAVIOUR_PARENT_NAME = "[UitkPages]";
 
         [SerializeField] internal FlowDefinition[] _flows;
@@ -30,41 +74,143 @@ namespace EncosyTower.PageFlows.UitkPages
         [SerializeField] internal float _sortingOrder;
         [SerializeField] internal VisualTreeAsset _layoutAsset;
 
-        private readonly ArrayMap<string, PageFlowScope> _flowScopeMap = new();
-        private readonly List<UitkPageFlow> _pageFlows = new();
+        private ArrayMap<string, PageFlowScope> _flowScopeMap = new();
+        private List<UitkPageFlow> _pageFlows = new();
 
         private IUitkPanelComponentAdapter _adapter;
         private VisualElement _codexRoot;
         private VisualElement _panelRoot;
         private Transform _behaviourParent;
         private IPageFlowScopeCollectionApplier _flowScopeCollectionApplier;
+        private CancellationTokenSource _initializationCts;
+        private CancellationToken _initializationToken;
         private int _rootVersion;
 
+        /// <summary>Gets the context that the codex gives to the flows it creates.</summary>
         public UitkPageFlowContext FlowContext => _flowContext;
 
+        /// <summary>
+        /// Cancelled when this codex is destroyed or initialized again; pass it to the work an initializer awaits.
+        /// </summary>
+        public CancellationToken InitializationToken => _initializationToken;
+
+        /// <summary>Gets the root element of the codex.</summary>
+        /// <remarks>
+        /// It fills its parent and ignores pointer input. The codex creates it before it initializes.
+        /// </remarks>
         public VisualElement CodexRoot => _codexRoot;
 
+        /// <summary>
+        /// Gets the root element of the panel that the codex draws on, or <c>null</c> until the panel has one.
+        /// </summary>
         public VisualElement PanelRoot => _panelRoot;
 
+        /// <summary>Gets the number that changes whenever the panel gives the codex a new root element.</summary>
         public int RootVersion => _rootVersion;
 
+        /// <summary>Gets the display name of the panel component: UI Document or Panel Renderer.</summary>
         public string PanelComponentName => _adapter?.DisplayName ?? string.Empty;
 
+        /// <summary>Gets the number of flows this codex created.</summary>
         public int FlowCount => _pageFlows.Count;
 
-        public void Initialize(
+        /// <summary>Creates the flows and starts the initializer without waiting for it.</summary>
+        /// <param name="flowContext">The context to use. <c>null</c> uses <see cref="FlowContext"/>.</param>
+        /// <param name="getPublisherFunc">Supplies the publisher. <c>null</c> uses the global publisher.</param>
+        /// <param name="getSubscriberFunc">Supplies the subscriber. <c>null</c> uses the global subscriber.</param>
+        /// <param name="getProcessorFunc">Supplies the processor. <c>null</c> uses the global processor.</param>
+        /// <returns>
+        /// Success when the codex created its flows; otherwise a failure; see <see cref="PageFlowCodexError"/>.
+        /// </returns>
+        /// <remarks>
+        /// The suppliers are used only when the context is not initialized yet. The initializer runs in the
+        /// background; an exception it throws is not returned. Use <see cref="InitializeAsync"/> to wait for it.
+        /// </remarks>
+        public Success<PageFlowCodexError> Initialize(
               UitkPageFlowContext flowContext = null
             , Func<MessagePublisher> getPublisherFunc = null
             , Func<MessageSubscriber> getSubscriberFunc = null
             , Func<Processor> getProcessorFunc = null
-            , Func<ArrayPool<UnityTask>> getTaskArrayPoolFunc = null
+        )
+        {
+            var result = InitializeFlows(
+                  flowContext
+                , getPublisherFunc
+                , getSubscriberFunc
+                , getProcessorFunc
+                , out var initializer
+            );
+
+            if (result.IsSuccess)
+            {
+                initializer.OnInitializeAsync(this).Forget();
+            }
+
+            return result;
+        }
+
+        /// <summary>Creates the flows and waits for the initializer.</summary>
+        /// <param name="flowContext">The context to use. <c>null</c> uses <see cref="FlowContext"/>.</param>
+        /// <param name="getPublisherFunc">Supplies the publisher. <c>null</c> uses the global publisher.</param>
+        /// <param name="getSubscriberFunc">Supplies the subscriber. <c>null</c> uses the global subscriber.</param>
+        /// <param name="getProcessorFunc">Supplies the processor. <c>null</c> uses the global processor.</param>
+        /// <returns>
+        /// Success when the codex created its flows and the initializer ended; otherwise a failure; see
+        /// <see cref="PageFlowCodexError"/>.
+        /// </returns>
+        /// <remarks>
+        /// An exception the initializer throws comes back as the <c>InitializerFailed</c> case. When the codex is
+        /// destroyed or initialized again meanwhile, the call throws the
+        /// <see cref="System.OperationCanceledException"/>.
+        /// </remarks>
+        public async UnityTask<Success<PageFlowCodexError>> InitializeAsync(
+              UitkPageFlowContext flowContext = null
+            , Func<MessagePublisher> getPublisherFunc = null
+            , Func<MessageSubscriber> getSubscriberFunc = null
+            , Func<Processor> getProcessorFunc = null
+        )
+        {
+            var result = InitializeFlows(
+                  flowContext
+                , getPublisherFunc
+                , getSubscriberFunc
+                , getProcessorFunc
+                , out var initializer
+            );
+
+            if (result.IsFailure)
+            {
+                return result;
+            }
+
+            var token = _initializationToken;
+
+            try
+            {
+                await initializer.OnInitializeAsync(this);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return PageFlowCodexError.InitializerFailed(ex);
+            }
+
+            // A superseded or destroyed run reports cancellation even when its initializer ignored the token.
+            token.ThrowIfCancellationRequested();
+            return Success.Yes;
+        }
+
+        private Success<PageFlowCodexError> InitializeFlows(
+              UitkPageFlowContext flowContext
+            , Func<MessagePublisher> getPublisherFunc
+            , Func<MessageSubscriber> getSubscriberFunc
+            , Func<Processor> getProcessorFunc
+            , out IUitkPageCodexOnInitialize initializer
         )
         {
             EnsureCreated();
 
+            initializer = null;
             flowContext ??= _flowContext;
-            _flowContext = flowContext;
-
             flowContext.Owner = this;
 
             if (flowContext.IsInitialized == false)
@@ -73,41 +219,36 @@ namespace EncosyTower.PageFlows.UitkPages
                 var subscriber = getSubscriberFunc?.Invoke();
                 var publisher = getPublisherFunc?.Invoke();
                 var processor = getProcessorFunc?.Invoke();
-                var taskArrayPool = getTaskArrayPoolFunc?.Invoke();
 
-                flowContext.Initialize(subscriber, publisher, processor, settings, taskArrayPool);
+                flowContext.Initialize(subscriber, publisher, processor, settings);
             }
 
-            var initializer = GetComponent<IUitkPageCodexOnInitialize>();
+            var foundInitializer = GetComponent<IUitkPageCodexOnInitialize>();
 
-            if (initializer is not Component initializerContext || initializerContext.IsInvalid())
+            if (foundInitializer is not Component initializerComponent || initializerComponent.IsInvalid())
             {
-                ErrorIfCannotInitializeWithoutInitializer(this);
-                return;
+                return PageFlowCodexError.InitializerMissing();
             }
 
-            var flowScopeCollectionApplier = initializer.PageFlowScopeCollectionApplier;
+            var flowScopeCollectionApplier = foundInitializer.PageFlowScopeCollectionApplier;
 
             if (flowScopeCollectionApplier == null)
             {
-                ErrorIfInitializerComponentReturnsNullApplier(this, initializerContext);
-                return;
+                return PageFlowCodexError.ScopeCollectionApplierMissing();
             }
 
             var flowScopeCollectionType = flowScopeCollectionApplier.CollectionType;
 
             if (flowScopeCollectionType == null)
             {
-                ErrorIfApplierReturnsNullFlowScopeCollectionType(this, initializerContext);
-                return;
+                return PageFlowCodexError.ScopeCollectionTypeMissing();
             }
 
             var identifiers = flowScopeCollectionApplier.ScopeIdentifiers;
 
             if (identifiers.Length < 1)
             {
-                ErrorIfFlowScopeCollectionTypeHasNoValidProperty(flowScopeCollectionType, this, initializerContext);
-                return;
+                return PageFlowCodexError.NoScopeProperties(flowScopeCollectionType);
             }
 
             var definitions = (_flows ?? Array.Empty<FlowDefinition>()).AsSpan();
@@ -115,31 +256,75 @@ namespace EncosyTower.PageFlows.UitkPages
 
             if (validation.IsValid == false)
             {
-                LogValidationErrors(flowScopeCollectionType, validation);
-                return;
+                return PageFlowCodexError.InvalidDefinitions(validation);
             }
 
+            // Clones made by CreatePageFlows copy the applier.
+            var previousApplier = flowContext.FlowScopeCollectionApplier;
             flowContext.FlowScopeCollectionApplier = Option.Some(flowScopeCollectionApplier);
 
-            CreatePageFlows(flowContext, definitions);
-            PlaceFlows();
+            var flowScopeMap = new ArrayMap<string, PageFlowScope>();
+            var pageFlows = new List<UitkPageFlow>(definitions.Length);
+            var result = CreatePageFlows(flowContext, definitions, flowScopeMap, pageFlows);
 
-            if (flowScopeCollectionApplier.TryBuild(_flowScopeMap, out var missingIdentifier) == false)
+            if (result.IsSuccess)
             {
-                ErrorIfCannotFindFlowScopeForProperty(flowScopeCollectionType, missingIdentifier, this);
-                return;
+                result = flowScopeCollectionApplier.Build(flowScopeMap);
             }
 
+            if (result.IsFailure)
+            {
+                var createdCount = pageFlows.Count;
+
+                for (var i = 0; i < createdCount; i++)
+                {
+                    pageFlows[i].Dispose();
+                }
+
+                flowContext.FlowScopeCollectionApplier = previousApplier;
+                return result;
+            }
+
+            // Commit: the D10 re-initialization fix, now applied only after success.
+            var oldFlows = _pageFlows;
+            var oldCount = oldFlows.Count;
+
+            for (var i = 0; i < oldCount; i++)
+            {
+                oldFlows[i].Dispose();
+            }
+
+            _flowContext = flowContext;
+            _flowScopeMap = flowScopeMap;
+            _pageFlows = pageFlows;
             _flowScopeCollectionApplier = flowScopeCollectionApplier;
-            initializer.OnInitializeAsync(this).Forget();
+
+            PlaceFlows();
+
+            CancelInitialization();
+            _initializationCts = new CancellationTokenSource();
+            _initializationToken = _initializationCts.Token;
+
+            initializer = foundInitializer;
+            return Success.Yes;
         }
 
+        /// <summary>Gets the scope of a flow by the identifier of its definition.</summary>
+        /// <param name="identifier">The identifier of the flow definition.</param>
+        /// <param name="result">The scope of the flow.</param>
+        /// <returns><c>true</c> when the codex created a flow with that identifier; otherwise <c>false</c>.</returns>
         public bool TryGetFlowScope(string identifier, out PageFlowScope result)
             => _flowScopeMap.TryGetValue(identifier, out result);
 
+        /// <summary>Gets a flow by the index of its definition.</summary>
+        /// <param name="index">The index of the flow definition.</param>
+        /// <returns>The flow, or none when the index is out of range.</returns>
         public Option<UitkPageFlow> GetFlowAt(int index)
             => (uint)index < (uint)_pageFlows.Count ? _pageFlows[index] : Option.None;
 
+        /// <summary>Gets a flow by the identifier of its definition.</summary>
+        /// <param name="identifier">The identifier of the flow definition.</param>
+        /// <returns>The flow, or none when the codex created no flow with that identifier.</returns>
         public Option<UitkPageFlow> GetFlow(string identifier)
         {
             var count = _pageFlows.Count;
@@ -157,34 +342,41 @@ namespace EncosyTower.PageFlows.UitkPages
             return Option.None;
         }
 
+        /// <summary>Creates the codex root and initializes the codex when <c>autoInitializeOnAwake</c> is on.</summary>
         protected void Awake()
         {
             EnsureCreated();
 
             if (_flowContext.autoInitializeOnAwake)
             {
-                Initialize(_flowContext);
+                // The synchronous steps of InitializeAsync complete before Awake returns.
+                AutoInitializeAsync().Forget();
             }
         }
 
+        /// <summary>Attaches the codex to its panel component.</summary>
         protected void OnEnable()
         {
             EnsureCreated();
             _adapter.Attach(OnRoot);
         }
 
+        /// <summary>Detaches the codex from its panel component.</summary>
         protected void OnDisable()
         {
             _adapter?.Detach();
         }
 
+        /// <summary>Lets the panel component report a new root element.</summary>
         protected void LateUpdate()
         {
             _adapter?.Poll();
         }
 
+        /// <summary>Cancels the initialization, disposes the flows and removes the codex root from the panel.</summary>
         protected void OnDestroy()
         {
+            CancelInitialization();
             _adapter?.Detach();
 
             var count = _pageFlows.Count;
@@ -352,124 +544,69 @@ namespace EncosyTower.PageFlows.UitkPages
             return _codexRoot;
         }
 
-        private void CreatePageFlows(UitkPageFlowContext originalContext, ReadOnlySpan<FlowDefinition> definitions)
+        private Success<PageFlowCodexError> CreatePageFlows(
+              UitkPageFlowContext originalContext
+            , ReadOnlySpan<FlowDefinition> definitions
+            , ArrayMap<string, PageFlowScope> flowScopeMap
+            , List<UitkPageFlow> pageFlows
+        )
         {
             var length = definitions.Length;
 
-            _flowScopeMap.Clear();
-            _flowScopeMap.EnsureCapacity(length);
+            flowScopeMap.EnsureCapacity(length);
 
             for (var i = 0; i < length; i++)
             {
                 var definition = definitions[i];
                 var identifier = definition.identifier;
 
-                if (_flowScopeMap.ContainsKey(identifier))
+                if (flowScopeMap.ContainsKey(identifier))
                 {
-                    ErrorIfDuplicateIdentifier(i, identifier, this);
-                    continue;
+                    return PageFlowCodexError.FlowCreationFailed(i, identifier);
                 }
 
                 if (UitkPageFlow.TryCreate(definition.kind, out var flow) == false)
                 {
-                    ErrorIfUnexpectedErrorWhenCreate(i, this);
-                    continue;
+                    return PageFlowCodexError.FlowCreationFailed(i, identifier);
                 }
 
                 var context = originalContext.CloneWithoutOwner();
                 context.autoInitializeOnAwake = false;
                 flow.Initialize(identifier, definition.containerName, this, context, _behaviourParent);
 
-                if (_flowScopeMap.TryAdd(identifier, flow.Context.FlowScope) == false)
+                if (flowScopeMap.TryAdd(identifier, flow.Context.FlowScope) == false)
                 {
-                    ErrorIfUnexpectedErrorWhenRegister(i, identifier, this);
                     flow.Dispose();
-                    continue;
+                    return PageFlowCodexError.FlowCreationFailed(i, identifier);
                 }
 
-                _pageFlows.Add(flow);
+                pageFlows.Add(flow);
             }
+
+            return Success.Yes;
         }
 
-        private void LogValidationErrors(Type type, in PageFlowCodexValidation validation)
+        private async UnityTask AutoInitializeAsync()
         {
-            if (validation.FirstEmptyIndex >= 0)
+            var result = await InitializeAsync(_flowContext);
+
+            if (result.TryGetFailure(out var error))
             {
-                ErrorIfDefinitionIdentifierIsEmpty(validation.FirstEmptyIndex, this);
+                error.Log(_flowContext.Logger);
             }
+        }
 
-            var duplicates = validation.DuplicateIdentifiers;
-
-            for (var i = 0; i < duplicates.Length; i++)
+        private void CancelInitialization()
+        {
+            if (_initializationCts == null)
             {
-                ErrorIfDuplicateDefinition(duplicates[i], this);
+                return;
             }
 
-            if (validation.ScopesWithoutDefinition.Length > 0 || validation.DefinitionsWithoutScope.Length > 0)
-            {
-                ErrorIfFlowIdentifiersMismatch(
-                      type
-                    , string.Join(", ", validation.ScopesWithoutDefinition)
-                    , string.Join(", ", validation.DefinitionsWithoutScope)
-                    , this
-                );
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfCannotInitializeWithoutInitializer(UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"Cannot initialize {nameof(UitkPageCodex)} without an initializer. " +
-                $"Please add another component implements {nameof(IUitkPageCodexOnInitialize)} " +
-                $"to the GameObject of this {nameof(UitkPageCodex)}."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfDefinitionIdentifierIsEmpty(int index, UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"Cannot create a flow for definition at index {index} because its identifier is null or empty."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfDuplicateDefinition(string identifier, UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"The identifier '{identifier}' is used by more than one flow definition."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfUnexpectedErrorWhenCreate(int index, UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"An unexpected error occured when create a flow for definition at index {index}."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfDuplicateIdentifier(int index, string identifier, UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"The identifier '{identifier}' of definition at index {index} is duplicate thus will be ignored."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfUnexpectedErrorWhenRegister(int index, string identifier, UitkPageCodex context)
-        {
-            context.GetLogger(context._flowContext.LogEnvironment).LogError(
-                $"An unexpected error occured when register the flow '{identifier}' at index {index}."
-            );
+            // _initializationToken keeps the cancelled token.
+            _initializationCts.Cancel();
+            _initializationCts.Dispose();
+            _initializationCts = null;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -479,85 +616,6 @@ namespace EncosyTower.PageFlows.UitkPages
             context.GetLogger(context._flowContext.LogEnvironment).LogError(
                 $"Cannot find the container '{containerName}' of the flow '{identifier}' in the panel root. " +
                 $"The flow is placed under the codex root instead."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfInitializerComponentReturnsNullApplier(UitkPageCodex codex, UnityObject context)
-        {
-            context.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                $"The {nameof(IUitkPageCodexOnInitialize)} component " +
-                $"returned a null {nameof(IPageFlowScopeCollectionApplier)}. " +
-                $"Please ensure the interface {nameof(IUitkPageCodexOnInitialize)} is correctly implemented."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfApplierReturnsNullFlowScopeCollectionType(UitkPageCodex codex, UnityObject context)
-        {
-            context.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                $"The {nameof(IPageFlowScopeCollectionApplier)} returned a null " +
-                $"flow scope collection type. Please ensure the interface " +
-                $"{nameof(IPageFlowScopeCollectionApplier)} is correctly implemented."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfFlowScopeCollectionTypeHasNoValidProperty(
-              Type type
-            , UitkPageCodex codex
-            , UnityObject context
-        )
-        {
-            context.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                $"Cannot find any valid property to store {nameof(PageFlowScope)} values. " +
-                $"Please ensure the type '{type}' is a partial struct with [PageFlowScopeCollection] " +
-                $"and has properties whose signature looks like this: " +
-                $"`public {nameof(PageFlowScope)} PropertyName {{ get; private set; }}`."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfFlowIdentifiersMismatch(
-              Type type
-            , string missingIdentifiers
-            , string missingProperties
-            , UitkPageCodex codex
-        )
-        {
-            if (missingIdentifiers.IsNotEmpty())
-            {
-                codex.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                    $"The flow definitions on this {nameof(UitkPageCodex)} " +
-                    $"do not match the properties of type '{type}'. " +
-                    $"The following identifiers are missing: {missingIdentifiers}. " +
-                    $"Please specify all flow definitions according to the properties of type '{type}'."
-                );
-            }
-
-            if (missingProperties.IsNotEmpty())
-            {
-                codex.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                    $"The properties of type '{type}' do not match the identifiers " +
-                    $"of the flow definitions on this {nameof(UitkPageCodex)}. " +
-                    $"The following properties are missing: {missingProperties}. " +
-                    $"Please ensure the properties of type '{type}' match all flow definitions."
-                );
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfCannotFindFlowScopeForProperty(Type type, string identifier, UitkPageCodex codex)
-        {
-            codex.GetLogger(codex._flowContext.LogEnvironment).LogError(
-                $"Cannot find a flow scope value for the property '{identifier}' of the type '{type}'. " +
-                $"Please add the flow definitions to this {nameof(UitkPageCodex)} " +
-                $"matching the properties of type '{type}'."
             );
         }
 

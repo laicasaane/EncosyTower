@@ -1,10 +1,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using EncosyTower.PageFlows;
+using EncosyTower.PageFlows.Codex;
 using EncosyTower.PageFlows.UitkPages;
-using NUnit.Framework;
+using EncosyTower.PageFlows.UitkPages.Transitions;
 using UnityEngine;
 using UnityEngine.UIElements;
+using NUnit.Framework;
 
 namespace EncosyTower.Tests.PageFlows.UitkPages
 {
@@ -33,7 +35,15 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             };
 
             var start = Time.realtimeSinceStartup;
-            await transition.OnShowAsync(PageTransitionOptions.Default, CancellationToken.None);
+
+            await transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , CancellationToken.None
+            );
+
             var elapsed = Time.realtimeSinceStartup - start;
 
             Assert.GreaterOrEqual(elapsed, 0.08f);
@@ -52,7 +62,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             };
 
             var startFrame = Time.frameCount;
-            await transition.OnShowAsync(PageTransitionOptions.Default, CancellationToken.None);
+
+            await transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , CancellationToken.None
+            );
 
             Assert.Less(Time.frameCount - startFrame, 10);
             Assert.IsTrue(slot.ClassListContains("test-plain-to"));
@@ -69,7 +86,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             using var cancellation = new CancellationTokenSource();
             var start = Time.realtimeSinceStartup;
-            var task = transition.OnShowAsync(PageTransitionOptions.Default, cancellation.Token);
+
+            var task = transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , cancellation.Token
+            );
 
             await WaitFramesAsync(3);
             cancellation.Cancel();
@@ -87,7 +111,13 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var slot = await CreateSlotAsync();
             var transition = new UitkUssClassTransition(slot);
 
-            await transition.OnShowAsync(PageTransitionOptions.Default, CancellationToken.None);
+            await transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , CancellationToken.None
+            );
 
             Assert.AreEqual(1f, slot.style.opacity.value, 0.0001f);
             Assert.IsFalse(transition.IsRunning);
@@ -102,10 +132,24 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
                 HideDurationMs = 50,
             };
 
-            await transition.OnShowAsync(PageTransitionOptions.Default, CancellationToken.None);
+            await transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , CancellationToken.None
+            );
+
             Assert.AreEqual(1f, slot.style.opacity.value, 0.0001f);
 
-            await transition.OnHideAsync(PageTransitionOptions.Default, CancellationToken.None);
+            await transition.OnHideAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Hide,
+                      HideOptions = PageTransitionOptions.Default,
+                  }
+                , CancellationToken.None
+            );
+
             Assert.AreEqual(0f, slot.style.opacity.value, 0.0001f);
         }
 
@@ -119,7 +163,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             using var cancellation = new CancellationTokenSource();
             var start = Time.realtimeSinceStartup;
-            var task = transition.OnShowAsync(PageTransitionOptions.Default, cancellation.Token);
+
+            var task = transition.OnShowAsync(
+                  new PageTransitionContext {
+                      Transition = PageTransition.Show,
+                      ShowOptions = PageTransitionOptions.Default,
+                  }
+                , cancellation.Token
+            );
 
             await WaitFramesAsync(3);
             cancellation.Cancel();
@@ -189,8 +240,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         private async Task<VisualElement> CreateSlotAsync()
         {
             _harness = await CreateAsync(
-                  ("Screen", PageFlowKind.SinglePageStack, "")
-                , ("Popup", PageFlowKind.SinglePageStack, "")
+                  ("Screen", PageFlowKind.PageStackSingle, "")
+                , ("Popup", PageFlowKind.PageStackSingle, "")
             );
 
             _harness.Codex.PanelRoot.styleSheets.Add(Resources.Load<StyleSheet>(TRANSITIONS));
@@ -201,14 +252,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             return slot;
         }
 
-        private async Task<UitkMultiPageStack> CreateStackAsync()
+        private async Task<UitkPageStackMulti> CreateStackAsync()
         {
             _harness = await CreateAsync(
-                  ("Screen", PageFlowKind.MultiPageStack, "")
-                , ("Popup", PageFlowKind.SinglePageStack, "")
+                  ("Screen", PageFlowKind.PageStackMulti, "")
+                , ("Popup", PageFlowKind.PageStackSingle, "")
             );
 
-            return _harness.GetFlow<UitkMultiPageStack>("Screen");
+            return _harness.GetFlow<UitkPageStackMulti>("Screen");
         }
 
         private static string GetFocusedName(UitkPageFlow flow)

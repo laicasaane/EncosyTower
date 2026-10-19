@@ -1,12 +1,26 @@
 #if UNITY_UGUI
 
 using System.Runtime.CompilerServices;
+using EncosyTower.PageFlows.PubSub;
+using EncosyTower.PageFlows.UguiPages.Transitions;
 using EncosyTower.PubSub;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 
 namespace EncosyTower.PageFlows.UguiPages
 {
+    /// <summary>A base component for a uGUI page.</summary>
+    /// <remarks>
+    /// <para>
+    /// It reads <see cref="UguiPageOptions"/> and a <see cref="Transitions.UguiPageTransitionCollection"/> from its
+    /// GameObject, and adds them when they are missing. The flow sets <see cref="FlowScope"/>,
+    /// <see cref="Subscriber"/> and <see cref="Publisher"/> when the page attaches, and clears them when it detaches.
+    /// </para>
+    /// <para>
+    /// For a page that fades as one unit, put a <see cref="Transitions.UguiPageTransitionCanvasGroup"/> on its
+    /// root GameObject.
+    /// </para>
+    /// </remarks>
     public abstract class UguiPageBehaviour : MonoBehaviour
         , IUguiPage
         , IPageHasOptions
@@ -21,6 +35,8 @@ namespace EncosyTower.PageFlows.UguiPages
         private MessagePublisher _publisher;
         private PageFlowScope _flowScope;
 
+        /// <inheritdoc/>
+        /// <remarks>It comes from the <see cref="UguiPageOptions"/> component of the page.</remarks>
         public PageOptions PageOptions
         {
             get
@@ -34,6 +50,8 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
+        /// <inheritdoc/>
+        /// <remarks>It is the <see cref="Transitions.UguiPageTransitionCollection"/> component of the page.</remarks>
         public IPageTransition PageTransition
         {
             get
@@ -47,18 +65,21 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
+        /// <summary>Gets the scope of the flow the page is attached to.</summary>
         public PageFlowScope FlowScope
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _flowScope;
         }
 
+        /// <summary>Gets the subscriber of the flow the page is attached to.</summary>
         public MessageSubscriber Subscriber
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _subscriber;
         }
 
+        /// <summary>Gets the publisher of the flow the page is attached to.</summary>
         public MessagePublisher Publisher
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

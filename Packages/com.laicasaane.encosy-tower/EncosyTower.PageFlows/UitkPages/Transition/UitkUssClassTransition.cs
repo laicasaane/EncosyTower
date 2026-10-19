@@ -4,8 +4,20 @@ using EncosyTower.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Transitions
 {
+    /// <summary>Animates a page element with USS transitions between USS classes.</summary>
+    /// <remarks>
+    /// <para>
+    /// A step sets the <c>From</c> class, then the <c>To</c> class, so the USS transitions of the element play.
+    /// The step ends when they end. Without classes for a step, the transition uses a preset: it fades the opacity
+    /// of the element and scales it from 0.98 over 0.2 seconds.
+    /// </para>
+    /// <para>
+    /// <see cref="PageTransitionOptions.ZeroDuration"/> applies the end state at once. An abort continues from the
+    /// current state. The element detaching from its panel ends the step with the end state.
+    /// </para>
+    /// </remarks>
     public sealed class UitkUssClassTransition : IPageTransition
     {
         private const float PRESET_DURATION_SECONDS = 0.2f;
@@ -19,12 +31,15 @@ namespace EncosyTower.PageFlows.UitkPages
 
         private UnityTaskCompletionSource _completion;
         private CancellationTokenRegistration _registration;
+        private PageAbortHandle _abort;
         private bool _show;
         private bool _zeroShowDuration;
         private bool _zeroHideDuration;
         private bool _hasRun;
         private int _runId;
 
+        /// <summary>Creates a transition for an element.</summary>
+        /// <param name="slot">The element to animate.</param>
         public UitkUssClassTransition(VisualElement slot)
         {
             _slot = slot;
@@ -34,62 +49,78 @@ namespace EncosyTower.PageFlows.UitkPages
             _slot.RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
+        /// <summary>Gets or sets the USS class that holds the start state of the show.</summary>
         public string EnterFromClass { get; set; }
 
+        /// <summary>Gets or sets the USS class that holds the end state of the show.</summary>
         public string EnterToClass { get; set; }
 
+        /// <summary>Gets or sets the USS class that holds the start state of the hide.</summary>
         public string ExitFromClass { get; set; }
 
+        /// <summary>Gets or sets the USS class that holds the end state of the hide.</summary>
         public string ExitToClass { get; set; }
 
+        /// <inheritdoc/>
         public bool ForceRunShow { get; set; }
 
+        /// <inheritdoc/>
         public bool ForceRunHide { get; set; }
 
+        /// <summary>Gets whether a step is running.</summary>
         public bool IsRunning => _completion != null;
 
+        /// <summary>Gets the element the transition animates.</summary>
         public VisualElement Slot => _slot;
 
         private static List<TimeValue> CreateDuration(float seconds)
             => new() { new TimeValue(seconds, TimeUnit.Second) };
 
-        public UnityTask OnBeforeTransitionAsync(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-            , CancellationToken token
-        )
+        /// <inheritdoc/>
+        public UnityTask OnBeforeTransitionAsync(PageTransitionContext context, CancellationToken token)
         {
-            _zeroShowDuration = showOptions.Contains(PageTransitionOptions.ZeroDuration);
-            _zeroHideDuration = hideOptions.Contains(PageTransitionOptions.ZeroDuration);
+            _zeroShowDuration = context.ShowOptions.Contains(PageTransitionOptions.ZeroDuration);
+            _zeroHideDuration = context.HideOptions.Contains(PageTransitionOptions.ZeroDuration);
             return UnityTask.CompletedTask;
         }
 
-        public void OnAfterTransition(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-        )
+        /// <inheritdoc/>
+        public void OnAfterTransition(PageTransitionContext context)
         {
-            Finish(transition == PageTransition.Show);
+            var show = context.Transition == PageTransition.Show;
+            var options = show ? context.ShowOptions : context.HideOptions;
+            var forceRun = show ? ForceRunShow : ForceRunHide;
+
+            if (options.Contains(PageTransitionOptions.NoTransition) && forceRun == false)
+            {
+                return;
+            }
+
+            Finish(show);
         }
 
-        public UnityTask OnShowAsync(PageTransitionOptions options, CancellationToken token)
+        /// <inheritdoc/>
+        public UnityTask OnShowAsync(PageTransitionContext context, CancellationToken token)
             => Run(
-                  show: true
-                , zeroDuration: _zeroShowDuration || options.Contains(PageTransitionOptions.ZeroDuration)
+                  context
+                , show: true
+                , zeroDuration: _zeroShowDuration || context.ShowOptions.Contains(PageTransitionOptions.ZeroDuration)
                 , token: token
             );
 
-        public UnityTask OnHideAsync(PageTransitionOptions options, CancellationToken token)
+        /// <inheritdoc/>
+        public UnityTask OnHideAsync(PageTransitionContext context, CancellationToken token)
             => Run(
-                  show: false
-                , zeroDuration: _zeroHideDuration || options.Contains(PageTransitionOptions.ZeroDuration)
+                  context
+                , show: false
+                , zeroDuration: _zeroHideDuration || context.HideOptions.Contains(PageTransitionOptions.ZeroDuration)
                 , token: token
             );
 
-        private UnityTask Run(bool show, bool zeroDuration, CancellationToken token)
+        private UnityTask Run(PageTransitionContext context, bool show, bool zeroDuration, CancellationToken token)
         {
+            _abort = context.Abort;
+
             if (IsRunning)
             {
                 Finish(_show);
@@ -107,6 +138,20 @@ namespace EncosyTower.PageFlows.UitkPages
             _hasRun = false;
             _runningProperties.Clear();
             _completion = new UnityTaskCompletionSource();
+
+            if (context.Abort.IsRequested)
+            {
+                RemoveTransitionClasses();
+
+                if (token.CanBeCanceled)
+                {
+                    _registration = token.Register(OnCanceled);
+                }
+
+                ApplyTargetState(runId, zeroDuration);
+                return _completion.Task;
+            }
+
             ApplyStartState(show);
 
             if (token.CanBeCanceled)
@@ -245,10 +290,18 @@ namespace EncosyTower.PageFlows.UitkPages
 
         private void OnCanceled()
         {
-            if (IsRunning)
+            if (IsRunning == false)
             {
-                Finish(_show);
+                return;
             }
+
+            if (_abort.IsRequested)
+            {
+                Complete();
+                return;
+            }
+
+            Finish(_show);
         }
 
         private void Finish(bool show)

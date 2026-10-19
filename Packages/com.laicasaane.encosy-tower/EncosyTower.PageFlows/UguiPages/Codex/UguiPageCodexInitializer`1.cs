@@ -4,7 +4,7 @@ using EncosyTower.Common;
 using EncosyTower.Tasks;
 using UnityEngine;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Codex
 {
     /// <summary>
     /// A base component that initializes a <see cref="UguiPageCodex"/> on the same GameObject
@@ -34,6 +34,7 @@ namespace EncosyTower.PageFlows.UguiPages
         /// <summary>
         /// The scopes set by the codex, or none before the codex has initialized.
         /// </summary>
+        /// <remarks>The hook <c>OnInitializeAsync</c> receives the same value.</remarks>
         protected Option<TScopes> FlowScopes => _flowScopesApplier.TryGet(out var scopes) ? scopes : Option.None;
 
         IPageFlowScopeCollectionApplier IUguiPageCodexOnInitialize.PageFlowScopeCollectionApplier

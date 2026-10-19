@@ -4,18 +4,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using EncosyTower.AssetKeys;
 using EncosyTower.Collections;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Initialization;
 using EncosyTower.Logging;
+using EncosyTower.PageFlows.Loading;
 using EncosyTower.Pooling;
 using EncosyTower.StringIds;
 using EncosyTower.UnityExtensions;
 using Unity.Collections;
 using UnityEngine;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Internals
 {
     using GameObjectId = UnityEntityId<GameObject>;
 
@@ -30,6 +32,7 @@ namespace EncosyTower.PageFlows.UguiPages
         private readonly int _activeLayer;
 
         private Option<UguiPageOptions> _options;
+        private PageAssetHandle<GameObject> _sourceLease;
 
         public UguiPagePool(
               Transform poolParent
@@ -52,12 +55,15 @@ namespace EncosyTower.PageFlows.UguiPages
 
         public int PoolingCount => _pool.UnusedCount;
 
-        public void Initialize(GameObject source)
+        public void Initialize(PageAssetHandle<GameObject> lease)
         {
             if (IsInitialized)
             {
+                lease.Release();
                 return;
             }
+
+            var source = lease.Asset;
 
             _pool.Prefab = new GameObjectPrefab {
                 Parent = _poolParent,
@@ -66,6 +72,7 @@ namespace EncosyTower.PageFlows.UguiPages
             };
 
             _options = source.TryGetComponent<UguiPageOptions>(out var options) ? options : Option.None;
+            _sourceLease = lease;
         }
 
         public void Prepool(int amount)
@@ -77,7 +84,11 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
-        public Option<UguiPageIdentifier> Rent(StringId keyId, string pageAssetKey, UnityObjectLogger logger)
+        public Result<UguiPageIdentifier, PageFlowError> Rent(
+              StringId keyId
+            , AssetKey pageAssetKey
+            , UnityObjectLogger logger
+        )
         {
             var gameObject = _pool.RentGameObject(GetRentingStrategy());
             var findResult = gameObject.TryGetComponent<IUguiPage>(out var page);
@@ -85,15 +96,13 @@ namespace EncosyTower.PageFlows.UguiPages
             if (findResult == false)
             {
                 UnityEngine.Object.Destroy(gameObject);
-                ErrorIfFoundNoPage(pageAssetKey, logger);
-                return default;
+                return PageFlowError.AssetNotSinglePage(assetKey: pageAssetKey, pageCount: 0);
             }
 
             if (page is not Component component)
             {
                 UnityEngine.Object.Destroy(gameObject);
-                ErrorIfPageIsNotComponent(page, pageAssetKey, logger);
-                return default;
+                return PageFlowError.PageNotComponent(page);
             }
 
             gameObject.layer = _activeLayer;
@@ -108,7 +117,7 @@ namespace EncosyTower.PageFlows.UguiPages
             identifier.Transform = transform;
             identifier.GameObject = gameObject;
             identifier.CanvasGroup = canvasGroup;
-            identifier.Transform.SetParent(_activeParent, false);
+            identifier.Transform.SetParent(_poolParent, false);
             identifier.GameObjectId = gameObject;
             identifier.Page = page;
 
@@ -124,12 +133,34 @@ namespace EncosyTower.PageFlows.UguiPages
             return identifier;
         }
 
+        public void MoveToActive(UguiPageIdentifier identifier)
+        {
+            var transform = identifier.Transform;
+
+            if (ReferenceEquals(transform.parent, _activeParent) == false)
+            {
+                transform.SetParent(_activeParent, false);
+            }
+        }
+
+        public void MoveToPool(UguiPageIdentifier identifier)
+        {
+            var transform = identifier.Transform;
+
+            if (ReferenceEquals(transform.parent, _poolParent) == false)
+            {
+                transform.SetParent(_poolParent, false);
+            }
+        }
+
         public void Return(UguiPageIdentifier identifier)
         {
-            if (_gameObjectIds.Remove(identifier.GameObjectId))
+            if (_gameObjectIds.Remove(identifier.GameObjectId) == false)
             {
-                _pageIds.Remove(identifier);
+                return;
             }
+
+            _pageIds.Remove(identifier);
 
             identifier.GameObject.layer = _poolLayer;
             identifier.Transform.SetParent(_poolParent, false);
@@ -143,6 +174,8 @@ namespace EncosyTower.PageFlows.UguiPages
 
             _pool.ReleaseInstances(0);
             _pool.Dispose();
+            _sourceLease.Release();
+            _sourceLease = default;
             _options = Option.None;
         }
 
@@ -177,23 +210,7 @@ namespace EncosyTower.PageFlows.UguiPages
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfFoundNoPage(string key, UnityObjectLogger logger)
-        {
-            logger.LogError($"Cannot find any page component derived from '{nameof(IUguiPage)}' on the asset '{key}'.");
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfPageIsNotComponent(IUguiPage page, string key, UnityObjectLogger logger)
-        {
-            logger.LogError(
-                $"The page '{page.GetType()}' on the asset '{key}' is not derived from 'UnityEngine.Component'."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void WarningIfAlreadyInActive(IUguiPage page, string assetKey, UnityObjectLogger logger)
+        private static void WarningIfAlreadyInActive(IUguiPage page, AssetKey assetKey, UnityObjectLogger logger)
         {
             logger.LogWarning(
                 $"The page '{page.GetType()}' on the asset '{assetKey}' is already in active. " +

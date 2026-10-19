@@ -2,7 +2,7 @@ using EncosyTower.Common;
 using EncosyTower.Tasks;
 using UnityEngine;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Codex
 {
     /// <summary>
     /// A base component that initializes a <see cref="UitkPageCodex"/> on the same GameObject
@@ -20,6 +20,7 @@ namespace EncosyTower.PageFlows.UitkPages
         /// <summary>
         /// The scopes set by the codex, or none before the codex has initialized.
         /// </summary>
+        /// <remarks>The hook <c>OnInitializeAsync</c> receives the same value.</remarks>
         protected Option<TScopes> FlowScopes => _flowScopesApplier.TryGet(out var scopes) ? scopes : Option.None;
 
         IPageFlowScopeCollectionApplier IUitkPageCodexOnInitialize.PageFlowScopeCollectionApplier

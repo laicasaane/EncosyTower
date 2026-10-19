@@ -4,21 +4,35 @@ using System;
 using System.Threading;
 using EncosyTower.Tasks;
 using EncosyTower.UnityExtensions;
+using UnityEngine;
 using UnityEngine.Playables;
-using UnityEngine.Scripting.APIUpdating;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Transitions
 {
+    /// <summary>Plays a timeline asset for the show or the hide.</summary>
+    /// <remarks>
+    /// With <see cref="PageTransitionOptions.ZeroDuration"/>, the director jumps to the end of the asset unless
+    /// <c>disableZeroDuration</c> of the options is on. A step with no asset does nothing.
+    /// </remarks>
     public class UguiPageTransitionPlayableDirector : UguiPageTransition
     {
+        /// <summary>The director that plays the assets. The transition adds one when it is missing.</summary>
+        [Tooltip("The director that plays the assets. The transition adds one when it is missing.")]
         public PlayableDirector director;
+
+        /// <summary>The options of the show.</summary>
+        [Tooltip("The options of the show.")]
         public Options showOperationOptions;
+
+        /// <summary>The options of the hide.</summary>
+        [Tooltip("The options of the hide.")]
         public Options hideOperationOptions;
 
         private bool _isTransitioning;
         private bool _zeroShowDuration;
         private bool _zeroHideDuration;
 
+        /// <summary>Gets the director that plays the assets.</summary>
         public PlayableDirector Director
         {
             get
@@ -32,49 +46,47 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
+        /// <inheritdoc/>
         public override bool ForceRunHide => hideOperationOptions.forceRun;
 
+        /// <inheritdoc/>
         public override bool ForceRunShow => showOperationOptions.forceRun;
 
-        public override UnityTask OnBeforeTransitionAsync(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-            , CancellationToken token
-        )
+        /// <inheritdoc/>
+        public override UnityTask OnBeforeTransitionAsync(PageTransitionContext context, CancellationToken token)
         {
             var director = Director;
+            director.stopped -= OnStopped;
             director.stopped += OnStopped;
 
             _isTransitioning = false;
 
-            _zeroShowDuration = showOptions.Contains(PageTransitionOptions.ZeroDuration)
+            _zeroShowDuration = context.ShowOptions.Contains(PageTransitionOptions.ZeroDuration)
                 && showOperationOptions.disableZeroDuration == false;
 
-            _zeroHideDuration = hideOptions.Contains(PageTransitionOptions.ZeroDuration)
+            _zeroHideDuration = context.HideOptions.Contains(PageTransitionOptions.ZeroDuration)
                 && hideOperationOptions.disableZeroDuration == false;
 
             return UnityTask.CompletedTask;
         }
 
-        public override void OnAfterTransition(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-        )
+        /// <inheritdoc/>
+        public override void OnAfterTransition(PageTransitionContext context)
         {
             var director = Director;
             director.stopped -= OnStopped;
         }
 
-        public override UnityTask OnShowAsync(PageTransitionOptions _, CancellationToken token)
+        /// <inheritdoc/>
+        public override UnityTask OnShowAsync(PageTransitionContext context, CancellationToken token)
         {
             return showOperationOptions.playableAsset.IsInvalid()
                 ? UnityTask.CompletedTask
                 : Transition(showOperationOptions, _zeroShowDuration, token);
         }
 
-        public override UnityTask OnHideAsync(PageTransitionOptions _, CancellationToken token)
+        /// <inheritdoc/>
+        public override UnityTask OnHideAsync(PageTransitionContext context, CancellationToken token)
         {
             return hideOperationOptions.playableAsset.IsInvalid()
                 ? UnityTask.CompletedTask
@@ -95,11 +107,16 @@ namespace EncosyTower.PageFlows.UguiPages
             {
                 _isTransitioning = true;
 
-                await UnityTask.WaitUntil(this, static state => state._isTransitioning == false, token);
-
-                if (token.IsCancellationRequested)
+                try
                 {
-                    _isTransitioning = false;
+                    await UnityTask.WaitUntil(this, static state => state._isTransitioning == false, token);
+                }
+                finally
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        _isTransitioning = false;
+                    }
                 }
             }
             else
@@ -113,17 +130,20 @@ namespace EncosyTower.PageFlows.UguiPages
             _isTransitioning = false;
         }
 
+        /// <summary>The options of the show or of the hide.</summary>
         [Serializable]
-        [MovedFrom(
-              true
-            , sourceNamespace: "EncosyTower.PageFlows.MonoPages"
-            , sourceAssembly: "EncosyTower.PageFlows.MonoPages"
-            , sourceClassName: null
-        )]
         public struct Options
         {
+            /// <summary>Whether the step runs even with <c>NoTransition</c>.</summary>
+            [Tooltip("Whether the step runs even with NoTransition.")]
             public bool forceRun;
+
+            /// <summary>Whether the step plays in full with <c>ZeroDuration</c>.</summary>
+            [Tooltip("Whether the step plays in full with ZeroDuration.")]
             public bool disableZeroDuration;
+
+            /// <summary>The asset to play.</summary>
+            [Tooltip("The asset to play.")]
             public PlayableAsset playableAsset;
         }
     }

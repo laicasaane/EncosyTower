@@ -2,10 +2,10 @@
 
 using EncosyTower.Logging;
 using EncosyTower.PageFlows;
-using EncosyTower.PageFlows.UguiPages;
+using EncosyTower.PageFlows.Loading;
 using EncosyTower.Pooling;
-using NUnit.Framework;
 using UnityEngine;
+using NUnit.Framework;
 
 namespace EncosyTower.Tests.PageFlows
 {
@@ -18,6 +18,7 @@ namespace EncosyTower.Tests.PageFlows
         {
             _settings = ScriptableObject.CreateInstance<UguiPageFlowSettings>();
             _settings.warnNoSubscriber = true;
+            _settings.rejectDuplicatePages = true;
             _settings.loaderStrategy = PageLoaderStrategy.Resources;
             _settings.poolRentingStrategy = RentingStrategy.Activate;
             _settings.poolReturningStrategy = ReturningStrategy.Deactivate;
@@ -39,6 +40,7 @@ namespace EncosyTower.Tests.PageFlows
             context.Initialize(settings: _settings);
 
             Assert.IsFalse(context.WarnNoSubscriber);
+            Assert.IsTrue(context.RejectDuplicatePages);
             Assert.AreEqual(PageLoaderStrategy.Resources, context.LoadStrategy);
             Assert.AreEqual(RentingStrategy.DoNothing, context.PoolRentingStrategy);
             Assert.AreEqual(ReturningStrategy.Deactivate, context.PoolReturningStrategy);
@@ -54,6 +56,7 @@ namespace EncosyTower.Tests.PageFlows
             context.Initialize(settings: null);
 
             Assert.IsFalse(context.WarnNoSubscriber);
+            Assert.IsFalse(context.RejectDuplicatePages);
             Assert.AreEqual(default(PageLoaderStrategy), context.LoadStrategy);
             Assert.AreEqual(RentingStrategy.DoNothing, context.PoolRentingStrategy);
             Assert.AreEqual(default(ReturningStrategy), context.PoolReturningStrategy);
@@ -70,14 +73,28 @@ namespace EncosyTower.Tests.PageFlows
             var clone = context.CloneWithoutOwner();
 
             Assert.AreEqual(context.warnNoSubscriber, clone.warnNoSubscriber);
+            Assert.AreEqual(context.rejectDuplicatePages, clone.rejectDuplicatePages);
             Assert.AreEqual(context.poolRentingStrategy, clone.poolRentingStrategy);
             Assert.AreEqual(context.loadStrategy, clone.loadStrategy);
             Assert.AreEqual(context.WarnNoSubscriber, clone.WarnNoSubscriber);
+            Assert.AreEqual(context.RejectDuplicatePages, clone.RejectDuplicatePages);
             Assert.AreEqual(context.LoadStrategy, clone.LoadStrategy);
             Assert.AreEqual(context.PoolRentingStrategy, clone.PoolRentingStrategy);
             Assert.AreEqual(context.PoolReturningStrategy, clone.PoolReturningStrategy);
             Assert.AreEqual(context.MessageScope, clone.MessageScope);
             Assert.AreEqual(context.LogEnvironment, clone.LogEnvironment);
+        }
+
+        [Test]
+        public void Initialize_RejectDuplicatePagesOverride_WinsOverSettings()
+        {
+            var context = new UguiPageFlowContext {
+                rejectDuplicatePages = new(value: false, isOverridden: true),
+            };
+
+            context.Initialize(settings: _settings);
+
+            Assert.IsFalse(context.RejectDuplicatePages);
         }
 
         private static UguiPageFlowContext CreatePartlyOverriddenContext()

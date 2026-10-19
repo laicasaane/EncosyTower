@@ -3,7 +3,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Internals
 {
     internal sealed class PanelRendererAdapter : IUitkPanelComponentAdapter
     {

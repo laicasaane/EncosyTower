@@ -1,4 +1,4 @@
-using EncosyTower.PageFlows;
+using EncosyTower.PageFlows.Codex;
 using NUnit.Framework;
 
 namespace EncosyTower.Tests.PageFlows

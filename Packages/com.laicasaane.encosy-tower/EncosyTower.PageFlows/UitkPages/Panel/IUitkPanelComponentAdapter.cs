@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Internals
 {
     internal interface IUitkPanelComponentAdapter
     {

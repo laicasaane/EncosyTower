@@ -4,32 +4,33 @@ using System.Threading;
 using EncosyTower.Tasks;
 using UnityEngine;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Transitions
 {
+    /// <summary>A base component for a transition that animates part of a uGUI page.</summary>
+    /// <remarks>A <see cref="UguiPageTransitionCollection"/> on the page runs every transition under it.</remarks>
     public abstract class UguiPageTransition : MonoBehaviour, IPageTransition
     {
+        /// <summary>A name for finding this transition. The flow does not read it.</summary>
+        [Tooltip("A name for finding this transition. The flow does not read it.")]
         public string identifier;
 
+        /// <inheritdoc/>
         public abstract bool ForceRunHide { get; }
 
+        /// <inheritdoc/>
         public abstract bool ForceRunShow { get; }
 
-        public abstract UnityTask OnBeforeTransitionAsync(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-            , CancellationToken token
-        );
+        /// <inheritdoc/>
+        public abstract UnityTask OnBeforeTransitionAsync(PageTransitionContext context, CancellationToken token);
 
-        public abstract void OnAfterTransition(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-        );
+        /// <inheritdoc/>
+        public abstract void OnAfterTransition(PageTransitionContext context);
 
-        public abstract UnityTask OnShowAsync(PageTransitionOptions options, CancellationToken token);
+        /// <inheritdoc/>
+        public abstract UnityTask OnShowAsync(PageTransitionContext context, CancellationToken token);
 
-        public abstract UnityTask OnHideAsync(PageTransitionOptions options, CancellationToken token);
+        /// <inheritdoc/>
+        public abstract UnityTask OnHideAsync(PageTransitionContext context, CancellationToken token);
     }
 }
 

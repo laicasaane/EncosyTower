@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
 
-namespace EncosyTower.PageFlows
+namespace EncosyTower.PageFlows.Codex
 {
+    /// <summary>Matches the flow definitions of a codex against its scope collection.</summary>
     public static class PageFlowCodexValidator
     {
+        /// <summary>Compares the identifiers of the flow definitions with those of the scope properties.</summary>
+        /// <param name="definitionIdentifiers">The identifiers of the flow definitions, in definition order.</param>
+        /// <param name="scopeIdentifiers">The identifiers of the scope properties.</param>
+        /// <returns>What the two lists do not share; see <see cref="PageFlowCodexValidation.IsValid"/>.</returns>
         public static PageFlowCodexValidation Validate(
               ReadOnlySpan<string> definitionIdentifiers
             , ReadOnlySpan<string> scopeIdentifiers

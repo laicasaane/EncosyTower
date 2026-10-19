@@ -4,16 +4,22 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using EncosyTower.AssetKeys;
 using EncosyTower.Collections.Extensions;
 using EncosyTower.Common;
 using EncosyTower.Ids;
 using EncosyTower.Initialization;
-using EncosyTower.Logging;
+using EncosyTower.PageFlows.Codex;
+using EncosyTower.PageFlows.Flows;
+using EncosyTower.PageFlows.Internals;
+using EncosyTower.PageFlows.Loading;
+using EncosyTower.PageFlows.PubSub;
+using EncosyTower.PageFlows.UitkPages.Codex;
+using EncosyTower.PageFlows.UitkPages.Internals;
 using EncosyTower.Processing;
 using EncosyTower.PubSub;
 using EncosyTower.Tasks;
 using EncosyTower.Types;
-using EncosyTower.UnityExtensions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -23,14 +29,38 @@ namespace EncosyTower.PageFlows.UitkPages
 {
     using UnityObject = UnityEngine.Object;
 
-    public abstract class UitkPageFlow : IIsInitialized, IDisposable
+    /// <summary>
+    /// The base class of a UI Toolkit page flow: it owns the page pools and the elements of the flow.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A <see cref="UitkPageCodex"/> creates one flow for each flow definition with <see cref="TryCreate"/> and
+    /// initializes it. A flow adds an element, <see cref="FlowElement"/>, to the panel. It holds the elements of its
+    /// pages, and a <see cref="Blocker"/> that swallows pointer input while a page transitions.
+    /// </para>
+    /// <para>
+    /// A flow loads the asset of a page when it first needs it, keeps the instances in a pool, and returns each
+    /// page it removes to the pool, or destroys it when <see cref="PageContext.ReturnOperation"/> says so. After a
+    /// show, the flow moves focus as <see cref="PageFocusMode"/> of the page says. All page flow operations and
+    /// callbacks run on the Unity main thread; see <see cref="IPageFlow"/>.
+    /// </para>
+    /// </remarks>
+    public abstract class UitkPageFlow : IIsInitialized, IDisposable, IPageFlowBackend
     {
+        /// <summary>
+        /// The USS class of the flow element. The element also has the class <c>FLOW_USS_CLASS_NAME--identifier</c>.
+        /// </summary>
         public const string FLOW_USS_CLASS_NAME = "uitk-page-flow";
+
+        /// <summary>The USS class of the blocker element.</summary>
         public const string BLOCKER_USS_CLASS_NAME = FLOW_USS_CLASS_NAME + "__blocker";
+
+        internal const string ADDRESSABLES_NOT_INSTALLED_MESSAGE
+            = "Addressables is not installed. UI Toolkit Page Loader will use Resources instead.";
 
         private static int s_flowSerial;
 
-        private readonly Dictionary<string, UitkPagePool> _pools = new(StringComparer.Ordinal);
+        private readonly Dictionary<AssetKey, UitkPagePool> _pools = new();
         private readonly Dictionary<IUitkPage, UitkPageSlot> _activeSlots = new();
         private readonly List<ISubscription> _subscriptions = new();
         private readonly List<ProcessRegistry> _processRegistries = new();
@@ -39,35 +69,60 @@ namespace EncosyTower.PageFlows.UitkPages
         private Transform _behaviourParent;
         private int _blockingCount;
 
+        /// <summary>Gets whether <see cref="Initialize"/> ran and the flow is not disposed.</summary>
         public bool IsInitialized { get; private set; }
 
+        /// <summary>Gets the identifier of this flow: the identifier of its definition.</summary>
         public string Identifier { get; private set; }
 
+        /// <summary>
+        /// Gets the name of the panel element that holds the flow element, or empty for the codex root.
+        /// </summary>
         public string ContainerName { get; private set; }
 
+        /// <summary>Gets the codex that created the flow.</summary>
         public UitkPageCodex Codex { get; private set; }
 
+        /// <summary>Gets the context of the flow.</summary>
         public UitkPageFlowContext Context { get; private set; }
 
+        /// <summary>Gets the element that holds the pages of the flow.</summary>
         public VisualElement FlowElement { get; private set; }
 
+        /// <summary>Gets the element that swallows pointer input while a page transitions.</summary>
         public VisualElement Blocker { get; private set; }
 
+        /// <summary>Gets whether the flow is running a transition.</summary>
         public abstract bool IsInTransition { get; }
 
+        /// <summary>Creates a flow of a kind.</summary>
+        /// <param name="kind">The kind of the flow.</param>
+        /// <param name="flow">The new flow, not initialized.</param>
+        /// <returns><c>true</c> when the kind has a flow type; otherwise <c>false</c>.</returns>
         public static bool TryCreate(PageFlowKind kind, out UitkPageFlow flow)
         {
             flow = kind switch {
-                PageFlowKind.SinglePageStack => new UitkSinglePageStack(),
-                PageFlowKind.MultiPageStack => new UitkMultiPageStack(),
-                PageFlowKind.SinglePageList => new UitkSinglePageList(),
-                PageFlowKind.MultiPageList => new UitkMultiPageList(),
+                PageFlowKind.PageStackSingle => new UitkPageStackSingle(),
+                PageFlowKind.PageStackMulti => new UitkPageStackMulti(),
+                PageFlowKind.PageListSingle => new UitkPageListSingle(),
+                PageFlowKind.PageListMulti => new UitkPageListMulti(),
                 _ => null,
             };
 
             return flow != null;
         }
 
+        /// <summary>Initializes the flow: gives it a scope and its elements, and subscribes its messages.</summary>
+        /// <param name="identifier">The identifier of the flow.</param>
+        /// <param name="containerName">The name of the panel element that holds the flow element, or empty.</param>
+        /// <param name="codex">The codex that owns the flow.</param>
+        /// <param name="context">The context of the flow.</param>
+        /// <param name="behaviourParent">The parent of the page behaviours the flow creates.</param>
+        /// <exception cref="System.InvalidOperationException">The flow is already initialized.</exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// <paramref name="identifier"/>, <paramref name="codex"/> or <paramref name="context"/> is <c>null</c> or
+        /// destroyed.
+        /// </exception>
         public void Initialize(
               string identifier
             , string containerName
@@ -76,6 +131,8 @@ namespace EncosyTower.PageFlows.UitkPages
             , Transform behaviourParent
         )
         {
+            ThrowIfInitialized(IsInitialized, this);
+
             ThrowHelper.ThrowIfNull(identifier);
             ThrowHelper.ThrowIfNullOrUnityObjectInvalid(codex);
             ThrowHelper.ThrowIfNull(context);
@@ -107,6 +164,8 @@ namespace EncosyTower.PageFlows.UitkPages
             IsInitialized = true;
         }
 
+        /// <summary>Unsubscribes the flow, disposes its pools and removes its element from the panel.</summary>
+        /// <remarks>Disposing a pool returns its active pages to it and releases the page assets.</remarks>
         public void Dispose()
         {
             _subscriptions.AsListFast().Unsubscribe();
@@ -126,39 +185,68 @@ namespace EncosyTower.PageFlows.UitkPages
             IsInitialized = false;
         }
 
-        public async UnityTask PrepoolPageAsync(string pageAssetKey, int amount, CancellationToken token)
+        /// <summary>Preloads instances of a page and keeps them in the pool.</summary>
+        /// <param name="pageAssetKey">The key of the page asset.</param>
+        /// <param name="amount">The number of pooled instances to have ready; at least 1.</param>
+        /// <param name="token">Cancels the call.</param>
+        /// <returns>
+        /// Success when the pool holds the amount; otherwise a failure; see <see cref="PageFlowError"/>.
+        /// </returns>
+        /// <remarks>
+        /// The flow creates only the missing instances. It loads the asset first when it is not loaded.
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">
+        /// <paramref name="pageAssetKey"/> is not valid (default or empty).
+        /// </exception>
+        public async UnityTask<Success<PageFlowError>> PrepoolPageAsync(
+              AssetKey pageAssetKey
+            , int amount
+            , CancellationToken token
+        )
         {
-            ThrowHelper.ThrowIfNull(pageAssetKey);
+            ThrowHelper.ThrowIfNullOrEmpty(pageAssetKey.Value, nameof(pageAssetKey));
 
             if (token.IsCancellationRequested)
             {
-                return;
+                return PageFlowError.Cancelled();
             }
 
             if (amount < 1)
             {
-                WarningIfAmountLesserThanOne(this);
-                return;
+                return PageFlowError.InvalidPrepoolAmount(amount);
             }
 
-            var poolOpt = await GetInitializedPoolAsync(pageAssetKey, token);
+            var poolResult = await GetInitializedPoolAsync(pageAssetKey, token);
 
-            if (poolOpt.TryGetValue(out var pool) == false || token.IsCancellationRequested)
+            if (poolResult.TryGetValue(out var pool) == false)
             {
-                return;
+                return poolResult.GetErrorOrDefault();
+            }
+
+            if (IsInitialized == false || token.IsCancellationRequested)
+            {
+                return PageFlowError.Cancelled();
             }
 
             var differentAmount = amount - pool.PoolingCount;
 
             if (differentAmount > 0)
             {
-                pool.Prepool(differentAmount);
+                return pool.Prepool(differentAmount);
             }
+
+            return Success.Yes;
         }
 
-        public void TrimPool(string pageAssetKey, int amountToKeep)
+        /// <summary>Keeps a certain amount of instances of a page in the pool, and destroys the others.</summary>
+        /// <param name="pageAssetKey">The key of the page asset.</param>
+        /// <param name="amountToKeep">The number of pooled instances to keep. A negative value keeps none.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// <paramref name="pageAssetKey"/> is not valid (default or empty).
+        /// </exception>
+        public void TrimPool(AssetKey pageAssetKey, int amountToKeep)
         {
-            ThrowHelper.ThrowIfNull(pageAssetKey);
+            ThrowHelper.ThrowIfNullOrEmpty(pageAssetKey.Value, nameof(pageAssetKey));
 
             if (_pools.TryGetValue(pageAssetKey, out var pool))
             {
@@ -166,7 +254,11 @@ namespace EncosyTower.PageFlows.UitkPages
             }
         }
 
-        public bool TryGetPooledCount(string pageAssetKey, out int count)
+        /// <summary>Gets the number of pooled instances of a page.</summary>
+        /// <param name="pageAssetKey">The key of the page asset.</param>
+        /// <param name="count">The number of pooled instances.</param>
+        /// <returns><c>true</c> when the flow has a pool for the asset; otherwise <c>false</c>.</returns>
+        public bool TryGetPooledCount(AssetKey pageAssetKey, out int count)
         {
             if (_pools.TryGetValue(pageAssetKey, out var pool))
             {
@@ -178,9 +270,29 @@ namespace EncosyTower.PageFlows.UitkPages
             return false;
         }
 
+        /// <summary>
+        /// Called once when the flow initializes, after it subscribed to the messages every flow handles.
+        /// </summary>
+        /// <param name="context">The subscriber and the process hub of the flow, scoped to the flow.</param>
+        /// <remarks>Subscribe the messages and register the requests of the flow type.</remarks>
         protected abstract void OnInitialize(in InitializationContext context);
 
+        /// <summary>Called when the flow is disposed, before its pools are disposed.</summary>
         protected abstract void OnDispose();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [HideInCallstack]
+        internal static void ErrorIfAddressablesNotInstalled(
+              PageLoaderStrategy strategy
+            , bool isAddressablesAvailable
+            , EncosyTower.Logging.ILogger logger
+        )
+        {
+            if (strategy == PageLoaderStrategy.Addressables && isAddressablesAvailable == false)
+            {
+                logger.LogError(ADDRESSABLES_NOT_INSTALLED_MESSAGE);
+            }
+        }
 
         internal bool TryGetSlot(IUitkPage page, out UitkPageSlot slot)
         {
@@ -193,58 +305,261 @@ namespace EncosyTower.PageFlows.UitkPages
             return _activeSlots.TryGetValue(page, out slot);
         }
 
-        internal async UnityTask<Option<UitkPageSlot>> RentPageAsync(
-              string pageAssetKey
+        internal async UnityTask<Result<UitkPageSlot, PageFlowError>> RentPageAsync(
+              AssetKey pageAssetKey
             , PageContext context
+            , PageContext flowContext
             , CancellationToken token
         )
         {
-            ThrowHelper.ThrowIfNull(pageAssetKey);
+            ThrowHelper.ThrowIfNullOrEmpty(pageAssetKey.Value, nameof(pageAssetKey));
             ThrowIfNotInitialized(IsInitialized, this);
 
             if (token.IsCancellationRequested)
             {
-                return Option.None;
+                return PageFlowError.Cancelled();
             }
 
-            var poolOpt = await GetInitializedPoolAsync(pageAssetKey, token);
+            var poolResult = await GetInitializedPoolAsync(pageAssetKey, token);
 
-            if (poolOpt.TryGetValue(out var pool) == false || token.IsCancellationRequested)
+            if (poolResult.TryGetValue(out var pool) == false)
             {
-                return Option.None;
+                return poolResult.GetErrorOrDefault();
             }
 
-            if (pool.Rent().TryGetValue(out var slot) == false)
+            if (token.IsCancellationRequested || IsInitialized == false)
             {
-                return Option.None;
+                return PageFlowError.Cancelled();
+            }
+
+            var rentResult = pool.Rent();
+
+            if (rentResult.TryGetValue(out var slot) == false)
+            {
+                return rentResult.GetErrorOrDefault();
             }
 
             _activeSlots[slot.Page] = slot;
 
-            if (slot.Page is IPageOnCreateAsync onCreate)
+            if (slot.Page is not IPageOnCreateAsync onCreate)
             {
-                var creationResult = await onCreate.OnCreateAsync(context, token);
+                return slot;
+            }
 
-                if (creationResult == false)
+            bool isPageCreationAccepted;
+
+            try
+            {
+                isPageCreationAccepted = await onCreate.OnCreateAsync(
+                      PageFlow.WithPageOrigin(flowContext, slot.Page)
+                    , token
+                );
+            }
+            catch (Exception ex)
+            {
+                ReturnPageOrLog(slot.Page, context);
+
+                if (ex is OperationCanceledException)
                 {
-                    WarningIfPageCreationFailed(pageAssetKey, this);
+                    throw;
                 }
 
-                if (creationResult == false || token.IsCancellationRequested)
-                {
-                    ReturnPage(slot.Page, context);
-                    return Option.None;
-                }
+                return PageFlowError.Exception(ex);
+            }
+
+            if (IsInitialized == false)
+            {
+                return PageFlowError.Cancelled();
+            }
+
+            if (isPageCreationAccepted == false)
+            {
+                ReturnPageOrLog(slot.Page, context);
+                return PageFlowError.CreateRejected(pageAssetKey);
+            }
+
+            if (token.IsCancellationRequested)
+            {
+                ReturnPageOrLog(slot.Page, context);
+                return PageFlowError.Cancelled();
             }
 
             return slot;
         }
 
-        internal bool ReturnPage(IUitkPage page, PageContext context)
+        internal void EnsureInitialized()
+            => ThrowIfNotInitialized(IsInitialized, this);
+
+        internal void PublishFailureOrAbort(in Success<PageFlowError> result, PageContext context)
+            => PublishFailureOrAbort(result: result, context: context, unansweredError: default);
+
+        internal void PublishFailureOrAbort(
+              in Success<PageFlowError> result
+            , PageContext context
+            , Option<PageFlowError> unansweredError
+        )
+        {
+            if (result.TryGetFailure(out var error) == false)
+            {
+                return;
+            }
+
+            var publisher = Context.Publisher.Scope(Context.FlowScope);
+
+            if (error.TryGetAbort(out var origin, out var mode))
+            {
+                PageFlow.PublishAndForget(
+                      publisher: publisher
+                    , message: new PageAbortedMessage(origin, mode, error, context)
+                    , logger: Context.Logger
+                    , unansweredError: default
+                );
+
+                return;
+            }
+
+            if ((error.IsCancelled || error.IsSubscriberNotFound) && error.HasSuppressedFailure() == false)
+            {
+                return;
+            }
+
+            PageFlow.PublishAndForget(
+                  publisher: publisher
+                , message: new PageFlowFailedMessage(error, context)
+                , logger: Context.Logger
+                , unansweredError: unansweredError
+            );
+        }
+
+        internal PageRef MakePageRef(IUitkPage page, Option<int> index)
+        {
+            if (page == null)
+            {
+                return PageRef.None;
+            }
+
+            return TryGetSlot(page, out var slot)
+                ? new PageRef(page, slot.AssetKey, index)
+                : new PageRef(Page: page, AssetKey: default, Index: index);
+        }
+
+        internal async UnityTask<Success<PageFlowError>> PublishNavigatedAsync(
+              PageNavigationKind kind
+            , PageRef from
+            , PageRef to
+            , PageContext context
+            , Success<PageFlowError> result
+        )
+        {
+            var navigation = new PageNavigation(Identifier, kind, from, to, context, context.IssuedBy);
+            var message = new PageNavigatedMessage(navigation);
+            var publisher = Context.Publisher.Scope(Context.FlowScope);
+
+            var publishingContext = PublishingContext.Default(logger: Context.Logger, token: CancellationToken.None);
+            PageFlowError error;
+
+            try
+            {
+                var published = await PageNavigatedMessage.Async.Publish(in publisher, message, publishingContext);
+
+                if (published.TryGetFailure(out var publishError) == false)
+                {
+                    return result;
+                }
+
+                if (publishError.IsSubscriberNotFound)
+                {
+                    return Context.WarnNoSubscriber
+                        ? PageFlow.MergeSoft(result, PageFlowError.SubscriberNotFound(typeof(PageNavigatedMessage)))
+                        : result;
+                }
+
+                error = PageFlowError.FromPublish(publishError);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                error = PageFlowError.Exception(ex);
+            }
+
+            return PageFlow.MergeFailure(result, error);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void ReportCall(in Success<PageFlowError> result, PageContext context)
+            => context.Receipt?.Report(Identifier, result);
+
+        /// <summary>Reports an exception of a call to its receipt.</summary>
+        /// <param name="ex">The exception. A cancellation is reported as the <c>Cancelled</c> case.</param>
+        /// <param name="context">The context of the call. Nothing is reported when it has no receipt.</param>
+        protected void ReportException(Exception ex, PageContext context)
+        {
+            Success<PageFlowError> failure = ex is OperationCanceledException
+                ? PageFlowError.Cancelled()
+                : PageFlowError.Exception(ex);
+
+            ReportCall(failure, context);
+        }
+
+        // B4 (D85): reports a call that threw. The receipt gets the Cancelled or Exception case with the errors the
+        // flow set aside while the cancellation won. A thrown cancel that carries a failure is also published; with no
+        // receipt, a PageFlowFailedMessage that nobody hears logs those errors (D28). A thrown exception is not
+        // published (as today); with no receipt its set-aside errors are logged. A receipt that was already reported
+        // counts as no receipt, so the errors are not lost.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal void ReportThrownCall(Exception ex, PageContext context, PageAbortState abort)
+        {
+            var isCancel = ex is OperationCanceledException;
+            var failure = isCancel ? PageFlowError.Cancelled() : PageFlowError.Exception(ex);
+            var setAside = abort?.SetAsideErrors;
+            var count = setAside?.Count ?? 0;
+
+            if (count < 1)
+            {
+                ReportCall(failure, context);
+                return;
+            }
+
+            var receipt = context.Receipt;
+            var wasReported = receipt != null && receipt.IsReported;
+            failure = PageFlow.WithSuppressedErrors(failure, setAside);
+            ReportCall(failure, context);
+            var hasReceipt = receipt != null && wasReported == false;
+
+            if (isCancel)
+            {
+                Option<PageFlowError> unanswered = default;
+
+                if (hasReceipt == false)
+                {
+                    unanswered = PageFlow.JoinErrors(setAside);
+                }
+
+                PublishFailureOrAbort(failure, context, unanswered);
+                return;
+            }
+
+            if (hasReceipt == false)
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    setAside[i].Log(Context.Logger);
+                }
+            }
+        }
+
+        internal void ReturnPageOrLog(IUitkPage page, PageContext context)
+        {
+            if (ReturnPage(page, context).TryGetFailure(out var error))
+            {
+                error.Log(Context.Logger);
+            }
+        }
+
+        internal Success<PageFlowError> ReturnPage(IUitkPage page, PageContext context)
         {
             if (page == null || _activeSlots.Remove(page, out var slot) == false)
             {
-                return false;
+                return PageFlowError.PageNotActive(page);
             }
 
             BlurIfFocusedInside(slot);
@@ -256,18 +571,25 @@ namespace EncosyTower.PageFlows.UitkPages
 
             if (_pools.TryGetValue(slot.AssetKey, out var pool) == false)
             {
-                ErrorIfCannotReturnToPool(slot.AssetKey, this);
-                return false;
+                return PageFlowError.PoolNotFound(slot.AssetKey);
             }
 
             if (context.ReturnOperation == PageReturnOperation.Destroy)
             {
                 pool.Destroy(slot);
-                return false;
+                return Success.Yes;
             }
 
             pool.Return(slot);
-            return true;
+            return Success.Yes;
+        }
+
+        void IPageFlowBackend.ActivatePageRendering(IPage page)
+        {
+            if (page is IUitkPage uitkPage && _activeSlots.TryGetValue(uitkPage, out var slot))
+            {
+                ShowSlot(slot);
+            }
         }
 
         internal void ShowSlot(UitkPageSlot slot)
@@ -408,15 +730,14 @@ namespace EncosyTower.PageFlows.UitkPages
             return element;
         }
 
-        private async UnityTask<Option<UitkPagePool>> GetInitializedPoolAsync(
-              string pageAssetKey
+        private async UnityTask<Result<UitkPagePool, PageFlowError>> GetInitializedPoolAsync(
+              AssetKey pageAssetKey
             , CancellationToken token
         )
         {
             if (_pools.TryGetValue(pageAssetKey, out var pool) == false)
             {
-                var logger = Codex.GetLogger(Context.LogEnvironment);
-                pool = new UitkPagePool(pageAssetKey, FlowElement, Blocker, _behaviourParent, logger);
+                pool = new UitkPagePool(pageAssetKey, FlowElement, Blocker, _behaviourParent);
                 _pools[pageAssetKey] = pool;
             }
 
@@ -425,20 +746,50 @@ namespace EncosyTower.PageFlows.UitkPages
                 return pool;
             }
 
-            var sourceOpt = await PageAssetLoader.LoadAsync<UnityObject>(Context.LoadStrategy, pageAssetKey, token);
+            ErrorIfAddressablesNotInstalled(
+                  Context.LoadStrategy
+                , PageAssetLoader.IsAddressablesAvailable
+                , Context.Logger
+            );
+
+            var load = await PageAssetLoader.LoadAsync<UnityObject>(Context.LoadStrategy, pageAssetKey, token);
+
+            if (IsInitialized == false)
+            {
+                pool.Dispose();
+
+                if (load.TryGetValue(out var unusedLease))
+                {
+                    unusedLease.Release();
+                }
+
+                return PageFlowError.Cancelled();
+            }
 
             if (token.IsCancellationRequested)
             {
-                return Option.None;
+                if (load.TryGetValue(out var unusedLease))
+                {
+                    unusedLease.Release();
+                }
+
+                return PageFlowError.Cancelled();
             }
 
-            if (sourceOpt.TryGetValue(out var source) == false || source.IsInvalid())
+            if (load.TryGetValue(out var lease) == false)
             {
-                ErrorIfCannotLoadAsset(pageAssetKey, this);
-                return Option.None;
+                return PageFlowError.AssetLoadFailed(pageAssetKey, load.GetErrorOrDefault());
             }
 
-            return pool.TryInitialize(source) ? pool : Option.None;
+            var initialization = pool.Initialize(lease);
+
+            if (initialization.TryGetFailure(out var reason))
+            {
+                // The pool has released the lease.
+                return PageFlowError.AssetLoadFailed(pageAssetKey, reason);
+            }
+
+            return pool;
         }
 
         private void SubscribeMessages(in InitializationContext context)
@@ -448,11 +799,16 @@ namespace EncosyTower.PageFlows.UitkPages
             TrimPoolMessage.Subscribe(in subscriber, Handle);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UnityTask HandleAsync(UitkPageFlow flow, PrepoolPageMessage.Async msg, PublishingContext context)
+        private static async UnityTask HandleAsync(
+              UitkPageFlow flow
+            , PrepoolPageMessage.Async msg
+            , PublishingContext context
+        )
         {
             var message = (PrepoolPageMessage)msg;
-            return flow.PrepoolPageAsync(message.AssetKey, message.Amount, context.Token);
+            var result = await flow.PrepoolPageAsync(message.AssetKey, message.Amount, context.Token);
+
+            flow.PublishFailureOrAbort(in result, default);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -472,43 +828,23 @@ namespace EncosyTower.PageFlows.UitkPages
                 => new($"The page flow '{context.Identifier}' must be initialized by its {nameof(UitkPageCodex)}.");
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
-        private static void WarningIfAmountLesserThanOne(UitkPageFlow context)
+        private static void ThrowIfInitialized([DoesNotReturnIf(true)] bool isInitialized, UitkPageFlow context)
         {
-            context.Codex.GetLogger(context.Context.LogEnvironment).LogWarning(
-                "The amount of preloaded instances should be greater than 0."
-            );
+            if (isInitialized)
+            {
+                throw CreateException(context);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static InvalidOperationException CreateException(UitkPageFlow context)
+                => new($"The page flow '{context.Identifier}' is already initialized; " +
+                    $"its {nameof(UitkPageCodex)} initializes it once.");
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfCannotReturnToPool(string key, UitkPageFlow context)
-        {
-            context.Codex.GetLogger(context.Context.LogEnvironment).LogError(
-                $"Cannot return the page originated from '{key}' to pool. The pool may not be created properly."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfCannotLoadAsset(string key, UitkPageFlow context)
-        {
-            context.Codex.GetLogger(context.Context.LogEnvironment).LogError(
-                $"Cannot load asset by the key '{key}'"
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void WarningIfPageCreationFailed(string key, UitkPageFlow context)
-        {
-            context.Codex.GetLogger(context.Context.LogEnvironment).LogWarning(
-                $"The result of '{nameof(IPageOnCreateAsync)}.{nameof(IPageOnCreateAsync.OnCreateAsync)}' " +
-                $"for page loaded by the key '{key}' was a failure."
-            );
-        }
-
+        /// <summary>What a flow type needs to subscribe its messages and register its requests.</summary>
+        /// <param name="Subscriber">The subscriber, scoped to the flow.</param>
+        /// <param name="ProcessHub">The process hub, scoped to the flow.</param>
         protected readonly record struct InitializationContext(
               MessageSubscriber.Subscriber<PageFlowScope> Subscriber
             , Processor.Hub<PageFlowScope> ProcessHub

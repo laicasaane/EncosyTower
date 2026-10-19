@@ -7,6 +7,7 @@
         "EncosyTower.PubSub",
         "UniTask",
         "Unity.Collections",
+        "Unity.ResourceManager",
         "UnityEngine.UI"
     ],
     "includePlatforms": [],

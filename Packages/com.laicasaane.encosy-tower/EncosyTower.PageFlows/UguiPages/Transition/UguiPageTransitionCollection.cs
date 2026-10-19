@@ -4,22 +4,39 @@ using System;
 using System.Threading;
 using EncosyTower.Tasks;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Transitions
 {
+    /// <summary>Runs the transitions on a page together, as the transition of the page.</summary>
+    /// <remarks>
+    /// It gathers the <see cref="UguiPageTransition"/> components of its GameObject, and of its children when
+    /// <see cref="ChildrenOptions.include"/> is on, in <c>Awake</c>. A step ends when every transition ended.
+    /// <see cref="PageTransitionOptions.NoTransition"/> skips a transition unless that transition forces the run.
+    /// </remarks>
     [DisallowMultipleComponent]
     public sealed class UguiPageTransitionCollection : MonoBehaviour, IPageTransition
     {
+        /// <summary>Whether the show step runs even with <c>NoTransition</c>.</summary>
+        [Tooltip("Whether the show step runs even with NoTransition.")]
         public bool alwaysEnableEnter = true;
+
+        /// <summary>Whether the hide step runs even with <c>NoTransition</c>.</summary>
+        [Tooltip("Whether the hide step runs even with NoTransition.")]
         public bool alwaysEnableExit = true;
+
+        /// <summary>Which child transitions the collection gathers.</summary>
+        [Tooltip("Which child transitions the collection gathers.")]
         public ChildrenOptions childrenOptions = ChildrenOptions.Default;
 
         private UguiPageTransition[] _transitions;
         private UnityTask[] _tasks;
 
+        /// <inheritdoc/>
+        /// <remarks>It is <see cref="alwaysEnableExit"/>.</remarks>
         public bool ForceRunHide => alwaysEnableExit;
 
+        /// <inheritdoc/>
+        /// <remarks>It is <see cref="alwaysEnableEnter"/>.</remarks>
         public bool ForceRunShow => alwaysEnableEnter;
 
         private void Awake()
@@ -36,12 +53,8 @@ namespace EncosyTower.PageFlows.UguiPages
             _tasks = new UnityTask[_transitions.Length];
         }
 
-        public UnityTask OnBeforeTransitionAsync(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-            , CancellationToken token
-         )
+        /// <inheritdoc/>
+        public UnityTask OnBeforeTransitionAsync(PageTransitionContext context, CancellationToken token)
         {
             var transitions = _transitions.AsSpan();
             var length = transitions.Length;
@@ -49,77 +62,77 @@ namespace EncosyTower.PageFlows.UguiPages
 
             for (var i = 0; i < length; i++)
             {
-                tasks[i] = transitions[i].OnBeforeTransitionAsync(transition, showOptions, hideOptions, token);
+                tasks[i] = transitions[i].OnBeforeTransitionAsync(context, token);
             }
 
             return UnityTask.WhenAll(_tasks);
         }
 
-        public void OnAfterTransition(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-        )
+        /// <inheritdoc/>
+        public void OnAfterTransition(PageTransitionContext context)
         {
             var transitions = _transitions.AsSpan();
             var length = transitions.Length;
 
             for (var i = 0; i < length; i++)
             {
-                transitions[i].OnAfterTransition(transition, showOptions, hideOptions);
+                transitions[i].OnAfterTransition(context);
             }
         }
 
-        public UnityTask OnShowAsync(PageTransitionOptions options, CancellationToken token)
+        /// <inheritdoc/>
+        public UnityTask OnShowAsync(PageTransitionContext context, CancellationToken token)
         {
             var transitions = _transitions.AsSpan();
             var length = transitions.Length;
             var tasks = _tasks.AsSpan();
-            var withShow = options.Contains(PageTransitionOptions.NoTransition) == false;
+            var withShow = context.ShowOptions.Contains(PageTransitionOptions.NoTransition) == false;
 
             for (var i = 0; i < length; i++)
             {
                 var transition = transitions[i];
 
                 tasks[i] = withShow || transition.ForceRunShow
-                    ? transition.OnShowAsync(options, token)
+                    ? transition.OnShowAsync(context, token)
                     : UnityTask.CompletedTask;
             }
 
             return UnityTask.WhenAll(_tasks);
         }
 
-        public UnityTask OnHideAsync(PageTransitionOptions options, CancellationToken token)
+        /// <inheritdoc/>
+        public UnityTask OnHideAsync(PageTransitionContext context, CancellationToken token)
         {
             var transitions = _transitions.AsSpan();
             var length = transitions.Length;
             var tasks = _tasks.AsSpan();
-            var withHide = options.Contains(PageTransitionOptions.NoTransition) == false;
+            var withHide = context.HideOptions.Contains(PageTransitionOptions.NoTransition) == false;
 
             for (var i = 0; i < length; i++)
             {
                 var transition = transitions[i];
 
                 tasks[i] = withHide || transition.ForceRunHide
-                    ? transition.OnHideAsync(options, token)
+                    ? transition.OnHideAsync(context, token)
                     : UnityTask.CompletedTask;
             }
 
             return UnityTask.WhenAll(_tasks);
         }
 
+        /// <summary>Which child transitions a collection gathers.</summary>
         [Serializable]
-        [MovedFrom(
-              true
-            , sourceNamespace: "EncosyTower.PageFlows.MonoPages"
-            , sourceAssembly: "EncosyTower.PageFlows.MonoPages"
-            , sourceClassName: null
-        )]
         public struct ChildrenOptions
         {
+            /// <summary>Whether the collection gathers the transitions of its children.</summary>
+            [Tooltip("Whether the collection gathers the transitions of its children.")]
             public bool include;
+
+            /// <summary>Whether the collection also gathers the transitions of inactive children.</summary>
+            [Tooltip("Whether the collection also gathers the transitions of inactive children.")]
             public bool includeInactive;
 
+            /// <summary>Gets the default options: children are included, inactive ones are not.</summary>
             public static ChildrenOptions Default => new() {
                 include = true,
             };

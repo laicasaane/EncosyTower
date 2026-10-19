@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using EncosyTower.AssetKeys;
 using EncosyTower.Common;
-using EncosyTower.Logging;
+using EncosyTower.PageFlows.Loading;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace EncosyTower.PageFlows.UitkPages
+namespace EncosyTower.PageFlows.UitkPages.Internals
 {
     using UnityObject = UnityEngine.Object;
 
     internal sealed class UitkPageSlot
     {
-        public UitkPageSlot(string assetKey, TemplateContainer container, IUitkPage page, GameObject gameObject)
+        public UitkPageSlot(AssetKey assetKey, TemplateContainer container, IUitkPage page, GameObject gameObject)
         {
             AssetKey = assetKey;
             Container = container;
@@ -22,7 +21,7 @@ namespace EncosyTower.PageFlows.UitkPages
             GameObject = gameObject;
         }
 
-        public string AssetKey { get; }
+        public AssetKey AssetKey { get; }
 
         public TemplateContainer Container { get; }
 
@@ -37,50 +36,62 @@ namespace EncosyTower.PageFlows.UitkPages
 
         private readonly Stack<UitkPageSlot> _unused = new();
         private readonly List<UitkPageSlot> _created = new();
-        private readonly string _assetKey;
+        private readonly AssetKey _assetKey;
         private readonly VisualElement _flowElement;
         private readonly VisualElement _blocker;
         private readonly Transform _behaviourParent;
-        private readonly UnityObjectLogger _logger;
 
         private UnityObject _source;
+        private PageAssetHandle<UnityObject> _sourceLease;
 
         public UitkPagePool(
-              string assetKey
+              AssetKey assetKey
             , VisualElement flowElement
             , VisualElement blocker
             , Transform behaviourParent
-            , UnityObjectLogger logger
         )
         {
             _assetKey = assetKey;
             _flowElement = flowElement;
             _blocker = blocker;
             _behaviourParent = behaviourParent;
-            _logger = logger;
         }
 
         public bool IsInitialized => _source.IsValid();
 
         public int PoolingCount => _unused.Count;
 
-        public bool TryInitialize(UnityObject source)
+        public Success<PageAssetLoadError> Initialize(PageAssetHandle<UnityObject> lease)
         {
+            if (IsInitialized)
+            {
+                lease.Release();
+                return Success.Yes;
+            }
+
+            var source = lease.Asset;
+
             if (source is VisualTreeAsset or GameObject)
             {
                 _source = source;
-                return true;
+                _sourceLease = lease;
+                return Success.Yes;
             }
 
-            ErrorIfUnsupportedAsset(_assetKey, source, _logger);
-            return false;
+            lease.Release();
+            return PageAssetLoadError.UnsupportedAsset(_assetKey, source.GetType());
         }
 
-        public Option<UitkPageSlot> Rent()
+        public Result<UitkPageSlot, PageFlowError> Rent()
         {
-            if (_unused.TryPop(out var slot) == false && TryCreate(out slot) == false)
+            if (_unused.TryPop(out var slot) == false)
             {
-                return Option.None;
+                var createResult = TryCreate(out slot);
+
+                if (createResult.TryGetFailure(out var error))
+                {
+                    return error;
+                }
             }
 
             if (slot.GameObject.IsValid())
@@ -103,17 +114,21 @@ namespace EncosyTower.PageFlows.UitkPages
             DestroySlot(slot);
         }
 
-        public void Prepool(int amount)
+        public Success<PageFlowError> Prepool(int amount)
         {
             for (var i = 0; i < amount; i++)
             {
-                if (TryCreate(out var slot) == false)
+                var createResult = TryCreate(out var slot);
+
+                if (createResult.IsFailure)
                 {
-                    return;
+                    return createResult;
                 }
 
                 _unused.Push(slot);
             }
+
+            return Success.Yes;
         }
 
         public void Trim(int amountToKeep)
@@ -136,6 +151,8 @@ namespace EncosyTower.PageFlows.UitkPages
             _created.Clear();
             _unused.Clear();
             _source = null;
+            _sourceLease.Release();
+            _sourceLease = default;
         }
 
         private static void Hide(UitkPageSlot slot)
@@ -158,12 +175,14 @@ namespace EncosyTower.PageFlows.UitkPages
             }
         }
 
-        private bool TryCreate(out UitkPageSlot slot)
+        private Success<PageFlowError> TryCreate(out UitkPageSlot slot)
         {
-            if (TryInstantiate(out var container, out var page, out var gameObject) == false)
+            var instantiateResult = TryInstantiate(out var container, out var page, out var gameObject);
+
+            if (instantiateResult.IsFailure)
             {
                 slot = null;
-                return false;
+                return instantiateResult;
             }
 
             container.AddToClassList(SLOT_USS_CLASS_NAME);
@@ -186,10 +205,14 @@ namespace EncosyTower.PageFlows.UitkPages
 
             slot = new UitkPageSlot(_assetKey, container, page, gameObject);
             _created.Add(slot);
-            return true;
+            return Success.Yes;
         }
 
-        private bool TryInstantiate(out TemplateContainer container, out IUitkPage page, out GameObject gameObject)
+        private Success<PageFlowError> TryInstantiate(
+              out TemplateContainer container
+            , out IUitkPage page
+            , out GameObject gameObject
+        )
         {
             gameObject = null;
 
@@ -208,67 +231,37 @@ namespace EncosyTower.PageFlows.UitkPages
                     || behaviour.VisualTreeAsset.IsInvalid()
                 )
                 {
-                    ErrorIfBehaviourInvalid(_assetKey, _logger);
                     UnityObject.Destroy(gameObject);
                     gameObject = null;
                     container = null;
                     page = null;
-                    return false;
+                    return PageFlowError.PageBehaviourMissing(_assetKey);
                 }
 
                 container = behaviour.VisualTreeAsset.Instantiate();
                 page = behaviour;
-                return true;
+                return Success.Yes;
             }
 
             container = null;
             page = null;
-            return false;
+            var sourceType = _source.IsValid() ? _source.GetType() : null;
+            var unsupported = PageAssetLoadError.UnsupportedAsset(_assetKey, sourceType);
+            return PageFlowError.AssetLoadFailed(_assetKey, unsupported);
         }
 
-        private bool TryFindSinglePage(TemplateContainer container, out IUitkPage page)
+        private Success<PageFlowError> TryFindSinglePage(TemplateContainer container, out IUitkPage page)
         {
             var pages = container.Query<VisualElement>().Where(static element => element is IUitkPage).ToList();
 
             if (pages.Count == 1)
             {
                 page = (IUitkPage)pages[0];
-                return true;
+                return Success.Yes;
             }
 
-            ErrorIfPageCountInvalid(_assetKey, pages.Count, _logger);
             page = null;
-            return false;
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfUnsupportedAsset(string key, UnityObject source, UnityObjectLogger logger)
-        {
-            logger.LogError(
-                $"The asset loaded by the key '{key}' is a '{source.GetType()}'. " +
-                $"A UI Toolkit page must be a VisualTreeAsset or a GameObject with a {nameof(UitkPageBehaviour)}."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfPageCountInvalid(string key, int count, UnityObjectLogger logger)
-        {
-            logger.LogError(
-                $"The UXML loaded by the key '{key}' must contain exactly one element implementing " +
-                $"{nameof(IUitkPage)}, but it contains {count}."
-            );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        [HideInCallstack, StackTraceHidden]
-        private static void ErrorIfBehaviourInvalid(string key, UnityObjectLogger logger)
-        {
-            logger.LogError(
-                $"The GameObject loaded by the key '{key}' must have a {nameof(UitkPageBehaviour)} " +
-                $"that references a VisualTreeAsset."
-            );
+            return PageFlowError.AssetNotSinglePage(assetKey: _assetKey, pageCount: pages.Count);
         }
     }
 }

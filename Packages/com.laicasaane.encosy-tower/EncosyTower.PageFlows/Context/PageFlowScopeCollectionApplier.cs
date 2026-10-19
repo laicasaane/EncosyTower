@@ -2,6 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using EncosyTower.Collections;
 using EncosyTower.Common;
+using EncosyTower.PageFlows.Codex;
+using EncosyTower.PageFlows.PubSub;
 
 namespace EncosyTower.PageFlows
 {
@@ -20,15 +22,24 @@ namespace EncosyTower.PageFlows
         /// </summary>
         Type CollectionType { get; }
 
+        /// <summary>Gets the identifiers of the scopes of <see cref="CollectionType"/>.</summary>
         ReadOnlyMemory<string> ScopeIdentifiers { get; }
 
-        bool TryBuild(ArrayMap<string, PageFlowScope> scopes, out string missingIdentifier);
+        /// <summary>
+        /// Builds the scope collection from <paramref name="scopes"/>; on failure the previous collection stays.
+        /// </summary>
+        /// <param name="scopes">The scope of each flow, by the identifier of the flow.</param>
+        /// <returns>
+        /// Success when the collection holds a scope for every identifier; otherwise a failure; see
+        /// <see cref="PageFlowCodexError"/>.
+        /// </returns>
+        Success<PageFlowCodexError> Build(ArrayMap<string, PageFlowScope> scopes);
 
         /// <summary>
         /// Applies a value of <see cref="IPageFlowScopeCollection"/> to an <see cref="IPage"/>
         /// if that page also implements <see cref="IPageNeedsFlowScopeCollection{TCollection}"/>.
         /// </summary>
-        /// <param name="page"></param>
+        /// <param name="page">The page that receives the collection.</param>
         void ApplyTo(IPage page);
     }
 
@@ -48,6 +59,7 @@ namespace EncosyTower.PageFlows
     {
         private Option<TCollection> _value;
 
+        /// <inheritdoc/>
         public ReadOnlyMemory<string> ScopeIdentifiers => new TCollection().ScopeIdentifiers;
 
         /// <inheritdoc/>
@@ -66,7 +78,8 @@ namespace EncosyTower.PageFlows
         public bool TryGet(out TCollection result)
             => _value.TryGetValue(out result);
 
-        public bool TryBuild(ArrayMap<string, PageFlowScope> scopes, out string missingIdentifier)
+        /// <inheritdoc/>
+        public Success<PageFlowCodexError> Build(ArrayMap<string, PageFlowScope> scopes)
         {
             var value = new TCollection();
             var identifiers = value.ScopeIdentifiers.Span;
@@ -77,16 +90,17 @@ namespace EncosyTower.PageFlows
 
                 if (scopes.TryGetValue(identifier, out var scope) == false)
                 {
-                    missingIdentifier = identifier;
-                    return false;
+                    return PageFlowCodexError.ScopeNotFound(identifier);
                 }
 
-                value.TrySetScope(identifier, scope);
+                if (value.TrySetScope(identifier, scope) == false)
+                {
+                    return PageFlowCodexError.ScopeNotAssigned(identifier);
+                }
             }
 
             _value = value;
-            missingIdentifier = null;
-            return true;
+            return Success.Yes;
         }
 
         /// <inheritdoc/>

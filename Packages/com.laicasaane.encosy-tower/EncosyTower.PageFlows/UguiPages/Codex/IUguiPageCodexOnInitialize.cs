@@ -2,7 +2,7 @@
 
 using EncosyTower.Tasks;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Codex
 {
     /// <summary>
     /// This interface allows providing <see cref="UguiPageCodex"/> these necessities:
@@ -42,8 +42,17 @@ namespace EncosyTower.PageFlows.UguiPages
     /// </example>
     public interface IUguiPageCodexOnInitialize
     {
+        /// <summary>Gets the applier that builds the scope collection of the codex.</summary>
+        /// <remarks>Return the same instance every time.</remarks>
         IPageFlowScopeCollectionApplier PageFlowScopeCollectionApplier { get; }
 
+        /// <summary>Runs once the codex has created its flows and built the scope collection.</summary>
+        /// <param name="codex">The codex that initialized.</param>
+        /// <returns>A task that ends when the initializer finishes.</returns>
+        /// <remarks>
+        /// The codex awaits the task in <see cref="UguiPageCodex.InitializeAsync"/>.
+        /// <see cref="UguiPageCodex.Initialize"/> does not wait for it.
+        /// </remarks>
         UnityTask OnInitializeAsync(UguiPageCodex codex);
     }
 }

@@ -5,16 +5,32 @@ using System.Threading;
 using EncosyTower.Tasks;
 using EncosyTower.UnityExtensions;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.UI;
 
-namespace EncosyTower.PageFlows.UguiPages
+namespace EncosyTower.PageFlows.UguiPages.Transitions
 {
+    /// <summary>Fades the alpha of a Graphic.</summary>
+    /// <remarks>
+    /// The fade runs in <c>Update</c> with the smoothed delta time. <see cref="PageTransitionOptions.ZeroDuration"/>
+    /// applies the end alpha at once unless <c>disableZeroDuration</c> of the options is on. After an abort, the fade
+    /// starts from the current alpha and takes the part of the duration that is left.
+    /// </remarks>
     public class UguiPageTransitionGraphic : UguiPageTransition
     {
+        /// <summary>The component to fade. The transition adds an <c>Image</c> when it is missing.</summary>
+        [Tooltip("The component to fade. The transition adds an Image when it is missing.")]
         public Graphic graphic;
+
+        /// <summary>Whether the transition skips the fade.</summary>
+        [Tooltip("Whether the transition skips the fade.")]
         public bool disableTweening;
+
+        /// <summary>The options of the show.</summary>
+        [Tooltip("The options of the show.")]
         public Options showOperationOptions = Options.DefaultShow;
+
+        /// <summary>The options of the hide.</summary>
+        [Tooltip("The options of the hide.")]
         public Options hideOperationOptions = Options.DefaultHide;
 
         private bool _isTransitioning;
@@ -24,6 +40,7 @@ namespace EncosyTower.PageFlows.UguiPages
         private float _duration;
         private TransitionFloat _alpha;
 
+        /// <summary>Gets the component to fade.</summary>
         public Graphic Graphic
         {
             get
@@ -37,53 +54,55 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
+        /// <inheritdoc/>
         public override bool ForceRunHide => hideOperationOptions.forceRun;
 
+        /// <inheritdoc/>
         public override bool ForceRunShow => showOperationOptions.forceRun;
 
-        public override UnityTask OnBeforeTransitionAsync(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
-            , CancellationToken token
-        )
+        /// <inheritdoc/>
+        public override UnityTask OnBeforeTransitionAsync(PageTransitionContext context, CancellationToken token)
         {
             _ = Graphic;
             _isTransitioning = false;
             _elapsedTime = 0f;
 
-            _zeroShowDuration = showOptions.Contains(PageTransitionOptions.ZeroDuration)
+            _zeroShowDuration = context.ShowOptions.Contains(PageTransitionOptions.ZeroDuration)
                 && showOperationOptions.disableZeroDuration == false;
 
-            _zeroHideDuration = hideOptions.Contains(PageTransitionOptions.ZeroDuration)
+            _zeroHideDuration = context.HideOptions.Contains(PageTransitionOptions.ZeroDuration)
                 && hideOperationOptions.disableZeroDuration == false;
 
             return UnityTask.CompletedTask;
         }
 
-        public override void OnAfterTransition(
-              PageTransition transition
-            , PageTransitionOptions showOptions
-            , PageTransitionOptions hideOptions
+        /// <inheritdoc/>
+        public override void OnAfterTransition(PageTransitionContext context)
+        {
+        }
+
+        /// <inheritdoc/>
+        public override UnityTask OnShowAsync(PageTransitionContext context, CancellationToken token)
+        {
+            return disableTweening
+                ? UnityTask.CompletedTask
+                : Transition(showOperationOptions, _zeroShowDuration, context.Abort, token);
+        }
+
+        /// <inheritdoc/>
+        public override UnityTask OnHideAsync(PageTransitionContext context, CancellationToken token)
+        {
+            return disableTweening
+                ? UnityTask.CompletedTask
+                : Transition(hideOperationOptions, _zeroHideDuration, context.Abort, token);
+        }
+
+        private async UnityTask Transition(
+              Options options
+            , bool zeroDuration
+            , PageAbortHandle abort
+            , CancellationToken token
         )
-        {
-        }
-
-        public override UnityTask OnShowAsync(PageTransitionOptions _, CancellationToken token)
-        {
-            return disableTweening
-                ? UnityTask.CompletedTask
-                : Transition(showOperationOptions, _zeroShowDuration, token);
-        }
-
-        public override UnityTask OnHideAsync(PageTransitionOptions _, CancellationToken token)
-        {
-            return disableTweening
-                ? UnityTask.CompletedTask
-                : Transition(hideOperationOptions, _zeroHideDuration, token);
-        }
-
-        private async UnityTask Transition(Options options, bool zeroDuration, CancellationToken token)
         {
             if (token.IsCancellationRequested)
             {
@@ -91,29 +110,46 @@ namespace EncosyTower.PageFlows.UguiPages
             }
 
             var graphic = Graphic;
-            var alpha = options.alpha;
-            _alpha = new(Mathf.Clamp(alpha.start, 0f, 1f), Mathf.Clamp(alpha.end, 0f, 1f));
-            _duration = Mathf.Max(0f, options.duration);
+            var start = Mathf.Clamp(options.alpha.start, 0f, 1f);
+            var end = Mathf.Clamp(options.alpha.end, 0f, 1f);
+            var duration = Mathf.Max(0f, options.duration);
+
+            if (abort.IsRequested)
+            {
+                var current = graphic.color.a;
+                var range = Mathf.Abs(end - start);
+
+                duration = range > 0f ? duration * Mathf.Abs(end - current) / range : 0f;
+                start = current;
+            }
+
+            _alpha = new(start, end);
+            _duration = duration;
 
             if (_duration > 0f && zeroDuration == false)
             {
                 _isTransitioning = true;
 
                 var color = graphic.color;
-                color.a = Mathf.Clamp(alpha.start, 0f, 1f);
+                color.a = start;
                 graphic.color = color;
 
-                await UnityTask.WaitUntil(this, static state => state._isTransitioning == false, token);
-
-                if (token.IsCancellationRequested)
+                try
                 {
-                    _isTransitioning = false;
+                    await UnityTask.WaitUntil(this, static state => state._isTransitioning == false, token);
+                }
+                finally
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        _isTransitioning = false;
+                    }
                 }
             }
             else
             {
                 var color = graphic.color;
-                color.a = Mathf.Clamp(alpha.end, 0f, 1f);
+                color.a = end;
                 graphic.color = color;
             }
         }
@@ -140,25 +176,33 @@ namespace EncosyTower.PageFlows.UguiPages
             }
         }
 
+        /// <summary>The options of the show or of the hide.</summary>
         [Serializable]
-        [MovedFrom(
-              true
-            , sourceNamespace: "EncosyTower.PageFlows.MonoPages"
-            , sourceAssembly: "EncosyTower.PageFlows.MonoPages"
-            , sourceClassName: null
-        )]
         public struct Options
         {
+            /// <summary>Whether the step runs even with <c>NoTransition</c>.</summary>
+            [Tooltip("Whether the step runs even with NoTransition.")]
             public bool forceRun;
+
+            /// <summary>Whether the step keeps its duration with <c>ZeroDuration</c>.</summary>
+            [Tooltip("Whether the step keeps its duration with ZeroDuration.")]
             public bool disableZeroDuration;
+
+            /// <summary>The duration of the fade, in seconds.</summary>
+            [Tooltip("The duration of the fade, in seconds.")]
             public float duration;
+
+            /// <summary>The alpha the fade starts and ends with, from 0 to 1.</summary>
+            [Tooltip("The alpha the fade starts and ends with, from 0 to 1.")]
             public TransitionFloat alpha;
 
+            /// <summary>Gets the default show options: 0.2 seconds from alpha 0 to 1.</summary>
             public static Options DefaultShow => new() {
                 duration = 0.2f,
                 alpha = new(0f, 1f),
             };
 
+            /// <summary>Gets the default hide options: 0.2 seconds from alpha 1 to 0.</summary>
             public static Options DefaultHide => new() {
                 duration = 0.2f,
                 alpha = new(1f, 0f),

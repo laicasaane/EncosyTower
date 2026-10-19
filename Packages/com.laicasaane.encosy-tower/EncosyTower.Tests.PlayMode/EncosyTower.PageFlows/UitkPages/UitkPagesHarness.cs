@@ -1,11 +1,14 @@
 using System;
 using System.Threading.Tasks;
 using EncosyTower.PageFlows;
+using EncosyTower.PageFlows.Codex;
+using EncosyTower.PageFlows.Loading;
 using EncosyTower.PageFlows.UitkPages;
+using EncosyTower.PageFlows.UitkPages.Codex;
 using EncosyTower.Tasks;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UIElements;
+using NUnit.Framework;
 
 namespace EncosyTower.Tests.PageFlows.UitkPages
 {
@@ -44,8 +47,15 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
         public UitkTestInitializer Initializer { get; }
 
+        public static Task<UitkPagesHarness> CreateAsync(
+              VisualTreeAsset layoutAsset
+            , params (string Identifier, PageFlowKind Kind, string ContainerName)[] definitions
+        )
+            => CreateAsync(layoutAsset, warnNoSubscriber: false, definitions);
+
         public static async Task<UitkPagesHarness> CreateAsync(
               VisualTreeAsset layoutAsset
+            , bool warnNoSubscriber
             , params (string Identifier, PageFlowKind Kind, string ContainerName)[] definitions
         )
         {
@@ -73,6 +83,11 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             codex._layoutAsset = layoutAsset;
             codex._flowContext.autoInitializeOnAwake = true;
             codex._flowContext.loadStrategy = new(value: PageLoaderStrategy.Resources, isOverridden: true);
+
+            if (warnNoSubscriber)
+            {
+                codex._flowContext.warnNoSubscriber = new(value: true, isOverridden: true);
+            }
 
             gameObject.SetActive(true);
 
