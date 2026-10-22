@@ -29,6 +29,7 @@ namespace EncosyTower.Samples.UguiPages.Screens
     {
         private const string CORE_GLOW = "core-glow";
         private const string DASHED_NAME = "dashed";
+        private const string CORE_SLOT = "core-slot";
         private const int ENTRY_COUNT = DimensionCatalog.OUTER_COUNT + 1;
 
         /// <summary>The background image of the screen.</summary>
@@ -82,12 +83,15 @@ namespace EncosyTower.Samples.UguiPages.Screens
         private Image _coreBorder;
         private RectTransform _coreGlowRect;
         private RectTransform _coreCardRect;
+        private RectTransform _coreSlot;
         private Color _coreGlowColor;
+        private Color _coreGlowMiddleColor;
+        private Color _coreGlowFarColor;
         private Vector2 _glowCardMin;
         private Vector2 _glowCardMax;
+        private Vector2 _glowCardSize;
         private float _blinkStart;
-        private float _glowOutset;
-        private float _glowPulseSeconds;
+        private HaloVfx _coreHaloVfx;
         private bool _isBlinking;
         private bool _isGlowPlaced;
         private bool _isRegistered;
@@ -125,6 +129,7 @@ namespace EncosyTower.Samples.UguiPages.Screens
                 _coreDashed = coreCard.transform.Find(DASHED_NAME).GetComponent<Image>();
                 _coreBorder = BookView.FindBorder(coreCard);
 
+                LiftCoreCard(coreCard);
                 CreateCoreGlow();
             }
 
@@ -174,6 +179,7 @@ namespace EncosyTower.Samples.UguiPages.Screens
         {
             if (_isRegistered)
             {
+                Canvas.willRenderCanvases -= SyncCoreCard;
                 _readName.onClick.RemoveAllListeners();
 
                 for (var i = 0; i < ENTRY_COUNT; i++)
@@ -204,39 +210,105 @@ namespace EncosyTower.Samples.UguiPages.Screens
             {
                 _isBlinking = true;
                 _blinkStart = Time.unscaledTime;
-                _glowOutset = _state.Config.Amount(ConfigAmountType.EntranceGlowOutset);
-                _glowPulseSeconds = _state.Config.Amount(ConfigAmountType.EntranceGlowPulseSeconds);
             }
 
             var cardMin = _coreCardRect.offsetMin;
             var cardMax = _coreCardRect.offsetMax;
 
-            if (_isGlowPlaced == false || cardMin != _glowCardMin || cardMax != _glowCardMax)
+            if (_isGlowPlaced == false || cardMin != _glowCardMin || cardMax != _glowCardMax
+                || _coreCardRect.rect.size != _glowCardSize)
             {
                 PlaceCoreGlow(cardMin, cardMax);
             }
 
-            var phase = Mathf.Repeat((Time.unscaledTime - _blinkStart) / _glowPulseSeconds, 1f);
-            var color = _coreGlowColor;
+            var elapsed = Time.unscaledTime - _blinkStart;
 
-            color.a *= 1f - Mathf.Abs((phase * 2f) - 1f);
-
-            _coreGlow.color = color;
+            _coreHaloVfx?.SetRotationSpeeds(new Vector3(
+                  _state.Config.Amount(ConfigAmountType.CoreVfxNearestDegreesPerSecond)
+                , _state.Config.Amount(ConfigAmountType.CoreVfxMiddleDegreesPerSecond)
+                , _state.Config.Amount(ConfigAmountType.CoreVfxFarDegreesPerSecond)
+            ));
+            _coreHaloVfx.Render(_coreGlowColor, _coreGlowMiddleColor, _coreGlowFarColor,
+                elapsed, HaloVfx.Intensity(elapsed));
         }
 
         private void PlaceCoreGlow(Vector2 cardMin, Vector2 cardMax)
         {
-            var outset = new Vector2(_glowOutset, _glowOutset);
+            var size = HaloVfx.CoreSize(_coreCardRect.rect.size);
 
             _isGlowPlaced = true;
             _glowCardMin = cardMin;
             _glowCardMax = cardMax;
+            _glowCardSize = _coreCardRect.rect.size;
+            _coreGlowRect.anchorMin = _coreGlowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _coreGlowRect.pivot = new Vector2(0.5f, 0.5f);
+            _coreGlowRect.sizeDelta = size;
+            _coreGlowRect.position = _coreCardRect.TransformPoint(_coreCardRect.rect.center);
+        }
 
-            _coreGlowRect.anchorMin = _coreCardRect.anchorMin;
-            _coreGlowRect.anchorMax = _coreCardRect.anchorMax;
-            _coreGlowRect.pivot = _coreCardRect.pivot;
-            _coreGlowRect.offsetMin = cardMin - outset;
-            _coreGlowRect.offsetMax = cardMax + outset;
+        // The glow must draw under the core card but over every other card. A card draws after the rows above it and
+        // before the rows below it, so the core card leaves its row for the end of the board, behind a slot that keeps
+        // its place in the layout, and the glow takes the place just before it.
+        private void LiftCoreCard(Button card)
+        {
+            var cardRect = (RectTransform)card.transform;
+            var row = cardRect.parent;
+            var board = row.parent;
+            var slotObject = new GameObject(CORE_SLOT, typeof(RectTransform), typeof(LayoutElement));
+            var slotLayout = slotObject.GetComponent<LayoutElement>();
+
+            _coreSlot = (RectTransform)slotObject.transform;
+            _coreSlot.SetParent(row, worldPositionStays: false);
+            _coreSlot.SetSiblingIndex(cardRect.GetSiblingIndex());
+            _coreSlot.anchorMin = cardRect.anchorMin;
+            _coreSlot.anchorMax = cardRect.anchorMax;
+            _coreSlot.pivot = cardRect.pivot;
+            _coreSlot.sizeDelta = cardRect.sizeDelta;
+            slotObject.layer = card.gameObject.layer;
+
+            if (card.TryGetComponent<LayoutElement>(out var cardLayout))
+            {
+                slotLayout.minWidth = cardLayout.minWidth;
+                slotLayout.minHeight = cardLayout.minHeight;
+                slotLayout.preferredWidth = cardLayout.preferredWidth;
+                slotLayout.preferredHeight = cardLayout.preferredHeight;
+                slotLayout.flexibleWidth = cardLayout.flexibleWidth;
+                slotLayout.flexibleHeight = cardLayout.flexibleHeight;
+                slotLayout.layoutPriority = cardLayout.layoutPriority;
+                cardLayout.ignoreLayout = true;
+            }
+
+            if (slotLayout.minWidth < 0f && slotLayout.preferredWidth < 0f && slotLayout.flexibleWidth <= 0f)
+            {
+                slotLayout.preferredWidth = cardRect.sizeDelta.x;
+            }
+
+            if (slotLayout.minHeight < 0f && slotLayout.preferredHeight < 0f && slotLayout.flexibleHeight <= 0f)
+            {
+                slotLayout.preferredHeight = cardRect.sizeDelta.y;
+            }
+
+            cardRect.SetParent(board, worldPositionStays: false);
+            cardRect.anchorMin = cardRect.anchorMax = cardRect.pivot = new Vector2(0.5f, 0.5f);
+            Canvas.willRenderCanvases += SyncCoreCard;
+        }
+
+        // Runs after the layout of the frame, so the card never trails its slot.
+        private void SyncCoreCard()
+        {
+            if (this == null || _coreSlot == null || _coreSlot.gameObject.activeInHierarchy == false)
+            {
+                return;
+            }
+
+            var rect = _coreSlot.rect;
+
+            if (_coreCardRect.sizeDelta != rect.size)
+            {
+                _coreCardRect.sizeDelta = rect.size;
+            }
+
+            _coreCardRect.position = _coreSlot.TransformPoint(rect.center);
         }
 
         private void CreateCoreGlow()
@@ -252,9 +324,7 @@ namespace EncosyTower.Samples.UguiPages.Screens
             glowObject.GetComponent<LayoutElement>().ignoreLayout = true;
 
             _coreGlow = glowObject.GetComponent<Image>();
-            _coreGlow.sprite = card.image.sprite;
-            _coreGlow.type = card.image.type;
-            _coreGlow.raycastTarget = false;
+            _coreHaloVfx = HaloVfx.Bind(_coreGlow, rectangular: true);
             HideCoreGlow();
         }
 
@@ -268,7 +338,7 @@ namespace EncosyTower.Samples.UguiPages.Screens
 
             if (_coreGlow != null)
             {
-                _coreGlow.color = color;
+                _coreHaloVfx?.Render(color, Color.clear, Color.clear, 0f, 0f);
             }
         }
 
@@ -361,7 +431,9 @@ namespace EncosyTower.Samples.UguiPages.Screens
             _coreHint.color = ink;
             _coreGlyph.gameObject.SetActive(visited);
             _coreGlyph.color = ink;
-            _coreGlowColor = config.Color(ConfigColorType.CoreGlow);
+            _coreGlowColor = config.Color(ConfigColorType.CoreVfxNearest);
+            _coreGlowMiddleColor = config.Color(ConfigColorType.CoreVfxMiddle);
+            _coreGlowFarColor = config.Color(ConfigColorType.CoreVfxFar);
         }
 
         private static void SetCardLooks(Button card, Color fill, bool isLocked, Color ink, AppConfig config)

@@ -1,3 +1,4 @@
+using System;
 using EncosyTower.Samples.UguiPages.Config;
 using EncosyTower.Samples.UguiPages.State;
 
@@ -8,5 +9,8 @@ namespace EncosyTower.Samples.UguiPages.PageUserData
     /// <see cref="EncosyTower.PageFlows.PageContext.UserData"/>.
     /// </summary>
     /// <remarks>Demonstrates passing app data to pages through the call context.</remarks>
-    internal sealed record class DimensionPageData(AppState State, BookLocation Location);
+    internal sealed record class DimensionPageData(AppState State, BookLocation Location)
+    {
+        public Action Dismiss { get; init; }
+    }
 }

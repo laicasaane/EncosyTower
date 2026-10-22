@@ -47,5 +47,6 @@ namespace EncosyTower.Samples.UguiPages.Ids
         SettingsThemeDark,
         SettingsThemeLight,
         SettingsExit,
+        SettingsGoToEntrance,
     }
 }
