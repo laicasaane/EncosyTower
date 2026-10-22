@@ -5,8 +5,8 @@ using EncosyTower.Editor.ProjectSetup;
 namespace EncosyTower.Editor.Localization
 {
     [Feature("2. EncosyTower: Localization")]
-    [RequiresPackage(PackageRegistry.Unity, "com.unity.addressables", "2.9.1")]
-    [RequiresPackage(PackageRegistry.Unity, "com.unity.localization", "1.5.12")]
+    [RequiresPackage(PackageRegistry.Unity, "com.unity.addressables", "2.10.3")]
+    [RequiresPackage(PackageRegistry.Unity, "com.unity.localization", "1.5.13")]
     internal readonly struct FeatureLocalization { }
 }
 

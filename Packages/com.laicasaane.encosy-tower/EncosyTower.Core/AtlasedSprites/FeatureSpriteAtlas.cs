@@ -6,7 +6,7 @@ namespace EncosyTower.Editor.AtlasedSprites
 {
     [Feature("3. EncosyTower: SpriteAtlas")]
 
-    [RequiresPackage(PackageRegistry.Unity, "com.unity.addressables", "2.9.1", isOptional: true)]
+    [RequiresPackage(PackageRegistry.Unity, "com.unity.addressables", "2.10.3", isOptional: true)]
     internal readonly struct FeatureSpriteAtlas { }
 }
 
