@@ -5,9 +5,9 @@ using EncosyTower.Editor.ProjectSetup;
 namespace EncosyTower.Editor.Entities
 {
     [Feature("4. EncosyTower: Entities")]
-    [RequiresPackage(PackageRegistry.Unity, "com.unity.entities", "1.4.7")]
-    [RequiresPackage(PackageRegistry.Unity, "com.unity.entities.graphics", "1.4.20", isOptional: true)]
-    [RequiresPackage(PackageRegistry.OpenUpm, "com.latios.latiosframework", "0.15.6", isOptional: true)]
+    [RequiresPackage(PackageRegistry.Unity, "com.unity.entities", "1.5.0")]
+    [RequiresPackage(PackageRegistry.Unity, "com.unity.entities.graphics", "1.5.0", isOptional: true)]
+    [RequiresPackage(PackageRegistry.OpenUpm, "com.latios.latiosframework", "0.16.3", isOptional: true)]
     internal readonly struct FeatureEntities { }
 }
 
