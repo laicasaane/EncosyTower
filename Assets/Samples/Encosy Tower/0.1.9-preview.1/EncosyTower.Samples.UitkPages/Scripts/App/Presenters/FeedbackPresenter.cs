@@ -34,19 +34,6 @@ namespace EncosyTower.Samples.UitkPages.App
             _toastExpiry = Time.unscaledTime + _ctx.Timings.ToastSeconds;
         }
 
-        public void ShowRuneToast(DimensionData data)
-        {
-            var text = _ctx.ViewResources.Format(ConfigTextType.ToastRuneDiscovered, data.Title);
-            var toast = _ctx.Attachments.Toast;
-
-            if (toast != null)
-            {
-                toast.Show(text, ToastKind.Rune, _ctx.State.RuneOf(data.Index), _ctx.State.NumberOf(data.Index));
-            }
-
-            _toastExpiry = Time.unscaledTime + _ctx.Timings.ToastSeconds;
-        }
-
         public void StartCoreBlink()
         {
             _blinkExpiry = Time.unscaledTime + _ctx.Timings.BlinkSeconds;

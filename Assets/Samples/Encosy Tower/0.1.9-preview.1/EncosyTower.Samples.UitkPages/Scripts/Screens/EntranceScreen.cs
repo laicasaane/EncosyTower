@@ -43,9 +43,11 @@ namespace EncosyTower.Samples.UitkPages.Screens
         private const string NAVIGATION_BAR_HOST = "navigation-bar-host";
         private const string GLOW_NAME = "core-glow";
         private const string GLOW_CLASS = "tower-book-entry__glow";
+        private const string SLOT_NAME = "core-slot";
+        private const string SLOT_CLASS = "tower-book-entry__slot";
+        private const string LIFTED_CLASS = "tower-book-entry--lifted";
         private const string LOCKED_CLASS = "tower-book-entry--locked";
         private const int ENTRY_COUNT = DimensionCatalog.OUTER_COUNT + 1;
-        private const float SECONDS_PER_MS = 0.001f;
         private const float CORE_DASH_WIDTH = 2f;
         private const float CORE_DASH_RADIUS = 4f;
         private const float CORE_DASH_LENGTH = 6f;
@@ -65,7 +67,9 @@ namespace EncosyTower.Samples.UitkPages.Screens
         private Label _instruction;
         private Button _readName;
         private Image _coreGlyph;
-        private VisualElement _coreGlow;
+        private Image _coreGlow;
+        private HaloVfx _coreHaloVfx;
+        private VisualElement _coreSlot;
         private VisualElement _navigationBarHost;
         private IVisualElementScheduledItem _blink;
         private string _castTitle;
@@ -135,6 +139,7 @@ namespace EncosyTower.Samples.UitkPages.Screens
 
             _set = null;
             StopBlink();
+            _coreHaloVfx?.Release();
         }
 
         /// <inheritdoc/>
@@ -343,11 +348,39 @@ namespace EncosyTower.Samples.UitkPages.Screens
 
             var card = this.Q<Button>($"{DIMENSION_BUTTON}{DimensionCatalog.OUTER_COUNT}");
             var row = card.parent;
+            var board = row.parent;
 
-            _coreGlow = new VisualElement { name = GLOW_NAME, pickingMode = PickingMode.Ignore };
+            _coreGlow = new Image { name = GLOW_NAME, pickingMode = PickingMode.Ignore };
+            _coreHaloVfx = new HaloVfx(_coreGlow, rectangular: true);
             _coreGlow.AddToClassList(GLOW_CLASS);
-            row.Insert(row.IndexOf(card), _coreGlow);
+
+            // The glow must draw under the core card but over every other card. A card draws after the rows above it
+            // and before the rows below it, so the core card leaves its row for the end of the board, behind a slot
+            // that keeps its place in the layout, and the glow takes the place just before it.
+            _coreSlot = new VisualElement { name = SLOT_NAME, pickingMode = PickingMode.Ignore };
+            _coreSlot.AddToClassList(SLOT_CLASS);
+            row.Insert(row.IndexOf(card), _coreSlot);
+            board.Add(_coreGlow);
+            board.Add(card);
+            card.AddToClassList(LIFTED_CLASS);
+            _coreSlot.RegisterCallback<GeometryChangedEvent>(OnCoreSlotGeometryChanged);
             card.RegisterCallback<GeometryChangedEvent>(OnCoreGeometryChanged);
+        }
+
+        private void PlaceCoreCard()
+        {
+            var card = _entries[DimensionCatalog.OUTER_COUNT];
+            var bounds = _coreSlot.worldBound;
+
+            if (float.IsNaN(bounds.width) || card.parent == null)
+            {
+                return;
+            }
+
+            var position = card.parent.WorldToLocal(bounds.position);
+
+            card.style.left = position.x;
+            card.style.top = position.y;
         }
 
         private void PlaceCoreGlow()
@@ -359,12 +392,12 @@ namespace EncosyTower.Samples.UitkPages.Screens
                 return;
             }
 
-            var outset = _palette.Amount(ConfigAmountType.EntranceGlowOutset);
+            var size = HaloVfx.CoreSize(rect.size);
 
-            _coreGlow.style.left = rect.x - outset;
-            _coreGlow.style.top = rect.y - outset;
-            _coreGlow.style.width = rect.width + (outset * 2f);
-            _coreGlow.style.height = rect.height + (outset * 2f);
+            _coreGlow.style.left = rect.center.x - size.x * 0.5f;
+            _coreGlow.style.top = rect.center.y - size.y * 0.5f;
+            _coreGlow.style.width = size.x;
+            _coreGlow.style.height = size.y;
         }
 
         private void RenderBlink()
@@ -392,23 +425,24 @@ namespace EncosyTower.Samples.UitkPages.Screens
 
             if (_coreGlow != null)
             {
-                _coreGlow.style.opacity = StyleKeyword.Null;
+                _coreGlow.style.opacity = 0f;
             }
         }
 
         private void UpdateGlow()
         {
-            var period = _state.Timings.CoreGlowPulseMs * SECONDS_PER_MS;
+            var elapsed = Time.unscaledTime - _blinkStart;
 
-            if (period <= 0f)
-            {
-                _coreGlow.style.opacity = StyleKeyword.Null;
-                return;
-            }
+            _coreGlow.style.opacity = 1f;
+            _coreHaloVfx?.SetRotationSpeeds(_state.Timings.CoreVfxSpeeds);
+            _coreHaloVfx.Render(_palette.Color(ConfigColorType.CoreVfxNearest),
+                _palette.Color(ConfigColorType.CoreVfxMiddle), _palette.Color(ConfigColorType.CoreVfxFar),
+                elapsed, HaloVfx.Intensity(elapsed));
+        }
 
-            var phase = Mathf.Repeat((Time.unscaledTime - _blinkStart) / period, 1f);
-
-            _coreGlow.style.opacity = 1f - Mathf.Abs((phase * 2f) - 1f);
+        private void OnCoreSlotGeometryChanged(GeometryChangedEvent evt)
+        {
+            PlaceCoreCard();
         }
 
         private void OnCoreGeometryChanged(GeometryChangedEvent evt)

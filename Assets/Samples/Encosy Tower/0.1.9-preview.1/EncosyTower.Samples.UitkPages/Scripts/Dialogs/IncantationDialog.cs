@@ -67,6 +67,8 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
         private VisualElement _backdrop;
         private VisualElement _root;
         private Button _writeInTheBook;
+        private readonly DialogBackdrop _dismissal = new();
+
         private AppState _state;
         private float _slotPitch;
         private float _rowWidth;
@@ -134,6 +136,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
             }
 
             _state = data.State;
+            _dismissal.Bind(this, data.Dismiss);
             _state.Changed += OnStateChanged;
 
             _root.style.backgroundColor = _palette.Color(ConfigColorType.PageEcho);
@@ -148,6 +151,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
         /// <inheritdoc/>
         public void OnReturnToPool(PageContext context)
         {
+            _dismissal.Unbind();
             if (_state != null)
             {
                 _state.Changed -= OnStateChanged;

@@ -43,7 +43,6 @@ namespace EncosyTower.Samples.UitkPages.App
                 , CanForward: idle && hasPopup == false && history != null && history.CanGoForward
                 , CanMap: isMenu == false && isEntrance == false && idle && mapOpen == false && popupPending == false
                 , CanSettings: isMenu == false && idle && popupPending == false
-                , CanPick: isMenu == false && _ctx.IsBusy == false && _popups.IsCleaning == false
             );
         }
 

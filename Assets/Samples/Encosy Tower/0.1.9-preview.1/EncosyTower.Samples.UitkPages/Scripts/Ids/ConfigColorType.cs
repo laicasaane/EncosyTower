@@ -52,5 +52,11 @@ namespace EncosyTower.Samples.UitkPages.Ids
         ButtonPress,
         MenuPressBackground,
         EntranceCardLockedHover,
+        RuneVfxNearest,
+        RuneVfxMiddle,
+        RuneVfxFar,
+        CoreVfxNearest,
+        CoreVfxMiddle,
+        CoreVfxFar,
     }
 }

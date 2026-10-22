@@ -19,7 +19,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
     /// A page of the Popup flow, defined by a prefab with a <see cref="UitkPageBehaviour"/> component and a layout.
     /// The Echo dialog opens above it.
     /// </remarks>
-    public class MoreDialog : UitkPageBehaviour<AppFlowScopes>, IPageOnCreateAsync
+    public class MoreDialog : UitkPageBehaviour<AppFlowScopes>, IPageOnCreateAsync, IPageOnReturnToPool
     {
         private const string ROOT = "root";
         private const string TITLE_LABEL = "label-title";
@@ -33,6 +33,8 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
         private Button _echo;
         private Button _close;
         private VisualElement _root;
+        private readonly DialogBackdrop _dismissal = new();
+
         private AppState _state;
         private Dimension? _titleId;
         private string _titleText;
@@ -60,6 +62,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
             DimensionCatalog.TryGet(data.Location, out var dimension);
 
             _state = data.State;
+            _dismissal.Bind(Slot, data.Dismiss);
 
             if (_titleId != dimension.Id)
             {
@@ -73,6 +76,11 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
             Slot.EnableInClassList(NESTED_CLASS, data.State.PopupDepth > 0);
 
             return UnityTask.FromResult(true);
+        }
+
+        public void OnReturnToPool(PageContext context)
+        {
+            _dismissal.Unbind();
         }
 
         /// <inheritdoc/>

@@ -8,7 +8,9 @@
                 <ui:Label name="label-theme" class="tower-book-settings__label" />
                 <views:ThemeSwitch name="theme-switch" />
             </ui:VisualElement>
+            <ui:Button name="button-settings-entrance" text="Go to Entrance" class="tower-book-button tower-book-settings__entrance" />
             <ui:Button name="button-settings-exit" text="Exit to Main Menu" class="tower-book-button tower-book-settings__exit" />
+            <ui:Button name="button-close" text="Close" class="tower-book-button tower-book-settings__close" />
         </ui:VisualElement>
     </dialogs:SettingsDialog>
 </ui:UXML>

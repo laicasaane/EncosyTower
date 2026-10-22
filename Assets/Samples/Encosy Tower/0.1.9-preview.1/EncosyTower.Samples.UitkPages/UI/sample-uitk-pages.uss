@@ -36,6 +36,12 @@
     --tb-color-locked: #C8CBCB;
     --tb-color-cast-gold: #8A6410;
     --tb-color-core-glow: #F0D99E;
+    --tb-color-rune-vfx-nearest: #f7eccf;
+    --tb-color-rune-vfx-middle: #ecc155;
+    --tb-color-rune-vfx-far: #d1ba80;
+    --tb-color-core-vfx-nearest: #fff7e0;
+    --tb-color-core-vfx-middle: #ecc155;
+    --tb-color-core-vfx-far: #d1ba80;
     --tb-color-backdrop: rgba(0, 0, 0, 0.70);
     --tb-color-map-line: #647C98;
     --tb-color-map-entrance-idle: rgba(255, 255, 255, 0);
@@ -100,6 +106,13 @@
     --tb-amount-entrance-card-hover-mix: 0.16;
     --tb-amount-map-node-hover-mix: 0.15;
     --tb-amount-toast-seconds: 4;
+    --tb-amount-rune-banner-seconds: 5;
+    --tb-amount-rune-vfx-nearest-degrees-per-second: 120;
+    --tb-amount-rune-vfx-middle-degrees-per-second: -60;
+    --tb-amount-rune-vfx-far-degrees-per-second: 0;
+    --tb-amount-core-vfx-nearest-degrees-per-second: 120;
+    --tb-amount-core-vfx-middle-degrees-per-second: -80;
+    --tb-amount-core-vfx-far-degrees-per-second: 0;
     --tb-amount-entrance-blink-seconds: 2;
     --tb-amount-entrance-glow-outset: 7;
     --tb-amount-entrance-glow-pulse-seconds: 0.5;
@@ -208,6 +221,12 @@
     --tb-color-locked: #4B5152;
     --tb-color-cast-gold: #F0C75E;
     --tb-color-core-glow: #AC9A75;
+    --tb-color-rune-vfx-nearest: #7acce1;
+    --tb-color-rune-vfx-middle: #4abaf2;
+    --tb-color-rune-vfx-far: #3e53bb;
+    --tb-color-core-vfx-nearest: #e4d18b;
+    --tb-color-core-vfx-middle: #eaaf2e;
+    --tb-color-core-vfx-far: #682d0d;
     --tb-color-backdrop: rgba(0, 0, 0, 0.82);
     --tb-color-map-line: #B8CDE2;
     --tb-color-map-entrance-idle: rgba(255, 255, 255, 0);
@@ -633,6 +652,21 @@
     border-color: rgba(0, 0, 0, 0);
 }
 
+.tower-book-entry__slot {
+    flex-shrink: 0;
+    width: 267px;
+    height: 64px;
+    min-height: 64px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.tower-book-entry--lifted {
+    position: absolute;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .tower-book-entry__glow {
     position: absolute;
     border-radius: 11px;
@@ -886,7 +920,7 @@
 }
 
 .tower-book-popup--nested .tower-book-backdrop {
-    display: none;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .tower-book-dialog {
@@ -954,10 +988,20 @@
     font-size: 18px;
 }
 
-.tower-book-settings__exit {
+.tower-book-settings__entrance,
+.tower-book-settings__exit,
+.tower-book-settings__close {
     flex-shrink: 0;
     align-self: stretch;
     height: 44px;
+}
+
+.tower-book-settings__exit {
+    margin-top: 12px;
+}
+
+.tower-book-settings__close {
+    margin-top: 12px;
 }
 
 .tower-book-theme-switch {
@@ -1348,4 +1392,41 @@
     margin-top: 8px;
     font-size: 12px;
     -unity-text-align: middle-center;
+}
+
+.tower-book-rune-banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    translate: 0 -50%;
+    height: 180px;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+}
+
+.tower-book-rune-banner__glow {
+    position: absolute;
+    width: 204.8px;
+    height: 204.8px;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    margin-top: 32px;
+}
+
+.tower-book-rune-banner__title {
+    width: 100%;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.tower-book-rune-banner__rune {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    translate: 0 10px;
 }

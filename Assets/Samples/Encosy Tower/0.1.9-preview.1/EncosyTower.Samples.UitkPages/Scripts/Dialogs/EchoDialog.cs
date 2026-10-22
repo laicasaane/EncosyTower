@@ -21,7 +21,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
     /// <see cref="PopupPageOptions.KeepLowerPage"/>.
     /// </remarks>
     [UxmlElement]
-    public partial class EchoDialog : UitkPageElement<AppFlowScopes>, IPageOnCreateAsync
+    public partial class EchoDialog : UitkPageElement<AppFlowScopes>, IPageOnCreateAsync, IPageOnReturnToPool
     {
         private const string ROOT = "root";
         private const string TITLE_LABEL = "label-title";
@@ -39,6 +39,8 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
         private Label _note;
         private Button _appendix;
         private Button _done;
+        private readonly DialogBackdrop _dismissal = new();
+
         private AppState _state;
         private Dimension? _textId;
         private string _titleText;
@@ -81,6 +83,7 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
             }
 
             _state = data.State;
+            _dismissal.Bind(this, data.Dismiss);
 
             var resources = _state.Resources;
 
@@ -99,6 +102,11 @@ namespace EncosyTower.Samples.UitkPages.Dialogs
             EnableInClassList(NESTED_CLASS, data.State.PopupDepth > 0);
 
             return UnityTask.FromResult(true);
+        }
+
+        public void OnReturnToPool(PageContext context)
+        {
+            _dismissal.Unbind();
         }
 
         /// <inheritdoc/>

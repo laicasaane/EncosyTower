@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using EncosyTower.Common;
 using EncosyTower.PageFlows;
 using EncosyTower.PageFlows.PubSub;
 using EncosyTower.Samples.UitkPages.Ids;
 using EncosyTower.Samples.UitkPages.Overlays;
+using EncosyTower.Samples.UitkPages.PageUserData;
 using EncosyTower.Tasks;
 using UnityEngine;
 
@@ -19,6 +21,7 @@ namespace EncosyTower.Samples.UitkPages.App
         private readonly FlowService _flows;
         private readonly FeedbackPresenter _feedback;
         private readonly List<DialogPage> _pages = new();
+        private readonly List<PopupOp> _presentations = new();
         private float _reopenExpiry;
 
         public PopupController(CodexContext ctx, FlowService flows, FeedbackPresenter feedback)
@@ -71,6 +74,7 @@ namespace EncosyTower.Samples.UitkPages.App
                     if (AssetKeyAPI.TryGetId(navigation.To.AssetKey, out var id) && id.TryGetValue(out DialogPage page))
                     {
                         _pages.Add(page);
+                        _presentations.Add(Op is { IsShow: true } opening && opening.Page == page ? opening : null);
                     }
 
                     break;
@@ -82,6 +86,7 @@ namespace EncosyTower.Samples.UitkPages.App
                     if (_pages.Count > 0)
                     {
                         _pages.RemoveAt(_pages.Count - 1);
+                        _presentations.RemoveAt(_presentations.Count - 1);
                     }
 
                     break;
@@ -93,9 +98,18 @@ namespace EncosyTower.Samples.UitkPages.App
             _ctx.MarkStatusDirty();
         }
 
-        public async UnityTask<Success<PageFlowError>> ShowPopupAsync(DialogPage page, object userData)
+        public async UnityTask<Success<PageFlowError>> ShowPopupAsync(
+              DialogPage page
+            , object userData
+            , Action onDismiss = null
+        )
         {
-            var op = new PopupOp(page, isShow: true);
+            var op = new PopupOp(page, isShow: true) { OnDismiss = onDismiss };
+
+            if (userData is DimensionPageData data)
+            {
+                userData = data with { Dismiss = () => RequestDismiss(op) };
+            }
 
             Op = op;
             Reopen = default;
@@ -116,6 +130,51 @@ namespace EncosyTower.Samples.UitkPages.App
 
             ReportAbort(op, in result);
             return result;
+        }
+
+        public void Tick()
+        {
+            if (Op != null || IsCleaning || _ctx.Token.IsCancellationRequested || _presentations.Count == 0)
+            {
+                return;
+            }
+
+            var presentation = _presentations[^1];
+
+            if (presentation is not { DismissRequested: true })
+            {
+                return;
+            }
+
+            presentation.DismissRequested = false;
+
+            if (presentation.OnDismiss != null)
+            {
+                presentation.OnDismiss();
+            }
+            else
+            {
+                HideTopPopupAsync(offerReopen: IsReopenable(presentation.Page)).Forget();
+            }
+        }
+
+        private void RequestDismiss(PopupOp presentation)
+        {
+            if (IsCleaning || _ctx.Token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(Op, presentation) && presentation.IsShow)
+            {
+                presentation.Source.Abort(PageAbortMode.Reverse);
+                return;
+            }
+
+            if (_presentations.Count > 0 && ReferenceEquals(_presentations[^1], presentation))
+            {
+                presentation.DismissRequested = true;
+            }
         }
 
         public async UnityTask<Success<PageFlowError>> HideTopPopupAsync(bool offerReopen)
@@ -358,6 +417,10 @@ namespace EncosyTower.Samples.UitkPages.App
             public DialogPage Page { get; }
 
             public bool IsShow { get; }
+
+            public Action OnDismiss { get; init; }
+
+            public bool DismissRequested { get; set; }
 
             public PageAbortSource Source { get; } = new();
 

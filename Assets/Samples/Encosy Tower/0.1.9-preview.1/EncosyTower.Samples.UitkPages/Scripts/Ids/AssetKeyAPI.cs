@@ -23,6 +23,13 @@ namespace EncosyTower.Samples.UitkPages.Ids
     /// </remarks>
     internal static class AssetKeyAPI
     {
+        public static readonly AssetKey RuneHaloVfxNearest = new("Vfx/uitk-rune-halo-vfx-nearest");
+        public static readonly AssetKey RuneHaloVfxNear = new("Vfx/uitk-rune-halo-vfx-near");
+        public static readonly AssetKey RuneHaloVfxFar = new("Vfx/uitk-rune-halo-vfx-far");
+        public static readonly AssetKey CoreHaloVfxNearest = new("Vfx/uitk-core-halo-vfx-nearest");
+        public static readonly AssetKey CoreHaloVfxNear = new("Vfx/uitk-core-halo-vfx-near");
+        public static readonly AssetKey CoreHaloVfxFar = new("Vfx/uitk-core-halo-vfx-far");
+
         private static readonly AssetKey s_pageFormat = new("Pages/{0}s/uitk-{1}");
         private static readonly AssetKey s_motifFormat = new("Motifs/uitk-motif-{0}");
         private static readonly AssetKey s_runeFormat = new("Runes/uitk-rune-{0}");

@@ -118,5 +118,12 @@ namespace EncosyTower.Samples.UitkPages.Ids
         DimensionPressMix,
         EntranceCardHoverMix,
         MapNodeHoverMix,
+        RuneBannerSeconds,
+        RuneVfxNearestDegreesPerSecond,
+        RuneVfxMiddleDegreesPerSecond,
+        RuneVfxFarDegreesPerSecond,
+        CoreVfxNearestDegreesPerSecond,
+        CoreVfxMiddleDegreesPerSecond,
+        CoreVfxFarDegreesPerSecond,
     }
 }
