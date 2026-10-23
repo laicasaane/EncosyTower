@@ -23,6 +23,7 @@ namespace EncosyTower.Samples.UguiPages.App
         private readonly PersistentService _saves;
         private ScreenRequest _active;
         private ScreenRequest _queued;
+        private BookLocation? _pendingRune;
 
         public ScreenController(
               CodexContext ctx
@@ -61,6 +62,7 @@ namespace EncosyTower.Samples.UguiPages.App
 
         public void DisposeHistory()
         {
+            _pendingRune = null;
             History?.Dispose();
             History = null;
         }
@@ -114,6 +116,7 @@ namespace EncosyTower.Samples.UguiPages.App
 
         public async UnityTask TravelAsync(BookLocation location)
         {
+            _pendingRune = null;
             var hasPopups = _popups.Count > 0 || _popups.Op != null;
 
             if (hasPopups && await _popups.BeginClosePopupsAsync() == false)
@@ -179,6 +182,28 @@ namespace EncosyTower.Samples.UguiPages.App
             await ReplayAsync(goBack: false);
         }
 
+        public void Tick()
+        {
+            if (_pendingRune is not { } location)
+            {
+                return;
+            }
+
+            if (_ctx.State.CurrentLocation != location)
+            {
+                _pendingRune = null;
+                return;
+            }
+
+            if (IsIdle == false || _popups.Op != null || _popups.Count > 0)
+            {
+                return;
+            }
+
+            _pendingRune = null;
+            _popups.ShowPopupAsync(DialogPage.RuneBanner, new DimensionPageData(_ctx.State, location)).Forget();
+        }
+
         private async UnityTask RunScreenRequestAsync(ScreenRequest request)
         {
             var context = _flows.CreateContext(
@@ -214,6 +239,7 @@ namespace EncosyTower.Samples.UguiPages.App
 
         private void OnScreenArrived(BookLocation location)
         {
+            _pendingRune = null;
             var state = _ctx.State;
 
             if (DimensionCatalog.TryGet(location, out var data))
@@ -222,7 +248,7 @@ namespace EncosyTower.Samples.UguiPages.App
                 {
                     if (state.DiscoverDimension(data.Index))
                     {
-                        _feedback.ShowRuneToast(data);
+                        _pendingRune = location;
                         _saves.RequestProgressSave();
                     }
                 }
@@ -234,7 +260,6 @@ namespace EncosyTower.Samples.UguiPages.App
             }
             else if (location.Screen == ScreenPage.Entrance && state.ConsumeCoreUnlockNotice())
             {
-                _feedback.ShowToast(ConfigTextType.ToastCoreUnlocked, ToastKind.Core);
                 _feedback.StartCoreBlink();
                 _saves.RequestProgressSave();
             }

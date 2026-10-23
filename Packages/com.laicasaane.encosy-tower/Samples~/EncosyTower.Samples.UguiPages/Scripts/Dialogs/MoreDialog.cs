@@ -83,7 +83,7 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
                 _titleText = string.Format(config.Text(ConfigTextType.DimensionPageTitle), dimension.Title);
             }
 
-            _backdrop.SetActive(_state.PopupDepth == 0);
+            DialogBackdrop.Bind(_backdrop, data.Dismiss, _state.PopupDepth > 0);
             _title.text = _titleText;
             RefreshColors();
 

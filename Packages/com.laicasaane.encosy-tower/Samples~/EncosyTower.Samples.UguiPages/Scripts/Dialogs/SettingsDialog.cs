@@ -2,6 +2,7 @@ using System.Threading;
 using EncosyTower.PageFlows;
 using EncosyTower.PageFlows.UguiPages;
 using EncosyTower.Samples.UguiPages.App;
+using EncosyTower.Samples.UguiPages.Config;
 using EncosyTower.Samples.UguiPages.Ids;
 using EncosyTower.Samples.UguiPages.Messages;
 using EncosyTower.Samples.UguiPages.PageUserData;
@@ -15,7 +16,7 @@ using UnityEngine.UI;
 
 namespace EncosyTower.Samples.UguiPages.Dialogs
 {
-    /// <summary>The settings dialog: the color theme, and exit to the main menu.</summary>
+    /// <summary>The settings dialog: the color theme, travel to the entrance, and exit to the main menu.</summary>
     /// <remarks>
     /// A page of the Popup flow. Fades as one unit through the root <c>CanvasGroup</c> transition of its prefab.
     /// </remarks>
@@ -41,9 +42,17 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
         [Tooltip("The switch that picks the light or the dark theme.")]
         [SerializeField] private ThemeSwitch _themeSwitch;
 
+        /// <summary>The button that travels to the entrance.</summary>
+        [Tooltip("The button that travels to the entrance.")]
+        [SerializeField] private Button _goToEntrance;
+
         /// <summary>The button that exits to the main menu.</summary>
         [Tooltip("The button that exits to the main menu.")]
         [SerializeField] private Button _exit;
+
+        /// <summary>The button that closes the dialog.</summary>
+        [Tooltip("The button that closes the dialog.")]
+        [SerializeField] private Button _buttonClose;
 
         private AppState _state;
         private bool _isRegistered;
@@ -62,7 +71,9 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
             if (_isRegistered == false)
             {
                 _isRegistered = true;
+                _goToEntrance.onClick.AddListener(OnGoToEntranceClicked);
                 _exit.onClick.AddListener(OnExitClicked);
+                _buttonClose.onClick.AddListener(OnCloseClicked);
             }
 
             UnsubscribeState();
@@ -72,11 +83,13 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
 
             var config = _state.Config;
 
-            _backdrop.SetActive(_state.PopupDepth == 0);
+            DialogBackdrop.Bind(_backdrop, data.Dismiss, _state.PopupDepth > 0);
             _title.text = config.Text(ConfigTextType.SettingsTitle);
             _themeLabel.text = config.Text(ConfigTextType.SettingsTheme);
 
+            BookView.SetLabel(_goToEntrance, config.Text(ConfigTextType.SettingsGoToEntrance));
             BookView.SetLabel(_exit, config.Text(ConfigTextType.SettingsExit));
+            BookView.SetInteractable(_goToEntrance, _state.CurrentScreen != ScreenPage.Entrance, config);
             RefreshColors();
             _themeSwitch.Bind(_state);
 
@@ -97,7 +110,9 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
 
             if (_isRegistered)
             {
+                _goToEntrance.onClick.RemoveListener(OnGoToEntranceClicked);
                 _exit.onClick.RemoveListener(OnExitClicked);
+                _buttonClose.onClick.RemoveListener(OnCloseClicked);
             }
         }
 
@@ -129,7 +144,9 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
             }
 
             BookView.SetBackdrop(_backdrop, config);
+            BookView.SetColors(_goToEntrance, navigationBar, ink, config);
             BookView.SetColors(_exit, navigationBar, ink, config);
+            BookView.SetColors(_buttonClose, navigationBar, ink, config);
         }
 
         private void OnThemeChanged()
@@ -137,9 +154,19 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
             RefreshColors();
         }
 
+        private void OnGoToEntranceClicked()
+        {
+            BookActions.Publish(Publisher, FlowScopeCollection, AppAction.Travel, BookLocation.Entrance);
+        }
+
         private void OnExitClicked()
         {
             BookActions.Publish(Publisher, FlowScopeCollection, AppAction.Exit);
+        }
+
+        private void OnCloseClicked()
+        {
+            BookActions.Publish(Publisher, FlowScopeCollection, AppAction.Done);
         }
     }
 }

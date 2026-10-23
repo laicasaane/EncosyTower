@@ -55,7 +55,6 @@ namespace EncosyTower.Samples.UguiPages.App
                     && _popups.IsTopPopup(DialogPage.Map) == false
                     && popupPending == false
                 , CanSettings: isMenu == false && idle && popupPending == false
-                , CanPick: isMenu == false && _ctx.IsBusy == false && _popups.IsCleaning == false
             );
         }
 

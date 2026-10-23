@@ -136,6 +136,8 @@ namespace EncosyTower.Samples.UguiPages.App
             var now = Time.unscaledTime;
 
             _feedback.Tick(now);
+            _screens.Tick();
+            _popups.Tick();
             _popups.ExpireReopen(now);
 
             if (_ctx.ConsumeStatusDirty())

@@ -185,6 +185,30 @@ MonoBehaviour:
     _value:
       light: {r: 0.6784314, g: 0.7137255, b: 0.7137255, a: 1}
       dark: {r: 0.3529412, g: 0.39215687, b: 0.39215687, a: 1}
+  - _type: 43
+    _value:
+      light: {r: 0.96862745, g: 0.9254902, b: 0.8117647, a: 1}
+      dark: {r: 0.47843137, g: 0.8, b: 0.88235295, a: 1}
+  - _type: 44
+    _value:
+      light: {r: 0.9254902, g: 0.75686276, b: 0.33333334, a: 1}
+      dark: {r: 0.2901961, g: 0.7294118, b: 0.9490196, a: 1}
+  - _type: 45
+    _value:
+      light: {r: 0.81960785, g: 0.7294118, b: 0.5019608, a: 1}
+      dark: {r: 0.24313726, g: 0.3254902, b: 0.73333335, a: 1}
+  - _type: 46
+    _value:
+      light: {r: 1, g: 0.96862745, b: 0.8784314, a: 1}
+      dark: {r: 0.89411765, g: 0.81960785, b: 0.54509807, a: 1}
+  - _type: 47
+    _value:
+      light: {r: 0.9254902, g: 0.75686276, b: 0.33333334, a: 1}
+      dark: {r: 0.91764706, g: 0.6862745, b: 0.18039216, a: 1}
+  - _type: 48
+    _value:
+      light: {r: 0.81960785, g: 0.7294118, b: 0.5019608, a: 1}
+      dark: {r: 0.40784314, g: 0.1764706, b: 0.050980393, a: 1}
   _namedAmounts:
   - _type: 0
     _value: 0.45
@@ -404,6 +428,20 @@ MonoBehaviour:
     _value: 0.16
   - _type: 108
     _value: 0.15
+  - _type: 109
+    _value: 5
+  - _type: 110
+    _value: 120
+  - _type: 111
+    _value: -60
+  - _type: 112
+    _value: 0
+  - _type: 113
+    _value: 120
+  - _type: 114
+    _value: -80
+  - _type: 115
+    _value: 0
   _namedTexts:
   - _type: 0
     _value: That page is missing from this edition.
@@ -483,6 +521,8 @@ MonoBehaviour:
     _value: Light
   - _type: 37
     _value: Exit to Main Menu
+  - _type: 38
+    _value: Go to Entrance
   _dimensions:
   - _id: 0
     title: PubSub

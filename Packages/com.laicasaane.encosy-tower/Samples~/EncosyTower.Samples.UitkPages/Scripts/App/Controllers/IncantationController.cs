@@ -41,7 +41,11 @@ namespace EncosyTower.Samples.UitkPages.App
                 return;
             }
 
-            var result = await _popups.ShowPopupAsync(DialogPage.TowerIncantation, MainMenuData());
+            var result = await _popups.ShowPopupAsync(
+                  DialogPage.TowerIncantation
+                , MainMenuData()
+                , () => WriteInTheBookAsync().Forget()
+            );
 
             if (result.IsApplied() && _ctx.State.CompleteIncantation())
             {
@@ -61,7 +65,11 @@ namespace EncosyTower.Samples.UitkPages.App
                 return;
             }
 
-            await _popups.ShowPopupAsync(DialogPage.TowerIncantation, MainMenuData());
+            await _popups.ShowPopupAsync(
+                  DialogPage.TowerIncantation
+                , MainMenuData()
+                , () => WriteInTheBookAsync().Forget()
+            );
         }
 
         public async UnityTask WriteInTheBookAsync()

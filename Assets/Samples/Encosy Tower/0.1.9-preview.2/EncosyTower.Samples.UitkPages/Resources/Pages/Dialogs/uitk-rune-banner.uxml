@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:dialogs="EncosyTower.Samples.UitkPages.Dialogs" xmlns:views="EncosyTower.Samples.UitkPages.Views">
+    <ui:Style src="../../../UI/sample-uitk-pages.uss" />
+    <dialogs:RuneBanner name="rune-banner" class="tower-book-popup">
+        <ui:VisualElement name="backdrop" class="tower-book-backdrop" />
+        <ui:VisualElement name="root" class="tower-book-rune-banner">
+            <ui:Image name="glow" class="tower-book-rune-banner__glow" picking-mode="Ignore" />
+            <ui:Label name="label-discovery" class="tower-book-rune-banner__title" picking-mode="Ignore" />
+            <views:RuneView name="rune" class="tower-book-rune-banner__rune" />
+        </ui:VisualElement>
+    </dialogs:RuneBanner>
+</ui:UXML>

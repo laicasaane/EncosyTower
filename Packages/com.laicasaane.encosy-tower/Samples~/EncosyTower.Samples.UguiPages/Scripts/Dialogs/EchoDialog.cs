@@ -91,7 +91,7 @@ namespace EncosyTower.Samples.UguiPages.Dialogs
                 _noteText = string.Format(config.Text(ConfigTextType.EchoNote), dimension.Motif);
             }
 
-            _backdrop.SetActive(_state.PopupDepth == 0);
+            DialogBackdrop.Bind(_backdrop, data.Dismiss, _state.PopupDepth > 0);
             _title.text = _titleText;
             _body.text = dimension.Lore;
             _note.text = _noteText;

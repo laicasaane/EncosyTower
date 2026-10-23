@@ -182,7 +182,14 @@ namespace EncosyTower.Samples.UguiPages.Views
         {
             if (backdrop.TryGetComponent<Image>(out var image))
             {
-                image.color = config.Color(ConfigColorType.Backdrop);
+                var color = config.Color(ConfigColorType.Backdrop);
+
+                if (backdrop.TryGetComponent<DialogBackdrop>(out var handler) && handler.IsNested)
+                {
+                    color.a = 0f;
+                }
+
+                image.color = color;
             }
         }
 

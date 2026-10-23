@@ -1,0 +1,1029 @@
+fileFormatVersion: 2
+guid: 13c004d61222b2942937f564a34bf296
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3556103781532420491
+    second: core-halo-16
+  - first:
+      213: 2901967416969097412
+    second: core-halo-17
+  - first:
+      213: 6873540658391726117
+    second: core-halo-18
+  - first:
+      213: -4450075439226648048
+    second: core-halo-19
+  - first:
+      213: -2279026941784998178
+    second: core-halo-20
+  - first:
+      213: -8348193922015987030
+    second: core-halo-21
+  - first:
+      213: 2506864417245165354
+    second: core-halo-22
+  - first:
+      213: 5335437618139236830
+    second: core-halo-23
+  - first:
+      213: -1401415402782929340
+    second: core-halo-24
+  - first:
+      213: 3570492038647639007
+    second: core-halo-25
+  - first:
+      213: -3963723891250595642
+    second: core-halo-26
+  - first:
+      213: 5959603601958927791
+    second: core-halo-27
+  - first:
+      213: -4181887772653012637
+    second: core-halo-28
+  - first:
+      213: 9040650400642292240
+    second: core-halo-29
+  - first:
+      213: -4801935404850923539
+    second: core-halo-30
+  - first:
+      213: 5116518739138234237
+    second: core-halo-31
+  - first:
+      213: 2998665317465065689
+    second: core-halo-vfx-00
+  - first:
+      213: 2421879963187494250
+    second: core-halo-vfx-01
+  - first:
+      213: -6017812364269927144
+    second: core-halo-vfx-02
+  - first:
+      213: -4628807442960147906
+    second: core-halo-vfx-03
+  - first:
+      213: -7241281572351477871
+    second: core-halo-vfx-04
+  - first:
+      213: 5243128298702033789
+    second: core-halo-vfx-05
+  - first:
+      213: -1163878875987945010
+    second: core-halo-vfx-06
+  - first:
+      213: -7013693117940094251
+    second: core-halo-vfx-07
+  - first:
+      213: 3682547967557618706
+    second: core-halo-vfx-08
+  - first:
+      213: -5342783062292312361
+    second: core-halo-vfx-09
+  - first:
+      213: -1450866295694111483
+    second: core-halo-vfx-10
+  - first:
+      213: 9079322810580924024
+    second: core-halo-vfx-11
+  - first:
+      213: -3181818730202496638
+    second: core-halo-vfx-12
+  - first:
+      213: -191078837788919688
+    second: core-halo-vfx-13
+  - first:
+      213: -3542452494389454242
+    second: core-halo-vfx-14
+  - first:
+      213: 1367860472529583236
+    second: core-halo-vfx-15
+  - first:
+      213: -258718785269203786
+    second: core-halo-vfx-16
+  - first:
+      213: -6992922711232418461
+    second: core-halo-vfx-17
+  - first:
+      213: -1180153089275911376
+    second: core-halo-vfx-18
+  - first:
+      213: -560623345100457408
+    second: core-halo-vfx-19
+  - first:
+      213: 656814648714238734
+    second: core-halo-vfx-20
+  - first:
+      213: -4057662110198433393
+    second: core-halo-vfx-21
+  - first:
+      213: -7789544909404994763
+    second: core-halo-vfx-22
+  - first:
+      213: 7511810579495889554
+    second: core-halo-vfx-23
+  - first:
+      213: -7018623164451167202
+    second: core-halo-vfx-24
+  - first:
+      213: 6499304929155404363
+    second: core-halo-vfx-25
+  - first:
+      213: -87836620352634079
+    second: core-halo-vfx-26
+  - first:
+      213: 64385384423914143
+    second: core-halo-vfx-27
+  - first:
+      213: 1810078367657959469
+    second: core-halo-vfx-28
+  - first:
+      213: -7447461580669833199
+    second: core-halo-vfx-29
+  - first:
+      213: 499999947467422314
+    second: core-halo-vfx-30
+  - first:
+      213: -6559886643086531089
+    second: core-halo-vfx-31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: core-halo-vfx-00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d80ac7f7366d9920800000000000000
+      internalID: 2998665317465065689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-01
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6d3d6eaefe3c9120800000000000000
+      internalID: 2421879963187494250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-02
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 815ccb6d98f6c7ca0800000000000000
+      internalID: -6017812364269927144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-03
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3a1da4b72c23cfb0800000000000000
+      internalID: -4628807442960147906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-04
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1977861a6ccc18b90800000000000000
+      internalID: -7241281572351477871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-05
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d73deeb886553c840800000000000000
+      internalID: 5243128298702033789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-06
+      rect:
+        serializedVersion: 2
+        x: 2304
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec9582b245219dfe0800000000000000
+      internalID: -1163878875987945010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-07
+      rect:
+        serializedVersion: 2
+        x: 2688
+        y: 576
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5da2495f44b5aae90800000000000000
+      internalID: -7013693117940094251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-08
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21ccb929dd90b1330800000000000000
+      internalID: 3682547967557618706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-09
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dec714bc1f9ad5b0800000000000000
+      internalID: -5342783062292312361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-10
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50dc0948acc7ddbe0800000000000000
+      internalID: -1450866295694111483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-11
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 876f6cdedfb300e70800000000000000
+      internalID: 9079322810580924024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-12
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 281889e09b8e7d3d0800000000000000
+      internalID: -3181818730202496638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-13
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8783f753fc6295df0800000000000000
+      internalID: -191078837788919688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-14
+      rect:
+        serializedVersion: 2
+        x: 2304
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5a583e993ea6dec0800000000000000
+      internalID: -3542452494389454242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-15
+      rect:
+        serializedVersion: 2
+        x: 2688
+        y: 384
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48c7c6f3add9bf210800000000000000
+      internalID: 1367860472529583236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-16
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bcfe43b2a8d86cf0800000000000000
+      internalID: -258718785269203786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-17
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36dea3f18d524fe90800000000000000
+      internalID: -6992922711232418461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-18
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 033212d94014f9fe0800000000000000
+      internalID: -1180153089275911376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-19
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04afe76b9044838f0800000000000000
+      internalID: -560623345100457408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-20
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0b92eb61797d1900800000000000000
+      internalID: 656814648714238734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-21
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f897f072fc940b7c0800000000000000
+      internalID: -4057662110198433393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-22
+      rect:
+        serializedVersion: 2
+        x: 2304
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53386f8fc2af5e390800000000000000
+      internalID: -7789544909404994763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-23
+      rect:
+        serializedVersion: 2
+        x: 2688
+        y: 192
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29aafda3cef4f3860800000000000000
+      internalID: 7511810579495889554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-24
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e146f8e0b67d89e90800000000000000
+      internalID: -7018623164451167202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-25
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b42d045f56b223a50800000000000000
+      internalID: 6499304929155404363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-26
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1234c952f01f7cef0800000000000000
+      internalID: -87836620352634079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-27
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9a705f7a2eb4e000800000000000000
+      internalID: 64385384423914143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-28
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d202fd76fa0be1910800000000000000
+      internalID: 1810078367657959469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-29
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1103ec5962d45a890800000000000000
+      internalID: -7447461580669833199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-30
+      rect:
+        serializedVersion: 2
+        x: 2304
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6a72889d4b50f600800000000000000
+      internalID: 499999947467422314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: core-halo-vfx-31
+      rect:
+        serializedVersion: 2
+        x: 2688
+        y: 0
+        width: 384
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe56ff79ad996f4a0800000000000000
+      internalID: -6559886643086531089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      core-halo-00: 6751631779672982801
+      core-halo-01: 8154557674997928352
+      core-halo-02: 9067109485295888383
+      core-halo-03: 8943382189087809944
+      core-halo-04: -1525462468101005306
+      core-halo-05: -255041158444641519
+      core-halo-06: 8931802458966287500
+      core-halo-07: -7717679958096633628
+      core-halo-08: -6082186066511499128
+      core-halo-09: -3506633433009532209
+      core-halo-10: 715904318593434154
+      core-halo-11: 4070272614234133390
+      core-halo-12: 4647117632731750298
+      core-halo-13: 6749108246371205291
+      core-halo-14: 3420896880897909824
+      core-halo-15: 6205184286311576838
+      core-halo-16: 3556103781532420491
+      core-halo-17: 2901967416969097412
+      core-halo-18: 6873540658391726117
+      core-halo-19: -4450075439226648048
+      core-halo-20: -2279026941784998178
+      core-halo-21: -8348193922015987030
+      core-halo-22: 2506864417245165354
+      core-halo-23: 5335437618139236830
+      core-halo-24: -1401415402782929340
+      core-halo-25: 3570492038647639007
+      core-halo-26: -3963723891250595642
+      core-halo-27: 5959603601958927791
+      core-halo-28: -4181887772653012637
+      core-halo-29: 9040650400642292240
+      core-halo-30: -4801935404850923539
+      core-halo-31: 5116518739138234237
+      core-halo-vfx-00: 2998665317465065689
+      core-halo-vfx-01: 2421879963187494250
+      core-halo-vfx-02: -6017812364269927144
+      core-halo-vfx-03: -4628807442960147906
+      core-halo-vfx-04: -7241281572351477871
+      core-halo-vfx-05: 5243128298702033789
+      core-halo-vfx-06: -1163878875987945010
+      core-halo-vfx-07: -7013693117940094251
+      core-halo-vfx-08: 3682547967557618706
+      core-halo-vfx-09: -5342783062292312361
+      core-halo-vfx-10: -1450866295694111483
+      core-halo-vfx-11: 9079322810580924024
+      core-halo-vfx-12: -3181818730202496638
+      core-halo-vfx-13: -191078837788919688
+      core-halo-vfx-14: -3542452494389454242
+      core-halo-vfx-15: 1367860472529583236
+      core-halo-vfx-16: -258718785269203786
+      core-halo-vfx-17: -6992922711232418461
+      core-halo-vfx-18: -1180153089275911376
+      core-halo-vfx-19: -560623345100457408
+      core-halo-vfx-20: 656814648714238734
+      core-halo-vfx-21: -4057662110198433393
+      core-halo-vfx-22: -7789544909404994763
+      core-halo-vfx-23: 7511810579495889554
+      core-halo-vfx-24: -7018623164451167202
+      core-halo-vfx-25: 6499304929155404363
+      core-halo-vfx-26: -87836620352634079
+      core-halo-vfx-27: 64385384423914143
+      core-halo-vfx-28: 1810078367657959469
+      core-halo-vfx-29: -7447461580669833199
+      core-halo-vfx-30: 499999947467422314
+      core-halo-vfx-31: -6559886643086531089
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

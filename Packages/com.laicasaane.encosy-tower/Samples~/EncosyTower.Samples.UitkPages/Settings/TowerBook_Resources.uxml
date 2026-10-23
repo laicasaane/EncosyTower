@@ -101,6 +101,7 @@
     <engine:Label name="text.settings-theme-dark" text="Dark" />
     <engine:Label name="text.settings-theme-light" text="Light" />
     <engine:Label name="text.settings-exit" text="Exit to Main Menu" />
+    <engine:Label name="text.settings-go-to-entrance" text="Go to Entrance" />
 
     <engine:Label name="text.map-status-entrance" text="You are at the Entrance" />
     <engine:Label name="text.map-status-core" text="You are at the Core" />

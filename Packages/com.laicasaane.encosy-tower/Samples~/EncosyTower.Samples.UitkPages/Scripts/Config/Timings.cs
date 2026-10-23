@@ -48,6 +48,30 @@ namespace EncosyTower.Samples.UitkPages.Config
         private static readonly CustomStyleProperty<float> s_demoNewestSecondDimension
             = ConfigNameAPI.AmountProperty(ConfigAmountType.DemoNewestSecondDimensionIndex);
 
+        private static readonly CustomStyleProperty<float> s_runeBannerSeconds
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.RuneBannerSeconds);
+
+        private static readonly CustomStyleProperty<float> s_runeVfxNearestDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.RuneVfxNearestDegreesPerSecond);
+        private static readonly CustomStyleProperty<float> s_runeVfxMiddleDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.RuneVfxMiddleDegreesPerSecond);
+        private static readonly CustomStyleProperty<float> s_runeVfxFarDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.RuneVfxFarDegreesPerSecond);
+        private static readonly CustomStyleProperty<float> s_coreVfxNearestDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.CoreVfxNearestDegreesPerSecond);
+        private static readonly CustomStyleProperty<float> s_coreVfxMiddleDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.CoreVfxMiddleDegreesPerSecond);
+        private static readonly CustomStyleProperty<float> s_coreVfxFarDegreesPerSecond
+            = ConfigNameAPI.AmountProperty(ConfigAmountType.CoreVfxFarDegreesPerSecond);
+
+        private float _runeVfxNearestDegreesPerSecond;
+        private float _runeVfxMiddleDegreesPerSecond;
+        private float _runeVfxFarDegreesPerSecond;
+        private float _coreVfxNearestDegreesPerSecond;
+        private float _coreVfxMiddleDegreesPerSecond;
+        private float _coreVfxFarDegreesPerSecond;
+
+        private float _runeBannerSeconds;
         private float _reopenSeconds;
         private float _toastSeconds;
         private float _blinkSeconds;
@@ -71,6 +95,20 @@ namespace EncosyTower.Samples.UitkPages.Config
         public readonly float ReopenSeconds => _reopenSeconds;
 
         public readonly float ToastSeconds => _toastSeconds;
+
+        public readonly Vector3 RuneVfxSpeeds => new(
+              _runeVfxNearestDegreesPerSecond
+            , _runeVfxMiddleDegreesPerSecond
+            , _runeVfxFarDegreesPerSecond
+        );
+
+        public readonly Vector3 CoreVfxSpeeds => new(
+              _coreVfxNearestDegreesPerSecond
+            , _coreVfxMiddleDegreesPerSecond
+            , _coreVfxFarDegreesPerSecond
+        );
+
+        public readonly float RuneBannerSeconds => _runeBannerSeconds;
 
         public readonly float BlinkSeconds => _blinkSeconds;
 
@@ -110,6 +148,19 @@ namespace EncosyTower.Samples.UitkPages.Config
         {
             style.Read(s_reopenSeconds, ref _reopenSeconds);
             style.Read(s_toastSeconds, ref _toastSeconds);
+            style.Read(s_runeBannerSeconds, ref _runeBannerSeconds);
+            _runeVfxNearestDegreesPerSecond = 120f;
+            style.Read(s_runeVfxNearestDegreesPerSecond, ref _runeVfxNearestDegreesPerSecond);
+            _runeVfxMiddleDegreesPerSecond = -60f;
+            style.Read(s_runeVfxMiddleDegreesPerSecond, ref _runeVfxMiddleDegreesPerSecond);
+            _runeVfxFarDegreesPerSecond = 0f;
+            style.Read(s_runeVfxFarDegreesPerSecond, ref _runeVfxFarDegreesPerSecond);
+            _coreVfxNearestDegreesPerSecond = 120f;
+            style.Read(s_coreVfxNearestDegreesPerSecond, ref _coreVfxNearestDegreesPerSecond);
+            _coreVfxMiddleDegreesPerSecond = -80f;
+            style.Read(s_coreVfxMiddleDegreesPerSecond, ref _coreVfxMiddleDegreesPerSecond);
+            _coreVfxFarDegreesPerSecond = 0f;
+            style.Read(s_coreVfxFarDegreesPerSecond, ref _coreVfxFarDegreesPerSecond);
             style.Read(s_blinkSeconds, ref _blinkSeconds);
             ReadMilliseconds(style, s_coreGlowPulseSeconds, ref _coreGlowPulseMs);
             ReadCount(style, s_historyEntries, ref _historyEntries);

@@ -23,6 +23,13 @@ namespace EncosyTower.Samples.UguiPages.Ids
     /// </remarks>
     internal static class AssetKeyAPI
     {
+        public static readonly AssetKey RuneHaloVfxNearest = new("Vfx/ugui-rune-halo-vfx-nearest");
+        public static readonly AssetKey RuneHaloVfxNear = new("Vfx/ugui-rune-halo-vfx-near");
+        public static readonly AssetKey RuneHaloVfxFar = new("Vfx/ugui-rune-halo-vfx-far");
+        public static readonly AssetKey CoreHaloVfxNearest = new("Vfx/ugui-core-halo-vfx-nearest");
+        public static readonly AssetKey CoreHaloVfxNear = new("Vfx/ugui-core-halo-vfx-near");
+        public static readonly AssetKey CoreHaloVfxFar = new("Vfx/ugui-core-halo-vfx-far");
+
         private static readonly AssetKey s_pageFormat = new("Pages/{0}s/ugui-{1}");
         private static readonly AssetKey s_motifFormat = new("Motifs/ugui-motif-{0}");
         private static readonly AssetKey s_runeFormat = new("Runes/ugui-rune-{0}");

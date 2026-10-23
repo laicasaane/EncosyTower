@@ -1,10 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:attachments="EncosyTower.Samples.UitkPages.Attachments" xmlns:views="EncosyTower.Samples.UitkPages.Views">
     <ui:Style src="../../../UI/sample-uitk-pages.uss" />
     <attachments:NavigationBarPage name="navigation-bar" class="tower-book-navigation-bar">
-        <ui:Button name="button-entrance" text="Entrance" class="tower-book-button" />
-        <ui:VisualElement name="placeholder-entrance" class="tower-book-navigation-bar__placeholder" picking-mode="Ignore">
-            <views:DottedBorder name="placeholder-dots" />
-        </ui:VisualElement>
         <ui:Button name="button-back" class="tower-book-button">
             <ui:VisualElement class="tower-book-navigation-bar__icon tower-book-navigation-bar__icon--back" picking-mode="Ignore" />
         </ui:Button>

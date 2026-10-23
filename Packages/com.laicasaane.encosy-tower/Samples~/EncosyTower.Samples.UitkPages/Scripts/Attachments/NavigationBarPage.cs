@@ -20,10 +20,9 @@ namespace EncosyTower.Samples.UitkPages.Attachments
         , bool CanForward
         , bool CanMap
         , bool CanSettings
-        , bool CanPick
     );
 
-    /// <summary>The navigation bar of a screen: book, back, forward, map and settings.</summary>
+    /// <summary>The navigation bar of a screen: back, forward, map and settings.</summary>
     /// <remarks>
     /// A page of the NavigationBar flow, a single-page stack attached to the screen and shown with it. The app renders
     /// its buttons from a <see cref="NavigationBarStatus"/>.
@@ -34,22 +33,15 @@ namespace EncosyTower.Samples.UitkPages.Attachments
         , IPageOnCreateAsync
         , IPageOnReturnToPool
     {
-        private const string BOOK_BUTTON = "button-entrance";
-        private const string BOOK_PLACEHOLDER = "placeholder-entrance";
         private const string BACK_BUTTON = "button-back";
         private const string FORWARD_BUTTON = "button-forward";
         private const string MAP_BUTTON = "button-map";
         private const string SETTINGS_BUTTON = "button-settings";
         private const string BACK_ICON_CLASS = "tower-book-navigation-bar__icon--back";
         private const string FORWARD_ICON_CLASS = "tower-book-navigation-bar__icon--forward";
-        private const float PLACEHOLDER_DOT_SIZE = 1f;
-        private const float PLACEHOLDER_RADIUS = 4f;
 
         private readonly PaletteStyle _palette = new();
 
-        private VisualElement _bookPlaceholder;
-        private DottedBorder _bookPlaceholderDots;
-        private Button _book;
         private Button _back;
         private Button _forward;
         private VisualElement _backIcon;
@@ -99,11 +91,8 @@ namespace EncosyTower.Samples.UitkPages.Attachments
                 return UnityTask.FromResult(false);
             }
 
-            if (_book == null)
+            if (_back == null)
             {
-                _bookPlaceholder = this.Q(BOOK_PLACEHOLDER);
-                _bookPlaceholderDots = _bookPlaceholder.Q<DottedBorder>();
-                _book = this.Q<Button>(BOOK_BUTTON);
                 _back = this.Q<Button>(BACK_BUTTON);
                 _forward = this.Q<Button>(FORWARD_BUTTON);
                 _backIcon = _back.Q(className: BACK_ICON_CLASS);
@@ -116,7 +105,6 @@ namespace EncosyTower.Samples.UitkPages.Attachments
             {
                 _isRegistered = true;
 
-                _book.clicked += OnBookClicked;
                 _back.clicked += OnBackClicked;
                 _forward.clicked += OnForwardClicked;
                 _map.clicked += OnMapClicked;
@@ -139,7 +127,6 @@ namespace EncosyTower.Samples.UitkPages.Attachments
             {
                 _isRegistered = false;
 
-                _book.clicked -= OnBookClicked;
                 _back.clicked -= OnBackClicked;
                 _forward.clicked -= OnForwardClicked;
                 _map.clicked -= OnMapClicked;
@@ -180,7 +167,6 @@ namespace EncosyTower.Samples.UitkPages.Attachments
             var status = _status;
             var navigation = _palette.Color(ConfigColorType.NavigationBar);
             var ink = _palette.Color(ConfigColorType.Ink);
-            var isEntrance = _set.Location.Screen == ScreenPage.Entrance;
 
             if (DimensionCatalog.TryGet(_set.Location, out var data))
             {
@@ -192,15 +178,11 @@ namespace EncosyTower.Samples.UitkPages.Attachments
             var borderMix = _palette.Amount(ConfigAmountType.NavigationBarBorderMix);
             var hoverMix = _palette.Amount(ConfigAmountType.NavigationBarHoverMix);
             var pressMix = _palette.Amount(ConfigAmountType.NavigationBarPressMix);
-            var bookBorderMix = isEntrance
-                ? _palette.Amount(ConfigAmountType.NavigationBarBorderMixSelected)
-                : borderMix;
 
             style.backgroundColor = navigation;
 
             BookView.AttachStates(this, _palette);
 
-            ApplyButtonColors(_book, navigation, ink, fillMix, bookBorderMix, hoverMix, pressMix);
             ApplyButtonColors(_back, navigation, ink, fillMix, borderMix, hoverMix, pressMix);
             ApplyButtonColors(_forward, navigation, ink, fillMix, borderMix, hoverMix, pressMix);
             ApplyButtonColors(_map, navigation, ink, fillMix, borderMix, hoverMix, pressMix);
@@ -209,16 +191,6 @@ namespace EncosyTower.Samples.UitkPages.Attachments
             _backIcon.style.unityBackgroundImageTintColor = ink;
             _forwardIcon.style.unityBackgroundImageTintColor = ink;
 
-            _bookPlaceholderDots.Color = _palette.Color(ConfigColorType.EntranceNavigationBorder);
-            _bookPlaceholderDots.Width = PLACEHOLDER_DOT_SIZE;
-            _bookPlaceholderDots.Radius = PLACEHOLDER_RADIUS;
-            _bookPlaceholderDots.Dash = PLACEHOLDER_DOT_SIZE;
-            _bookPlaceholderDots.Gap = PLACEHOLDER_DOT_SIZE;
-
-            _book.style.display = isEntrance ? DisplayStyle.None : DisplayStyle.Flex;
-            _bookPlaceholder.style.display = isEntrance ? DisplayStyle.Flex : DisplayStyle.None;
-
-            BookView.SetEnabled(_book, status.CanPick);
             BookView.SetEnabled(_back, status.CanBack);
             BookView.SetEnabled(_forward, status.CanForward);
             BookView.SetEnabled(_map, status.CanMap);
@@ -235,16 +207,6 @@ namespace EncosyTower.Samples.UitkPages.Attachments
         private void Publish(AppAction action)
         {
             BookActions.Publish(Publisher, FlowScopeCollection, action);
-        }
-
-        private void Publish(AppAction action, BookLocation location)
-        {
-            BookActions.Publish(Publisher, FlowScopeCollection, action, location);
-        }
-
-        private void OnBookClicked()
-        {
-            Publish(AppAction.Travel, BookLocation.Entrance);
         }
 
         private void OnBackClicked()

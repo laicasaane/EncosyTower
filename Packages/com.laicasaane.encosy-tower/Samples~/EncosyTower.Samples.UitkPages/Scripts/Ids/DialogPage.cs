@@ -17,5 +17,7 @@ namespace EncosyTower.Samples.UitkPages.Ids
 
         /// <summary>A dialog without an asset: the sample opens it to show how a missing page fails.</summary>
         LostAppendix,
+
+        RuneBanner,
     }
 }
