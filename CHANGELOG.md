@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.9-preview.2
+
+### Core
+
+- Changed the required package versions to Addressables 2.10.3, Burst 1.8.31, Collections 2.7.1, and Localization 1.5.13
+
+### Editor
+
+- Changed the project setup for Entities and Entities Stats to require Entities 1.5.0, Entities Graphics 1.5.0 (Entities only), and Latios Framework 0.16.3
+
+### SourceGen
+
+- Changed shipped source generator assemblies for `0.1.9-preview.2`
+
+### Samples
+
+- Added rune banners with dismissal, and halo VFX for runes and the core, to the uGUI and UI Toolkit page flow samples
+- Changed the samples to draw the core VFX over the dimension cards and under the core card, and to move the Entrance button from the navigation bar to the Settings popup
+- Changed imported sample paths and database preset references to `0.1.9-preview.2`
+- Removed the core unlocked toast from the Entrance screen
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.9-preview.2`
+
 ## 0.1.9-preview.1
 
 ### PageFlows
