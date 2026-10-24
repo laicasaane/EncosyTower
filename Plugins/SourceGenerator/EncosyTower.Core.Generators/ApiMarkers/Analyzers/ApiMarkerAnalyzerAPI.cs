@@ -4,6 +4,8 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
 {
     internal static class ApiMarkerAnalyzerAPI
     {
+        private const string CONDITIONAL_ATTRIBUTE = "System.Diagnostics.ConditionalAttribute";
+
         internal static ImmutableArray<SyntaxKind> NameKinds { get; } = ImmutableArray.Create(
               SyntaxKind.IdentifierName
             , SyntaxKind.GenericName
@@ -106,7 +108,15 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
                 return;
             }
 
-            ReportUse(context, symbol, name.Identifier.GetLocation(), marker, exemptionMarkers, descriptor);
+            ReportUse(
+                  context
+                , symbol
+                , name.Identifier.GetLocation()
+                , marker
+                , allowedSymbols
+                , exemptionMarkers
+                , descriptor
+            );
         }
 
         internal static void AnalyzeUse(
@@ -131,7 +141,15 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
 
             if (symbol != null)
             {
-                ReportUse(context, symbol, GetUseLocation(context.Node), marker, exemptionMarkers, descriptor);
+                ReportUse(
+                      context
+                    , symbol
+                    , GetUseLocation(context.Node)
+                    , marker
+                    , allowedSymbols
+                    , exemptionMarkers
+                    , descriptor
+                );
             }
         }
 
@@ -172,6 +190,7 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
                     , conversion.MethodSymbol
                     , expression.GetLocation()
                     , marker
+                    , allowedSymbols
                     , exemptionMarkers
                     , descriptor
                 );
@@ -417,6 +436,92 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
             return false;
         }
 
+        /// <summary>
+        /// An attribute application is removed from builds that define none of its
+        /// <c>[Conditional]</c> symbols. When every such symbol is an allowed symbol, the application,
+        /// its arguments included, can only survive in builds where the API is allowed already.
+        /// </summary>
+        private static bool IsInsideConditionalAttribute(
+              SyntaxNodeAnalysisContext context
+            , ReadOnlySpan<string> allowedSymbols
+        )
+        {
+            var token = context.CancellationToken;
+
+            for (var node = context.Node; node != null; node = node.Parent)
+            {
+                token.ThrowIfCancellationRequested();
+
+                if (node is AttributeSyntax attribute)
+                {
+                    var type = context.SemanticModel.GetSymbolInfo(attribute, token).Symbol?.ContainingType;
+                    return IsConditionalOnAllowedSymbols(type, allowedSymbols, token);
+                }
+
+                if (node is StatementSyntax or MemberDeclarationSyntax)
+                {
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsConditionalOnAllowedSymbols(
+              INamedTypeSymbol attributeType
+            , ReadOnlySpan<string> allowedSymbols
+            , CancellationToken token
+        )
+        {
+            var found = false;
+
+            // [Conditional] is inherited: the symbols of every base attribute class also keep the application.
+            for (var type = attributeType; type != null; type = type.BaseType)
+            {
+                var attributes = type.GetAttributes();
+                var count = attributes.Length;
+
+                for (var i = 0; i < count; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var attribute = attributes[i];
+
+                    if (attribute.AttributeClass?.ToDisplayString() != CONDITIONAL_ATTRIBUTE)
+                    {
+                        continue;
+                    }
+
+                    if (attribute.ConstructorArguments.Length != 1
+                        || attribute.ConstructorArguments[0].Value is not string symbol
+                        || IsAllowedSymbol(symbol, allowedSymbols) == false
+                    )
+                    {
+                        return false;
+                    }
+
+                    found = true;
+                }
+            }
+
+            return found;
+        }
+
+        private static bool IsAllowedSymbol(string symbol, ReadOnlySpan<string> allowedSymbols)
+        {
+            var count = allowedSymbols.Length;
+
+            for (var i = 0; i < count; i++)
+            {
+                if (allowedSymbols[i] == symbol)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static bool IsRestrictedQualifier(
               SyntaxNodeAnalysisContext context
             , SimpleNameSyntax name
@@ -453,11 +558,14 @@ namespace EncosyTower.Core.Analyzers.ApiMarkers
             , ISymbol symbol
             , Location location
             , string marker
+            , ReadOnlySpan<string> allowedSymbols
             , ReadOnlySpan<string> exemptionMarkers
             , DiagnosticDescriptor descriptor
         )
         {
-            if (HasUseMarker(context, symbol, marker) == false)
+            if (HasUseMarker(context, symbol, marker) == false
+                || IsInsideConditionalAttribute(context, allowedSymbols)
+            )
             {
                 return;
             }

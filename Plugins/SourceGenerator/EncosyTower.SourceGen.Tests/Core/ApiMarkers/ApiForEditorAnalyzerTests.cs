@@ -515,6 +515,31 @@ public sealed class ApiForEditorAnalyzerTests
             , Array.Empty<string>()
         );
 
+    [TestMethod]
+    public Task ConditionalAttributeApplications_ExemptOnlyEditorSymbols()
+        => VerifyAsync(
+              """
+              [EncosyTower.Core.ApiForEditor]
+              [System.Diagnostics.Conditional("UNITY_EDITOR")]
+              public sealed class EditorOnlyAttribute : System.Attribute
+              {
+                  public EditorOnlyAttribute(System.Type type) { }
+              }
+
+              [EncosyTower.Core.ApiForEditor]
+              [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("ENCOSY_INCLUDE_AUTHORING")]
+              public sealed class EditorOrAuthoringAttribute : System.Attribute { }
+
+              [EditorOnly(typeof(EditorType))]
+              public class First { }
+
+              [{|#0:EditorOrAuthoring|}]
+              public class Second { }
+              """
+            , Array.Empty<string>()
+            , Editor(location: 0, api: "EditorOrAuthoringAttribute.EditorOrAuthoringAttribute()")
+        );
+
     private static DiagnosticResult Editor(int location, string api)
         => new DiagnosticResult("SG_API_MARKER_0001", DiagnosticSeverity.Error)
             .WithLocation(location).WithMessage($"API '{api}' requires UNITY_EDITOR.");

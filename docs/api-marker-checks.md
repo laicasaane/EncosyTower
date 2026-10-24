@@ -25,6 +25,15 @@ and type references, including `typeof`, inheritance and generic arguments. It a
 source too. `nameof` expressions and inactive `#if` code are excluded. Qualifying a marked member
 with its marked type does not produce a duplicate report for the same restriction.
 
+An attribute application is exempt, with its arguments, when the attribute class or one of its
+base classes carries `[Conditional]` and every `[Conditional]` symbol is an allowed symbol of that
+analyzer. The compiler removes such an application from every build that defines none of those
+symbols, so it can only reach a build where the API is allowed. This lets runtime code apply
+authoring attributes such as `[DataManualAuthoring]` without `#if` guards. Other uses of the same
+attribute type, such as `new`, `typeof` or reflection in a method body, are still reported. An
+attribute with an unconditional marker, or with a `[Conditional]` symbol outside the allowed set,
+is still reported where it is applied.
+
 Messages identify the API and say either `requires UNITY_EDITOR` or
 `requires UNITY_EDITOR or ENCOSY_INCLUDE_AUTHORING`.
 
@@ -65,7 +74,7 @@ dotnet test Plugins/SourceGenerator/EncosyTower.SourceGen.Tests/EncosyTower.Sour
 `ApiForEditorAnalyzerTests` and `ApiForAuthoringAnalyzerTests` assert exact IDs, error severity,
 locations and messages with Microsoft.CodeAnalysis.Testing. They cover player/editor/authoring
 profiles, member/type exemptions, type uses, `nameof`, accessors, aliases, metadata references,
-generated source and inferred `var` types. Each suite also verifies that its analyzer ignores APIs
+generated source, inferred `var` types and conditional attribute applications. Each suite also verifies that its analyzer ignores APIs
 marked only with the other attribute.
 
 Refresh the shipped DLL through the existing Release copy target:

@@ -295,6 +295,125 @@ public sealed class ApiForAuthoringAnalyzerTests
             , Array.Empty<string>()
         );
 
+    [TestMethod]
+    public Task ConditionalAttributeApplications_AreExemptButOtherUsesAreReported()
+        => VerifyAsync(
+              CONDITIONAL_ATTRIBUTE
+            + """
+              [AuthoringOnly(typeof(AuthoringType), Name = "type")]
+              public class Consumer
+              {
+                  [AuthoringOnly(typeof(AuthoringType.Nested))]
+                  public int Value => 0;
+
+                  public void Run([AuthoringOnly(typeof(AuthoringType))] int value)
+                  {
+                      [AuthoringOnly(typeof(AuthoringType))]
+                      void Local() { }
+
+                      Local();
+                      _ = typeof({|#0:AuthoringOnlyAttribute|});
+                      _ = new {|#1:AuthoringOnlyAttribute|}(typeof({|#2:AuthoringType|}));
+                  }
+              }
+              """
+            , Array.Empty<string>()
+            , Authoring(location: 0, api: "AuthoringOnlyAttribute")
+            , Authoring(location: 1, api: "AuthoringOnlyAttribute.AuthoringOnlyAttribute(System.Type)")
+            , Authoring(location: 2, api: "AuthoringType")
+        );
+
+    [TestMethod]
+    public Task ConditionalBaseAttribute_ExemptsDerivedApplications()
+        => VerifyAsync(
+              """
+              [System.Diagnostics.Conditional("UNITY_EDITOR")]
+              public abstract class EditorOnlyBaseAttribute : System.Attribute { }
+
+              [EncosyTower.Core.ApiForAuthoring]
+              public sealed class DerivedAttribute : EditorOnlyBaseAttribute { }
+
+              [Derived]
+              public class Consumer { }
+              """
+            , Array.Empty<string>()
+        );
+
+    [TestMethod]
+    public Task AttributesWithoutOnlyAllowedConditionals_AreReported()
+        => VerifyAsync(
+              """
+              [EncosyTower.Core.ApiForAuthoring]
+              public sealed class UnconditionalAttribute : System.Attribute { }
+
+              [EncosyTower.Core.ApiForAuthoring]
+              [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("CUSTOM")]
+              public sealed class MixedAttribute : System.Attribute { }
+
+              [{|#0:Unconditional|}]
+              public class First { }
+
+              [{|#1:Mixed|}]
+              public class Second { }
+              """
+            , Array.Empty<string>()
+            , Authoring(location: 0, api: "UnconditionalAttribute.UnconditionalAttribute()")
+            , Authoring(location: 1, api: "MixedAttribute.MixedAttribute()")
+        );
+
+    [TestMethod]
+    public async Task MetadataConditionalAttribute_ApplicationIsExempt()
+    {
+        var references = await TestReferenceHelper.FrameworkReferences.ResolveAsync(
+              LanguageNames.CSharp
+            , CancellationToken.None
+        );
+
+        var dependency = CSharpCompilation.Create(
+              assemblyName: "MarkedDependency"
+            , syntaxTrees: new[] { CSharpSyntaxTree.ParseText(MARKERS + APIS + CONDITIONAL_ATTRIBUTE) }
+            , references: references
+            , options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+        );
+
+        using var stream = new MemoryStream();
+        var result = dependency.Emit(stream);
+        Assert.IsTrue(result.Success, string.Join(Environment.NewLine, result.Diagnostics));
+        Assert.AreEqual(expected: 0, actual: result.Diagnostics.Length);
+
+        var test = CreateTest(
+              """
+              [AuthoringOnly(typeof(AuthoringType), Name = "type")]
+              public class Consumer
+              {
+                  public object Run() => new {|#0:AuthoringOnlyAttribute|}(null);
+              }
+              """
+            , Array.Empty<string>()
+        );
+
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromImage(stream.ToArray()));
+        test.ExpectedDiagnostics.Add(
+            Authoring(location: 0, api: "AuthoringOnlyAttribute.AuthoringOnlyAttribute(System.Type)")
+        );
+        await test.RunAsync();
+    }
+
+    private const string CONDITIONAL_ATTRIBUTE = """
+
+        [EncosyTower.Core.ApiForAuthoring]
+        [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("ENCOSY_INCLUDE_AUTHORING")]
+        public sealed class AuthoringOnlyAttribute : System.Attribute
+        {
+            [EncosyTower.Core.ApiForAuthoring]
+            public AuthoringOnlyAttribute(System.Type type) { }
+
+            [EncosyTower.Core.ApiForAuthoring]
+            public string Name { get; set; }
+        }
+
+        """;
+
     private static DiagnosticResult Authoring(int location, string api)
         => new DiagnosticResult("SG_API_MARKER_0002", DiagnosticSeverity.Error)
             .WithLocation(location).WithMessage($"API '{api}' requires UNITY_EDITOR or ENCOSY_INCLUDE_AUTHORING.");
