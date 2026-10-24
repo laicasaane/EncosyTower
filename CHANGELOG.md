@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.9-preview.5
+
+### Data
+
+- Changed `DatabaseAttribute` to a runtime attribute: it no longer carries `[ApiForAuthoring]` or `[Conditional]`, so runtime code can apply it without `#if` guards
+
+### SourceGen
+
+- Changed the API marker analyzers to exempt applications of conditional attributes whose `[Conditional]` symbols are all allowed by the analyzer, so runtime code can apply authoring attributes without `#if` guards
+- Changed shipped source generator assemblies for `0.1.9-preview.5`
+
+### Samples
+
+- Changed imported sample paths and database preset references to `0.1.9-preview.5`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.9-preview.5`
+
 ## 0.1.9-preview.4
 
 ### PageFlows
