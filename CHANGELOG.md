@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.9-preview.3
+
+### Editor
+
+- Fixed `SerializedValueAPI` to read and write `Color32` values through the color property
+
+### SourceGen
+
+- Changed shipped source generator assemblies for `0.1.9-preview.3`
+
+### Samples
+
+- Changed imported sample paths and database preset references to `0.1.9-preview.3`
+
+### Versioning
+
+- Changed `EncosyTower.SourceGen.*`, the package version, and the README installation URL to `0.1.9-preview.3`
+
 ## 0.1.9-preview.2
 
 ### Core
