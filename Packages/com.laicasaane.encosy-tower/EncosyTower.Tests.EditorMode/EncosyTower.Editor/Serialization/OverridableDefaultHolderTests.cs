@@ -177,6 +177,39 @@ namespace EncosyTower.Tests.Editor.Serialization
         }
 
         [Test]
+        public void Write_Color32RoundTripsThroughColorProperty()
+        {
+            var expected = new Color32(1, 128, 254, 77);
+            var replacement = new Color32(255, 0, 64, 255);
+            _holder = SerializedValueHolder.Create(typeof(Color32));
+            var property = _holder.Write(expected, expandedSource: null);
+
+            Assert.AreEqual(SerializedPropertyType.Color, property.propertyType);
+
+            var actual = SerializedValueAPI.Read(property, typeof(Color32));
+
+            Assert.IsInstanceOf<Color32>(actual);
+            Assert.AreEqual(expected, actual);
+
+            SerializedValueAPI.Write(property, replacement);
+            property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.AreEqual(replacement, SerializedValueAPI.Read(property, typeof(Color32)));
+        }
+
+        [Test]
+        public void Write_Color32ArrayRoundTripsElements()
+        {
+            var expected = new[] { new Color32(1, 128, 254, 77), new Color32(255, 0, 64, 255) };
+            _holder = SerializedValueHolder.Create(typeof(Color32[]));
+            var property = _holder.Write(expected, expandedSource: null);
+            var actual = (Color32[])SerializedValueAPI.Read(property, typeof(Color32[]));
+
+            CollectionAssert.AreEqual(expected, actual);
+            Assert.AreNotSame(expected, actual);
+        }
+
+        [Test]
         public void Write_GuidCopiesFixedBufferAndKeepsTheSourceValue()
         {
             var original = new SerializableGuid(new System.Guid("fedcba98-7654-4321-8fed-cba987654321"));

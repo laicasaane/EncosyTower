@@ -42,7 +42,8 @@ namespace EncosyTower.Editor
         /// </summary>
         /// <remarks>
         /// An enum is read from <see cref="SerializedProperty.longValue"/> and a <see cref="char"/> from
-        /// <see cref="SerializedProperty.uintValue"/>. An array or list is read element by element. A managed
+        /// <see cref="SerializedProperty.uintValue"/>. A <see cref="Color32"/> is read from
+        /// <see cref="SerializedProperty.colorValue"/>. An array or list is read element by element. A managed
         /// reference, an exposed reference or a type that needs a property copy is read through a temporary holder,
         /// which is destroyed before the method returns.
         /// </remarks>
@@ -90,7 +91,17 @@ namespace EncosyTower.Editor
                 return result;
             }
 
-            return valueType == typeof(char) ? (char)property.uintValue : property.boxedValue;
+            if (valueType == typeof(char))
+            {
+                return (char)property.uintValue;
+            }
+
+            if (valueType == typeof(Color32) && property.propertyType == SerializedPropertyType.Color)
+            {
+                return (Color32)property.colorValue;
+            }
+
+            return property.boxedValue;
         }
 
         /// <summary>
@@ -100,7 +111,8 @@ namespace EncosyTower.Editor
         /// <para>
         /// The caller applies the change with <see cref="SerializedObject.ApplyModifiedProperties"/>. The exception is
         /// a property copy, which applies partial changes while it copies. A collection property written with a value
-        /// that is not an <see cref="System.Collections.IList"/> is resized to 0.
+        /// that is not an <see cref="System.Collections.IList"/> is resized to 0. A <see cref="Color32"/> value is
+        /// written to <see cref="SerializedProperty.colorValue"/>.
         /// </para>
         /// <para>
         /// A property copy deep-copies the value through JSON, so the source and the destination do not share
@@ -162,6 +174,10 @@ namespace EncosyTower.Editor
             else if (property.propertyType == SerializedPropertyType.ObjectReference)
             {
                 property.objectReferenceValue = value as UnityEngine.Object;
+            }
+            else if (property.propertyType == SerializedPropertyType.Color && value is Color32 color32)
+            {
+                property.colorValue = color32;
             }
             else
             {
