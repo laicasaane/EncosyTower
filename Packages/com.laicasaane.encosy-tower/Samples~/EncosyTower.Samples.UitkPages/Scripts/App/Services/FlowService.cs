@@ -8,7 +8,7 @@ using ThrowHelper = EncosyTower.Samples.UitkPages.Diagnostics.ThrowHelper;
 
 namespace EncosyTower.Samples.UitkPages.App
 {
-    /// <summary>Calls the page flows by publishing page messages, and reads each result from its receipt.</summary>
+    /// <summary>Calls the page flows by publishing page messages, and reads each result from its report.</summary>
     internal sealed class FlowService
     {
         private readonly CodexContext _ctx;
@@ -21,7 +21,7 @@ namespace EncosyTower.Samples.UitkPages.App
         public PageContext CreateContext(
               object userData = null
             , PageAbortSource source = null
-            , PageCallReceipt receipt = null
+            , PageCallReport report = null
             , PageTransitionOptions show = default
             , PageTransitionOptions hide = default
             , int defaultIndex = 0
@@ -33,7 +33,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 HideOptions = hide,
                 UserData = userData == null ? default : Option.Some(userData),
                 Abort = source != null ? source.Handle : default,
-                Receipt = receipt ?? new PageCallReceipt(),
+                Report = report ?? new PageCallReport(),
             };
 
         public PublishingContext CreatePublishingContext()
@@ -58,7 +58,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 error.Log(_ctx.Codex.FlowContext.Logger);
             }
 
-            return ReadResult(context.Receipt, key.Value);
+            return ReadResult(context.Report, key.Value);
         }
 
         public async UnityTask<Success<PageFlowError>> HideActiveAsync(PageFlowScope scope, PageContext context)
@@ -76,7 +76,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 error.Log(_ctx.Codex.FlowContext.Logger);
             }
 
-            return ReadResult(context.Receipt, "HideActive");
+            return ReadResult(context.Report, "HideActive");
         }
 
         public async UnityTask<Success<PageFlowError>> HideAllAsync(PageFlowScope scope, PageContext context)
@@ -94,7 +94,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 error.Log(_ctx.Codex.FlowContext.Logger);
             }
 
-            return ReadResult(context.Receipt, "HideAll");
+            return ReadResult(context.Report, "HideAll");
         }
 
         public async UnityTask<Success<PageFlowError>> ShowAtAsync(PageFlowScope scope, int index, object userData)
@@ -113,7 +113,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 error.Log(_ctx.Codex.FlowContext.Logger);
             }
 
-            return ReadResult(context.Receipt, "ShowAt");
+            return ReadResult(context.Report, "ShowAt");
         }
 
         public async UnityTask<Success<PageFlowError>> HideAtAsync(PageFlowScope scope, int index, object userData)
@@ -132,14 +132,14 @@ namespace EncosyTower.Samples.UitkPages.App
                 error.Log(_ctx.Codex.FlowContext.Logger);
             }
 
-            return ReadResult(context.Receipt, "HideAt");
+            return ReadResult(context.Report, "HideAt");
         }
 
-        private Success<PageFlowError> ReadResult(PageCallReceipt receipt, string operation)
+        private Success<PageFlowError> ReadResult(PageCallReport report, string operation)
         {
-            if (receipt.IsReported)
+            if (report.IsReported)
             {
-                return receipt.Result;
+                return report.Result;
             }
 
             if (_ctx.Token.IsCancellationRequested)
@@ -147,7 +147,7 @@ namespace EncosyTower.Samples.UitkPages.App
                 return PageFlowError.Cancelled();
             }
 
-            ThrowHelper.LogError_NoReceipt(operation);
+            ThrowHelper.LogError_NoReport(operation);
             return PageFlowError.Undefined();
         }
     }

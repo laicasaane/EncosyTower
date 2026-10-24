@@ -486,11 +486,11 @@ namespace EncosyTower.PageFlows.UitkPages
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ReportCall(in Success<PageFlowError> result, PageContext context)
-            => context.Receipt?.Report(Identifier, result);
+            => context.Report?.Report(Identifier, result);
 
-        /// <summary>Reports an exception of a call to its receipt.</summary>
+        /// <summary>Reports an exception of a call to its report.</summary>
         /// <param name="ex">The exception. A cancellation is reported as the <c>Cancelled</c> case.</param>
-        /// <param name="context">The context of the call. Nothing is reported when it has no receipt.</param>
+        /// <param name="context">The context of the call. Nothing is reported when it has no report.</param>
         protected void ReportException(Exception ex, PageContext context)
         {
             Success<PageFlowError> failure = ex is OperationCanceledException
@@ -500,11 +500,11 @@ namespace EncosyTower.PageFlows.UitkPages
             ReportCall(failure, context);
         }
 
-        // B4 (D85): reports a call that threw. The receipt gets the Cancelled or Exception case with the errors the
+        // B4 (D85): reports a call that threw. The report gets the Cancelled or Exception case with the errors the
         // flow set aside while the cancellation won. A thrown cancel that carries a failure is also published; with no
-        // receipt, a PageFlowFailedMessage that nobody hears logs those errors (D28). A thrown exception is not
-        // published (as today); with no receipt its set-aside errors are logged. A receipt that was already reported
-        // counts as no receipt, so the errors are not lost.
+        // report, a PageFlowFailedMessage that nobody hears logs those errors (D28). A thrown exception is not
+        // published (as today); with no report its set-aside errors are logged. A report that was already reported
+        // counts as no report, so the errors are not lost.
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal void ReportThrownCall(Exception ex, PageContext context, PageAbortState abort)
         {
@@ -519,17 +519,17 @@ namespace EncosyTower.PageFlows.UitkPages
                 return;
             }
 
-            var receipt = context.Receipt;
-            var wasReported = receipt != null && receipt.IsReported;
+            var report = context.Report;
+            var wasReported = report != null && report.IsReported;
             failure = PageFlow.WithSuppressedErrors(failure, setAside);
             ReportCall(failure, context);
-            var hasReceipt = receipt != null && wasReported == false;
+            var hasReport = report != null && wasReported == false;
 
             if (isCancel)
             {
                 Option<PageFlowError> unanswered = default;
 
-                if (hasReceipt == false)
+                if (hasReport == false)
                 {
                     unanswered = PageFlow.JoinErrors(setAside);
                 }
@@ -538,7 +538,7 @@ namespace EncosyTower.PageFlows.UitkPages
                 return;
             }
 
-            if (hasReceipt == false)
+            if (hasReport == false)
             {
                 for (var i = 0; i < count; i++)
                 {

@@ -74,10 +74,10 @@ public sealed class PageHistoryRecordingTests
         var history = Track(new PageHistory());
         Assert.IsTrue(history.Attach(screen).IsSuccess);
         var issuer = new object();
-        var firstReceipt = new PageCallReceipt();
-        var secondReceipt = new PageCallReceipt();
-        var firstContext = new PageContext { IssuedBy = issuer, Receipt = firstReceipt };
-        var secondContext = new PageContext { IssuedBy = issuer, Receipt = secondReceipt };
+        var firstReport = new PageCallReport();
+        var secondReport = new PageCallReport();
+        var firstContext = new PageContext { IssuedBy = issuer, Report = firstReport };
+        var secondContext = new PageContext { IssuedBy = issuer, Report = secondReport };
 
         Assert.IsTrue((await screen.ShowAsync("A", firstContext)).IsSuccess);
         Assert.IsTrue((await screen.ShowAsync("B", secondContext)).IsSuccess);
@@ -91,7 +91,7 @@ public sealed class PageHistoryRecordingTests
         Assert.IsFalse(first.To.Index.HasValue);
         Assert.IsNull(first.To.Page);
         Assert.IsNull(first.Context.IssuedBy);
-        Assert.IsNull(first.Context.Receipt);
+        Assert.IsNull(first.Context.Report);
 
         var second = history.Entries[1];
         Assert.AreEqual(expected: "Screen", actual: second.FlowId);
@@ -101,7 +101,7 @@ public sealed class PageHistoryRecordingTests
         Assert.IsFalse(second.To.Index.HasValue);
         Assert.IsNull(second.To.Page);
         Assert.IsNull(second.Context.IssuedBy);
-        Assert.IsNull(second.Context.Receipt);
+        Assert.IsNull(second.Context.Report);
         Assert.AreEqual(expected: 1, actual: history.CurrentIndex);
         Assert.IsTrue(history.CanGoBack);
         Assert.IsFalse(history.CanGoForward);

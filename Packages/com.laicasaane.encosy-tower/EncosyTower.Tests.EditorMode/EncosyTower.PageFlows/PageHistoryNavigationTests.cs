@@ -290,7 +290,7 @@ public sealed class PageHistoryNavigationTests
         Assert.AreEqual(expected: PageTransitionOptions.ZeroDuration, actual: replayed.ShowOptions);
         Assert.AreSame(history, replayed.IssuedBy);
         Assert.AreEqual(expected: PageAsyncOperation.Drop, actual: replayed.AsyncOperation);
-        Assert.IsNotNull(replayed.Receipt);
+        Assert.IsNotNull(replayed.Report);
     }
 
     [Test]

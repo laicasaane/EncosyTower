@@ -137,9 +137,9 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var stack = await CreateFlowAsync<UitkPageStackMulti>(PageFlowKind.PageStackMulti);
             await ShowTwoPagesAsync(stack);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = stack.Context.Publisher.Scope(stack.Context.FlowScope);
-            var context = ZeroDuration with { Receipt = receipt };
+            var context = ZeroDuration with { Report = report };
 
             var published = await HideAllPagesMessage.Async.Publish(
                   in publisher
@@ -148,8 +148,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             );
 
             Assert.IsTrue(published.IsSuccess);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.IsTrue(receipt.Result.IsSuccess);
+            Assert.IsTrue(report.IsReported);
+            Assert.IsTrue(report.Result.IsSuccess);
             Assert.AreEqual(expected: 0, actual: stack.PageCollection.Count);
             LogAssert.NoUnexpectedReceived();
         }
@@ -225,26 +225,26 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsTrue((await list.AddPageAsync(ELEMENT_PAGE, ZeroDuration, CancellationToken.None)).IsSuccess);
 
             var publisher = list.Context.Publisher.Scope(list.Context.FlowScope);
-            var showReceipt = new PageCallReceipt();
-            var hideReceipt = new PageCallReceipt();
+            var showReport = new PageCallReport();
+            var hideReport = new PageCallReport();
 
             await ShowAllPagesMessage.Async.Publish(
                   in publisher
-                , new ShowAllPagesMessage(ZeroDuration with { Receipt = showReceipt })
+                , new ShowAllPagesMessage(ZeroDuration with { Report = showReport })
                 , PublishingContext.Default()
             );
 
-            Assert.IsTrue(showReceipt.Result.IsSuccess);
+            Assert.IsTrue(showReport.Result.IsSuccess);
             Assert.IsTrue(IsDisplayed(GetSlot(list.Pages[0])));
             Assert.IsTrue(IsDisplayed(GetSlot(list.Pages[1])));
 
             await HideAllPagesMessage.Async.Publish(
                   in publisher
-                , new HideAllPagesMessage(ZeroDuration with { Receipt = hideReceipt })
+                , new HideAllPagesMessage(ZeroDuration with { Report = hideReport })
                 , PublishingContext.Default()
             );
 
-            Assert.IsTrue(hideReceipt.Result.IsSuccess);
+            Assert.IsTrue(hideReport.Result.IsSuccess);
             Assert.IsFalse(IsDisplayed(GetSlot(list.Pages[0])));
             Assert.IsFalse(IsDisplayed(GetSlot(list.Pages[1])));
             Assert.AreEqual(expected: 2, actual: list.Pages.Count);

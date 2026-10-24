@@ -20,7 +20,7 @@ namespace EncosyTower.PageFlows
     /// <see cref="SuppressedErrors"/>. Failures returned by the subscribers of the flow's messages come back the
     /// same way. The caller owns logging: call <see cref="Log(ILogger)"/> for each failed result it reacts to.
     /// When a cancellation wins over earlier failures, the call throws. A wrapper then reports the <c>Cancelled</c>
-    /// case to the receipt with those failures as suppressed errors and publishes it as a
+    /// case to the report with those failures as suppressed errors and publishes it as a
     /// <see cref="EncosyTower.PageFlows.PubSub.PageFlowFailedMessage"/>; a direct call of a core flow logs them when
     /// the call ends, because it has no other channel.
     /// </para>

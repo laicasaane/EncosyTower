@@ -120,7 +120,7 @@ namespace EncosyTower.Samples.UitkPages.App
 
             try
             {
-                var context = _flows.CreateContext(userData: userData, source: op.Source, receipt: op.Receipt);
+                var context = _flows.CreateContext(userData: userData, source: op.Source, report: op.Report);
                 result = await _flows.ShowAsync(_ctx.Scopes.Popup, AssetKeyAPI.Key(page), context);
             }
             finally
@@ -195,7 +195,7 @@ namespace EncosyTower.Samples.UitkPages.App
 
             try
             {
-                var context = _flows.CreateContext(source: op.Source, receipt: op.Receipt);
+                var context = _flows.CreateContext(source: op.Source, report: op.Report);
                 result = await _flows.HideActiveAsync(_ctx.Scopes.Popup, context);
             }
             finally
@@ -424,7 +424,7 @@ namespace EncosyTower.Samples.UitkPages.App
 
             public PageAbortSource Source { get; } = new();
 
-            public PageCallReceipt Receipt { get; } = new();
+            public PageCallReport Report { get; } = new();
         }
 
         public readonly record struct ReopenOffer(DialogPage Page, Dimension Dimension, bool HasOffer) : IIsValid

@@ -3,30 +3,30 @@ using EncosyTower.Common;
 namespace EncosyTower.PageFlows
 {
     /// <summary>
-    /// Receives the result of one page flow call issued through a message. One receipt serves one call.
+    /// Receives the result of one page flow call issued through a message. One report serves one call.
     /// </summary>
     /// <remarks>
-    /// Put the receipt in <see cref="PageContext.Receipt"/>. The flow wrapper that handles the call reports its
+    /// Put the report in <see cref="PageContext.Report"/>. The flow wrapper that handles the call reports its
     /// result, whether it was issued through a message or by a direct call on the wrapper. A call that no wrapper
-    /// handles leaves the receipt unreported.
+    /// handles leaves the report unreported.
     /// <para>
     /// When several flows of one scope handle the same call, only the first flow's result is kept. The later flows'
     /// failures still reach the <see cref="EncosyTower.PageFlows.PubSub.PageFlowFailedMessage"/> and
-    /// <see cref="EncosyTower.PageFlows.PubSub.PageAbortedMessage"/> listeners, whose <c>Context.Receipt</c> is this
-    /// receipt.
+    /// <see cref="EncosyTower.PageFlows.PubSub.PageAbortedMessage"/> listeners, whose <c>Context.Report</c> is this
+    /// report.
     /// </para>
     /// </remarks>
     /// <example>
     /// <code>
-    /// var receipt = new PageCallReceipt();
-    /// var context = new PageContext { Receipt = receipt };
+    /// var report = new PageCallReport();
+    /// var context = new PageContext { Report = report };
     ///
     /// await HideAllPagesMessage.Async.Publish(in publisher, new HideAllPagesMessage(context), publishing);
     ///
-    /// if (receipt.IsReported &amp;&amp; receipt.Result.TryGetFailure(out var error)) error.Log(logger);
+    /// if (report.IsReported &amp;&amp; report.Result.TryGetFailure(out var error)) error.Log(logger);
     /// </code>
     /// </example>
-    public sealed class PageCallReceipt
+    public sealed class PageCallReport
     {
         /// <summary>Gets whether a flow reported its result.</summary>
         public bool IsReported { get; private set; }

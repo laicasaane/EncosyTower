@@ -57,10 +57,10 @@ namespace EncosyTower.PageFlows.UguiPages
         /// Success when the call was applied; otherwise a failure; see <see cref="PageFlowError"/>.
         /// </returns>
         /// <remarks>
-        /// The result is also reported to <see cref="PageContext.Receipt"/>. An abort is also
+        /// The result is also reported to <see cref="PageContext.Report"/>. An abort is also
         /// published as a <see cref="EncosyTower.PageFlows.PubSub.PageAbortedMessage"/>, any other failure as a
         /// <see cref="EncosyTower.PageFlows.PubSub.PageFlowFailedMessage"/>, except a cancel or an unheard message
-        /// that carries no other failure. When the call throws, the receipt gets the <c>Cancelled</c> or
+        /// that carries no other failure. When the call throws, the report gets the <c>Cancelled</c> or
         /// <c>Exception</c> case with the failures the flow set aside.
         /// </remarks>
         /// <exception cref="System.ArgumentNullException">
@@ -108,10 +108,10 @@ namespace EncosyTower.PageFlows.UguiPages
         /// Success when the call was applied; otherwise a failure; see <see cref="PageFlowError"/>.
         /// </returns>
         /// <remarks>
-        /// The result is also reported to <see cref="PageContext.Receipt"/>. An abort is also
+        /// The result is also reported to <see cref="PageContext.Report"/>. An abort is also
         /// published as a <see cref="EncosyTower.PageFlows.PubSub.PageAbortedMessage"/>, any other failure as a
         /// <see cref="EncosyTower.PageFlows.PubSub.PageFlowFailedMessage"/>, except a cancel or an unheard message
-        /// that carries no other failure. When the call throws, the receipt gets the <c>Cancelled</c> or
+        /// that carries no other failure. When the call throws, the report gets the <c>Cancelled</c> or
         /// <c>Exception</c> case with the failures the flow set aside.
         /// </remarks>
         /// <exception cref="System.InvalidOperationException">The flow is not initialized.</exception>

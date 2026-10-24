@@ -114,7 +114,7 @@ internal sealed class FakeHistoryFlow : IPageFlowRecordable, IDisposable
             }
         }
 
-        context.Receipt?.Report(FlowId, result);
+        context.Report?.Report(FlowId, result);
         return result;
     }
 
@@ -129,7 +129,7 @@ internal sealed class FakeHistoryFlow : IPageFlowRecordable, IDisposable
             await ApplyHideActiveAsync(context);
         }
 
-        context.Receipt?.Report(FlowId, result);
+        context.Report?.Report(FlowId, result);
         return result;
     }
 
@@ -160,7 +160,7 @@ internal sealed class FakeHistoryFlow : IPageFlowRecordable, IDisposable
             }
         }
 
-        context.Receipt?.Report(FlowId, result);
+        context.Report?.Report(FlowId, result);
         return result;
     }
 
@@ -177,7 +177,7 @@ internal sealed class FakeHistoryFlow : IPageFlowRecordable, IDisposable
             await PublishAsync(PageNavigationKind.HideAt, from, PageRef.None, context);
         }
 
-        context.Receipt?.Report(FlowId, result);
+        context.Report?.Report(FlowId, result);
         return result;
     }
 

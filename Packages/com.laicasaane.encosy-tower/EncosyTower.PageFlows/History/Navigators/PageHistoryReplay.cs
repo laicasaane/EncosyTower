@@ -16,13 +16,13 @@ namespace EncosyTower.PageFlows.History
         /// <summary>Replays a show by key with <see cref="EncosyTower.PageFlows.PubSub.ShowPageMessage"/>.</summary>
         /// <param name="flow">The flow to replay on.</param>
         /// <param name="assetKey">The key of the page asset to show.</param>
-        /// <param name="context">The context of the call. The method puts a new receipt in it.</param>
+        /// <param name="context">The context of the call. The method puts a new report in it.</param>
         /// <param name="token">Cancels the call.</param>
         /// <returns>
         /// Success when the flow applied the call; otherwise a failure; see <see cref="PageFlowError"/>.
         /// </returns>
         /// <remarks>
-        /// The result comes from a <see cref="PageCallReceipt"/>. When no flow reports to it, the call fails with the
+        /// The result comes from a <see cref="PageCallReport"/>. When no flow reports to it, the call fails with the
         /// <c>ReplayUnanswered</c> case, or the <c>Cancelled</c> case when the token is cancelled.
         /// </remarks>
         /// <exception cref="System.ArgumentNullException"><paramref name="flow"/> is <c>null</c>.</exception>
@@ -35,9 +35,9 @@ namespace EncosyTower.PageFlows.History
         {
             ThrowHelper.ThrowIfNull(flow);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = flow.Publisher.Scope(flow.FlowScope);
-            var message = new ShowPageMessage(assetKey, context with { Receipt = receipt });
+            var message = new ShowPageMessage(assetKey, context with { Report = report });
 
             var published = await ShowPageMessage.Async.Publish(in publisher, message, CreatePublishingContext(token));
 
@@ -46,14 +46,14 @@ namespace EncosyTower.PageFlows.History
                 return PageFlowError.FromPublish(publishError);
             }
 
-            return ReadResult(flow, receipt, token);
+            return ReadResult(flow, report, token);
         }
 
         /// <summary>
         /// Replays a hide of the current page with <see cref="EncosyTower.PageFlows.PubSub.HideActivePageMessage"/>.
         /// </summary>
         /// <param name="flow">The flow to replay on.</param>
-        /// <param name="context">The context of the call. The method puts a new receipt in it.</param>
+        /// <param name="context">The context of the call. The method puts a new report in it.</param>
         /// <param name="token">Cancels the call.</param>
         /// <returns>
         /// Success when the flow applied the call; otherwise a failure; see <see cref="PageFlowError"/>.
@@ -68,9 +68,9 @@ namespace EncosyTower.PageFlows.History
         {
             ThrowHelper.ThrowIfNull(flow);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = flow.Publisher.Scope(flow.FlowScope);
-            var message = new HideActivePageMessage(context with { Receipt = receipt });
+            var message = new HideActivePageMessage(context with { Report = report });
 
             var published = await HideActivePageMessage.Async.Publish(
                   in publisher
@@ -83,7 +83,7 @@ namespace EncosyTower.PageFlows.History
                 return PageFlowError.FromPublish(publishError);
             }
 
-            return ReadResult(flow, receipt, token);
+            return ReadResult(flow, report, token);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace EncosyTower.PageFlows.History
         /// </summary>
         /// <param name="flow">The flow to replay on.</param>
         /// <param name="index">The index of the page to show.</param>
-        /// <param name="context">The context of the call. The method puts a new receipt in it.</param>
+        /// <param name="context">The context of the call. The method puts a new report in it.</param>
         /// <param name="token">Cancels the call.</param>
         /// <returns>
         /// Success when the flow applied the call; otherwise a failure; see <see cref="PageFlowError"/>.
@@ -107,9 +107,9 @@ namespace EncosyTower.PageFlows.History
         {
             ThrowHelper.ThrowIfNull(flow);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = flow.Publisher.Scope(flow.FlowScope);
-            var message = new ShowPageAtIndexMessage(index, context with { Receipt = receipt });
+            var message = new ShowPageAtIndexMessage(index, context with { Report = report });
 
             var published = await ShowPageAtIndexMessage.Async.Publish(
                   in publisher
@@ -122,7 +122,7 @@ namespace EncosyTower.PageFlows.History
                 return PageFlowError.FromPublish(publishError);
             }
 
-            return ReadResult(flow, receipt, token);
+            return ReadResult(flow, report, token);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace EncosyTower.PageFlows.History
         /// </summary>
         /// <param name="flow">The flow to replay on.</param>
         /// <param name="index">The index of the page to hide.</param>
-        /// <param name="context">The context of the call. The method puts a new receipt in it.</param>
+        /// <param name="context">The context of the call. The method puts a new report in it.</param>
         /// <param name="token">Cancels the call.</param>
         /// <returns>
         /// Success when the flow applied the call; otherwise a failure; see <see cref="PageFlowError"/>.
@@ -146,9 +146,9 @@ namespace EncosyTower.PageFlows.History
         {
             ThrowHelper.ThrowIfNull(flow);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = flow.Publisher.Scope(flow.FlowScope);
-            var message = new HidePageAtIndexMessage(index, context with { Receipt = receipt });
+            var message = new HidePageAtIndexMessage(index, context with { Report = report });
 
             var published = await HidePageAtIndexMessage.Async.Publish(
                   in publisher
@@ -161,7 +161,7 @@ namespace EncosyTower.PageFlows.History
                 return PageFlowError.FromPublish(publishError);
             }
 
-            return ReadResult(flow, receipt, token);
+            return ReadResult(flow, report, token);
         }
 
         internal static UnityTask<Success<PageFlowError>> CannotReplayAsync(
@@ -184,13 +184,13 @@ namespace EncosyTower.PageFlows.History
 
         private static Success<PageFlowError> ReadResult(
               IPageFlowRecordable flow
-            , PageCallReceipt receipt
+            , PageCallReport report
             , CancellationToken token
         )
         {
-            if (receipt.IsReported)
+            if (report.IsReported)
             {
-                return receipt.Result;
+                return report.Result;
             }
 
             if (token.IsCancellationRequested)

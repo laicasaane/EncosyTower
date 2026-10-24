@@ -4,7 +4,7 @@ namespace EncosyTower.PageFlows
 {
     /// <summary>The settings of one page flow call, passed to the flow and on to the page hooks.</summary>
     /// <remarks>
-    /// Create a new context for each call: a <see cref="PageAbortSource"/> and a <see cref="PageCallReceipt"/>
+    /// Create a new context for each call: a <see cref="PageAbortSource"/> and a <see cref="PageCallReport"/>
     /// serve one call.
     /// </remarks>
     public readonly record struct PageContext
@@ -59,6 +59,6 @@ namespace EncosyTower.PageFlows
         public object IssuedBy { get; init; }
 
         /// <summary>When set, the wrapper that handles this call reports its result here.</summary>
-        public PageCallReceipt Receipt { get; init; }
+        public PageCallReport Report { get; init; }
     }
 }

@@ -21,7 +21,7 @@ namespace EncosyTower.Samples.UguiPages.App
     /// (single page stacks). Each screen also gets a navigation bar, tabs and cards, attached as pages in flows of
     /// their own. Pages ask for actions with <see cref="AppActionMessage"/>; the modules call the flows with
     /// <see cref="ShowPageMessage"/>, <see cref="HideActivePageMessage"/> and <see cref="HideAllPagesMessage"/>, and
-    /// read each result from a <see cref="PageCallReceipt"/>.
+    /// read each result from a <see cref="PageCallReport"/>.
     /// </para>
     /// <para>
     /// It demonstrates <see cref="UguiPageCodexInitializer{TScopes}"/>,

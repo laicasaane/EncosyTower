@@ -209,7 +209,7 @@ namespace EncosyTower.Samples.UguiPages.App
             var context = _flows.CreateContext(
                   userData: new DimensionPageData(_ctx.State, request.Location)
                 , source: request.Source
-                , receipt: request.Receipt
+                , report: request.Report
             );
 
             try
@@ -299,7 +299,7 @@ namespace EncosyTower.Samples.UguiPages.App
 
             public PageAbortSource Source { get; } = new();
 
-            public PageCallReceipt Receipt { get; } = new();
+            public PageCallReport Report { get; } = new();
         }
     }
 }

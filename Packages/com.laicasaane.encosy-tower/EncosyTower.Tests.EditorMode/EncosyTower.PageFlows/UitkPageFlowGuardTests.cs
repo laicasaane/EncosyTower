@@ -31,10 +31,10 @@ public sealed class UitkPageFlowGuardTests
         return null;
     }
 
-    private static void AssertReportedException(PageCallReceipt receipt, Exception thrown)
+    private static void AssertReportedException(PageCallReport report, Exception thrown)
     {
-        Assert.IsTrue(receipt.IsReported);
-        Assert.IsTrue(receipt.Result.TryGetFailure(out var error));
+        Assert.IsTrue(report.IsReported);
+        Assert.IsTrue(report.Result.TryGetFailure(out var error));
         Assert.IsTrue(error._error.TryGetValue(out PageFlowError.Error.Exception wrapped));
         Assert.AreSame(thrown, wrapped.Ex);
     }
@@ -57,31 +57,31 @@ public sealed class UitkPageFlowGuardTests
 
     [TestCase(false)]
     [TestCase(true)]
-    public async Task ShowOnAnUninitializedStackReportsToTheReceiptAsync(bool multi)
+    public async Task ShowOnAnUninitializedStackReportsToTheReportAsync(bool multi)
     {
-        var receipt = new PageCallReceipt();
+        var report = new PageCallReport();
 
-        var thrown = await ShowAndCatchAsync(multi, "k", new PageContext { Receipt = receipt });
+        var thrown = await ShowAndCatchAsync(multi, "k", new PageContext { Report = report });
 
         Assert.IsInstanceOf<InvalidOperationException>(thrown);
-        AssertReportedException(receipt, thrown);
+        AssertReportedException(report, thrown);
     }
 
     [TestCase(false, false)]
     [TestCase(true, false)]
     [TestCase(false, true)]
     [TestCase(true, true)]
-    public async Task ShowWithAnInvalidKeyReportsToTheReceiptAsync(bool multi, bool empty)
+    public async Task ShowWithAnInvalidKeyReportsToTheReportAsync(bool multi, bool empty)
     {
-        var receipt = new PageCallReceipt();
+        var report = new PageCallReport();
 
         var thrown = await ShowAndCatchAsync(
               multi: multi
             , assetKey: empty ? new AssetKey(string.Empty) : default
-            , context: new PageContext { Receipt = receipt }
+            , context: new PageContext { Report = report }
         );
 
         Assert.IsInstanceOf<ArgumentNullException>(thrown);
-        AssertReportedException(receipt, thrown);
+        AssertReportedException(report, thrown);
     }
 }

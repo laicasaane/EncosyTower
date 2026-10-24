@@ -61,8 +61,8 @@ namespace EncosyTower.Tests.PageFlows
             var pool = AddPageSource(stack, ELEMENT_PAGE);
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("attach failed");
-            var receipt = new PageCallReceipt();
-            var context = s_context with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = s_context with { Report = report };
             ErrorDeliveryProbePage.AbortOnAttach = PageAbortMode.Reverse;
             ErrorDeliveryProbePage.ThrowOnAttach = exception;
 
@@ -79,7 +79,7 @@ namespace EncosyTower.Tests.PageFlows
             Assert.IsInstanceOf<ErrorDeliveryProbePage>(pageOrigin.Source);
             Assert.AreEqual(expected: PageAbortMode.Reverse, actual: mode);
             AssertSingleSuppressedException(error, exception);
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
 
             Assert.AreEqual(expected: 1, actual: log.Aborted.Count);
             var message = log.Aborted[0];
@@ -88,7 +88,7 @@ namespace EncosyTower.Tests.PageFlows
             Assert.AreEqual(expected: error, actual: message.Error);
             AssertSingleSuppressedException(message.Error, exception);
             Assert.AreEqual(expected: context, actual: message.Context);
-            Assert.AreSame(receipt, message.Context.Receipt);
+            Assert.AreSame(report, message.Context.Report);
             Assert.IsEmpty(log.Failed);
             Assert.IsFalse(GetCurrentPage(stack).TryGetValue(out _));
             Assert.AreEqual(expected: 0, actual: GetPageCollection(stack).Count);
@@ -98,14 +98,14 @@ namespace EncosyTower.Tests.PageFlows
         }
 
         [Test]
-        public async Task G3_ThrownCancel_ReceiptAndListenerGetTheFailureItWonOverAsync()
+        public async Task G3_ThrownCancel_ReportAndListenerGetTheFailureItWonOverAsync()
         {
             var stack = CreateFlow<UguiPageStackMulti>("Popup");
             AddPageSource(stack, ELEMENT_PAGE);
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("began subscriber failed");
-            var receipt = new PageCallReceipt();
-            var context = s_context with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = s_context with { Report = report };
             using var cancellation = new CancellationTokenSource();
             ErrorDeliveryProbePage.CancelOnShow = cancellation;
             OperationCanceledException thrown = null;
@@ -127,15 +127,15 @@ namespace EncosyTower.Tests.PageFlows
 
             Assert.IsNotNull(thrown);
             Assert.IsTrue(cancellation.IsCancellationRequested);
-            Assert.IsTrue(receipt.Result.TryGetFailure(out var error));
+            Assert.IsTrue(report.Result.TryGetFailure(out var error));
             Assert.IsTrue(error.IsCancelled);
             AssertSingleSuppressedException(error, exception);
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             AssertSingleSuppressedException(log.Failed[0].Error, exception);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
             Assert.IsTrue(GetCurrentPage(stack).TryGetValue(out var page));
             Assert.IsInstanceOf<ErrorDeliveryProbePage>(page);
@@ -158,8 +158,8 @@ namespace EncosyTower.Tests.PageFlows
             AddPageSource(stack, ELEMENT_PAGE);
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("navigated subscriber failed");
-            var receipt = new PageCallReceipt();
-            var context = s_context with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = s_context with { Report = report };
 
             var subscriber = stack.Context.Subscriber.Scope(stack.Context.FlowScope)
                 .WithState(exception)
@@ -174,13 +174,13 @@ namespace EncosyTower.Tests.PageFlows
             Assert.IsFalse(error.HasSuppressedErrors);
             Assert.AreEqual(expected: PageTransitionState.Completed, actual: error.TransitionState);
             Assert.IsTrue(result.IsApplied());
-            AssertReceipt(receipt, "Screen", error);
-            Assert.IsTrue(receipt.Result.IsApplied());
+            AssertReport(report, "Screen", error);
+            Assert.IsTrue(report.Result.IsApplied());
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             AssertException(log.Failed[0].Error, exception);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
             Assert.IsTrue(GetCurrentPage(stack).TryGetValue(out var page));
             Assert.IsInstanceOf<ErrorDeliveryProbePage>(page);
@@ -212,11 +212,11 @@ namespace EncosyTower.Tests.PageFlows
             Assert.IsFalse(suppressed.HasSuppressedErrors);
         }
 
-        private static void AssertReceipt(PageCallReceipt receipt, string flowId, PageFlowError error)
+        private static void AssertReport(PageCallReport report, string flowId, PageFlowError error)
         {
-            Assert.IsTrue(receipt.IsReported);
-            Assert.AreEqual(expected: flowId, actual: receipt.FlowId);
-            Assert.IsTrue(receipt.Result.TryGetFailure(out var reported));
+            Assert.IsTrue(report.IsReported);
+            Assert.AreEqual(expected: flowId, actual: report.FlowId);
+            Assert.IsTrue(report.Result.TryGetFailure(out var reported));
             Assert.AreEqual(expected: error, actual: reported);
         }
 

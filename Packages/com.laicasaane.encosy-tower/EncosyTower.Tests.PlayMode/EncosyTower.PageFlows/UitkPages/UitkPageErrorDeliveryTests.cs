@@ -45,8 +45,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var stack = _harness.GetFlow<UitkPageStackMulti>("Popup");
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("attach failed");
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
             TestElementPage.AbortOnAttach = PageAbortMode.Reverse;
             TestElementPage.ThrowOnAttach = exception;
 
@@ -63,7 +63,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsInstanceOf<TestElementPage>(pageOrigin.Source);
             Assert.AreEqual(expected: PageAbortMode.Reverse, actual: mode);
             AssertSingleSuppressedException(error, exception);
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
 
             Assert.AreEqual(expected: 1, actual: log.Aborted.Count);
             var message = log.Aborted[0];
@@ -72,7 +72,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.AreEqual(expected: error, actual: message.Error);
             AssertSingleSuppressedException(message.Error, exception);
             Assert.AreEqual(expected: context, actual: message.Context);
-            Assert.AreSame(receipt, message.Context.Receipt);
+            Assert.AreSame(report, message.Context.Report);
             Assert.IsEmpty(log.Failed);
             Assert.IsFalse(stack.CurrentPage.TryGetValue(out _));
             Assert.AreEqual(expected: 0, actual: stack.PageCollection.Count);
@@ -89,8 +89,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var list = _harness.GetFlow<UitkPageListMulti>("Popup");
             var log = Subscribe(list);
             var exception = new InvalidOperationException("detach subscriber failed");
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
             using var cancellation = new CancellationTokenSource();
             TestElementPage.CancelOnAttach = cancellation;
 
@@ -107,12 +107,12 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsTrue(error.IsCancelled);
             Assert.IsFalse(result.IsApplied());
             AssertSingleSuppressedException(error, exception);
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             AssertSingleSuppressedException(log.Failed[0].Error, exception);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
             Assert.AreEqual(expected: 0, actual: list.Pages.Count);
             Assert.IsTrue(list.TryGetPooledCount(ELEMENT_PAGE, out var pooled));
@@ -134,8 +134,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             await CreateHarnessAsync(PageFlowKind.PageListMulti);
             var list = _harness.GetFlow<UitkPageListMulti>("Popup");
             var log = Subscribe(list);
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
             using var cancellation = new CancellationTokenSource();
             TestElementPage.CancelOnAttach = cancellation;
 
@@ -147,7 +147,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsFalse(error.HasSuppressedErrors);
             Assert.AreEqual(expected: 0, actual: error.SuppressedErrors.Length);
             Assert.IsFalse(result.IsApplied());
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
             Assert.IsEmpty(log.Failed);
             Assert.IsEmpty(log.Aborted);
             Assert.AreEqual(expected: 0, actual: list.Pages.Count);
@@ -158,28 +158,28 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         }
 
         [Test]
-        public async Task G3_ThrownCancel_ReceiptAndListenerGetTheFailureItWonOverAsync()
+        public async Task G3_ThrownCancel_ReportAndListenerGetTheFailureItWonOverAsync()
         {
-            await AssertThrownShowCancellationAsync(hasReceipt: true, hasListener: true);
+            await AssertThrownShowCancellationAsync(hasReport: true, hasListener: true);
             LogAssert.NoUnexpectedReceived();
         }
 
         [Test]
-        public async Task G3_ThrownCancel_WithoutReceiptOrListener_LogsTheFailureOnceAsync()
+        public async Task G3_ThrownCancel_WithoutReportOrListener_LogsTheFailureOnceAsync()
         {
-            await AssertThrownShowCancellationAsync(hasReceipt: false, hasListener: false);
+            await AssertThrownShowCancellationAsync(hasReport: false, hasListener: false);
             LogAssert.NoUnexpectedReceived();
         }
 
         [Test]
-        public async Task G3_ThrownCancel_WithoutReceipt_ListenerGetsItAndNothingIsLoggedAsync()
+        public async Task G3_ThrownCancel_WithoutReport_ListenerGetsItAndNothingIsLoggedAsync()
         {
-            await AssertThrownShowCancellationAsync(hasReceipt: false, hasListener: true);
+            await AssertThrownShowCancellationAsync(hasReport: false, hasListener: true);
             LogAssert.NoUnexpectedReceived();
         }
 
         [Test]
-        public async Task G3_HideActiveThrownCancel_ReceiptCarriesTheFailureAsync()
+        public async Task G3_HideActiveThrownCancel_ReportCarriesTheFailureAsync()
         {
             await CreateHarnessAsync(PageFlowKind.PageStackMulti);
             var stack = _harness.GetFlow<UitkPageStackMulti>("Popup");
@@ -191,8 +191,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("began subscriber failed");
             SubscribeBeganFailure(stack, exception);
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
             using var cancellation = new CancellationTokenSource();
             OperationCanceledException thrown = null;
 
@@ -210,7 +210,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             }
 
             Assert.IsNotNull(thrown);
-            AssertCancelledReceiptAndMessage(receipt, context, log, exception);
+            AssertCancelledReportAndMessage(report, context, log, exception);
             CollectionAssert.Contains(TestElementPage.Events, $"HideCancelled:{element.Counter}");
             Assert.IsFalse(stack.CurrentPage.TryGetValue(out _));
             Assert.AreEqual(expected: 0, actual: stack.PageCollection.Count);
@@ -221,7 +221,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         }
 
         [Test]
-        public async Task G3_ListShowAtThrownCancel_ReceiptCarriesTheFailureAsync()
+        public async Task G3_ListShowAtThrownCancel_ReportCarriesTheFailureAsync()
         {
             await CreateHarnessAsync(PageFlowKind.PageListMulti);
             var list = _harness.GetFlow<UitkPageListMulti>("Popup");
@@ -230,8 +230,8 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var log = Subscribe(list);
             var exception = new InvalidOperationException("began subscriber failed");
             SubscribeBeganFailure(list, exception);
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
             using var cancellation = new CancellationTokenSource();
             TestElementPage.CancelOnShow = cancellation;
             OperationCanceledException thrown = null;
@@ -247,7 +247,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             Assert.IsNotNull(thrown);
             Assert.IsTrue(cancellation.IsCancellationRequested);
-            AssertCancelledReceiptAndMessage(receipt, context, log, exception);
+            AssertCancelledReportAndMessage(report, context, log, exception);
             Assert.AreEqual(expected: 1, actual: list.Pages.Count);
             Assert.AreSame(page, list.Pages[0]);
             Assert.IsFalse(list.IsInTransition);
@@ -255,14 +255,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         }
 
         [Test]
-        public async Task G4_NavigatedSubscriberFailure_ReachesTheReceiptAsync()
+        public async Task G4_NavigatedSubscriberFailure_ReachesTheReportAsync()
         {
             await CreateHarnessAsync(PageFlowKind.PageStackMulti);
             var stack = _harness.GetFlow<UitkPageStackSingle>("Screen");
             var log = Subscribe(stack);
             var exception = new InvalidOperationException("navigated subscriber failed");
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
 
             var subscriber = stack.Context.Subscriber.Scope(stack.Context.FlowScope)
                 .WithState(exception)
@@ -277,12 +277,12 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsFalse(error.HasSuppressedErrors);
             Assert.AreEqual(expected: PageTransitionState.Completed, actual: error.TransitionState);
             Assert.IsTrue(result.IsApplied());
-            AssertReceipt(receipt, "Screen", error);
-            Assert.IsTrue(receipt.Result.IsApplied());
+            AssertReport(report, "Screen", error);
+            Assert.IsTrue(report.Result.IsApplied());
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
             Assert.IsTrue(stack.CurrentPage.TryGetValue(out var page));
             Assert.IsInstanceOf<TestElementPage>(page);
@@ -299,23 +299,23 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         }
 
         [Test]
-        public async Task G5_SecondFlowFailure_ReachesListenersWhileTheReceiptKeepsTheFirstAsync()
+        public async Task G5_SecondFlowFailure_ReachesListenersWhileTheReportKeepsTheFirstAsync()
         {
             await CreateHarnessAsync(PageFlowKind.PageStackMulti);
             var screen = _harness.GetFlow<UitkPageStackSingle>("Screen");
             var popup = _harness.GetFlow<UitkPageStackMulti>("Popup");
             var log = Subscribe(popup);
-            var receipt = new PageCallReceipt();
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = ZeroDuration with { Report = report };
 
             var first = await screen.ShowPageAsync(ELEMENT_PAGE, context, CancellationToken.None);
             var second = await popup.ShowPageAsync(TWO_PAGES, context, CancellationToken.None);
 
             Assert.IsTrue(first.IsSuccess);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.AreEqual(expected: "Screen", actual: receipt.FlowId);
-            Assert.IsTrue(receipt.Result.IsSuccess);
-            Assert.AreEqual(expected: first, actual: receipt.Result);
+            Assert.IsTrue(report.IsReported);
+            Assert.AreEqual(expected: "Screen", actual: report.FlowId);
+            Assert.IsTrue(report.Result.IsSuccess);
+            Assert.AreEqual(expected: first, actual: report.Result);
             Assert.IsTrue(second.TryGetFailure(out var error));
 
             Assert.AreEqual(
@@ -328,7 +328,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
             Assert.IsTrue(screen.CurrentPage.TryGetValue(out _));
             Assert.IsFalse(popup.CurrentPage.TryGetValue(out _));
@@ -353,30 +353,30 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsFalse(suppressed.HasSuppressedErrors);
         }
 
-        private static void AssertReceipt(PageCallReceipt receipt, string flowId, PageFlowError error)
+        private static void AssertReport(PageCallReport report, string flowId, PageFlowError error)
         {
-            Assert.IsTrue(receipt.IsReported);
-            Assert.AreEqual(expected: flowId, actual: receipt.FlowId);
-            Assert.IsTrue(receipt.Result.TryGetFailure(out var reported));
+            Assert.IsTrue(report.IsReported);
+            Assert.AreEqual(expected: flowId, actual: report.FlowId);
+            Assert.IsTrue(report.Result.TryGetFailure(out var reported));
             Assert.AreEqual(expected: error, actual: reported);
         }
 
-        private static void AssertCancelledReceiptAndMessage(
-              PageCallReceipt receipt
+        private static void AssertCancelledReportAndMessage(
+              PageCallReport report
             , PageContext context
             , MessageLog log
             , Exception exception
         )
         {
-            Assert.IsTrue(receipt.Result.TryGetFailure(out var error));
+            Assert.IsTrue(report.Result.TryGetFailure(out var error));
             Assert.IsTrue(error.IsCancelled);
             AssertSingleSuppressedException(error, exception);
-            AssertReceipt(receipt, "Popup", error);
+            AssertReport(report, "Popup", error);
             Assert.AreEqual(expected: 1, actual: log.Failed.Count);
             Assert.AreEqual(expected: error, actual: log.Failed[0].Error);
             AssertSingleSuppressedException(log.Failed[0].Error, exception);
             Assert.AreEqual(expected: context, actual: log.Failed[0].Context);
-            Assert.AreSame(receipt, log.Failed[0].Context.Receipt);
+            Assert.AreSame(report, log.Failed[0].Context.Report);
             Assert.IsEmpty(log.Aborted);
         }
 
@@ -387,20 +387,20 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             _harness = await CreateAsync(("Screen", PageFlowKind.PageStackSingle, ""), ("Popup", popupKind, ""));
         }
 
-        private async Task AssertThrownShowCancellationAsync(bool hasReceipt, bool hasListener)
+        private async Task AssertThrownShowCancellationAsync(bool hasReport, bool hasListener)
         {
             await CreateHarnessAsync(PageFlowKind.PageStackMulti);
             var stack = _harness.GetFlow<UitkPageStackMulti>("Popup");
             var log = Subscribe(stack, hasListener);
             var exception = new InvalidOperationException("began subscriber failed");
             SubscribeBeganFailure(stack, exception);
-            var receipt = hasReceipt ? new PageCallReceipt() : null;
-            var context = ZeroDuration with { Receipt = receipt };
+            var report = hasReport ? new PageCallReport() : null;
+            var context = ZeroDuration with { Report = report };
             using var cancellation = new CancellationTokenSource();
             TestElementPage.CancelOnShow = cancellation;
             OperationCanceledException thrown = null;
 
-            if (hasReceipt == false && hasListener == false)
+            if (hasReport == false && hasListener == false)
             {
                 LogAssert.Expect(
                       LogType.Exception
@@ -420,9 +420,9 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.IsNotNull(thrown);
             Assert.IsTrue(cancellation.IsCancellationRequested);
 
-            if (hasReceipt)
+            if (hasReport)
             {
-                AssertCancelledReceiptAndMessage(receipt, context, log, exception);
+                AssertCancelledReportAndMessage(report, context, log, exception);
             }
             else if (hasListener)
             {
@@ -431,7 +431,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
                 Assert.IsTrue(message.Error.IsCancelled);
                 AssertSingleSuppressedException(message.Error, exception);
                 Assert.AreEqual(expected: context, actual: message.Context);
-                Assert.IsNull(message.Context.Receipt);
+                Assert.IsNull(message.Context.Report);
             }
             else
             {

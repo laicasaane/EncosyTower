@@ -183,18 +183,18 @@ namespace EncosyTower.Tests.PageFlows
             Assert.IsTrue((await stack.ShowPageAsync(SLOW_KEY, s_context, CancellationToken.None)).IsSuccess);
             Assert.IsTrue((await stack.ShowPageAsync(FAST_KEY, s_context, CancellationToken.None)).IsSuccess);
 
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = stack.Context.Publisher.Scope(stack.Context.FlowScope);
 
             var published = await HideAllPagesMessage.Async.Publish(
                   in publisher
-                , new HideAllPagesMessage(s_context with { Receipt = receipt })
+                , new HideAllPagesMessage(s_context with { Report = report })
                 , PublishingContext.Default()
             );
 
             Assert.IsTrue(published.IsSuccess);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.IsTrue(receipt.Result.IsSuccess);
+            Assert.IsTrue(report.IsReported);
+            Assert.IsTrue(report.Result.IsSuccess);
             await AssertStackIsEmptyAsync(stack);
             LogAssert.NoUnexpectedReceived();
         }

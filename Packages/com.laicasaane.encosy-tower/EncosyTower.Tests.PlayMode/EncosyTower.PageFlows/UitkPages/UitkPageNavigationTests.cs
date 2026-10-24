@@ -46,7 +46,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageStackSingle>(PageFlowKind.PageStackSingle);
-            var firstContext = CreateContextWithReceipt(out var r1);
+            var firstContext = CreateContextWithReport(out var r1);
             var firstResult = await screen.ShowPageAsync(ELEMENT_PAGE, firstContext, CancellationToken.None);
 
             Assert.IsTrue(firstResult.IsSuccess);
@@ -64,7 +64,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             );
 
             Assert.AreSame(firstPage, _recorder.Items[0].To.Page);
-            var secondContext = CreateContextWithReceipt(out var r2);
+            var secondContext = CreateContextWithReport(out var r2);
             var secondResult = await screen.ShowPageAsync(BEHAVIOUR_PAGE, secondContext, CancellationToken.None);
 
             Assert.IsTrue(secondResult.IsSuccess);
@@ -83,7 +83,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             Assert.AreSame(firstPage, _recorder.Items[1].From.Page);
             Assert.AreSame(secondPage, _recorder.Items[1].To.Page);
-            var hideContext = CreateContextWithReceipt(out var r3);
+            var hideContext = CreateContextWithReport(out var r3);
             var hideResult = await screen.HideActivePageAsync(hideContext, CancellationToken.None);
 
             Assert.IsTrue(hideResult.IsSuccess);
@@ -110,7 +110,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageStackMulti>(PageFlowKind.PageStackMulti);
-            var firstContext = CreateContextWithReceipt(out var r1);
+            var firstContext = CreateContextWithReport(out var r1);
             var firstResult = await screen.ShowPageAsync(ELEMENT_PAGE, firstContext, CancellationToken.None);
 
             Assert.IsTrue(firstResult.IsSuccess);
@@ -128,7 +128,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             );
 
             Assert.AreSame(firstPage, _recorder.Items[0].To.Page);
-            var secondContext = CreateContextWithReceipt(out var r2);
+            var secondContext = CreateContextWithReport(out var r2);
             var secondResult = await screen.ShowPageAsync(BEHAVIOUR_PAGE, secondContext, CancellationToken.None);
 
             Assert.IsTrue(secondResult.IsSuccess);
@@ -147,7 +147,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             Assert.AreSame(firstPage, _recorder.Items[1].From.Page);
             Assert.AreSame(secondPage, _recorder.Items[1].To.Page);
-            var hideContext = CreateContextWithReceipt(out var r3);
+            var hideContext = CreateContextWithReport(out var r3);
             var hideResult = await screen.HideActivePageAsync(hideContext, CancellationToken.None);
 
             Assert.IsTrue(hideResult.IsSuccess);
@@ -175,19 +175,19 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageListSingle>(PageFlowKind.PageListSingle);
-            var addFirstContext = CreateContextWithReceipt(out var r1);
+            var addFirstContext = CreateContextWithReport(out var r1);
             var addFirstResult = await screen.AddPageAsync(ELEMENT_PAGE, addFirstContext, CancellationToken.None);
 
             Assert.IsTrue(addFirstResult.IsSuccess);
             AssertReported(r1, addFirstResult);
             Assert.IsEmpty(_recorder.Items);
-            var addSecondContext = CreateContextWithReceipt(out var r2);
+            var addSecondContext = CreateContextWithReport(out var r2);
             var addSecondResult = await screen.AddPageAsync(BEHAVIOUR_PAGE, addSecondContext, CancellationToken.None);
 
             Assert.IsTrue(addSecondResult.IsSuccess);
             AssertReported(r2, addSecondResult);
             Assert.IsEmpty(_recorder.Items);
-            var showFirstContext = CreateContextWithReceipt(out var r3);
+            var showFirstContext = CreateContextWithReport(out var r3);
 
             var showFirstResult = await screen.ShowPageAtIndexAsync(
                   index: 0
@@ -209,7 +209,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             );
 
             Assert.AreSame(screen.Pages[0], _recorder.Items[0].To.Page);
-            var showSecondContext = CreateContextWithReceipt(out var r4);
+            var showSecondContext = CreateContextWithReport(out var r4);
 
             var showSecondResult = await screen.ShowPageAtIndexAsync(
                   index: 1
@@ -232,7 +232,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             Assert.AreSame(screen.Pages[0], _recorder.Items[1].From.Page);
             Assert.AreSame(screen.Pages[1], _recorder.Items[1].To.Page);
-            var hideContext = CreateContextWithReceipt(out var r5);
+            var hideContext = CreateContextWithReport(out var r5);
             var hideResult = await screen.HideActivePageAsync(hideContext, CancellationToken.None);
 
             Assert.IsTrue(hideResult.IsSuccess);
@@ -260,19 +260,19 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageListMulti>(PageFlowKind.PageListMulti);
-            var addFirstContext = CreateContextWithReceipt(out var r1);
+            var addFirstContext = CreateContextWithReport(out var r1);
             var addFirstResult = await screen.AddPageAsync(ELEMENT_PAGE, addFirstContext, CancellationToken.None);
 
             Assert.IsTrue(addFirstResult.IsSuccess);
             AssertReported(r1, addFirstResult);
             Assert.IsEmpty(_recorder.Items);
-            var addSecondContext = CreateContextWithReceipt(out var r2);
+            var addSecondContext = CreateContextWithReport(out var r2);
             var addSecondResult = await screen.AddPageAsync(BEHAVIOUR_PAGE, addSecondContext, CancellationToken.None);
 
             Assert.IsTrue(addSecondResult.IsSuccess);
             AssertReported(r2, addSecondResult);
             Assert.IsEmpty(_recorder.Items);
-            var showContext = CreateContextWithReceipt(out var r3);
+            var showContext = CreateContextWithReport(out var r3);
 
             var showResult = await screen.ShowPageAtIndexAsync(
                   index: 1
@@ -294,7 +294,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             );
 
             Assert.AreSame(screen.Pages[1], _recorder.Items[0].To.Page);
-            var hideContext = CreateContextWithReceipt(out var r4);
+            var hideContext = CreateContextWithReport(out var r4);
 
             var hideResult = await screen.HidePageAtIndexAsync(
                   index: 1
@@ -325,13 +325,13 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageListMulti>(PageFlowKind.PageListMulti);
-            var addContext = CreateContextWithReceipt(out var r1);
+            var addContext = CreateContextWithReport(out var r1);
             var addResult = await screen.AddPageAsync(ELEMENT_PAGE, addContext, CancellationToken.None);
 
             Assert.IsTrue(addResult.IsSuccess);
             AssertReported(r1, addResult);
             Assert.IsEmpty(_recorder.Items);
-            var showContext = CreateContextWithReceipt(out var r2);
+            var showContext = CreateContextWithReport(out var r2);
 
             var showResult = await screen.ShowPageAtIndexAsync(
                   index: 5
@@ -355,14 +355,14 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             var screen = await CreateFlowAsync<UitkPageStackSingle>(PageFlowKind.PageStackSingle);
             using var source = new CancellationTokenSource();
             source.Cancel();
-            var context = CreateContextWithReceipt(out var receipt);
+            var context = CreateContextWithReport(out var report);
             var result = await screen.ShowPageAsync(ELEMENT_PAGE, context, source.Token);
 
             Assert.IsFalse(result.IsSuccess);
             Assert.IsTrue(result.TryGetFailure(out var error));
             Assert.IsTrue(error.IsCancelled);
-            AssertReported(receipt, result);
-            Assert.IsTrue(receipt.Result.GetFailureOrDefault().IsCancelled);
+            AssertReported(report, result);
+            Assert.IsTrue(report.Result.GetFailureOrDefault().IsCancelled);
             Assert.IsEmpty(_recorder.Items);
             LogAssert.NoUnexpectedReceived();
         }
@@ -373,16 +373,16 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             LogAssert.Expect(LogType.Warning, NO_THEME_WARNING);
             var screen = await CreateFlowAsync<UitkPageStackSingle>(PageFlowKind.PageStackSingle);
             TestElementPage.AbortOnAttach = PageAbortMode.Immediate;
-            var context = CreateContextWithReceipt(out var receipt);
+            var context = CreateContextWithReport(out var report);
             var result = await screen.ShowPageAsync(ELEMENT_PAGE, context, CancellationToken.None);
 
             Assert.IsFalse(result.IsSuccess);
             Assert.IsTrue(result.TryGetFailure(out var error));
             Assert.IsTrue(error.IsAborted);
             Assert.AreEqual(PageTransitionState.NotStarted, error.TransitionState);
-            AssertReported(receipt, result);
-            Assert.IsTrue(receipt.Result.GetFailureOrDefault().IsAborted);
-            Assert.AreEqual(PageTransitionState.NotStarted, receipt.Result.GetFailureOrDefault().TransitionState);
+            AssertReported(report, result);
+            Assert.IsTrue(report.Result.GetFailureOrDefault().IsAborted);
+            Assert.AreEqual(PageTransitionState.NotStarted, report.Result.GetFailureOrDefault().TransitionState);
             Assert.IsEmpty(_recorder.Items);
             LogAssert.NoUnexpectedReceived();
         }
@@ -395,11 +395,11 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             TestElementPage.AttachDelayFrames = 3;
 
             var source = new PageAbortSource();
-            var firstContext = CreateContextWithReceipt(out var r1);
+            var firstContext = CreateContextWithReport(out var r1);
             var first = screen.ShowPageAsync(ELEMENT_PAGE, firstContext, CancellationToken.None);
             await WaitUntilAsync(() => screen.IsInTransition);
 
-            var secondContext = CreateContextWithReceipt(out var r2) with {
+            var secondContext = CreateContextWithReport(out var r2) with {
                 AsyncOperation = PageAsyncOperation.Sequential,
                 Abort = source.Handle,
             };
@@ -526,17 +526,17 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
             Assert.AreSame(thrown, wrapped.Ex);
         }
 
-        private static PageContext CreateContextWithReceipt(out PageCallReceipt receipt)
+        private static PageContext CreateContextWithReport(out PageCallReport report)
         {
-            receipt = new PageCallReceipt();
-            return ZeroDuration with { Receipt = receipt };
+            report = new PageCallReport();
+            return ZeroDuration with { Report = report };
         }
 
-        private static void AssertReported(PageCallReceipt receipt, in Success<PageFlowError> result)
+        private static void AssertReported(PageCallReport report, in Success<PageFlowError> result)
         {
-            Assert.IsTrue(receipt.IsReported);
-            Assert.AreEqual("Screen", receipt.FlowId);
-            Assert.AreEqual(result.IsSuccess, receipt.Result.IsSuccess);
+            Assert.IsTrue(report.IsReported);
+            Assert.AreEqual("Screen", report.FlowId);
+            Assert.AreEqual(result.IsSuccess, report.Result.IsSuccess);
         }
 
         private static void AssertNavigation(

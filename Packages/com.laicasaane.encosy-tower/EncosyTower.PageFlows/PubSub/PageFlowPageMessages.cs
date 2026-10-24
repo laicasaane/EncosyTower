@@ -37,7 +37,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit page list of the scope. The result is reported to
-    /// <see cref="PageContext.Receipt"/>.
+    /// <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>AddPageMessage.Async.Publish</c>; handle it with <c>AddPageMessage.Async.Subscribe</c>.
@@ -52,7 +52,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit page stack of the scope. The result is reported to
-    /// <see cref="PageContext.Receipt"/>.
+    /// <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>ShowPageMessage.Async.Publish</c>; handle it with <c>ShowPageMessage.Async.Subscribe</c>.
@@ -60,17 +60,17 @@ namespace EncosyTower.PageFlows.PubSub
     /// </remarks>
     /// <example>
     /// <code>
-    /// var receipt = new PageCallReceipt();
-    /// var context = new PageContext { AsyncOperation = PageAsyncOperation.Sequential, Receipt = receipt };
+    /// var report = new PageCallReport();
+    /// var context = new PageContext { AsyncOperation = PageAsyncOperation.Sequential, Report = report };
     /// var publisher = codex.FlowContext.Publisher.Scope(scopes.Popup);
     /// var publishing = PublishingContext.Default(logger: logger, token: token);
     ///
     /// await ShowPageMessage.Async.Publish(in publisher, new ShowPageMessage(assetKey, context), publishing);
     ///
-    /// if (receipt.IsReported &amp;&amp; receipt.Result.TryGetFailure(out var error)) error.Log(logger);
+    /// if (report.IsReported &amp;&amp; report.Result.TryGetFailure(out var error)) error.Log(logger);
     ///
     /// // HideActivePageMessage works the same way. A direct call on a flow returns the result:
-    /// var result = await stack.HideActivePageAsync(context with { Receipt = null }, token);
+    /// var result = await stack.HideActivePageAsync(context with { Report = null }, token);
     /// </code>
     /// </example>
     /// <param name="AssetKey">The key of the page asset.</param>
@@ -82,7 +82,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit page list of the scope. The result is reported to
-    /// <see cref="PageContext.Receipt"/>.
+    /// <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>ShowPageAtIndexMessage.Async.Publish</c>; handle it with
@@ -98,7 +98,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit multi-page list of the scope. The result is reported to
-    /// <see cref="PageContext.Receipt"/>.
+    /// <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>HidePageAtIndexMessage.Async.Publish</c>; handle it with
@@ -114,7 +114,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit page stack and single-page list of the scope. The result is reported
-    /// to <see cref="PageContext.Receipt"/>.
+    /// to <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>HideActivePageMessage.Async.Publish</c>; handle it with
@@ -132,7 +132,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit multi-page stack and multi-page list of the scope. The result is
-    /// reported to <see cref="PageContext.Receipt"/>.
+    /// reported to <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>HideAllPagesMessage.Async.Publish</c>; handle it with
@@ -147,7 +147,7 @@ namespace EncosyTower.PageFlows.PubSub
     /// <remarks>
     /// <para>
     /// Handled by every UGUI and UI Toolkit multi-page list of the scope. The result is reported to
-    /// <see cref="PageContext.Receipt"/>.
+    /// <see cref="PageContext.Report"/>.
     /// </para>
     /// <para>
     /// Publish it with <c>ShowAllPagesMessage.Async.Publish</c>; handle it with

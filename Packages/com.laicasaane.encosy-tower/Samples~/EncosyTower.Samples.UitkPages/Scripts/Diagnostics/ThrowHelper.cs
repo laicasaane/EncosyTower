@@ -55,7 +55,7 @@ namespace EncosyTower.Samples.UitkPages.Diagnostics
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         [HideInCallstack, StackTraceHidden]
-        internal static void LogError_NoReceipt(string operation)
+        internal static void LogError_NoReport(string operation)
             => DevLogger.Default.LogError($"No page flow answered the call '{operation}'.");
 
         [MethodImpl(MethodImplOptions.NoInlining)]

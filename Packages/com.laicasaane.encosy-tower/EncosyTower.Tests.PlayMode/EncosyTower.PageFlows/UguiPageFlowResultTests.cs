@@ -408,55 +408,55 @@ namespace EncosyTower.Tests.PageFlows
         }
 
         [Test]
-        public async Task PageStackSingle_ShowOnAnUninitializedFlowReportsToTheReceiptAsync()
+        public async Task PageStackSingle_ShowOnAnUninitializedFlowReportsToTheReportAsync()
         {
             _root = new GameObject(nameof(UguiPageFlowResultTests), typeof(RectTransform));
 
             var stack = CreateChildRect("Screen").gameObject.AddComponent<UguiPageStackSingle>();
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             System.InvalidOperationException thrown = null;
 
             try
             {
-                await stack.ShowPageAsync(FIRST_KEY, new PageContext { Receipt = receipt }, CancellationToken.None);
+                await stack.ShowPageAsync(FIRST_KEY, new PageContext { Report = report }, CancellationToken.None);
             }
             catch (System.InvalidOperationException ex)
             {
                 thrown = ex;
             }
 
-            AssertReportedException(receipt, thrown);
+            AssertReportedException(report, thrown);
         }
 
         [Test]
-        public async Task PageStackMulti_ShowOnAnUninitializedFlowReportsToTheReceiptAsync()
+        public async Task PageStackMulti_ShowOnAnUninitializedFlowReportsToTheReportAsync()
         {
             _root = new GameObject(nameof(UguiPageFlowResultTests), typeof(RectTransform));
 
             var stack = CreateChildRect("Screen").gameObject.AddComponent<UguiPageStackMulti>();
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             System.InvalidOperationException thrown = null;
 
             try
             {
-                await stack.ShowPageAsync(FIRST_KEY, new PageContext { Receipt = receipt }, CancellationToken.None);
+                await stack.ShowPageAsync(FIRST_KEY, new PageContext { Report = report }, CancellationToken.None);
             }
             catch (System.InvalidOperationException ex)
             {
                 thrown = ex;
             }
 
-            AssertReportedException(receipt, thrown);
+            AssertReportedException(report, thrown);
         }
 
         [TestCase(false)]
         [TestCase(true)]
-        public async Task PageStack_ShowWithAnInvalidKeyReportsToTheReceiptAsync(bool multi)
+        public async Task PageStack_ShowWithAnInvalidKeyReportsToTheReportAsync(bool multi)
         {
             _root = new GameObject(nameof(UguiPageFlowResultTests), typeof(RectTransform));
 
-            var receipt = new PageCallReceipt();
-            var context = new PageContext { Receipt = receipt };
+            var report = new PageCallReport();
+            var context = new PageContext { Report = report };
             System.ArgumentNullException thrown = null;
 
             try
@@ -477,7 +477,7 @@ namespace EncosyTower.Tests.PageFlows
                 thrown = ex;
             }
 
-            AssertReportedException(receipt, thrown);
+            AssertReportedException(report, thrown);
         }
 
         [Test]
@@ -578,11 +578,11 @@ namespace EncosyTower.Tests.PageFlows
             Assert.AreSame(thrown, wrapped.Ex);
         }
 
-        private static void AssertReportedException(PageCallReceipt receipt, System.Exception thrown)
+        private static void AssertReportedException(PageCallReport report, System.Exception thrown)
         {
             Assert.IsNotNull(thrown);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.IsTrue(receipt.Result.TryGetFailure(out var error));
+            Assert.IsTrue(report.IsReported);
+            Assert.IsTrue(report.Result.TryGetFailure(out var error));
             Assert.IsTrue(error._error.TryGetValue(out PageFlowError.Error.Exception wrapped));
             Assert.AreSame(thrown, wrapped.Ex);
         }

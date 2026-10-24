@@ -564,7 +564,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             var stack = await CreateFlowAsync<UitkPageStackSingle>(PageFlowKind.PageStackSingle);
             var key = new AssetKey(ELEMENT_PAGE);
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = stack.Context.Publisher.Scope(stack.Context.FlowScope);
 
             var publishingContext = PublishingContext.Default(
@@ -574,13 +574,13 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             var published = await ShowPageMessage.Async.Publish(
                   in publisher
-                , new ShowPageMessage(key, ZeroDuration with { Receipt = receipt })
+                , new ShowPageMessage(key, ZeroDuration with { Report = report })
                 , publishingContext
             );
 
             Assert.IsTrue(published.IsSuccess);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.IsTrue(receipt.Result.IsSuccess);
+            Assert.IsTrue(report.IsReported);
+            Assert.IsTrue(report.Result.IsSuccess);
             Assert.IsTrue(stack.CurrentPage.HasValue);
             Assert.IsTrue(stack.TryGetPooledCount(key, out _));
         }
@@ -614,7 +614,7 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
         {
             var list = await CreateFlowAsync<UitkPageListMulti>(PageFlowKind.PageListMulti);
             var key = new AssetKey(ELEMENT_PAGE);
-            var receipt = new PageCallReceipt();
+            var report = new PageCallReport();
             var publisher = list.Context.Publisher.Scope(list.Context.FlowScope);
 
             var publishingContext = PublishingContext.Default(
@@ -624,13 +624,13 @@ namespace EncosyTower.Tests.PageFlows.UitkPages
 
             var published = await AddPageMessage.Async.Publish(
                   in publisher
-                , new AddPageMessage(key, ZeroDuration with { Receipt = receipt })
+                , new AddPageMessage(key, ZeroDuration with { Report = report })
                 , publishingContext
             );
 
             Assert.IsTrue(published.IsSuccess);
-            Assert.IsTrue(receipt.IsReported);
-            Assert.IsTrue(receipt.Result.IsSuccess);
+            Assert.IsTrue(report.IsReported);
+            Assert.IsTrue(report.Result.IsSuccess);
             Assert.AreEqual(1, list.Pages.Count);
         }
 
