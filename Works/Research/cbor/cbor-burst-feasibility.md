@@ -10,6 +10,11 @@
   Entities 1.5.0.
 - Burst rules cited from the installed Burst docs (`Library/PackageCache/com.unity.burst@*/Documentation~`):
   `csharp-type-support.md`, `csharp-hpc-overview.md`, `csharp-string-support.md`, `csharp-system-support.md`.
+- Placement (D2): folder `EncosyTower.Core/Formatting`, namespace `EncosyTower.Formatting.Cbor`. Which assembly the
+  code compiles into is not a design concern (D13). Decisions: [handoff.md](handoff.md); how the port is used by the
+  CBOR and JSON frontends: [cbor-serialization-design.md](cbor-serialization-design.md).
+- Type names below (`CborWriter`, `CborReader`, `CborError`, …) are working names from upstream; final names are open
+  (D3). The design shares one error enum across CBOR, the JSON text routines and the transcoder.
 
 ## Verdict
 
@@ -176,12 +181,14 @@ Total: medium-sized feature, roughly 3–4k lines of ported code plus tests.
 
 ## Open questions for the Owner
 
-1. Target surface: Burst-only core with a managed extension layer (recommended), or two separate implementations?
+1. ~~Target surface~~ settled by R4: one Burst-compatible core with a managed extension layer, no second
+   implementation.
 2. Buffer ownership: `NativeList<byte>`-owned writer (simple) vs. caller-supplied `UnsafeList<byte>*` (embeddable in
-   ECS components) — or both?
-3. Conformance modes: port all four (Lax, Strict, Canonical, Ctap2Canonical) or start with Lax + Canonical?
-4. Placement: new assembly (e.g. `EncosyTower.Cbor`) vs. inside `EncosyTower.Core`; and whether a source generator for
-   struct (de)serialization is a later goal (affects API naming now).
+   ECS components) — or both? The design proposes both.
+3. Conformance modes: port all four (Lax, Strict, Canonical, Ctap2Canonical) or start with Lax + Canonical? The design
+   proposes all four plus `CoreDeterministic` (RFC 8949 §4.2.1), with `Canonical` documented as legacy RFC 7049.
+4. ~~Placement and generator~~ settled: placement by D2 (assembly not a design concern, D13); the source generator is
+   in the first release (D4).
 
 ## Unverified / to check before planning
 
